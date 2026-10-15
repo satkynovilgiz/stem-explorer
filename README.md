@@ -3,10 +3,12 @@
 An interactive science exploration workspace: **explore → interact → understand**.
 Users rotate, zoom, select and measure parts of 3D models and read concise, sourced explanations.
 
-Five subjects are planned — Anatomy, Chemistry, Physics, Mathematics and Biology.
-**Chemistry Explorer** (molecules and measurements), **Biology Explorer** (an interactive animal
-cell) and **Physics Explorer** (a projectile motion lab) are implemented. Anatomy and Mathematics
-show an honest "Coming soon" page.
+All five subjects are implemented:
+- **Anatomy Explorer:** the human heart, with a blood-flow tour.
+- **Chemistry Explorer:** molecules and measurements.
+- **Biology Explorer:** an interactive animal cell.
+- **Physics Explorer:** a projectile motion lab.
+- **Mathematics Explorer:** interactive 3D surfaces.
 
 ## Requirements
 
@@ -35,6 +37,136 @@ locally installed Google Chrome (`channel: 'chrome'`), so no browser download is
 React 19 · TypeScript · Vite 8 · Three.js via React Three Fiber 9 and Drei 10 · Lucide icons ·
 plain CSS with design tokens · Vitest for unit tests · Playwright for browser tests. No backend, accounts, API keys or third-party
 3D assets. The Three.js bundle is lazy-loaded when the 3D viewer mounts, so text renders first.
+
+## Anatomy Explorer — the human heart
+
+> This is a simplified educational diagram in 3D. Shapes, proportions, vessel positions, and
+> movement are schematic.
+
+### Structures
+
+**Chambers:**
+- right atrium
+- right ventricle
+- left atrium
+- left ventricle
+
+**Valves:**
+- tricuspid
+- pulmonary
+- mitral
+- aortic
+
+**Vessels and wall:**
+- aorta
+- pulmonary trunk with its left and right pulmonary arteries (simplified)
+- pulmonary veins (four, simplified)
+- superior and inferior venae cavae
+- interventricular septum
+
+Each entry in `src/data/anatomy/heart.ts` stores:
+- a stable ID, a summary and details;
+- connections to other structures, shown as links that select them;
+- its oxygen-pathway colour, what the model simplifies, and its source pages.
+
+### Orientation and colours
+
+- **Anterior view:** the model is shown as if you face a person's chest. Left and right always mean
+  the **body's** left and right, so the heart's right side appears on your left.
+- **Orientation labels:** "Body's right", "Body's left", "Superior" and "Inferior" labels move with
+  the model and stay visible even with labels turned off.
+- **Colours:** blue marks the relatively oxygen-poor pathway (venae cavae, right heart, pulmonary
+  trunk) and red the oxygen-rich pathway (pulmonary veins, left heart, aorta).
+  - The legend says these are diagram colours.
+  - Blood is never blue: oxygen-rich blood is bright red and oxygen-poor blood darker red (OpenStax
+    §18.3).
+- **Layout:** the layout follows the textbook arrangement in simplified form.
+  - The pulmonary trunk leaves the right ventricle and rises in front of, and to the body's left
+    of, the ascending aorta.
+  - The aorta arches over toward the body's left.
+  - The right pulmonary artery passes behind the aorta and the superior vena cava.
+  - Vessel clearances were checked numerically so that unconnected vessels do not touch.
+
+### Controls
+
+| Control | Behavior |
+| --- | --- |
+| **Whole / Cutaway** | Whole shows the closed chambers and vessels. Cutaway opens the front of each chamber and shows the valves and the septum. Choosing an internal structure switches to Cutaway. |
+| **Click / list** | Selects a structure (searchable list of 14). Clicking empty space clears the selection; releasing after a rotation drag is not a click. |
+| **Focus** | Moves the camera to the selected structure, only when pressed. |
+| **Isolate / Show all** | Shows only the selected structure; Show all restores the full heart and keeps the selection. |
+| **Reset camera** | Returns to the default anterior view. |
+| **Labels** | Turns structure labels on or off. Selected and tour structures, and orientation labels, stay labelled. |
+
+- **Labels:** major structures are labelled by default. A label is hidden when other geometry is in
+  front of it or when it would overlap a higher-priority label.
+- **Details tabs:** Overview, Connections and Sources.
+- **Camera moves:** they ease over about 0.6 s, or jump instantly with `prefers-reduced-motion`.
+
+### Blood-flow tour
+
+Start it with **Start blood-flow tour**; it never starts on its own. It has 14 steps, checked against
+OpenStax A&P 2e §19.1:
+
+1. Venae cavae (from the body)
+2. Right atrium
+3. Tricuspid valve
+4. Right ventricle
+5. Pulmonary valve
+6. Pulmonary trunk and arteries
+7. Lungs
+8. Pulmonary veins
+9. Left atrium
+10. Mitral valve
+11. Left ventricle
+12. Aortic valve
+13. Aorta
+14. Body
+
+- **Destinations:** the lungs and the body are labelled markers outside the heart, never heart
+  structures.
+- **Each step:**
+  - highlights its structures and labels them "Step n";
+  - shows a short explanation;
+  - offers Previous, Next and step-dot buttons, all in HTML.
+- **The marker:** a dashed path and a moving marker show direction only. They are labelled a
+  conceptual pathway, and imply no real speed, timing, pressure or valve motion. With reduced motion
+  the marker stays still.
+- **Entering and exiting:**
+  - Entering the tour switches to the cutaway view, and pauses selection and isolation.
+  - Exit tour (or Finish) restores the previous view, selection and isolation.
+  - Tour progress is never stored in the URL.
+
+### Model simplifications
+
+- Chambers are rounded shells and vessels are tubes. Sizes, wall thicknesses (including the thicker
+  left ventricle) and valve geometry are not quantitatively accurate.
+- Valves are rings with flat flaps in the source's cusp counts (tricuspid 3, mitral 2, semilunar 3).
+  - They do not move.
+  - The semilunar valves appear as collars at the vessel roots; their flaps are inside the vessel.
+- Not drawn:
+  - chordae tendineae and papillary muscles;
+  - the coronary vessels;
+  - the interatrial septum;
+  - the aortic branches.
+- The model shows no heartbeat or cardiac cycle.
+- The content is paraphrased from OpenStax and has **not been reviewed by a medical expert**.
+  Passing software tests does not establish anatomical accuracy.
+
+### Without WebGL
+
+The structure list, descriptions, sources and the full step-by-step tour (as HTML) keep working.
+Only the 3D view and its toolbar are replaced by a message.
+
+### Anatomy sources
+
+- [OpenStax Anatomy and Physiology 2e — 19.1 Heart Anatomy](https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy)
+  covers:
+  - chambers, valves and cusp counts, and the septa;
+  - the vessels entering and leaving the heart;
+  - the pulmonary and systemic circuits, and the thicker left ventricle.
+- [OpenStax Anatomy and Physiology 2e — 18.3 Erythrocytes](https://openstax.org/books/anatomy-and-physiology-2e/pages/18-3-erythrocytes)
+  covers bright red oxygenated versus darker red deoxygenated blood.
 
 ## Chemistry Explorer
 
@@ -286,6 +418,118 @@ a slider never fights the user's camera.
 - [OpenStax University Physics Volume 1 — 4.3 Projectile Motion](https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion)
 - [OpenStax University Physics Volume 1 — 3.5 Free Fall](https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall)
 
+## Mathematics Explorer — interactive 3D surfaces
+
+Choose a surface z = f(x, y), reshape it with parameters, read exact values at points, and cut it
+with vertical cross-sections. The formulas are a fixed preset library: there is no formula entry,
+no `eval`, and no computer algebra.
+
+### Surface presets and parameter ranges
+
+| Surface | Formula | Parameters (range, step, default) | Drawn domain | Mesh |
+| --- | --- | --- | --- | --- |
+| Plane | z = a·x + b·y + c | a: −2 to 2 (0.05, 0.5) · b: −2 to 2 (0.05, −0.25) · c: −3 to 3 (0.1, 1) | −3 ≤ x, y ≤ 3 | 24 × 24 |
+| Elliptic paraboloid | z = a·x² + b·y² | a, b: 0.1 to 1.5 (0.05, 0.5), kept positive | −2 ≤ x, y ≤ 2 | 64 × 64 |
+| Saddle (hyperbolic paraboloid) | z = a·x² − b·y² | a, b: 0.1 to 1.5 (0.05, 0.5), kept positive | −2 ≤ x, y ≤ 2 | 64 × 64 |
+| Sinusoidal surface | z = A·sin(k·x)·cos(k·y) | A: −2 to 2 (0.05, 1) · k: 0 to 3 (0.05, 1) | −π ≤ x, y ≤ π | 120 × 120 |
+
+- **Default:** the elliptic paraboloid opens by default. Choosing a preset restores that preset's
+  default parameters, unless a valid shared link supplies them.
+- **Sine and cosine:** they take radians. k is a spatial angular frequency (radians per unit of x or
+  y; one wave spans 2π/k units), not a frequency in time.
+- **Input fields:** each parameter has a slider and a typed field.
+  - Typed text commits on Enter or blur, and only if it is a complete number.
+  - Out-of-range values are clamped to the range and rounded to the step.
+  - **Reset parameters** restores the preset defaults.
+- **Formula display:** the current formula is shown with the parameter values substituted, for
+  example z = 0.50·x² + 0.50·y².
+
+### Coordinates
+
+- x and y are the independent variables and z = f(x, y) is the height. They are abstract
+  coordinates without units.
+- Three.js uses Y as its up axis, so a single utility (`src/math/coordinates.ts`) maps
+  (x, y, z) → (x, z, −y).
+  - The mapping is a rotation, so nothing is mirrored and all axes keep a 1:1 scale.
+  - The surface, axes, tick labels, point marker, slice plane, curve and camera presets all go
+    through it.
+- **Equal scale:** x, y and z share one world scale, so the vertical axis is never stretched. Only
+  the tick spacing differs per axis.
+
+### 3D view
+
+- **Shading and grid lines:** the surface is shaded with height colors, and a **Grid lines**
+  overlay (on by default) shows the shape without relying on color.
+- **Height legend:** gives the numeric minimum, middle and maximum. A constant surface (for example
+  A = 0) shows "constant z = …" instead of a color range.
+- **Axes:** x runs along the front edge, y along the right edge and z up the front-left corner, with
+  a reference grid on the floor of the axis box.
+- **Views:**
+  - **Perspective** can be rotated.
+  - **Top**, **Front** (xz) and **Side** (yz) are orthographic and pan/zoom only.
+  - **Fit surface** frames the whole surface and keeps the current viewing direction.
+  - **Reset camera** returns to the default direction for the current view.
+- **When the camera moves:** opening a preset, changing view, or pressing Fit or Reset. Parameter
+  edits never move it.
+
+### Point inspection
+
+- **Choosing a point:** click the surface, or type x and y in the Explore tab. Releasing the mouse
+  after a rotation drag does not pick a point.
+- **Exact values:** the click hits a flat mesh triangle, so only its x and y are kept. z is always
+  evaluated from the formula.
+  - The readout shows x, y, z ≈ value and the substitution, for example
+    z = 0.50·(1.00)² + 0.50·(−1.00)² ≈ 1.000.
+  - Displayed numbers are rounded; the formula is exact.
+- **Outside the domain:** coordinates outside the drawn domain are clamped, with a "Limited to the
+  drawn domain" note.
+- **The marker P:** it has a drop line to the floor and stays on the surface when parameters change.
+  Switching preset clears the point.
+
+### Cross-sections
+
+- **Controls:** **Show cross-section** adds a vertical plane at x = constant or y = constant, with a
+  slider and typed field for its position (0.05 steps).
+- **The plane:** it is translucent and does not take clicks, so point picking still works through
+  it.
+- **The curve:** the highlighted curve and the one-variable formula are calculated directly from the
+  surface function, not from triangle intersections.
+- **The 2D graph:**
+  - For x = constant the horizontal axis is **y**; for y = constant it is **x**. The vertical axis
+    is always **z**.
+  - Its z axis is scaled to fit, not to the same scale as the horizontal axis.
+  - It includes a value table at five positions and a text summary.
+- **Slice shapes:** the summary describes each slice as one of:
+  - a straight line (plane);
+  - a constant (for example a plane with zero slope in that direction, or a flat sine slice);
+  - an upward parabola (paraboloid, and the saddle at y = constant);
+  - a downward parabola (saddle at x = constant);
+  - a sinusoidal wave whose amplitude depends on the slice position.
+
+### Mesh approximation
+
+- The 3D surface is a triangle mesh (segment counts in the table above) that approximates the
+  continuous surface.
+- The sinusoidal mesh keeps at least 40 samples per wave at the highest k.
+- Point readouts, slice curves and slice graphs come from the formula, so they are not affected by
+  the mesh. Only the drawn shape between grid points is approximate.
+
+### Without WebGL
+
+Only the 3D view is replaced by a message. Parameters, formulas, point evaluation and the
+cross-section graph keep working, and the 3D-only toolbar is hidden.
+
+### Mathematics sources
+
+- [OpenStax Calculus Volume 3 — 4.1 Functions of Several Variables](https://openstax.org/books/calculus-volume-3/pages/4-1-functions-of-several-variables)
+  covers:
+  - graphs of z = f(x, y) as surfaces, and vertical traces;
+  - examples with a plane, a paraboloid and sin x cos y.
+- [OpenStax Calculus Volume 3 — 2.6 Quadric Surfaces](https://openstax.org/books/calculus-volume-3/pages/2-6-quadric-surfaces)
+  covers:
+  - traces;
+  - elliptic and hyperbolic paraboloids.
+
 ## Shareable links and URL state
 
 Subjects are hash routes (`#/chemistry`, `#/biology`). Each explorer keeps its state in its **own**
@@ -296,6 +540,8 @@ query parameters, so neither subject can change the other:
 | Chemistry | `molecule`, `view` | `water`, `carbon-dioxide`, `methane`, `ammonia`, `ethanol`, `benzene` · `ball-and-stick`, `space-filling` |
 | Biology | `structure`, `cell` | `plasma-membrane`, `cytoplasm`, `nucleus`, `nucleolus`, `mitochondrion`, `rough-er`, `smooth-er`, `golgi`, `ribosome`, `lysosome` · `whole`, `cutaway` |
 | Physics | `speed`, `angle`, `height`, `gravity` | plain numbers inside the ranges above; each invalid value falls back to its default on its own |
+| Anatomy | `part`, `heart` | one of the 14 structure IDs (e.g. `mitral-valve`) · `whole`, `cutaway` |
+| Mathematics | `surface`, the preset's parameters (`a`, `b`, `c` or `amp`, `k`), `slice`, `at` | `plane`, `paraboloid`, `saddle`, `sine` · numbers inside the preset's ranges · `x` or `y` · a position inside the domain |
 
 Examples:
 
@@ -303,7 +549,13 @@ Examples:
 /?molecule=benzene&view=space-filling#/chemistry
 /?structure=golgi&cell=cutaway#/biology
 /?speed=15&angle=60&height=10&gravity=1.62#/physics
+/?surface=saddle&a=1.2&b=0.3&slice=y&at=0.5#/mathematics
+/?part=mitral-valve&heart=cutaway#/anatomy
 ```
+
+Mathematics links store the preset, its parameters and the slice. They never store the camera or the
+inspected point. Parameters belonging to a different preset are ignored, and when the preset
+changes the previous preset's keys are removed from the address.
 
 Physics links never contain animation time; they always open paused at t = 0. Slider movement
 updates the address with `replaceState`, so it never adds history entries.
@@ -378,10 +630,15 @@ How the URL is kept up to date:
 | `src/features/chemistry/scene/measurementGeometry.test.ts` | Angle arc and label placement, including straight and degenerate angles. |
 | `src/data/biology/organelles.test.ts` | Required structures with stable, URL-safe IDs; every content field present; known sources and related structures. Also that cytoplasm and cytosol are distinguished, and that the text never claims all proteins pass through the Golgi. |
 | `src/features/biology/state.test.ts` | Selecting types and single copies, and rejecting invalid copies and IDs. Also auto-cutaway, isolation and Show all, clearing, and changing view. |
-| `src/lib/urlState.test.ts` | Valid and invalid parameters for all three subjects. Also that no subject reads another's keys, round trips, that time is never stored, and share links built from the given origin. |
+| `src/lib/urlState.test.ts` | Valid and invalid parameters for all five subjects. Also that no subject reads another's keys, round trips, that time is never stored, and share links built from the given origin. |
 | `src/physics/projectile.test.ts` | Known analytical cases: straight up (4 s, 20 m), horizontal launch, a raised start, dropping from rest, and the level-ground range formula. Also: constant vₓ and vᵧ slope −g; impact clamping (never below ground); immediate impact and very short flights; NaN and negative time; non-positive gravity; playback speed and frame rate not changing results; the frame-step cap; input parsing, clamping and rounding. |
 | `src/features/physics/state.test.ts` | No auto-launch, edits reset to t = 0, Reset vs Restore defaults, pause/resume/landed announcements, scrubbing pauses, immediate impact, playback speed, and Run A storing inputs only. |
 | `src/features/physics/sceneMath.test.ts` | Equal axis scales, framing all compared runs, tick steps and labels, and separate vector scales. |
+| `src/data/anatomy/heart.test.ts` | All 14 structures, with URL-safe IDs, known sources and valid, reciprocal connections. Also oxygen-pathway colours by side, cusp counts, the exact 14-step blood-flow order with external lungs and body, and valve-after-chamber ordering. |
+| `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. |
+| `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude. Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
+| `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
+| `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
 
 **Browser tests** (`npm run test:e2e`, Playwright, `e2e/`), run in the local Google Chrome against
 the production build:
@@ -394,10 +651,10 @@ the production build:
   - Focus and pixel-exact Reset view;
   - Copy link;
   - URL restore, invalid values, and switching subjects with Back/Forward and reload.
-- `chemistry.e2e.ts`: a regression check:
+- `chemistry.e2e.ts`: a regression check (it also confirms no subject is a Coming soon page):
   - share links still restore, and Biology parameters are ignored;
   - all six molecules, and distance and angle measurements;
-  - Copy link, and the remaining Coming soon pages.
+  - Copy link.
 - `physics.e2e.ts`: covers
   - no auto-launch, and typed input validation and clamping;
   - launch, pause, resume, landing and reset; Restore defaults;
@@ -406,12 +663,35 @@ the production build:
   - immediate impact and the A/B comparison;
   - URL restore, invalid values, subject switching with Back/Forward and refresh;
   - no history entries from sliders, and Copy link.
+- `anatomy.e2e.ts`: covers
+  - orientation (the body's right drawn on the viewer's left), the disclaimer, legend and
+    non-overlapping labels;
+  - selecting from the list and the 3D model, connection links and sources;
+  - whole and cutaway views; Isolate, Show all, Focus and Reset camera (checked by comparing
+    frames);
+  - the Labels toggle;
+  - the full tour order, Previous/Next, step dots, the external destinations, and exit restoring
+    state;
+  - no autostart;
+  - URL restore and invalid values, subject switching with Back/Forward and refresh, and Copy link.
+- `mathematics.e2e.ts`: covers
+  - all four presets, editing and resetting parameters, and partial typed input;
+  - point entry with clamping, and clicking the surface (z checked against the formula);
+  - slice direction and position kept in sync across formula, graph, table and URL;
+  - slice shape descriptions;
+  - camera presets, Fit surface and Reset camera, checked by comparing frames, and the camera
+    staying put on parameter edits;
+  - grid lines and the legend; URL restore and invalid values;
+  - subject switching with Back/Forward and refresh;
+  - no history entries from sliders, and Copy link.
 - `mobile.e2e.ts` (390 × 844):
-  - Biology, Chemistry and Physics with no horizontal overflow and a prominent viewport;
+  - all five subjects with no horizontal overflow and a prominent viewport;
   - touch targets of at least 40 px, the tab workflow, and normal page scrolling.
 - `no-webgl.e2e.ts` (Chrome with `--disable-3d-apis`):
   - Biology and Chemistry fall back to text;
   - Physics keeps inputs, playback, readouts and graphs working;
+  - Mathematics keeps parameters, point evaluation and the slice graph working;
+  - Anatomy keeps the list, sources and the HTML tour working;
   - 3D-only controls are hidden.
 
 The test fixture fails a test on any console error or warning except two known, harmless ones: the
@@ -441,6 +721,18 @@ src/
     scene/                      R3F scene: viewport, atoms, bonds, measurement overlay, labels, camera
   physics/
     projectile.ts               pure projectile-motion model (SI units, analytical, validation)
+  math/
+    surfaces.ts                 surface presets: formulas, parameters, domains, slices, sources
+    coordinates.ts, heightColor.ts   math ↔ Three.js mapping; height colour ramp
+  data/anatomy/heart.ts         heart structures, connections, blood-flow steps and sources
+  features/anatomy/
+    state.ts                    selection, view, isolation and tour reducer
+    HeartExplorer.tsx, HeartPanels.tsx
+    scene/                      R3F heart: chambers, valves, septum, vessels, labels, camera, tour marker
+  features/mathematics/
+    state.ts, sceneGeometry.ts  explorer reducer; mesh, wireframe and axis-frame builders
+    MathematicsExplorer.tsx, MathPanels.tsx, SliceGraph.tsx
+    scene/                      R3F scene: surface, grid lines, axes, slice, point marker, camera
   features/physics/
     state.ts, clock.ts          experiment reducer and the shared simulation clock
     PhysicsExplorer.tsx         layout, playback loop, URL sync, live region
@@ -464,7 +756,7 @@ e2e/                            Playwright browser tests
 ## Known issues
 
 - **`THREE.Clock` warning.** The console shows `THREE.Clock: This module has been deprecated. Please
-  use THREE.Timer instead.` once per 3D view mount, in Chemistry, Biology and Physics.
+  use THREE.Timer instead.` once per 3D view mount, in every 3D subject.
   - React Three Fiber 9.8.2 creates `new THREE.Clock()` in its root store
     (`node_modules/@react-three/fiber/dist/events-*.esm.js`).
   - Three.js has warned in the `Clock` constructor since r183; this project uses 0.186.1.

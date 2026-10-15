@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, search, test, waitForViewport } from './fixtures.ts'
+import { canvasShot, expect, parkMouse, search, stableCanvasShot, test, waitForViewport } from './fixtures.ts'
 
 const live = (page: Page, name: string) => page.locator('.readout > div').filter({ hasText: name }).locator('dd')
 const summary = (page: Page, name: string) => page.locator('.stats > div').filter({ hasText: name }).locator('dd')
@@ -227,4 +227,14 @@ test.describe('URL state', () => {
       `${baseURL}/?speed=20&angle=45&height=12.5&gravity=9.81#/physics`,
     )
   })
+})
+
+test('switching camera views re-frames with the new controls (Side → Perspective → Side)', async ({ page }) => {
+  await parkMouse(page)
+  const side = await stableCanvasShot(page, true)
+  await page.getByRole('button', { name: 'Perspective' }).click()
+  await expect.poll(async () => (await canvasShot(page, true)).equals(side)).toBe(false)
+  await page.getByRole('button', { name: 'Side view' }).click()
+  // Before the fix the framing could update the old controls, leaving the new ones aimed at the origin.
+  await expect.poll(async () => (await canvasShot(page, true)).equals(side)).toBe(true)
 })

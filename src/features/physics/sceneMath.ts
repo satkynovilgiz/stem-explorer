@@ -1,14 +1,8 @@
+import { formatTick, niceStep } from '../../lib/ticks'
 import type { Trajectory } from '../../physics/projectile'
 
-/** A "nice" tick step (1, 2 or 5 × 10ⁿ) giving roughly `target` intervals across `span`. */
-export function niceStep(span: number, target = 5): number {
-  if (!(span > 0) || !Number.isFinite(span)) return 1
-  const raw = span / target
-  const power = 10 ** Math.floor(Math.log10(raw))
-  const unit = raw / power
-  const nice = unit < 1.5 ? 1 : unit < 3.5 ? 2 : unit < 7.5 ? 5 : 10
-  return nice * power
-}
+// Re-exported so existing Physics imports keep working.
+export { formatTick, niceStep }
 
 /** Tick values from 0 up to and including the first multiple of `step` ≥ `max`. */
 export function ticks(max: number, step: number): number[] {
@@ -61,9 +55,3 @@ export function markerRadius(extent: number): number {
   return Math.max(0.05, extent * 0.012)
 }
 
-/** Tick label with as many decimals as the tick step needs ("5", "10", "0.5", "0.25") — no false precision. */
-export function formatTick(value: number, step: number): string {
-  const decimals = step >= 1 ? 0 : Math.min(3, Math.ceil(-Math.log10(step) - 1e-9))
-  const text = value.toFixed(decimals)
-  return Number(text) === 0 ? '0' : text
-}

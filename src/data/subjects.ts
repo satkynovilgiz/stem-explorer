@@ -12,7 +12,7 @@ export const SUBJECTS: readonly Subject[] = [
   {
     id: 'anatomy',
     name: 'Anatomy',
-    available: false,
+    available: true,
     tagline: 'Human body structures: organs, bones, muscles and body systems.',
     planned: [
       'Rotatable models of major bones and organs',
@@ -41,7 +41,7 @@ export const SUBJECTS: readonly Subject[] = [
   {
     id: 'mathematics',
     name: 'Mathematics',
-    available: false,
+    available: true,
     tagline: 'Graphs, vectors, geometric solids and surfaces.',
     planned: [
       'Function graphs with sliders for each parameter',

@@ -2,8 +2,10 @@ import { useEffect } from 'react'
 import { ComingSoon } from './components/ComingSoon'
 import { TopNav } from './components/TopNav'
 import { SUBJECTS } from './data/subjects'
+import { HeartExplorer } from './features/anatomy/HeartExplorer'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
 import { ChemistryExplorer } from './features/chemistry/ChemistryExplorer'
+import { MathematicsExplorer } from './features/mathematics/MathematicsExplorer'
 import { PhysicsExplorer } from './features/physics/PhysicsExplorer'
 import { useHashSubject } from './lib/hooks'
 
@@ -22,7 +24,12 @@ export default function App() {
       </a>
       <TopNav active={subjectId} />
       <main id="main" className="main" tabIndex={-1}>
-        {subject.id === 'chemistry' ? (
+        {subject.id === 'anatomy' ? (
+          <>
+            <h1 className="visually-hidden">Anatomy Explorer: the human heart</h1>
+            <HeartExplorer />
+          </>
+        ) : subject.id === 'chemistry' ? (
           <>
             <h1 className="visually-hidden">Chemistry Explorer</h1>
             <ChemistryExplorer />
@@ -31,6 +38,11 @@ export default function App() {
           <>
             <h1 className="visually-hidden">Physics Explorer: projectile motion lab</h1>
             <PhysicsExplorer />
+          </>
+        ) : subject.id === 'mathematics' ? (
+          <>
+            <h1 className="visually-hidden">Mathematics Explorer: interactive 3D surfaces</h1>
+            <MathematicsExplorer />
           </>
         ) : subject.id === 'biology' ? (
           <>

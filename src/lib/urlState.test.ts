@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
+  parseAnatomyParams,
   parseBiologyParams,
   parseChemistryParams,
+  parseMathParams,
   parsePhysicsParams,
   shareUrl,
   withBiologyParams,
+  withAnatomyParams,
   withChemistryParams,
+  withMathParams,
   withPhysicsParams,
 } from './urlState'
 
@@ -152,5 +156,77 @@ describe('parsePhysicsParams', () => {
     const search = withPhysicsParams('', p)
     expect(new URLSearchParams(search).has('t')).toBe(false)
     expect(parsePhysicsParams(search, physicsDefaults, isValid).params).toEqual(p)
+  })
+})
+
+describe('parseMathParams', () => {
+  it('restores preset, parameters and slice', () => {
+    expect(parseMathParams('?surface=sine&amp=1.5&k=2&slice=y&at=-1.25')).toEqual({
+      surfaceId: 'sine',
+      params: { A: 1.5, k: 2 },
+      slice: { axis: 'y', value: -1.25 },
+      invalid: [],
+    })
+  })
+
+  it('uses the default preset and its defaults when nothing is given', () => {
+    expect(parseMathParams('')).toEqual({ surfaceId: 'paraboloid', params: { a: 0.5, b: 0.5 }, slice: null, invalid: [] })
+  })
+
+  it('falls back for unknown presets, out-of-range or non-numeric values, and bad slices', () => {
+    const r = parseMathParams('?surface=torus&a=0&b=abc&slice=z')
+    expect(r.surfaceId).toBe('paraboloid')
+    expect(r.params).toEqual({ a: 0.5, b: 0.5 })
+    expect(r.slice).toBeNull()
+    expect(r.invalid).toEqual(['surface', 'a', 'b', 'slice'])
+    expect(parseMathParams('?surface=saddle&slice=x&at=9').slice).toEqual({ axis: 'x', value: 0 })
+  })
+
+  it('ignores parameters that belong to a different preset', () => {
+    expect(parseMathParams('?surface=paraboloid&amp=2&k=3&c=1').params).toEqual({ a: 0.5, b: 0.5 })
+  })
+
+  it('does not read or change other subjects’ parameters', () => {
+    const other = '?molecule=benzene&view=space-filling&structure=golgi&cell=whole&speed=12&angle=30'
+    expect(parseMathParams(other).surfaceId).toBe('paraboloid')
+    const q = new URLSearchParams(withMathParams(other, { surfaceId: 'plane', params: { a: 1, b: 0, c: -1 }, slice: null }))
+    expect([q.get('molecule'), q.get('structure'), q.get('speed'), q.get('angle')]).toEqual(['benzene', 'golgi', '12', '30'])
+    // Chemistry, Biology and Physics parsers are unaffected by Mathematics keys.
+    const math = '?surface=sine&amp=2&k=3&a=1&slice=x&at=1'
+    expect(parseChemistryParams(math, ['water'], defaults).moleculeId).toBe('water')
+    expect(parseBiologyParams(math, ['golgi'], { structureId: null, cellView: 'cutaway' }).structureId).toBeNull()
+  })
+
+  it('removes the previous preset’s keys and round-trips', () => {
+    const search = withMathParams('?surface=plane&a=1&b=1&c=2', { surfaceId: 'sine', params: { A: -1, k: 0.5 }, slice: { axis: 'x', value: 1 } })
+    const q = new URLSearchParams(search)
+    expect([q.has('a'), q.has('c')]).toEqual([false, false])
+    expect(parseMathParams(search)).toEqual({ surfaceId: 'sine', params: { A: -1, k: 0.5 }, slice: { axis: 'x', value: 1 }, invalid: [] })
+  })
+})
+
+describe('parseAnatomyParams', () => {
+  const parts = ['right-atrium', 'mitral-valve']
+  const d = { partId: null, heartView: 'whole' } as const
+
+  it('restores a valid structure and view', () => {
+    expect(parseAnatomyParams('?part=mitral-valve&heart=cutaway', parts, d)).toEqual({ partId: 'mitral-valve', heartView: 'cutaway', invalid: [] })
+  })
+
+  it('falls back for unknown values', () => {
+    expect(parseAnatomyParams('?part=spleen&heart=xray', parts, d)).toEqual({ ...d, invalid: ['part', 'heart'] })
+  })
+
+  it('keeps subjects independent', () => {
+    const others = '?molecule=benzene&structure=golgi&cell=whole&speed=12&surface=sine&amp=1'
+    expect(parseAnatomyParams(others, parts, d)).toEqual({ ...d, invalid: [] })
+    const q = new URLSearchParams(withAnatomyParams(others, { partId: 'right-atrium', heartView: 'cutaway' }))
+    expect([q.get('structure'), q.get('cell'), q.get('surface'), q.get('part'), q.get('heart')]).toEqual(['golgi', 'whole', 'sine', 'right-atrium', 'cutaway'])
+    expect(parseBiologyParams(q.toString(), ['golgi'], { structureId: null, cellView: 'cutaway' })).toMatchObject({ structureId: 'golgi', cellView: 'whole' })
+    expect(parseMathParams(q.toString()).surfaceId).toBe('sine')
+  })
+
+  it('removes the part key when nothing is selected', () => {
+    expect(new URLSearchParams(withAnatomyParams('?part=right-atrium', { partId: null, heartView: 'whole' })).has('part')).toBe(false)
   })
 })

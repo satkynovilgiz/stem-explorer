@@ -67,10 +67,10 @@ test('Copy link copies a Chemistry-only link from the current origin', async ({ 
   )
 })
 
-test('remaining subjects are still honest Coming soon pages', async ({ page }) => {
-  for (const subject of ['anatomy', 'mathematics']) {
+test('all five subjects are live; none is a Coming soon page', async ({ page }) => {
+  for (const subject of ['anatomy', 'chemistry', 'physics', 'mathematics', 'biology']) {
     await page.goto(`/#/${subject}`)
-    await expect(page.locator('#coming-soon-title')).toContainText('Explorer')
-    await expect(page.locator('main input, main canvas')).toHaveCount(0)
+    await waitForViewport(page)
+    await expect(page.locator('#coming-soon-title')).toHaveCount(0)
   }
 })

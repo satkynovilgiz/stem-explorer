@@ -255,7 +255,9 @@ function useMovingLabels(
 /** Frames the whole flight (and Run A). Runs only when its token changes — never while the user drags. */
 function CameraRig({ bounds, view, token }: { bounds: SceneBounds; view: CameraView; token: string }) {
   const get = useThree((s) => s.get)
-  const hasControls = useThree((s) => s.controls !== null)
+  // Switching cameras recreates OrbitControls; re-run framing for the new controls, not the old ones.
+  const controlsObject = useThree((s) => s.controls)
+  const hasControls = controlsObject !== null
   const boundsRef = useRef(bounds)
   useEffect(() => {
     boundsRef.current = bounds
@@ -295,7 +297,7 @@ function CameraRig({ bounds, view, token }: { bounds: SceneBounds; view: CameraV
     camera.updateProjectionMatrix()
     controls.update()
     invalidate()
-  }, [hasControls, token, view, get])
+  }, [controlsObject, hasControls, token, view, get])
 
   return null
 }

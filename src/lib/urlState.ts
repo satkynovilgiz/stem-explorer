@@ -1,3 +1,14 @@
+import {
+  DEFAULT_SURFACE,
+  defaultParams,
+  getSurface,
+  isSurfaceId,
+  isValidParamValue,
+  SURFACES,
+  type Params,
+  type SliceAxis,
+  type SurfaceId,
+} from '../math/surfaces'
 import type { Representation } from '../data/chemistry/types'
 
 export const REPRESENTATIONS: readonly Representation[] = ['ball-and-stick', 'space-filling']
@@ -137,4 +148,117 @@ export function withPhysicsParams(search: string, params: Record<PhysicsKey, num
   const query = new URLSearchParams(search)
   for (const [key, value] of Object.entries(physicsParamEntries(params))) query.set(key, value)
   return `?${query.toString()}`
+}
+
+/* ---------- Mathematics ---------- */
+
+
+export interface MathUrlState {
+  surfaceId: SurfaceId
+  params: Params
+  slice: { axis: SliceAxis; value: number } | null
+}
+
+/** Every query key Mathematics owns: none overlap Chemistry, Biology or Physics. */
+export const MATH_URL_KEYS = ['surface', 'slice', 'at', ...new Set(SURFACES.flatMap((s) => s.params.map((p) => p.urlKey)))]
+
+const NUMBER_RE = /^[-+]?(\d+\.?\d*|\.\d+)$/
+
+/**
+ * Reads `?surface=…&<parameters>&slice=x|y&at=…`. Parameters are only accepted for the chosen
+ * surface and inside its ranges; anything else falls back to that surface's defaults.
+ * Camera position and point selection are never stored.
+ */
+export function parseMathParams(search: string): MathUrlState & { invalid: string[] } {
+  const q = new URLSearchParams(search)
+  const invalid: string[] = []
+
+  const rawSurface = q.get('surface')
+  const surfaceId = rawSurface && isSurfaceId(rawSurface) ? rawSurface : DEFAULT_SURFACE
+  if (rawSurface !== null && surfaceId !== rawSurface) invalid.push('surface')
+  const surface = getSurface(surfaceId)
+
+  const params = defaultParams(surface)
+  for (const def of surface.params) {
+    const raw = q.get(def.urlKey)
+    if (raw === null) continue
+    const value = NUMBER_RE.test(raw.trim()) ? Number(raw) : Number.NaN
+    if (isValidParamValue(def, value)) params[def.key] = value
+    else invalid.push(def.urlKey)
+  }
+
+  let slice: MathUrlState['slice'] = null
+  const rawSlice = q.get('slice')
+  if (rawSlice === 'x' || rawSlice === 'y') {
+    const rawAt = q.get('at')
+    const at = rawAt === null ? 0 : NUMBER_RE.test(rawAt.trim()) ? Number(rawAt) : Number.NaN
+    if (Number.isFinite(at) && at >= surface.domain.min && at <= surface.domain.max) {
+      slice = { axis: rawSlice, value: at }
+    } else {
+      invalid.push('at')
+      slice = { axis: rawSlice, value: 0 }
+    }
+  } else if (rawSlice !== null) {
+    invalid.push('slice')
+  }
+
+  return { surfaceId, params, slice, invalid }
+}
+
+/** Mathematics parameters for share links and the address bar. */
+export function mathParamEntries(state: MathUrlState): Record<string, string> {
+  const surface = getSurface(state.surfaceId)
+  const entries: Record<string, string> = { surface: state.surfaceId }
+  for (const def of surface.params) entries[def.urlKey] = String(state.params[def.key])
+  if (state.slice) {
+    entries.slice = state.slice.axis
+    entries.at = String(Number(state.slice.value.toFixed(3)))
+  }
+  return entries
+}
+
+/** Replaces all Mathematics keys in `search` with the current state; other subjects' keys are kept. */
+export function withMathParams(search: string, state: MathUrlState): string {
+  const q = new URLSearchParams(search)
+  for (const key of MATH_URL_KEYS) q.delete(key)
+  for (const [key, value] of Object.entries(mathParamEntries(state))) q.set(key, value)
+  return `?${q.toString()}`
+}
+
+/* ---------- Anatomy ---------- */
+
+export interface AnatomyUrlState {
+  partId: string | null
+  heartView: 'whole' | 'cutaway'
+}
+
+/**
+ * Reads `?part=<structure id>&heart=whole|cutaway` (keys unused by other subjects). Tour progress is
+ * never stored.
+ */
+export function parseAnatomyParams(
+  search: string,
+  validPartIds: readonly string[],
+  defaults: AnatomyUrlState,
+): AnatomyUrlState & { invalid: string[] } {
+  const q = new URLSearchParams(search)
+  const invalid: string[] = []
+  const part = q.get('part')
+  const partId = part && validPartIds.includes(part) ? part : defaults.partId
+  if (part !== null && partId !== part) invalid.push('part')
+  const view = q.get('heart')
+  const heartView = view === 'whole' || view === 'cutaway' ? view : defaults.heartView
+  if (view !== null && heartView !== view) invalid.push('heart')
+  return { partId, heartView, invalid }
+}
+
+export function anatomyParamEntries(state: AnatomyUrlState): Record<string, string> {
+  return { ...(state.partId ? { part: state.partId } : {}), heart: state.heartView }
+}
+
+export function withAnatomyParams(search: string, state: AnatomyUrlState): string {
+  const q = new URLSearchParams(search)
+  q.delete('part')
+  for (const [k, v] of Object.entries(anatomyParamEntries(state))) q.set(k, v)
+  return `?${q.toString()}`
 }
