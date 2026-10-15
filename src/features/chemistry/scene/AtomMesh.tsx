@@ -3,10 +3,12 @@ import { ELEMENTS } from '../../../data/chemistry/elements'
 import type { Atom } from '../../../data/chemistry/types'
 import { SCENE } from './sceneTheme'
 
+export type AtomHighlight = 'inspect' | 'measure' | null
+
 interface Props {
   atom: Atom
   radius: number
-  selected: boolean
+  highlight: AtomHighlight
   hovered: boolean
   onSelect: (id: string) => void
   onHover: (id: string | null) => void
@@ -14,8 +16,9 @@ interface Props {
 
 const noRaycast = () => null
 
-export function AtomMesh({ atom, radius, selected, hovered, onSelect, onHover }: Props) {
+export function AtomMesh({ atom, radius, highlight, hovered, onSelect, onHover }: Props) {
   const element = ELEMENTS[atom.element]
+  const ringColor = highlight === 'measure' ? SCENE.measure : SCENE.accent
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation()
@@ -34,14 +37,15 @@ export function AtomMesh({ atom, radius, selected, hovered, onSelect, onHover }:
           color={element.color}
           roughness={0.42}
           metalness={0.05}
-          emissive={selected ? SCENE.accent : hovered ? SCENE.hover : '#000000'}
-          emissiveIntensity={selected ? 0.45 : 1}
+          emissive={highlight ? ringColor : hovered ? SCENE.hover : '#000000'}
+          // A light tint keeps the element color recognizable; the halo and label carry the selection.
+          emissiveIntensity={highlight ? 0.14 : 1}
         />
       </mesh>
-      {selected && (
+      {highlight && (
         <mesh raycast={noRaycast}>
-          <sphereGeometry args={[radius * 1.16, 48, 32]} />
-          <meshBasicMaterial color={SCENE.accent} transparent opacity={0.22} depthWrite={false} />
+          <sphereGeometry args={[radius * 1.18, 48, 32]} />
+          <meshBasicMaterial color={ringColor} transparent opacity={0.32} depthWrite={false} />
         </mesh>
       )}
     </group>

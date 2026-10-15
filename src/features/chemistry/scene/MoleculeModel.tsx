@@ -1,22 +1,26 @@
 import { useCursor } from '@react-three/drei'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Vector3 } from 'three'
 import { atomRadius } from '../../../data/chemistry/elements'
 import type { Molecule, Representation } from '../../../data/chemistry/types'
-import { AtomMesh } from './AtomMesh'
+import { centroid } from '../../../lib/chemistry'
+import { AtomMesh, type AtomHighlight } from './AtomMesh'
 import { BondMesh } from './BondMesh'
 
 interface Props {
   molecule: Molecule
   representation: Representation
-  selectedAtomId: string | null
-  onSelectAtom: (id: string) => void
+  highlights: ReadonlyMap<string, Exclude<AtomHighlight, null>>
+  onPickAtom: (id: string) => void
 }
 
-export function MoleculeModel({ molecule, representation, selectedAtomId, onSelectAtom }: Props) {
+/** Atoms and bonds drawn in source coordinates (Å); the parent group handles the display transform. */
+export function MoleculeModel({ molecule, representation, highlights, onPickAtom }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   useCursor(hoveredId !== null)
 
-  const atomsById = new Map(molecule.atoms.map((a) => [a.id, a]))
+  const atomsById = useMemo(() => new Map(molecule.atoms.map((a) => [a.id, a])), [molecule])
+  const center = useMemo(() => new Vector3(...centroid(molecule)), [molecule])
 
   return (
     <group>
@@ -25,9 +29,9 @@ export function MoleculeModel({ molecule, representation, selectedAtomId, onSele
           key={atom.id}
           atom={atom}
           radius={atomRadius(atom.element, representation)}
-          selected={atom.id === selectedAtomId}
+          highlight={highlights.get(atom.id) ?? null}
           hovered={atom.id === hoveredId}
-          onSelect={onSelectAtom}
+          onSelect={onPickAtom}
           onHover={setHoveredId}
         />
       ))}
@@ -35,7 +39,9 @@ export function MoleculeModel({ molecule, representation, selectedAtomId, onSele
         molecule.bonds.map((bond) => {
           const from = atomsById.get(bond.atoms[0])
           const to = atomsById.get(bond.atoms[1])
-          return from && to ? <BondMesh key={bond.id} from={from} to={to} order={bond.order} /> : null
+          return from && to ? (
+            <BondMesh key={bond.id} from={from} to={to} order={bond.order} center={center} />
+          ) : null
         })}
     </group>
   )

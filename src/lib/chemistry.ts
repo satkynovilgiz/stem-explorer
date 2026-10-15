@@ -1,5 +1,5 @@
 import { ELEMENTS } from '../data/chemistry/elements'
-import type { Atom, ElementInfo, Molecule } from '../data/chemistry/types'
+import type { Atom, BondOrder, ElementInfo, Molecule } from '../data/chemistry/types'
 
 const SUBSCRIPT_DIGITS = '₀₁₂₃₄₅₆₇₈₉'
 
@@ -46,7 +46,16 @@ export function composition(molecule: Molecule): CompositionRow[] {
   })
 }
 
-export function bondedNeighbors(molecule: Molecule, atomId: string): { atom: Atom; order: number }[] {
+/** Atom counts implied by a formula string such as "C2H6O". */
+export function formulaCounts(formula: string): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const [, symbol, n] of formula.matchAll(/([A-Z][a-z]?)(\d*)/g)) {
+    counts[symbol] = (counts[symbol] ?? 0) + (n ? Number(n) : 1)
+  }
+  return counts
+}
+
+export function bondedNeighbors(molecule: Molecule, atomId: string): { atom: Atom; order: BondOrder }[] {
   return molecule.bonds.flatMap((b) => {
     const [a, c] = b.atoms
     const otherId = a === atomId ? c : c === atomId ? a : null
@@ -55,6 +64,23 @@ export function bondedNeighbors(molecule: Molecule, atomId: string): { atom: Ato
   })
 }
 
-export function bondOrderName(order: number): string {
-  return order === 1 ? 'single' : order === 2 ? 'double' : 'triple'
+export function bondOrderName(order: BondOrder): string {
+  switch (order) {
+    case 1:
+      return 'single'
+    case 2:
+      return 'double'
+    case 3:
+      return 'triple'
+    case 'aromatic':
+      return 'aromatic'
+  }
+}
+
+/** Centroid of the source coordinates, used only to center the model on screen. */
+export function centroid(molecule: Molecule): [number, number, number] {
+  const n = molecule.atoms.length
+  const c: [number, number, number] = [0, 0, 0]
+  for (const { position } of molecule.atoms) for (let i = 0; i < 3; i++) c[i] += position[i] / n
+  return c
 }

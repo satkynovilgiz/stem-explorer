@@ -70,7 +70,7 @@ export function MoleculeLibrary({ molecules, activeId, query, onQueryChange, onS
                   <Formula formula={m.formula} className="molecule-card-formula" />
                   <span className="molecule-card-text">
                     <span className="molecule-card-name">{m.name}</span>
-                    <span className="molecule-card-shape">{m.geometry.shape}</span>
+                    <span className="molecule-card-shape">{m.shapeSummary}</span>
                   </span>
                 </button>
               </li>
@@ -80,7 +80,10 @@ export function MoleculeLibrary({ molecules, activeId, query, onQueryChange, onS
       ) : (
         <div className="empty-state">
           <p>No molecules match “{query.trim()}”.</p>
-          <p className="muted">Try water, CO2 or methane.</p>
+          <p className="muted">
+            Search by name (benzene) or formula (NH3, C₂H₆O). Available: water, carbon dioxide, methane,
+            ammonia, ethanol and benzene.
+          </p>
         </div>
       )}
 

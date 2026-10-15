@@ -8,6 +8,12 @@ import type { MoleculeViewportProps } from './scene/MoleculeViewport'
 // Three.js is loaded on demand so the rest of the interface renders immediately.
 const MoleculeViewport = lazy(() => import('./scene/MoleculeViewport'))
 
+const HINTS = {
+  inspect: 'Click an atom to inspect it',
+  distance: 'Click two atoms to measure',
+  angle: 'Click three atoms: end, vertex, end',
+} as const
+
 type Props = Omit<MoleculeViewportProps, 'onReady' | 'onContextLost'> & {
   /** Scene controls, shown only while the 3D view is working. */
   controls: ReactNode
@@ -78,7 +84,7 @@ export function MoleculeViewer({ controls, ...props }: Props) {
             <ModeBadge molecule={props.molecule} representation={props.representation} />
             <p className="viewport-hint">
               <MousePointerClick size={14} aria-hidden="true" />
-              Drag to rotate · Scroll or pinch to zoom · Click an atom
+              Drag to rotate · Scroll or pinch to zoom · {HINTS[props.mode]}
             </p>
           </>
         ) : (

@@ -1,6 +1,6 @@
 export type Vec3 = readonly [number, number, number]
 
-export type ElementSymbol = 'H' | 'C' | 'O'
+export type ElementSymbol = 'H' | 'C' | 'N' | 'O'
 
 export interface ElementInfo {
   symbol: ElementSymbol
@@ -13,15 +13,17 @@ export interface ElementInfo {
 }
 
 export interface Atom {
+  /** Stable, per-element ID shown to users, e.g. "O1" or "H2". */
   id: string
   element: ElementSymbol
-  /** Short label shown in the scene, e.g. "O" or "H1". */
-  label: string
-  /** Position in ångströms, centered on the molecule. */
+  /** Position in ångströms, exactly as listed by the coordinate source (not centered or scaled). */
   position: Vec3
+  /** Atom label used by the coordinate source, for traceability (e.g. CCCBDB "H4"). */
+  sourceLabel: string
 }
 
-export type BondOrder = 1 | 2 | 3
+/** 'aromatic' marks a bond in a delocalized ring (e.g. benzene), not an integer order. */
+export type BondOrder = 1 | 2 | 3 | 'aromatic'
 
 export interface Bond {
   id: string
@@ -30,30 +32,70 @@ export interface Bond {
 }
 
 export interface Source {
+  id: string
   label: string
   url: string
   /** What this source was used for. */
   usedFor: string
 }
 
-export interface MoleculeGeometry {
-  /** VSEPR shape name, e.g. "Bent". */
+/**
+ * experimental — derived from measurements (spectroscopy, diffraction);
+ * computed — from quantum-chemistry calculations;
+ * illustrative — hand-built for teaching, not a measurement.
+ */
+export type GeometryKind = 'experimental' | 'computed' | 'illustrative'
+
+export interface CoordinateInfo {
+  kind: GeometryKind
+  unit: 'Å'
+  sourceId: string
+  note: string
+}
+
+/** A bond length or angle as reported by a source (not recomputed from coordinates). */
+export interface GeometryParameter {
+  label: string
+  value: number
+  unit: 'Å' | '°'
+  kind: GeometryKind
+  sourceId: string
+}
+
+/** Local geometry around one atom, e.g. "trigonal pyramidal around N1". */
+export interface AtomCenterGeometry {
+  atomId: string
   shape: string
-  bondAngleDeg: number
-  bondLabel: string
-  bondLengthAngstrom: number
+  description: string
+}
+
+export interface MoleculeNote {
+  title: string
+  body: string
+}
+
+export interface DisplayTransform {
+  /** Rotation applied only when drawing, to give a readable default view. */
+  rotation?: { axis: Vec3; angleDeg: number }
 }
 
 export interface Molecule {
   id: string
   name: string
-  /** ASCII formula; digits are rendered as subscripts. */
+  /** Display formula in ASCII; digits are rendered as subscripts. */
   formula: string
-  /** Extra search terms. */
+  /** Extra search terms (other formulas, synonyms). */
   aliases: readonly string[]
   summary: string
-  geometry: MoleculeGeometry
+  /** One-line shape summary for the library list. */
+  shapeSummary: string
+  centers: readonly AtomCenterGeometry[]
+  parameters: readonly GeometryParameter[]
   shapeExplanation: string
+  notes: readonly MoleculeNote[]
+  coordinates: CoordinateInfo
+  limitations: readonly string[]
+  display: DisplayTransform
   atoms: readonly Atom[]
   bonds: readonly Bond[]
   sources: readonly Source[]

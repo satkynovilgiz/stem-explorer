@@ -7,28 +7,42 @@ interface Tab<T extends string> {
 }
 
 interface Props<T extends string> {
+  /** Accessible name for the tab list. */
+  label: string
   tabs: Tab<T>[]
   active: T
   onChange: (id: T) => void
+  className?: string
 }
 
 /** WAI-ARIA tabs pattern with arrow-key navigation. */
-export function MobileTabs<T extends string>({ tabs, active, onChange }: Props<T>) {
+export function Tabs<T extends string>({ label, tabs, active, onChange, className }: Props<T>) {
   const baseId = useId()
   const refs = useRef<(HTMLButtonElement | null)[]>([])
 
   const onKeyDown = (e: KeyboardEvent, index: number) => {
-    const delta = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
-    if (!delta) return
+    const last = tabs.length - 1
+    const targets: Record<string, number> = {
+      ArrowRight: (index + 1) % tabs.length,
+      ArrowLeft: (index + last) % tabs.length,
+      Home: 0,
+      End: last,
+    }
+    const next = targets[e.key] ?? -1
+    if (next < 0) return
     e.preventDefault()
-    const next = (index + delta + tabs.length) % tabs.length
     onChange(tabs[next].id)
     refs.current[next]?.focus()
   }
 
   return (
-    <div className="mobile-tabs">
-      <div role="tablist" aria-label="Chemistry panels" className="tablist">
+    <div className={`tabs ${className ?? ''}`}>
+      <div
+        role="tablist"
+        aria-label={label}
+        className="tablist"
+        style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}
+      >
         {tabs.map((tab, i) => {
           const selected = tab.id === active
           return (

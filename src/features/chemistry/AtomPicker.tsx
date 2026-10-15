@@ -1,30 +1,48 @@
+import { Check } from 'lucide-react'
 import { ELEMENTS } from '../../data/chemistry/elements'
 import type { Molecule } from '../../data/chemistry/types'
 
 interface Props {
   molecule: Molecule
-  selectedAtomId: string | null
-  onSelectAtom: (id: string | null) => void
+  /** Selected atom IDs. In ordered mode their position is shown as 1, 2, 3. */
+  selectedIds: readonly string[]
+  ordered: boolean
+  onPick: (id: string) => void
+  label: string
 }
 
-/** Keyboard- and screen-reader-friendly alternative to clicking atoms in 3D. */
-export function AtomPicker({ molecule, selectedAtomId, onSelectAtom }: Props) {
+/**
+ * Keyboard- and screen-reader-friendly alternative to clicking atoms in 3D.
+ * Selection is shown with a check mark or order number, not by color alone.
+ */
+export function AtomPicker({ molecule, selectedIds, ordered, onPick, label }: Props) {
   return (
-    <div className="atom-picker" role="group" aria-label={`Select an atom in ${molecule.name}`}>
+    <div className="atom-picker" role="group" aria-label={label}>
       {molecule.atoms.map((atom) => {
         const element = ELEMENTS[atom.element]
-        const selected = atom.id === selectedAtomId
+        const index = selectedIds.indexOf(atom.id)
+        const selected = index >= 0
         return (
           <button
             key={atom.id}
             type="button"
-            className={`chip${selected ? ' is-selected' : ''}`}
+            className={`chip${selected ? (ordered ? ' is-measured' : ' is-selected') : ''}`}
             aria-pressed={selected}
-            aria-label={`${element.name} atom ${atom.label}`}
-            onClick={() => onSelectAtom(selected ? null : atom.id)}
+            aria-label={`${element.name} ${atom.id}${selected && ordered ? `, selection ${index + 1}` : ''}`}
+            onClick={() => onPick(atom.id)}
           >
-            <span className="swatch" style={{ background: element.color }} aria-hidden="true" />
-            {atom.label}
+            {selected ? (
+              ordered ? (
+                <span className="chip-order" aria-hidden="true">
+                  {index + 1}
+                </span>
+              ) : (
+                <Check size={13} className="chip-check" aria-hidden="true" />
+              )
+            ) : (
+              <span className="swatch" style={{ background: element.color }} aria-hidden="true" />
+            )}
+            {atom.id}
           </button>
         )
       })}
