@@ -52,7 +52,7 @@ export const SUBJECTS: readonly Subject[] = [
   {
     id: 'biology',
     name: 'Biology',
-    available: false,
+    available: true,
     tagline: 'Cells, organelles, DNA, microorganisms and biological processes.',
     planned: [
       'Explorable animal and plant cell models with labelled organelles',

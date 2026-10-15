@@ -38,6 +38,8 @@ export function SceneLabelProjector({ labels, matrix, elements }: ProjectorProps
   useFrame(({ camera, size }) => {
     const map = elements.current
     if (!map) return
+    // Use this frame's camera, not the previous frame's (useFrame runs before rendering).
+    camera.updateMatrixWorld()
     const fov = camera instanceof PerspectiveCamera ? (camera.fov * Math.PI) / 180 : 1
     for (const label of labels) {
       const el = map.get(label.key)

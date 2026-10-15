@@ -5,8 +5,15 @@ type Status = 'idle' | 'copied' | 'error'
 
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
-/** Copies the current address (including molecule and view parameters) to the clipboard. */
-export function CopyLinkButton() {
+interface Props {
+  /** Builds the link at click time, from the current browser origin. */
+  getUrl: () => string
+  /** What the link restores, e.g. "this molecule and display mode". */
+  restores: string
+}
+
+/** Copies a share link to the clipboard and reports success or failure. */
+export function CopyLinkButton({ getUrl, restores }: Props) {
   const [status, setStatus] = useState<Status>('idle')
 
   useEffect(() => {
@@ -18,7 +25,7 @@ export function CopyLinkButton() {
   const copy = async () => {
     try {
       if (!navigator.clipboard) throw new Error('Clipboard API unavailable')
-      await navigator.clipboard.writeText(window.location.href)
+      await navigator.clipboard.writeText(getUrl())
       setStatus('copied')
     } catch {
       setStatus('error')
@@ -37,7 +44,7 @@ export function CopyLinkButton() {
         {status === 'copied' &&
           (isLocal
             ? 'Copied. This local link only opens on this computer while the dev server runs.'
-            : 'Copied. The link restores this molecule and display mode.')}
+            : `Copied. The link restores ${restores}.`)}
         {status === 'error' && (
           <>
             <TriangleAlert size={14} aria-hidden="true" /> Could not access the clipboard. Copy the address

@@ -1508,3 +1508,219 @@ button {
   font-size: var(--text-sm);
   color: var(--color-accent-strong);
 }
+
+/* ---------- Biology ---------- */
+
+.structure-list {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.structure-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration) var(--ease),
+    background-color var(--duration) var(--ease);
+}
+
+.structure-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.structure-item.is-active {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-soft);
+}
+
+.structure-swatch {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+  color: #0f1113;
+}
+
+.structure-text {
+  display: grid;
+  min-width: 0;
+}
+
+.structure-name {
+  font-weight: 550;
+  font-size: var(--text-sm);
+}
+
+.structure-item.is-active .structure-name {
+  color: var(--color-accent-strong);
+}
+
+.structure-count {
+  font-weight: 400;
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.structure-tag {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.cell-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 999px;
+  background: rgb(15 17 19 / 0.82);
+  color: var(--color-text);
+  font: 600 11.5px/1.4 var(--font-sans);
+  white-space: nowrap;
+  user-select: none;
+  will-change: transform;
+}
+
+.cell-label.is-selected {
+  border-color: var(--color-accent);
+  color: var(--color-accent-strong);
+}
+
+.cell-label-badge {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.orientation {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.orientation svg {
+  vertical-align: -2px;
+}
+
+.inline-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-measure);
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.tool-button.bordered {
+  border-color: var(--color-border-strong);
+}
+
+.tool-button.is-on {
+  color: var(--color-accent-strong);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-border);
+}
+
+.instance-picker {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+}
+
+.instance-note {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.bullets {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-4);
+  list-style: disc;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.glossary {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.glossary dt {
+  font-weight: 600;
+}
+
+.glossary dd {
+  color: var(--color-text-muted);
+}
+
+.relations {
+  display: grid;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.relations li {
+  display: grid;
+  gap: 2px;
+}
+
+.relation-link {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent-strong);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgb(111 224 220 / 0.4);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.relation-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.relation-text {
+  color: var(--color-text-muted);
+}
+
+.note-title svg {
+  vertical-align: -2px;
+  margin-right: 4px;
+}

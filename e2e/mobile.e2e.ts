@@ -1,0 +1,52 @@
+import type { Page } from '@playwright/test'
+import { expect, test, waitForViewport } from './fixtures.ts'
+
+async function expectNoHorizontalOverflow(page: Page) {
+  const { scroll, width } = await page.evaluate(() => ({
+    scroll: document.documentElement.scrollWidth,
+    width: window.innerWidth,
+  }))
+  expect(scroll).toBeLessThanOrEqual(width)
+}
+
+async function smallTargets(page: Page, selector: string) {
+  return page.evaluate((sel) => {
+    return [...document.querySelectorAll<HTMLElement>(sel)]
+      .filter((el) => el.offsetParent !== null)
+      .map((el) => ({ name: el.getAttribute('aria-label') || el.textContent?.trim(), r: el.getBoundingClientRect() }))
+      .filter(({ r }) => r.height < 40 || r.width < 40)
+      .map(({ name, r }) => `${name} ${Math.round(r.width)}×${Math.round(r.height)}`)
+  }, selector)
+}
+
+test('Biology on a phone: prominent viewport, tabs, touch-sized controls, no overflow', async ({ page }) => {
+  await page.goto('/#/biology')
+  await waitForViewport(page)
+  const viewport = (await page.locator('.viewport').boundingBox())!
+  expect(viewport.height).toBeGreaterThanOrEqual(300)
+  await expectNoHorizontalOverflow(page)
+  expect(await smallTargets(page, '.scene-controls button, .tab, .subject-link')).toEqual([])
+
+  await page.getByRole('tab', { name: 'Structures' }).click()
+  await page.locator('.structure-item', { hasText: 'Golgi apparatus' }).click()
+  // Choosing a structure returns to the details tab.
+  await expect(page.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.locator('#structure-heading')).toHaveText('Golgi apparatus')
+  await expectNoHorizontalOverflow(page)
+
+  // The page itself still scrolls below the viewport.
+  const before = await page.evaluate(() => window.scrollY)
+  await page.evaluate(() => window.scrollBy(0, 600))
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(before)
+})
+
+test('Chemistry on a phone still measures without overflow', async ({ page }) => {
+  await page.goto('/?molecule=water#/chemistry')
+  await waitForViewport(page)
+  await page.getByRole('button', { name: 'Angle' }).click()
+  for (const id of ['H1', 'O1', 'H2']) {
+    await page.locator('.measure-panel .chip').filter({ hasText: new RegExp(`^\\d?${id}$`) }).click()
+  }
+  await expect(page.locator('.measure-result')).toContainText('104.5°')
+  await expectNoHorizontalOverflow(page)
+})

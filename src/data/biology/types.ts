@@ -1,0 +1,59 @@
+export const ORGANELLE_IDS = [
+  'plasma-membrane',
+  'cytoplasm',
+  'nucleus',
+  'nucleolus',
+  'mitochondrion',
+  'rough-er',
+  'smooth-er',
+  'golgi',
+  'ribosome',
+  'lysosome',
+] as const
+
+export type OrganelleId = (typeof ORGANELLE_IDS)[number]
+
+export interface BiologySource {
+  id: string
+  label: string
+  url: string
+}
+
+export interface Relationship {
+  /** Related structure; the UI turns this into a button that selects it. */
+  targetId: OrganelleId
+  text: string
+}
+
+export interface GlossaryTerm {
+  term: string
+  definition: string
+}
+
+export interface Organelle {
+  /** Stable ID used in URLs and tests. */
+  id: OrganelleId
+  name: string
+  /** Name for one copy of a repeated structure, e.g. "Mitochondrion" → "mitochondrion 2". */
+  instanceName?: string
+  /** One-line tag for the structure list. */
+  tag: string
+  /** Short introductory explanation. */
+  summary: string
+  functions: readonly string[]
+  structure: string
+  relationships: readonly Relationship[]
+  /** Technical words introduced in this entry. */
+  glossary: readonly GlossaryTerm[]
+  /** How the 3D model departs from real cells. */
+  simplifications: readonly string[]
+  sourceIds: readonly string[]
+  /** Illustrative model color — not the structure's natural appearance. */
+  color: string
+  /** Shown as a label by default (major structures only, to limit clutter). */
+  majorLabel: boolean
+  /** True for structures inside the plasma membrane (hidden in the whole-cell view). */
+  internal: boolean
+}
+
+export type CellView = 'whole' | 'cutaway'

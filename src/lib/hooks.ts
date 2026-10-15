@@ -1,9 +1,17 @@
 import { useSyncExternalStore } from 'react'
 import { DEFAULT_SUBJECT, isSubjectId, type SubjectId } from '../data/subjects'
 
+/**
+ * Back/Forward between entries whose query strings differ (each explorer keeps its own
+ * parameters in the query) fires only `popstate`, not `hashchange`, so listen to both.
+ */
 function subscribeHash(onChange: () => void) {
   window.addEventListener('hashchange', onChange)
-  return () => window.removeEventListener('hashchange', onChange)
+  window.addEventListener('popstate', onChange)
+  return () => {
+    window.removeEventListener('hashchange', onChange)
+    window.removeEventListener('popstate', onChange)
+  }
 }
 
 /** Current subject from the URL hash, e.g. "#/physics". */
