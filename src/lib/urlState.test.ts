@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   parseBiologyParams,
   parseChemistryParams,
+  parsePhysicsParams,
   shareUrl,
   withBiologyParams,
   withChemistryParams,
+  withPhysicsParams,
 } from './urlState'
 
 const ids = ['water', 'benzene']
@@ -109,5 +111,46 @@ describe('shareUrl', () => {
     expect(shareUrl({ origin: 'http://localhost:5173', pathname: '/' }, 'chemistry', {})).toBe(
       'http://localhost:5173/#/chemistry',
     )
+  })
+})
+
+describe('parsePhysicsParams', () => {
+  const physicsDefaults = { speed: 20, angleDeg: 45, height: 0, gravity: 9.81 }
+  const ranges = { speed: [0, 50], angleDeg: [0, 90], height: [0, 50], gravity: [1, 25] } as const
+  const isValid = (key: keyof typeof ranges, v: number) =>
+    Number.isFinite(v) && v >= ranges[key][0] && v <= ranges[key][1]
+
+  it('restores valid launch parameters', () => {
+    expect(parsePhysicsParams('?speed=12.5&angle=60&height=3&gravity=1.62', physicsDefaults, isValid)).toEqual({
+      params: { speed: 12.5, angleDeg: 60, height: 3, gravity: 1.62 },
+      invalid: [],
+    })
+  })
+
+  it('falls back per parameter for invalid, out-of-range or non-numeric values', () => {
+    const r = parsePhysicsParams('?speed=abc&angle=120&height=-1&gravity=0', physicsDefaults, isValid)
+    expect(r.params).toEqual(physicsDefaults)
+    expect(r.invalid).toEqual(['speed', 'angle', 'height', 'gravity'])
+    expect(parsePhysicsParams('?gravity=Infinity&speed=1e2', physicsDefaults, isValid).invalid).toEqual(['speed', 'gravity'])
+  })
+
+  it('ignores other subjects’ parameters and does not change them', () => {
+    expect(parsePhysicsParams('?molecule=benzene&view=space-filling&structure=golgi&cell=whole', physicsDefaults, isValid)).toEqual({
+      params: physicsDefaults,
+      invalid: [],
+    })
+    const search = withPhysicsParams('?molecule=benzene&structure=golgi', physicsDefaults)
+    const q = new URLSearchParams(search)
+    expect(q.get('molecule')).toBe('benzene')
+    expect(q.get('structure')).toBe('golgi')
+    expect(q.get('angle')).toBe('45')
+    expect(parseChemistryParams(search, ['water', 'benzene'], defaults).moleculeId).toBe('benzene')
+  })
+
+  it('round-trips and never stores time', () => {
+    const p = { speed: 33.5, angleDeg: 12, height: 7.5, gravity: 3.71 }
+    const search = withPhysicsParams('', p)
+    expect(new URLSearchParams(search).has('t')).toBe(false)
+    expect(parsePhysicsParams(search, physicsDefaults, isValid).params).toEqual(p)
   })
 })

@@ -30,7 +30,7 @@ export const SUBJECTS: readonly Subject[] = [
   {
     id: 'physics',
     name: 'Physics',
-    available: false,
+    available: true,
     tagline: 'Motion, forces, energy, waves and electricity.',
     planned: [
       'Simulations with adjustable parameters such as mass, angle and speed',

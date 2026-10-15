@@ -91,3 +91,50 @@ export function shareUrl(
   const query = new URLSearchParams(params).toString()
   return `${location.origin}${location.pathname}${query ? `?${query}` : ''}#/${subject}`
 }
+
+/** URL keys for the Physics launch parameters (none overlap Chemistry's or Biology's keys). */
+export const PHYSICS_URL_KEYS = {
+  speed: 'speed',
+  angleDeg: 'angle',
+  height: 'height',
+  gravity: 'gravity',
+} as const
+
+type PhysicsKey = keyof typeof PHYSICS_URL_KEYS
+
+/**
+ * Reads `?speed=…&angle=…&height=…&gravity=…`. Each value must be a plain finite number inside its
+ * supported range, otherwise that one parameter falls back to its default. Animation time is never
+ * stored, so shared experiments always open paused at t = 0.
+ */
+export function parsePhysicsParams<T extends Record<PhysicsKey, number>>(
+  search: string,
+  defaults: T,
+  isValid: (key: PhysicsKey, value: number) => boolean,
+): { params: T; invalid: string[] } {
+  const query = new URLSearchParams(search)
+  const params = { ...defaults }
+  const invalid: string[] = []
+  for (const key of Object.keys(PHYSICS_URL_KEYS) as PhysicsKey[]) {
+    const raw = query.get(PHYSICS_URL_KEYS[key])
+    if (raw === null) continue
+    const value = /^[-+]?(\d+\.?\d*|\.\d+)$/.test(raw.trim()) ? Number(raw) : Number.NaN
+    if (isValid(key, value)) params[key] = value as T[PhysicsKey]
+    else invalid.push(PHYSICS_URL_KEYS[key])
+  }
+  return { params, invalid }
+}
+
+/** Physics URL parameters as strings, for `shareUrl` and the address bar. */
+export function physicsParamEntries(params: Record<PhysicsKey, number>): Record<string, string> {
+  return Object.fromEntries(
+    (Object.keys(PHYSICS_URL_KEYS) as PhysicsKey[]).map((key) => [PHYSICS_URL_KEYS[key], String(params[key])]),
+  )
+}
+
+/** Returns `search` with the Physics parameters set, keeping other subjects' parameters. */
+export function withPhysicsParams(search: string, params: Record<PhysicsKey, number>): string {
+  const query = new URLSearchParams(search)
+  for (const [key, value] of Object.entries(physicsParamEntries(params))) query.set(key, value)
+  return `?${query.toString()}`
+}

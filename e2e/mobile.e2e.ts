@@ -50,3 +50,21 @@ test('Chemistry on a phone still measures without overflow', async ({ page }) =>
   await expect(page.locator('.measure-result')).toContainText('104.5°')
   await expectNoHorizontalOverflow(page)
 })
+
+test('Physics on a phone: inputs, playback and graphs are reachable without overflow', async ({ page }) => {
+  await page.goto('/#/physics')
+  await waitForViewport(page)
+  await expectNoHorizontalOverflow(page)
+  expect(await smallTargets(page, '.playback button, .scene-controls button, .tab, .param-input')).toEqual([])
+
+  await page.getByRole('slider', { name: 'Launch angle slider' }).fill('30')
+  await page.getByRole('button', { name: 'Launch', exact: true }).click()
+  await expect(page.getByRole('button', { name: /Launch again/ })).toBeVisible({ timeout: 10_000 })
+
+  await page.getByRole('tab', { name: 'Graphs' }).click()
+  await expect(page.locator('.graph')).toHaveCount(2)
+  await expect(page.locator('.graph-readout').first()).toContainText('At t = 2.04 s')
+  await page.getByRole('tab', { name: 'Results' }).click()
+  await expect(page.locator('.stats > div', { hasText: 'Flight time' }).locator('dd')).toHaveText('2.04 s')
+  await expectNoHorizontalOverflow(page)
+})

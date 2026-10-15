@@ -4,6 +4,7 @@ import { TopNav } from './components/TopNav'
 import { SUBJECTS } from './data/subjects'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
 import { ChemistryExplorer } from './features/chemistry/ChemistryExplorer'
+import { PhysicsExplorer } from './features/physics/PhysicsExplorer'
 import { useHashSubject } from './lib/hooks'
 
 export default function App() {
@@ -25,6 +26,11 @@ export default function App() {
           <>
             <h1 className="visually-hidden">Chemistry Explorer</h1>
             <ChemistryExplorer />
+          </>
+        ) : subject.id === 'physics' ? (
+          <>
+            <h1 className="visually-hidden">Physics Explorer: projectile motion lab</h1>
+            <PhysicsExplorer />
           </>
         ) : subject.id === 'biology' ? (
           <>

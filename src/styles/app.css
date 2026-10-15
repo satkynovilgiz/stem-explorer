@@ -1724,3 +1724,434 @@ button {
   vertical-align: -2px;
   margin-right: 4px;
 }
+
+/* ---------- Physics ---------- */
+
+.physics-stage {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.physics-stage .viewport {
+  flex: 1 0 420px;
+}
+
+.params {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.param {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.param-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.param-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.param-symbol {
+  margin-left: 2px;
+  font-weight: 400;
+  color: var(--color-text-subtle);
+}
+
+.param-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.param-input {
+  width: 72px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.param-input[aria-invalid='true'] {
+  border-color: var(--color-warning);
+}
+
+.param-unit {
+  min-width: 34px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.param-slider {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.param-slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.param-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.param-hint.is-error {
+  color: var(--color-warning);
+}
+
+.compare-actions {
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-4);
+  gap: var(--space-2);
+}
+
+.run-tag {
+  margin-left: var(--space-2);
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.run-tag.is-active {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.playback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.playback-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.playback-primary {
+  min-width: 132px;
+  min-height: 36px;
+  justify-content: center;
+}
+
+.playback-time {
+  display: grid;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.playback-time-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.playback-clock {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.graphs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-3);
+}
+
+.graph {
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.graph-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.graph-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: var(--space-1);
+}
+
+.graph-grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.graph-zero {
+  stroke: var(--color-text-subtle);
+  stroke-width: 1.2;
+}
+
+.graph-frame {
+  fill: none;
+  stroke: var(--color-border-strong);
+}
+
+.graph-tick {
+  fill: var(--color-text-muted);
+  font: 10.5px var(--font-sans);
+}
+
+.graph-axis {
+  fill: var(--color-text-muted);
+  font: 600 11px var(--font-sans);
+}
+
+.graph-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.graph-marker {
+  stroke: var(--color-text);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+
+.graph-dot {
+  fill: var(--color-text);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.graph-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-3);
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.graph-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 0;
+  border-top: 3px solid var(--color-accent);
+  vertical-align: middle;
+}
+
+.legend-swatch.is-dotted {
+  border-top: 3px dotted #c9a2f2;
+}
+
+.graph-summary {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+  line-height: 1.5;
+}
+
+.readout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.readout > div {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+}
+
+.readout dt {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.readout dd {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-tag {
+  margin-left: var(--space-2);
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+}
+
+.compare-table tr.is-first-result th,
+.compare-table tr.is-first-result td {
+  border-top: 2px solid var(--color-border-strong);
+}
+
+.compare-table th[scope='row'] {
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.equations {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.equations > div {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+}
+
+.equations dt {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.equations dd {
+  font-family: 'Cambria Math', 'STIX Two Math', Georgia, serif;
+  font-size: var(--text-base);
+}
+
+.physics-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font: 600 11px/1.4 var(--font-sans);
+  white-space: nowrap;
+  user-select: none;
+  will-change: transform;
+}
+
+.physics-label.is-tick {
+  padding: 0 2px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.physics-label.is-axis {
+  color: var(--color-text);
+  background: rgb(15 17 19 / 0.7);
+}
+
+.physics-label.is-marker,
+.physics-label.is-projectile {
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background: rgb(15 17 19 / 0.82);
+  color: var(--color-text);
+}
+
+.physics-label.is-run-a {
+  border: 1px dotted #c9a2f2;
+  background: rgb(15 17 19 / 0.82);
+  color: #dcc4f7;
+}
+
+.physics-label.is-velocity {
+  color: #9dbcff;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.physics-label.is-acceleration {
+  color: var(--color-measure);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.physics-legend {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px var(--space-4);
+  padding: 4px var(--space-3);
+  border-radius: var(--radius-sm);
+  background: rgb(15 17 19 / 0.78);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.physics-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 20px;
+  border-top: 3px solid;
+}
+
+.legend-line.is-dashed {
+  border-top-style: dashed;
+}
+
+.legend-line.is-dotted {
+  border-top-style: dotted;
+}
+
+@media (max-width: 899px) {
+  .physics .viewport {
+    height: clamp(280px, 48svh, 460px);
+  }
+
+  .param-input {
+    height: 44px;
+    width: 84px;
+  }
+
+  .param-slider {
+    height: 44px;
+  }
+
+  .playback-primary {
+    min-height: 44px;
+  }
+
+  .physics-legend {
+    gap: 0 var(--space-3);
+    font-size: 11px;
+  }
+}

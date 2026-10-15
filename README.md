@@ -4,8 +4,9 @@ An interactive science exploration workspace: **explore → interact → underst
 Users rotate, zoom, select and measure parts of 3D models and read concise, sourced explanations.
 
 Five subjects are planned — Anatomy, Chemistry, Physics, Mathematics and Biology.
-**Chemistry Explorer** (molecules and measurements) and **Biology Explorer** (an interactive animal
-cell) are implemented. Anatomy, Physics and Mathematics show an honest "Coming soon" page.
+**Chemistry Explorer** (molecules and measurements), **Biology Explorer** (an interactive animal
+cell) and **Physics Explorer** (a projectile motion lab) are implemented. Anatomy and Mathematics
+show an honest "Coming soon" page.
 
 ## Requirements
 
@@ -171,6 +172,120 @@ All content is paraphrased from OpenStax textbooks (CC BY 4.0). Each structure l
 NCBI Bookshelf was considered but not cited: its pages returned a reCAPTCHA to automated checks, and
 only pages that were actually read are referenced.
 
+## Physics Explorer — projectile motion lab
+
+Set the launch, predict the path, launch, pause, scrub through time, read synchronized values and
+graphs, and compare two launches.
+
+### Model assumptions
+
+- No air resistance.
+- Uniform, constant downward gravitational acceleration.
+- A point-like projectile. The sphere is an enlarged, schematic marker.
+- Flat ground at y = 0.
+- No bounce: the motion stops at the analytical landing point and never goes below ground.
+
+The motion happens in **one vertical plane**. The 3D view only lets you look at that plane from
+different angles; it does not make the motion three-dimensional.
+
+### Coordinates, units and equations
+
+- Origin on the ground directly below the launch point. **x** is horizontal (positive in the launch
+  direction) and **y** is height (positive up). Gravity therefore acts along −y: **a = (0, −g)**.
+- SI units throughout: m, s, m/s, m/s². Angles are entered in degrees and converted to radians
+  explicitly (`degToRad`).
+- Formulas (OpenStax University Physics Vol. 1, §4.3 and §3.5):
+
+| Quantity | Formula |
+| --- | --- |
+| Launch velocity | v₀ₓ = v₀ cos θ, v₀ᵧ = v₀ sin θ |
+| Position | x = v₀ₓ t, y = y₀ + v₀ᵧ t − ½ g t² |
+| Velocity | vₓ = v₀ₓ (constant), vᵧ = v₀ᵧ − g t |
+| Landing time (y = 0) | t = (v₀ᵧ + √(v₀ᵧ² + 2 g y₀)) / g |
+| Maximum height (if v₀ᵧ > 0) | y_max = y₀ + v₀ᵧ² / (2g), at t = v₀ᵧ / g |
+| Landing distance | R = v₀ₓ · t_landing |
+
+- **Landing time:** this is the non-negative root of y(t) = 0. Its discriminant is never negative
+  because y₀ ≥ 0 and g > 0. The textbook R = v₀² sin 2θ / g is only the special case y₀ = 0; the
+  tests check that the app agrees with it there.
+- **Evaluation:** every visual and number is evaluated **analytically from the simulation time**
+  (`stateAt` in `src/physics/projectile.ts`). Positions are never accumulated frame by frame.
+- **Edge cases:**
+  - zero speed and vertical or horizontal launches;
+  - zero height and immediate impact (flight time 0);
+  - very short flights, and non-finite input;
+  - gravity ≤ 0 is rejected.
+- **Display precision:** values are shown to about three significant figures (`formatSig`).
+
+### Parameter ranges
+
+| Input | Range | Step | Default |
+| --- | --- | --- | --- |
+| Launch speed v₀ | 0–50 m/s | 0.5 | 20 m/s |
+| Launch angle θ | 0–90° | 1° | 45° |
+| Initial height y₀ | 0–50 m | 0.5 | 0 m |
+| Gravity g | 1–25 m/s² | 0.01 | 9.81 m/s² (approximate near-Earth value; real g varies ≈ 9.78–9.83) |
+
+Each input has a slider and a typed field:
+- The slider commits as it moves.
+- Typed text commits on Enter or when the field loses focus, and only if it is a complete number.
+  Empty or partial input ("", "-", "1.") is discarded.
+- Out-of-range numbers are clamped and rounded to the input step.
+
+### Playback and reset behavior
+
+| Action | Behavior |
+| --- | --- |
+| Page load / shared link | Ready at t = 0; nothing launches automatically. |
+| **Launch** | Plays from t = 0. Shows "Launch again" after landing. An immediate-impact setup lands without animating. |
+| **Pause / Resume** | Freezes and continues time; Pause stops time immediately (no extra frame). |
+| **Reset experiment** | Back to t = 0, keeping the current inputs. |
+| **Restore defaults** | Restores the default inputs and returns to t = 0. |
+| Editing any input | Returns to t = 0 and updates the preview. |
+| **Time scrubber** | Pauses and moves the scene, readouts and graphs to the chosen time (0.01 s steps). |
+| **Speed 0.25× – 2×** | Changes how fast simulated time passes, not the results. |
+| Background tab | Each frame advances at most 0.1 s of real time, and the interval restarts when the tab becomes visible, so nothing jumps. On very slow devices playback runs slower than real time rather than skipping. |
+
+Scene toolbar (shown only when 3D works): **Side view** (orthographic, equal scale on both axes) or
+**Perspective**, **Reset camera**, and toggles for the dashed **Preview**, **Vectors** (velocity and
+acceleration) and velocity **Components**.
+
+The camera frames the whole flight (and Run A) once the inputs stop changing for 250 ms, so dragging
+a slider never fights the user's camera.
+
+### Vectors, values and graphs
+
+- **Arrows:**
+  - velocity is blue; its dashed components are light blue;
+  - acceleration is amber;
+  - velocity and acceleration have different units, so each has its own display scale, shown in the
+    legend (for example "v: 1 m/s = 0.563 m"). Arrow lengths of different quantities cannot be
+    compared.
+- **Right now:** the values at the current time: t, x, y, vₓ, vᵧ, speed and a.
+- **Predicted full flight:** flight time, maximum height, landing distance and impact speed, computed
+  from the inputs.
+- **Graphs:** two SVG graphs, height vs time and vertical velocity vs time. Each has:
+  - axis titles with units and readable ticks;
+  - a dashed current-time marker with a point on the curve;
+  - a text readout at the current time and a short text summary;
+  - Run A as a dotted line, with a text legend.
+
+  The scene, readouts and graph markers all read one shared simulation clock.
+
+### Comparing two launches
+
+1. **Save as Run A** stores the current *inputs*. Results are always recomputed from them, never
+   stored.
+2. Change the inputs: the active run becomes **Run B (active)**, the only one that animates.
+3. Run A is drawn as a static dotted path labelled "Run A (saved)", in the scene and in both graphs.
+4. A table compares inputs, flight time, maximum height, landing distance and impact speed.
+5. **Clear comparison** removes Run A.
+
+### Physics sources
+
+- [OpenStax University Physics Volume 1 — 4.3 Projectile Motion](https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion)
+- [OpenStax University Physics Volume 1 — 3.5 Free Fall](https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall)
+
 ## Shareable links and URL state
 
 Subjects are hash routes (`#/chemistry`, `#/biology`). Each explorer keeps its state in its **own**
@@ -180,13 +295,18 @@ query parameters, so neither subject can change the other:
 | --- | --- | --- |
 | Chemistry | `molecule`, `view` | `water`, `carbon-dioxide`, `methane`, `ammonia`, `ethanol`, `benzene` · `ball-and-stick`, `space-filling` |
 | Biology | `structure`, `cell` | `plasma-membrane`, `cytoplasm`, `nucleus`, `nucleolus`, `mitochondrion`, `rough-er`, `smooth-er`, `golgi`, `ribosome`, `lysosome` · `whole`, `cutaway` |
+| Physics | `speed`, `angle`, `height`, `gravity` | plain numbers inside the ranges above; each invalid value falls back to its default on its own |
 
 Examples:
 
 ```
 /?molecule=benzene&view=space-filling#/chemistry
 /?structure=golgi&cell=cutaway#/biology
+/?speed=15&angle=60&height=10&gravity=1.62#/physics
 ```
+
+Physics links never contain animation time; they always open paused at t = 0. Slider movement
+updates the address with `replaceState`, so it never adds history entries.
 
 How the URL is kept up to date:
 
@@ -258,7 +378,10 @@ How the URL is kept up to date:
 | `src/features/chemistry/scene/measurementGeometry.test.ts` | Angle arc and label placement, including straight and degenerate angles. |
 | `src/data/biology/organelles.test.ts` | Required structures with stable, URL-safe IDs; every content field present; known sources and related structures. Also that cytoplasm and cytosol are distinguished, and that the text never claims all proteins pass through the Golgi. |
 | `src/features/biology/state.test.ts` | Selecting types and single copies, and rejecting invalid copies and IDs. Also auto-cutaway, isolation and Show all, clearing, and changing view. |
-| `src/lib/urlState.test.ts` | Valid and invalid parameters for both subjects. Also that neither subject reads the other's keys, round trips, and share links built from the given origin. |
+| `src/lib/urlState.test.ts` | Valid and invalid parameters for all three subjects. Also that no subject reads another's keys, round trips, that time is never stored, and share links built from the given origin. |
+| `src/physics/projectile.test.ts` | Known analytical cases: straight up (4 s, 20 m), horizontal launch, a raised start, dropping from rest, and the level-ground range formula. Also: constant vₓ and vᵧ slope −g; impact clamping (never below ground); immediate impact and very short flights; NaN and negative time; non-positive gravity; playback speed and frame rate not changing results; the frame-step cap; input parsing, clamping and rounding. |
+| `src/features/physics/state.test.ts` | No auto-launch, edits reset to t = 0, Reset vs Restore defaults, pause/resume/landed announcements, scrubbing pauses, immediate impact, playback speed, and Run A storing inputs only. |
+| `src/features/physics/sceneMath.test.ts` | Equal axis scales, framing all compared runs, tick steps and labels, and separate vector scales. |
 
 **Browser tests** (`npm run test:e2e`, Playwright, `e2e/`), run in the local Google Chrome against
 the production build:
@@ -275,11 +398,21 @@ the production build:
   - share links still restore, and Biology parameters are ignored;
   - all six molecules, and distance and angle measurements;
   - Copy link, and the remaining Coming soon pages.
+- `physics.e2e.ts`: covers
+  - no auto-launch, and typed input validation and clamping;
+  - launch, pause, resume, landing and reset; Restore defaults;
+  - scrubbing, with readouts and both graph markers in sync;
+  - edits resetting time, and playback speed checked with Playwright's fake clock;
+  - immediate impact and the A/B comparison;
+  - URL restore, invalid values, subject switching with Back/Forward and refresh;
+  - no history entries from sliders, and Copy link.
 - `mobile.e2e.ts` (390 × 844):
-  - Biology and Chemistry with no horizontal overflow and a prominent viewport;
+  - Biology, Chemistry and Physics with no horizontal overflow and a prominent viewport;
   - touch targets of at least 40 px, the tab workflow, and normal page scrolling.
-- `no-webgl.e2e.ts` (Chrome with `--disable-3d-apis`): Biology and Chemistry fall back to text, and
-  3D-only controls are hidden.
+- `no-webgl.e2e.ts` (Chrome with `--disable-3d-apis`):
+  - Biology and Chemistry fall back to text;
+  - Physics keeps inputs, playback, readouts and graphs working;
+  - 3D-only controls are hidden.
 
 The test fixture fails a test on any console error or warning except two known, harmless ones: the
 `THREE.Clock` notice (see Known issues), and Chrome's "GPU stall due to ReadPixels" driver note,
@@ -306,6 +439,13 @@ src/
     ChemistryExplorer.tsx       layout, URL sync, live region
     InfoPanel.tsx, MeasurementPanel.tsx, SceneControls.tsx, MoleculeLibrary.tsx, …
     scene/                      R3F scene: viewport, atoms, bonds, measurement overlay, labels, camera
+  physics/
+    projectile.ts               pure projectile-motion model (SI units, analytical, validation)
+  features/physics/
+    state.ts, clock.ts          experiment reducer and the shared simulation clock
+    PhysicsExplorer.tsx         layout, playback loop, URL sync, live region
+    ParamControl.tsx, PlaybackBar.tsx, TimeGraph.tsx, ResultsPanel.tsx, AboutPanel.tsx
+    scene/                      R3F scene: ground, axes, paths, vectors, labels, camera
   features/biology/
     state.ts                    selection, instance, view and isolation reducer
     BiologyExplorer.tsx         layout, URL sync, live region
@@ -324,7 +464,7 @@ e2e/                            Playwright browser tests
 ## Known issues
 
 - **`THREE.Clock` warning.** The console shows `THREE.Clock: This module has been deprecated. Please
-  use THREE.Timer instead.` once per 3D view mount, in both Chemistry and Biology.
+  use THREE.Timer instead.` once per 3D view mount, in Chemistry, Biology and Physics.
   - React Three Fiber 9.8.2 creates `new THREE.Clock()` in its root store
     (`node_modules/@react-three/fiber/dist/events-*.esm.js`).
   - Three.js has warned in the `Clock` constructor since r183; this project uses 0.186.1.
