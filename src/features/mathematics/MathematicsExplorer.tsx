@@ -12,7 +12,7 @@ import { ActivityPanel } from '../activities/ActivityPanel'
 import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
 import { MATHEMATICS_ACTIVITY, saddleSetup } from './activity'
-import { FormulaPanel, ParameterPanel, PointInspector, SliceControls, SourcesPanel, SurfaceLibrary } from './MathPanels'
+import { FormulaPanel, LocalSlope, ParameterPanel, PointInspector, SliceControls, SourcesPanel, SurfaceLibrary } from './MathPanels'
 import type { MathView } from './scene/SurfaceScene'
 import { SliceGraph } from './SliceGraph'
 import { initialMathState, mathReducer } from './state'
@@ -41,6 +41,9 @@ export function MathematicsExplorer() {
   const [state, dispatch] = useReducer(mathReducer, undefined, initFromUrl)
   const [view, setView] = useState<MathView>('perspective')
   const [showWireframe, setShowWireframe] = useState(true)
+  // Optional overlays at the inspected point; off by default so they never crowd the surface.
+  const [showTangent, setShowTangent] = useState(false)
+  const [showGradient, setShowGradient] = useState(false)
   const [cameraRequest, setCameraRequest] = useState({ id: 0, keep: false })
   const [sideTab, setSideTab] = useState<SideTab>('explore')
   const [mobileTab, setMobileTab] = useState<MobileTab>('surface')
@@ -106,6 +109,17 @@ export function MathematicsExplorer() {
         onSet={(x, y) => dispatch({ type: 'setPoint', x, y, source: 'input' })}
         onClear={() => dispatch({ type: 'clearPoint' })}
       />
+      {point && (
+        <LocalSlope
+          surface={surface}
+          params={params}
+          point={point}
+          showPlane={showTangent}
+          showGradient={showGradient}
+          onTogglePlane={() => setShowTangent((v) => !v)}
+          onToggleGradient={() => setShowGradient((v) => !v)}
+        />
+      )}
       <SliceControls
         surface={surface}
         slice={slice}
@@ -133,6 +147,8 @@ export function MathematicsExplorer() {
           showWireframe={showWireframe}
           slice={slice}
           point={point}
+          showTangent={showTangent}
+          showGradient={showGradient}
           cameraRequest={cameraRequest}
           onPick={(x, y) => dispatch({ type: 'setPoint', x, y, source: 'click' })}
           {...callbacks}

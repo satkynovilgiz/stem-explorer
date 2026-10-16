@@ -588,6 +588,32 @@ no `eval`, and no computer algebra.
 - **The marker P:** it has a drop line to the floor and stays on the surface when parameters change.
   Switching preset clears the point.
 
+### Tangent planes and gradients
+
+When a point is inspected, **Local slope at P** shows:
+- ∂f/∂x and ∂f/∂y, symbolically and as numbers;
+- the gradient ∇f = (fₓ, fᵧ), with its magnitude |∇f| and its direction from +x;
+- the tangent plane z = f(x₀, y₀) + fₓ(x − x₀) + fᵧ(y − y₀), with the numbers substituted;
+- a sentence on steepest increase.
+
+The derivatives are derived by hand for each fixed surface (`src/math/tangent.ts`) and never read
+from the mesh: plane (a, b), paraboloid (2ax, 2by), saddle (2ax, −2by), and sine
+(Ak·cos kx·cos ky, −Ak·sin kx·sin ky). Unit tests check them against finite differences, and check
+that each plane passes through the point and agrees with the surface to first order.
+
+- **Zero gradient** (e.g. the saddle origin, or a flat plane): the panel says the tangent plane is
+  horizontal, that the rate of change is zero in every direction, and that such a point can be a
+  maximum, a minimum or a saddle point. Floating-point residue below 10⁻⁹ is shown as 0.
+- **Gradient vs normal.** ∇f is two-dimensional, in the x–y input plane, and the scene draws it
+  flat on the floor under P. The panel states that it is not the surface normal, which is
+  (−fₓ, −fᵧ, 1).
+- **Overlays** (**Tangent plane**, **Gradient arrow**) are off by default and not stored in links.
+  The plane is a bounded square patch (half-width 15% of the domain). The arrow's length grows
+  with |∇f| but is capped at 30% of the domain. Without WebGL, the toggles are hidden and every
+  number and equation is still shown.
+- Sources: OpenStax Calculus Vol. 3 §4.3 (partial derivatives), §4.4 (tangent planes), §4.6
+  (gradient).
+
 ### Cross-sections
 
 - **Controls:** **Show cross-section** adds a vertical plane at x = constant or y = constant, with a
@@ -975,6 +1001,7 @@ How the URL is kept up to date:
 | `src/data/chemistry/periodicTable.test.ts` | 118 elements with contiguous atomic numbers and unique symbols and names; positions of reference elements in every period and both f rows; no two elements in one cell; block counts (s 14, p 36, d 38, f 30) and helium in s; f rows agreeing with PubChem's categories; search by number, symbol (listed first) and name prefix; molecules containing an element. |
 | `src/physics/spring.test.ts` | Known period, frequency and ω; T scaling with m and k and independence from amplitude; start at rest, quarter- and half-period positions and velocities; energy conservation and F = ma at every instant; zero displacement; bad times; results independent of playback rate; input normalization. |
 | `src/features/physics/spring/springState.test.ts` | No auto-launch; launch, pause, resume, end of window and reset; edits returning to t = 0; scrubbing pausing; the zero-displacement announcement. |
+| `src/math/tangent.test.ts` | Hand-derived partials against known values and against finite differences for every surface; tangent planes through the point with first-order agreement; the plane surface as its own tangent plane; the saddle origin (zero gradient, z = 0); flat-plane and sine residue degenerate cases; gradient magnitude and direction; the substituted equation. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -1061,6 +1088,9 @@ the production build:
   known analytic values (period, quarter-period readouts, force, energy); energy conservation while
   scrubbing; launch, pause, resume, end of window and reset; zero displacement and input bounds; a
   background tab not jumping ahead (Playwright's fake clock); saving a spring view.
+- `tangent.e2e.ts`: partial derivatives, gradient and the substituted tangent plane at a typed point,
+  updating with parameters; the saddle origin's zero gradient and explanation; optional overlays
+  that keep point inspection and cross-sections working and stay out of links.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

@@ -1,5 +1,7 @@
 import { Eraser, ExternalLink, RotateCcw, Scissors } from 'lucide-react'
 import { RangeField } from '../../components/RangeField'
+import { isWebGLAvailable } from '../../lib/webgl'
+import { PARTIAL_FORMULAS, tangentPlane } from '../../math/tangent'
 import { formatValue, MATH_SOURCES, num, SURFACES, type Params, type SliceAxis, type SurfaceDef, type SurfaceId } from '../../math/surfaces'
 
 /* ---------- Left: library and parameters ---------- */
@@ -131,6 +133,101 @@ export function PointInspector({
       ) : (
         <p className="muted small">No point selected. The marker P appears on the surface once you choose one.</p>
       )}
+    </section>
+  )
+}
+
+/** Partial derivatives, gradient and tangent plane at the inspected point (all exact, mesh-independent). */
+export function LocalSlope({
+  surface,
+  params,
+  point,
+  showPlane,
+  showGradient,
+  onTogglePlane,
+  onToggleGradient,
+}: {
+  surface: SurfaceDef
+  params: Params
+  point: { x: number; y: number }
+  showPlane: boolean
+  showGradient: boolean
+  onTogglePlane: () => void
+  onToggleGradient: () => void
+}) {
+  const t = tangentPlane(surface, params, point.x, point.y)
+  const f = PARTIAL_FORMULAS[surface.id]
+  const webgl = isWebGLAvailable()
+  return (
+    <section className="info-section" aria-labelledby="slope-heading">
+      <h3 id="slope-heading" className="section-title">
+        Local slope at P
+      </h3>
+      <dl className="readout">
+        <div>
+          <dt>{f.fx}</dt>
+          <dd>{formatValue(t.fx)}</dd>
+        </div>
+        <div>
+          <dt>{f.fy}</dt>
+          <dd>{formatValue(t.fy)}</dd>
+        </div>
+        <div className="is-wide">
+          <dt>Gradient ∇f = (∂f/∂x, ∂f/∂y)</dt>
+          <dd>
+            ({formatValue(t.fx)}, {formatValue(t.fy)})
+          </dd>
+        </div>
+        <div>
+          <dt>Steepest slope |∇f|</dt>
+          <dd>{formatValue(t.gradientMagnitude)}</dd>
+        </div>
+        <div>
+          <dt>Direction of ∇f</dt>
+          <dd>{t.gradientDirectionDeg === null ? 'none (∇f = 0)' : `${num(t.gradientDirectionDeg, 1)}° from +x`}</dd>
+        </div>
+      </dl>
+      <p className="tangent-formula">
+        <span className="muted">Tangent plane:</span> z = f(x₀, y₀) + f<sub>x</sub>·(x − x₀) + f<sub>y</sub>·(y − y₀)
+        <br />
+        <span className="muted">At P:</span> <span className="tangent-equation">{t.equation}</span>
+      </p>
+      {t.zeroGradient ? (
+        <p className="inline-note">
+          ∇f = 0 here: the tangent plane is horizontal, and the rate of change is zero in every direction. This can be a maximum, a
+          minimum or a saddle point; on the saddle at the origin, the surface rises along x and falls along y.
+        </p>
+      ) : (
+        <p className="small">
+          Moving from P in the direction of ∇f increases z fastest, at a rate of |∇f| per unit of horizontal distance. Moving
+          perpendicular to ∇f keeps z unchanged at first.
+        </p>
+      )}
+      <p className="muted small">
+        ∇f is a two-dimensional vector in the x–y input plane, so the scene draws it flat on the floor. It is not the surface
+        normal: a three-dimensional normal at P is (−f<sub>x</sub>, −f<sub>y</sub>, 1).
+      </p>
+      {webgl && (
+        <div className="header-actions">
+          <button type="button" className="tool-button" aria-pressed={showPlane} onClick={onTogglePlane}>
+            Tangent plane
+          </button>
+          <button type="button" className="tool-button" aria-pressed={showGradient} onClick={onToggleGradient}>
+            Gradient arrow
+          </button>
+        </div>
+      )}
+      <p className="muted small">
+        Sources:{' '}
+        <a href="https://openstax.org/books/calculus-volume-3/pages/4-4-tangent-planes-and-linear-approximations" target="_blank" rel="noreferrer">
+          OpenStax Calculus Vol. 3 §4.4<span className="visually-hidden"> (opens in a new tab)</span>
+        </a>
+        ,{' '}
+        <a href="https://openstax.org/books/calculus-volume-3/pages/4-6-directional-derivatives-and-the-gradient" target="_blank" rel="noreferrer">
+          §4.6<span className="visually-hidden"> (opens in a new tab)</span>
+        </a>
+        .
+      </p>
     </section>
   )
 }

@@ -51,6 +51,18 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'Bondi, A. (1964). van der Waals Volumes and Radii. J. Phys. Chem. 68, 441–451',
     url: 'https://doi.org/10.1021/j100785a001',
   },
+  'calc3-4-3': {
+    label: 'OpenStax Calculus Volume 3 — 4.3 Partial Derivatives',
+    url: 'https://openstax.org/books/calculus-volume-3/pages/4-3-partial-derivatives',
+  },
+  'calc3-4-4': {
+    label: 'OpenStax Calculus Volume 3 — 4.4 Tangent Planes and Linear Approximations',
+    url: 'https://openstax.org/books/calculus-volume-3/pages/4-4-tangent-planes-and-linear-approximations',
+  },
+  'calc3-4-6': {
+    label: 'OpenStax Calculus Volume 3 — 4.6 Directional Derivatives and the Gradient',
+    url: 'https://openstax.org/books/calculus-volume-3/pages/4-6-directional-derivatives-and-the-gradient',
+  },
   'calc3-4-7': {
     label: 'OpenStax Calculus Volume 3 — 4.7 Maxima/Minima Problems',
     url: 'https://openstax.org/books/calculus-volume-3/pages/4-7-maxima-minima-problems',

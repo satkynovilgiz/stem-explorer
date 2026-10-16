@@ -203,10 +203,12 @@ export const GUIDES: Record<SubjectId, SubjectGuide> = {
         sourceIds: ['calc3-4-7'],
       },
     ],
-    keyTerms: ['function-of-two-variables', 'domain', 'graph-surface', 'vertical-trace', 'saddle-point', 'parameter'],
+    keyTerms: ['function-of-two-variables', 'domain', 'graph-surface', 'vertical-trace', 'saddle-point', 'partial-derivative', 'gradient', 'tangent-plane', 'parameter'],
     relations: [
       { expression: 'x = c  ⇒  z = f(c, y)', text: 'A vertical trace at fixed x.', sourceIds: ['calc3-4-1'] },
       { expression: 'y = c  ⇒  z = f(x, c)', text: 'A vertical trace at fixed y.', sourceIds: ['calc3-4-1'] },
+      { expression: 'z = f(x₀, y₀) + fₓ·(x − x₀) + fᵧ·(y − y₀)', text: 'The tangent plane at an inspected point.', sourceIds: ['calc3-4-4'] },
+      { expression: '∇f = (fₓ, fᵧ)', text: 'The gradient: direction and rate of steepest increase.', sourceIds: ['calc3-4-6'] },
     ],
     symbols: [
       { symbol: 'x, y', meaning: 'inputs (horizontal coordinates)', unit: 'none' },

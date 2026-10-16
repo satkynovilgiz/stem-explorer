@@ -133,3 +133,15 @@ test('the spring lab keeps inputs, playback, readouts, energy and graph without 
   await expect(page.locator('.readout > div').filter({ hasText: 'Position x' }).locator('dd')).toHaveText('-0.003 m')
   await expect(page.locator('.graph-readout')).toContainText('At t = 0.790 s')
 })
+
+test('tangent plane equation and gradient values work without WebGL; overlay toggles are hidden', async ({ page }) => {
+  await page.goto('/?surface=sine#/mathematics')
+  await waitForViewport(page)
+  for (const [label, v] of [[/^x/, '0'], [/^y/, '0']] as const) {
+    const f = page.getByRole('textbox', { name: label })
+    await f.fill(v)
+    await f.press('Enter')
+  }
+  await expect(page.locator('.tangent-equation')).toHaveText('z = 0.000 + 1.00·x + 0.00·y')
+  await expect(page.getByRole('button', { name: 'Tangent plane' })).toHaveCount(0)
+})

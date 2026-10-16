@@ -50,7 +50,7 @@ export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; 
     summary: 'Four surfaces with adjustable parameters.',
     capabilities: [
       'Reshape a plane, paraboloid, saddle or sine surface',
-      'Inspect exact values at a point',
+      'Inspect a point: exact value, tangent plane and gradient',
       'Cut vertical cross-sections with a graph and table',
     ],
     action: 'Open surfaces',

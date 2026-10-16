@@ -5,6 +5,7 @@ import { BufferAttribute, BufferGeometry, DoubleSide, Vector3, type Orthographic
 import { formatTick } from '../../../lib/ticks'
 import { fromWorld, toWorld } from '../../../math/coordinates'
 import type { Params, SliceAxis, SurfaceDef } from '../../../math/surfaces'
+import { tangentPlane } from '../../../math/tangent'
 import { axisFrame, buildSurfaceArrays, buildWireframe, type AxisFrame } from '../sceneGeometry'
 
 export type MathView = 'perspective' | 'top' | 'front' | 'side'
@@ -16,6 +17,9 @@ export interface SurfaceSceneProps {
   showWireframe: boolean
   slice: { axis: SliceAxis; value: number } | null
   point: { x: number; y: number } | null
+  /** Optional overlays at the inspected point. */
+  showTangent?: boolean
+  showGradient?: boolean
   /**
    * Explicit camera request: Fit surface keeps the current viewing direction (keep = true);
    * Reset camera uses the default direction (keep = false). Parameter edits never move the camera.
@@ -34,6 +38,8 @@ const COLORS = {
   slicePlane: '#2fc4c0',
   sliceCurve: '#f5c26b',
   point: '#ffffff',
+  tangent: '#c9a2f2',
+  gradient: '#7aa7ff',
 }
 const noRaycast = () => null
 type P3 = [number, number, number]
@@ -250,6 +256,60 @@ function PointMarker({ surface, params, point, frame }: { surface: SurfaceDef; p
   )
 }
 
+/**
+ * The tangent plane at the point, drawn as a small square patch (half-width 15% of the domain) so it
+ * shows the local slope without covering the surface.
+ */
+function TangentPatch({ surface, params, point }: { surface: SurfaceDef; params: Params; point: { x: number; y: number } }) {
+  const geometry = useMemo(() => {
+    const t = tangentPlane(surface, params, point.x, point.y)
+    const h = (surface.domain.max - surface.domain.min) * 0.15
+    const corners = [
+      [-h, -h],
+      [h, -h],
+      [h, h],
+      [-h, h],
+    ].map(([dx, dy]) => w(point.x + dx, point.y + dy, t.evaluate(point.x + dx, point.y + dy)))
+    const g = new BufferGeometry()
+    g.setAttribute('position', new BufferAttribute(new Float32Array([...corners[0], ...corners[1], ...corners[2], ...corners[0], ...corners[2], ...corners[3]]), 3))
+    g.computeVertexNormals()
+    return { g, outline: [...corners, corners[0]] }
+  }, [surface, params, point])
+  return (
+    <group>
+      <mesh geometry={geometry.g} raycast={noRaycast} renderOrder={4}>
+        <meshBasicMaterial color={COLORS.tangent} transparent opacity={0.45} side={DoubleSide} depthWrite={false} />
+      </mesh>
+      <Line points={geometry.outline} color={COLORS.tangent} lineWidth={1.5} raycast={noRaycast} />
+    </group>
+  )
+}
+
+/**
+ * ∇f drawn flat on the floor (the x–y input plane) under the point. Its length grows with |∇f| but
+ * is bounded, so steep points don't produce arrows longer than the domain.
+ */
+function GradientArrow({ surface, params, point, frame }: { surface: SurfaceDef; params: Params; point: { x: number; y: number }; frame: AxisFrame }) {
+  const t = tangentPlane(surface, params, point.x, point.y)
+  if (t.zeroGradient) return null
+  const span = surface.domain.max - surface.domain.min
+  const length = (span * 0.3 * t.gradientMagnitude) / (t.gradientMagnitude + 1)
+  const ux = t.fx / t.gradientMagnitude
+  const uy = t.fy / t.gradientMagnitude
+  const z = frame.zFloor
+  const start = w(point.x, point.y, z)
+  const end = w(point.x + ux * length, point.y + uy * length, z)
+  const head = span * 0.03
+  const left = w(point.x + ux * (length - head) - uy * head * 0.6, point.y + uy * (length - head) + ux * head * 0.6, z)
+  const right = w(point.x + ux * (length - head) + uy * head * 0.6, point.y + uy * (length - head) - ux * head * 0.6, z)
+  return (
+    <group>
+      <Line points={[start, end]} color={COLORS.gradient} lineWidth={3} raycast={noRaycast} />
+      <Line points={[left, end, right]} color={COLORS.gradient} lineWidth={3} raycast={noRaycast} />
+    </group>
+  )
+}
+
 /* ---------- Camera ---------- */
 
 const DIRECTIONS: Record<MathView, { dir: P3; up: P3 }> = {
@@ -311,7 +371,7 @@ function CameraRig({ surface, frame, view, token, keepDirection }: { surface: Su
 /* ---------- Root ---------- */
 
 export default function SurfaceScene(props: SurfaceSceneProps) {
-  const { surface, params, view, showWireframe, slice, point, cameraRequest, onPick, onReady, onContextLost } = props
+  const { surface, params, view, showWireframe, slice, point, showTangent, showGradient, cameraRequest, onPick, onReady, onContextLost } = props
   const range = useMemo(() => {
     const { zMin, zMax } = buildSurfaceArrays(surface, params)
     return { zMin, zMax }
@@ -378,6 +438,8 @@ export default function SurfaceScene(props: SurfaceSceneProps) {
         {showWireframe && <Wireframe surface={surface} params={params} />}
         {slice && <Slice surface={surface} params={params} slice={slice} frame={frame} />}
         {point && <PointMarker surface={surface} params={params} point={point} frame={frame} />}
+        {point && showTangent && <TangentPatch surface={surface} params={params} point={point} />}
+        {point && showGradient && <GradientArrow surface={surface} params={params} point={point} frame={frame} />}
 
         <OrbitControls makeDefault enableRotate={view === 'perspective'} enableDamping={false} screenSpacePanning />
         <CameraRig surface={surface} frame={frame} view={view} token={token} keepDirection={cameraRequest.keep} />

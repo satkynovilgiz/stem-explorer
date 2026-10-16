@@ -2209,7 +2209,8 @@ button {
   grid-column: 1 / -1;
 }
 
-.substitution {
+.substitution,
+.tangent-formula {
   font-family: 'Cambria Math', 'STIX Two Math', Georgia, serif;
   font-size: var(--text-sm);
   line-height: 1.7;
