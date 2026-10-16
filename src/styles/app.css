@@ -3012,3 +3012,14 @@ button {
     transition: none;
   }
 }
+
+.library-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.library-status:empty {
+  display: none;
+}

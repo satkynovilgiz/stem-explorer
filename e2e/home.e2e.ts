@@ -186,7 +186,9 @@ test.describe('Saved and recent explorations', () => {
     })
     await page.reload()
     await expect(homeTitle(page)).toBeVisible()
-    await expect(savedPanel(page)).toContainText('Nothing saved yet.')
+    // A damaged saved list is reported and left untouched, never shown as empty and overwritten.
+    await expect(savedPanel(page)).toContainText('The saved list on this browser is damaged')
+    expect(await page.evaluate(() => localStorage.getItem('stem-explorer:saved'))).toBe('{not json')
     await expect(recentPanel(page)).toHaveCount(0)
   })
 

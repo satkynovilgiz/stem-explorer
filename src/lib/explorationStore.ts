@@ -23,20 +23,30 @@ export interface Exploration extends ShareState {
   updatedAt: string
 }
 
-export type StoreResult<T = void> =
-  | { ok: true; value: T }
-  | { ok: false; reason: 'unavailable' | 'quota' | 'limit' | 'duplicate' | 'invalid' | 'not-found'; existing?: Exploration }
+/**
+ * Why an operation failed:
+ * - unavailable: localStorage is blocked or missing (nothing can be read or written);
+ * - unreadable: the stored list exists but is damaged, so it is never overwritten;
+ * - quota: the browser reports its storage is full; nothing was changed;
+ * - write-failed: the browser refused the write for another reason; nothing was changed.
+ */
+export type StoreFailure = 'unavailable' | 'unreadable' | 'quota' | 'write-failed' | 'limit' | 'duplicate' | 'invalid' | 'not-found'
+
+export type StoreResult<T = void> = { ok: true; value: T } | { ok: false; reason: StoreFailure; existing?: Exploration }
+
+/** A list as read from storage. `preserved` holds entries from newer schema versions, kept untouched on write. */
+export type ListRead = { ok: true; entries: Exploration[]; preserved: unknown[] } | { ok: false; reason: 'unavailable' | 'unreadable' }
 
 /** Storage-like object; injectable for tests. */
 export type KeyValueStore = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
+/**
+ * The browser's localStorage, or null when access is blocked. This only looks the object up: it
+ * never writes (a probe write would fire storage events in every other open tab).
+ */
 export function browserStorage(): KeyValueStore | null {
   try {
-    const s = window.localStorage
-    const probe = '__stem-explorer-probe__'
-    s.setItem(probe, '1')
-    s.removeItem(probe)
-    return s
+    return window.localStorage ?? null
   } catch {
     return null
   }
@@ -72,39 +82,61 @@ export function parseEntry(raw: unknown): Exploration | null {
   }
 }
 
-function readList(store: KeyValueStore | null, key: string): Exploration[] {
-  if (!store) return []
+function isNewerVersion(raw: unknown): boolean {
+  const v = (raw as { version?: unknown } | null)?.version
+  return typeof v === 'number' && Number.isInteger(v) && v > SCHEMA_VERSION
+}
+
+/** Reads a list without side effects. A failed read is reported, never turned into an empty list. */
+export function loadList(store: KeyValueStore | null, key: string): ListRead {
+  if (!store) return { ok: false, reason: 'unavailable' }
+  let raw: string | null
   try {
-    const raw = store.getItem(key)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    const seen = new Set<string>()
-    const out: Exploration[] = []
-    for (const item of parsed) {
-      const e = parseEntry(item)
-      if (!e) continue
-      const k = canonicalKey(e)
-      if (seen.has(k)) continue
-      seen.add(k)
-      out.push(e)
-    }
-    return out
+    raw = store.getItem(key)
   } catch {
-    // Malformed JSON or a storage access error: behave as if empty.
-    return []
+    return { ok: false, reason: 'unavailable' }
+  }
+  if (raw === null) return { ok: true, entries: [], preserved: [] }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return { ok: false, reason: 'unreadable' }
+  }
+  if (!Array.isArray(parsed)) return { ok: false, reason: 'unreadable' }
+  const seen = new Set<string>()
+  const entries: Exploration[] = []
+  const preserved: unknown[] = []
+  for (const item of parsed) {
+    const e = parseEntry(item)
+    if (!e) {
+      // Entries written by a newer version of the app are kept as they are; invalid ones are dropped.
+      if (isNewerVersion(item)) preserved.push(item)
+      continue
+    }
+    const k = canonicalKey(e)
+    if (seen.has(k)) continue
+    seen.add(k)
+    entries.push(e)
+  }
+  return { ok: true, entries, preserved }
+}
+
+function writeList(store: KeyValueStore | null, key: string, list: readonly unknown[]): StoreResult {
+  if (!store) return { ok: false, reason: 'unavailable' }
+  try {
+    // Removing never needs extra space, so an emptied list still saves when storage is full.
+    if (list.length === 0) store.removeItem(key)
+    else store.setItem(key, JSON.stringify(list))
+    return { ok: true, value: undefined }
+  } catch (e) {
+    return { ok: false, reason: isQuotaError(e) ? 'quota' : 'write-failed' }
   }
 }
 
-function writeList(store: KeyValueStore | null, key: string, list: Exploration[]): StoreResult {
-  if (!store) return { ok: false, reason: 'unavailable' }
-  try {
-    store.setItem(key, JSON.stringify(list))
-    return { ok: true, value: undefined }
-  } catch (e) {
-    const name = (e as { name?: string })?.name ?? ''
-    return { ok: false, reason: /quota/i.test(name) || /quota/i.test(String(e)) ? 'quota' : 'unavailable' }
-  }
+export function isQuotaError(e: unknown): boolean {
+  const name = (e as { name?: string } | null)?.name ?? ''
+  return /quota/i.test(name) || /quota/i.test(String(e))
 }
 
 let counter = 0
@@ -113,12 +145,20 @@ export function newId(now: number = Date.now()): string {
   return `${now.toString(36)}-${counter.toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+/** Saved entries, or [] when they cannot be read (use loadList to tell the difference). */
 export function readSaved(store: KeyValueStore | null): Exploration[] {
-  return readList(store, SAVED_KEY)
+  const read = loadList(store, SAVED_KEY)
+  return read.ok ? read.entries : []
 }
 
 export function readRecent(store: KeyValueStore | null): Exploration[] {
-  return readList(store, RECENT_KEY).slice(0, MAX_RECENT)
+  const read = loadList(store, RECENT_KEY)
+  return read.ok ? read.entries.slice(0, MAX_RECENT) : []
+}
+
+/** Writes saved entries, keeping entries from newer schema versions that this version cannot read. */
+export function writeSaved(store: KeyValueStore | null, entries: readonly Exploration[], preserved: readonly unknown[]): StoreResult {
+  return writeList(store, SAVED_KEY, [...entries, ...preserved])
 }
 
 /** Saves a state. The same canonical state is never stored twice: the caller gets the existing entry. */
@@ -126,7 +166,9 @@ export function saveExploration(store: KeyValueStore | null, state: ShareState, 
   if (!store) return { ok: false, reason: 'unavailable' }
   const canonical = canonicalize(state.subject, state.params)
   if (!canonical) return { ok: false, reason: 'invalid' }
-  const list = readSaved(store)
+  const read = loadList(store, SAVED_KEY)
+  if (!read.ok) return { ok: false, reason: read.reason }
+  const list = read.entries
   const key = canonicalKey(canonical)
   const existing = list.find((e) => canonicalKey(e) === key)
   if (existing) return { ok: false, reason: 'duplicate', existing }
@@ -140,25 +182,28 @@ export function saveExploration(store: KeyValueStore | null, state: ShareState, 
     createdAt: iso,
     updatedAt: iso,
   }
-  const result = writeList(store, SAVED_KEY, [entry, ...list])
+  const result = writeSaved(store, [entry, ...list], read.preserved)
   return result.ok ? { ok: true, value: entry } : result
 }
 
 export function renameExploration(store: KeyValueStore | null, id: string, title: string, now = new Date()): StoreResult<Exploration> {
-  const list = readSaved(store)
+  const read = loadList(store, SAVED_KEY)
+  if (!read.ok) return { ok: false, reason: read.reason }
+  const list = read.entries
   const index = list.findIndex((e) => e.id === id)
-  if (index < 0) return { ok: false, reason: store ? 'not-found' : 'unavailable' }
+  if (index < 0) return { ok: false, reason: 'not-found' }
   const updated = { ...list[index], title: cleanTitle(title, list[index].title), updatedAt: now.toISOString() }
   const next = [...list]
   next[index] = updated
-  const result = writeList(store, SAVED_KEY, next)
+  const result = writeSaved(store, next, read.preserved)
   return result.ok ? { ok: true, value: updated } : result
 }
 
 export function removeExploration(store: KeyValueStore | null, id: string): StoreResult {
-  const list = readSaved(store)
-  if (!list.some((e) => e.id === id)) return { ok: false, reason: store ? 'not-found' : 'unavailable' }
-  return writeList(store, SAVED_KEY, list.filter((e) => e.id !== id))
+  const read = loadList(store, SAVED_KEY)
+  if (!read.ok) return { ok: false, reason: read.reason }
+  if (!read.entries.some((e) => e.id === id)) return { ok: false, reason: 'not-found' }
+  return writeSaved(store, read.entries.filter((e) => e.id !== id), read.preserved)
 }
 
 /** Records a visit: the newest first, deduplicated by canonical state, at most MAX_RECENT entries. */
@@ -168,7 +213,10 @@ export function recordVisit(store: KeyValueStore | null, state: ShareState, now 
   if (!store) return { ok: false, reason: 'unavailable' }
   const key = canonicalKey(canonical)
   const iso = now.toISOString()
-  const previous = readList(store, RECENT_KEY).filter((e) => canonicalKey(e) !== key)
+  const read = loadList(store, RECENT_KEY)
+  if (!read.ok && read.reason === 'unavailable') return read
+  // History is disposable: a damaged recent list is replaced rather than blocking new visits.
+  const previous = read.ok ? read.entries.filter((e) => canonicalKey(e) !== key) : []
   const entry: Exploration = {
     ...canonical,
     id: newId(now.getTime()),
@@ -185,7 +233,7 @@ export function clearRecent(store: KeyValueStore | null): StoreResult {
   try {
     store.removeItem(RECENT_KEY)
     return { ok: true, value: undefined }
-  } catch {
-    return { ok: false, reason: 'unavailable' }
+  } catch (e) {
+    return { ok: false, reason: isQuotaError(e) ? 'quota' : 'write-failed' }
   }
 }

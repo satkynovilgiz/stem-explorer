@@ -3,6 +3,7 @@ import { useId, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { hrefFor, subjectName } from '../../lib/explorations'
 import { browserStorage, clearRecent, MAX_SAVED, MAX_TITLE_LENGTH, removeExploration, renameExploration, type Exploration } from '../../lib/explorationStore'
+import { storeFailureText } from '../../lib/storeMessages'
 import { notifyLibraryChange, useExplorationLibrary } from '../../lib/useExplorationLibrary'
 
 function formatDate(iso: string) {
@@ -20,7 +21,7 @@ function SavedItem({ entry, onMessage }: { entry: Exploration; onMessage: (text:
       onMessage(`Renamed to “${r.value.title}”.`)
       setEditing(false)
       notifyLibraryChange()
-    } else onMessage('Could not rename: this browser’s storage is unavailable.')
+    } else onMessage(storeFailureText('rename', r.reason))
   }
 
   return (
@@ -70,7 +71,8 @@ function SavedItem({ entry, onMessage }: { entry: Exploration; onMessage: (text:
               aria-label={`Remove ${entry.title}`}
               onClick={() => {
                 const r = removeExploration(browserStorage(), entry.id)
-                onMessage(r.ok ? `Removed “${entry.title}”.` : 'Could not remove: this browser’s storage is unavailable.')
+                onMessage(r.ok ? `Removed “${entry.title}”.` : storeFailureText('remove', r.reason))
+                // Re-read either way, so the list shows what is really stored.
                 notifyLibraryChange()
               }}
             >
@@ -85,11 +87,14 @@ function SavedItem({ entry, onMessage }: { entry: Exploration; onMessage: (text:
 
 /** Saved explorations (always shown, with an empty state) and recent ones (only when there are some). */
 export function LibrarySections() {
-  const { available, saved, recent } = useExplorationLibrary()
+  const { savedError, saved, recent } = useExplorationLibrary()
   const [message, setMessage] = useState('')
 
   return (
     <div className="library-grid">
+      <p className="library-status" role="status">
+        {message}
+      </p>
       {recent.length > 0 && (
         <section className="home-panel" aria-labelledby="recent-heading">
           <div className="home-panel-head">
@@ -100,9 +105,10 @@ export function LibrarySections() {
               type="button"
               className="tool-button bordered"
               onClick={() => {
-                clearRecent(browserStorage())
+                const r = clearRecent(browserStorage())
+                // Announce success only once the entries are really gone; on failure they stay listed.
+                setMessage(r.ok ? 'History cleared.' : storeFailureText('clear', r.reason))
                 notifyLibraryChange()
-                setMessage('History cleared.')
               }}
             >
               Clear history
@@ -135,10 +141,15 @@ export function LibrarySections() {
             </span>
           )}
         </div>
-        {!available ? (
+        {savedError === 'unavailable' ? (
           <p className="empty-state">
             Saving isn’t available because this browser is blocking local storage. All explorers still work; use Copy link to keep
             a place.
+          </p>
+        ) : savedError === 'unreadable' ? (
+          <p className="empty-state">
+            The saved list on this browser is damaged and can’t be read. It has been left untouched, and new saves are paused so
+            nothing is overwritten. Clearing this site’s data in your browser settings starts a fresh list.
           </p>
         ) : saved.length === 0 ? (
           <p className="empty-state">
@@ -153,9 +164,6 @@ export function LibrarySections() {
         )}
         <p className="muted small">Saved on this browser. Clearing site data removes these entries.</p>
       </section>
-      <p className="visually-hidden" role="status">
-        {message}
-      </p>
     </div>
   )
 }

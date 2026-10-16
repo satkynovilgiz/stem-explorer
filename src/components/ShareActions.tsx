@@ -2,7 +2,8 @@ import { Bookmark, Check } from 'lucide-react'
 import { useId, useState } from 'react'
 import type { SubjectId } from '../data/subjects'
 import { canonicalize, defaultTitle } from '../lib/explorations'
-import { browserStorage, MAX_SAVED, MAX_TITLE_LENGTH, renameExploration, saveExploration, type Exploration } from '../lib/explorationStore'
+import { browserStorage, MAX_TITLE_LENGTH, renameExploration, saveExploration, type Exploration } from '../lib/explorationStore'
+import { storeFailureText } from '../lib/storeMessages'
 import { shareUrl } from '../lib/urlState'
 import { notifyLibraryChange } from '../lib/useExplorationLibrary'
 import { CopyLinkButton } from './CopyLinkButton'
@@ -21,12 +22,6 @@ type Message =
   | { kind: 'renamed'; title: string }
   | { kind: 'error'; text: string }
 
-const ERRORS: Record<string, string> = {
-  unavailable: 'Saving isn’t available: this browser is blocking local storage. Everything else still works.',
-  quota: 'This browser’s storage is full, so the exploration could not be saved.',
-  limit: `You already have ${MAX_SAVED} saved explorations, the maximum. Remove some on the Home page first.`,
-  invalid: 'This exploration could not be saved.',
-}
 
 /** Copy link + Save exploration, both built from one canonical share state. */
 export function ShareActions({ subject, params, restores }: Props) {
@@ -38,7 +33,7 @@ export function ShareActions({ subject, params, restores }: Props) {
   const suggested = state ? defaultTitle(state) : ''
 
   const save = () => {
-    if (!state) return setMessage({ kind: 'error', text: ERRORS.invalid })
+    if (!state) return setMessage({ kind: 'error', text: storeFailureText('save', 'invalid') })
     const result = saveExploration(browserStorage(), state, name || suggested)
     if (result.ok) {
       setMessage({ kind: 'saved', title: result.value.title })
@@ -47,7 +42,7 @@ export function ShareActions({ subject, params, restores }: Props) {
     } else if (result.reason === 'duplicate' && result.existing) {
       setMessage({ kind: 'duplicate', existing: result.existing })
     } else {
-      setMessage({ kind: 'error', text: ERRORS[result.reason] ?? ERRORS.invalid })
+      setMessage({ kind: 'error', text: storeFailureText('save', result.reason) })
     }
   }
 
@@ -58,7 +53,7 @@ export function ShareActions({ subject, params, restores }: Props) {
       setOpen(false)
       notifyLibraryChange()
     } else {
-      setMessage({ kind: 'error', text: ERRORS[result.reason] ?? ERRORS.invalid })
+      setMessage({ kind: 'error', text: storeFailureText('rename', result.reason) })
     }
   }
 

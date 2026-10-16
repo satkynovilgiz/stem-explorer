@@ -578,10 +578,25 @@ tour, which is what Exit tour restores.
 - Saved explorations are kept **on this browser only**. They don't sync across devices or browsers,
   and clearing site data, private windows or browser storage policies remove them.
 - At most 30 saved entries; saving more shows a message asking you to remove one.
-- If storage is unavailable (blocked or disabled), Home says so and every explorer keeps working;
-  Copy link still works. A full storage quota is reported instead of failing silently.
-- Malformed JSON, entries from an unknown schema version and entries whose parameters no longer
-  validate are ignored rather than crashing the page.
+- **Reading and writing are separate.** Reading never writes (there is no probe key). If writes fail,
+  for example with `QuotaExceededError` when storage is full, saved entries stay listed and
+  openable. The message names the cause and says that nothing changed. Removing the last saved
+  entry deletes the key, which needs no space, so it works even when storage is full.
+- **Damaged data is never overwritten.** If the saved list can't be parsed, Home says so and
+  saving, renaming and removing are refused until site data is cleared; the stored text is left
+  as it is. A damaged *recent* list is simply replaced, because history is disposable.
+- Entries written by a newer schema version are kept untouched when this version rewrites the
+  list. Entries of the current version whose parameters no longer validate are dropped.
+- If storage is blocked entirely, Home says so and every explorer keeps working; Copy link still
+  works.
+- **Clear history** reports success only after the browser has really removed the list; if it
+  refuses, the entries stay listed with an explanation.
+
+**Multiple tabs.** Open tabs stay in sync through the browser's `storage` event. A tab re-reads the
+library only for events about `stem-explorer:saved`, `stem-explorer:recent`, or `localStorage.clear()`
+(key `null`) on `localStorage`. Other keys and `sessionStorage` are ignored. Re-reading never
+writes, so tabs cannot set each other off. The only automatic write is the recent-visit record,
+made once per distinct view shown in that tab.
 
 ## Shareable links and URL state
 
@@ -695,7 +710,7 @@ How the URL is kept up to date:
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
-| `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored; unavailable storage and quota errors. |
+| `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
 
 **Browser tests** (`npm run test:e2e`, Playwright, `e2e/`), run in the local Google Chrome against
@@ -751,6 +766,10 @@ the production build:
   - save, duplicate detection, refresh, restore, rename and remove; Anatomy saved during the tour;
   - malformed stored data; recent history (only after visits, deduped, Clear history);
   - Back/Forward between Home and explorers, and direct deep links.
+- `storage.e2e.ts`: two pages in one browser context (shared storage, real `storage` events):
+  save, rename and remove propagating between tabs; idle tabs making no writes or events; unrelated
+  keys not re-reading the library; full storage keeping entries readable and openable with accurate
+  messages; a failed Clear history keeping the entries.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

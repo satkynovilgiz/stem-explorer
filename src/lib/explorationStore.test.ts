@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { canonicalize, canonicalKey, defaultTitle, hrefFor } from './explorations'
 import {
   clearRecent,
+  loadList,
   MAX_RECENT,
   MAX_SAVED,
   parseEntry,
@@ -15,6 +16,7 @@ import {
   saveExploration,
   type KeyValueStore,
 } from './explorationStore'
+import { isLibraryStorageEvent } from './useExplorationLibrary'
 
 function memoryStore(initial: Record<string, string> = {}): KeyValueStore & { data: Record<string, string> } {
   const data = { ...initial }
@@ -168,5 +170,114 @@ describe('recent explorations', () => {
 
   it('ignores invalid states', () => {
     expect(recordVisit(memoryStore(), { subject: 'chemistry', params: { molecule: 'gold' } })).toMatchObject({ ok: false, reason: 'invalid' })
+  })
+})
+
+describe('storage reliability', () => {
+  const quota = () => {
+    throw new DOMException('full', 'QuotaExceededError')
+  }
+
+  it('tells a failed read apart from an empty list', () => {
+    expect(loadList(null, SAVED_KEY)).toEqual({ ok: false, reason: 'unavailable' })
+    expect(loadList(memoryStore(), SAVED_KEY)).toEqual({ ok: true, entries: [], preserved: [] })
+    expect(loadList(memoryStore({ [SAVED_KEY]: '{not json' }), SAVED_KEY)).toEqual({ ok: false, reason: 'unreadable' })
+    const blocked = memoryStore()
+    blocked.getItem = () => {
+      throw new Error('SecurityError')
+    }
+    expect(loadList(blocked, SAVED_KEY)).toEqual({ ok: false, reason: 'unavailable' })
+  })
+
+  it('never overwrites a saved list it could not read', () => {
+    const store = memoryStore({ [SAVED_KEY]: '{damaged' })
+    expect(saveExploration(store, water, 'x')).toMatchObject({ ok: false, reason: 'unreadable' })
+    expect(removeExploration(store, 'abc123-1')).toMatchObject({ ok: false, reason: 'unreadable' })
+    expect(store.data[SAVED_KEY]).toBe('{damaged')
+
+    const blocked = memoryStore()
+    saveExploration(blocked, water, 'Kept')
+    const before = blocked.data[SAVED_KEY]
+    blocked.getItem = () => {
+      throw new Error('SecurityError')
+    }
+    expect(saveExploration(blocked, { subject: 'chemistry', params: { molecule: 'methane' } }, 'y')).toMatchObject({ ok: false, reason: 'unavailable' })
+    expect(blocked.data[SAVED_KEY]).toBe(before)
+  })
+
+  it('keeps entries readable when writes fail, and reports quota without changing data', () => {
+    const store = memoryStore()
+    saveExploration(store, water, 'Kept')
+    const before = store.data[SAVED_KEY]
+    store.setItem = quota
+    expect(saveExploration(store, { subject: 'chemistry', params: { molecule: 'methane' } }, 'y')).toMatchObject({ ok: false, reason: 'quota' })
+    const id = readSaved(store)[0].id
+    expect(renameExploration(store, id, 'New')).toMatchObject({ ok: false, reason: 'quota' })
+    expect(store.data[SAVED_KEY]).toBe(before)
+    expect(readSaved(store).map((e) => e.title)).toEqual(['Kept'])
+  })
+
+  it('can still remove the last entry when storage is full (removal needs no space)', () => {
+    const store = memoryStore()
+    saveExploration(store, water, 'Only')
+    store.setItem = quota
+    expect(removeExploration(store, readSaved(store)[0].id).ok).toBe(true)
+    expect(store.data[SAVED_KEY]).toBeUndefined()
+  })
+
+  it('reports other write refusals distinctly', () => {
+    const store = memoryStore()
+    store.setItem = () => {
+      throw new Error('SecurityError')
+    }
+    expect(saveExploration(store, water, 'x')).toMatchObject({ ok: false, reason: 'write-failed' })
+  })
+
+  it('preserves entries from newer schema versions when writing', () => {
+    const future = { id: 'future-1', version: 2, subject: 'chemistry', params: { molecule: 'water' }, title: 'From v2', extra: [1, 2] }
+    const store = memoryStore({ [SAVED_KEY]: JSON.stringify([future]) })
+    expect(readSaved(store)).toEqual([])
+    expect(saveExploration(store, water, 'Now').ok).toBe(true)
+    const raw = JSON.parse(store.data[SAVED_KEY]) as unknown[]
+    expect(raw).toHaveLength(2)
+    expect(raw[1]).toEqual(future)
+  })
+
+  it('reports a failed history clear and keeps the entries', () => {
+    const store = memoryStore()
+    recordVisit(store, water)
+    store.removeItem = () => {
+      throw new Error('SecurityError')
+    }
+    expect(clearRecent(store)).toMatchObject({ ok: false, reason: 'write-failed' })
+    expect(readRecent(store)).toHaveLength(1)
+    expect(clearRecent(null)).toMatchObject({ ok: false, reason: 'unavailable' })
+  })
+
+  it('replaces a damaged history list, but never writes when storage is blocked', () => {
+    const store = memoryStore({ [RECENT_KEY]: 'garbage' })
+    expect(recordVisit(store, water).ok).toBe(true)
+    expect(readRecent(store)).toHaveLength(1)
+    const blocked = memoryStore()
+    let writes = 0
+    blocked.getItem = () => {
+      throw new Error('SecurityError')
+    }
+    blocked.setItem = () => {
+      writes++
+    }
+    expect(recordVisit(blocked, water)).toMatchObject({ ok: false, reason: 'unavailable' })
+    expect(writes).toBe(0)
+  })
+
+  it('only library keys (or clear()) on localStorage count as library storage events', () => {
+    const local = {} as Storage
+    const session = {} as Storage
+    expect(isLibraryStorageEvent({ key: SAVED_KEY, storageArea: local }, local)).toBe(true)
+    expect(isLibraryStorageEvent({ key: RECENT_KEY, storageArea: local }, local)).toBe(true)
+    expect(isLibraryStorageEvent({ key: null, storageArea: local }, local)).toBe(true)
+    expect(isLibraryStorageEvent({ key: 'other-app', storageArea: local }, local)).toBe(false)
+    expect(isLibraryStorageEvent({ key: '__stem-explorer-probe__', storageArea: local }, local)).toBe(false)
+    expect(isLibraryStorageEvent({ key: SAVED_KEY, storageArea: session }, local)).toBe(false)
   })
 })
