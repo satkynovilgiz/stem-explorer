@@ -7,6 +7,7 @@ import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { anatomyParamEntries, parseAnatomyParams, withAnatomyParams } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { ActivityPanel } from '../activities/ActivityPanel'
+import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
 import { ANATOMY_ACTIVITY, anatomySnapshot, pulmonarySetup } from './activity'
 import { HEART_COLORS } from './colors'
@@ -56,6 +57,7 @@ export function HeartExplorer() {
     restoreUrl: (snap) => replaceUrlSearch(withAnatomyParams(window.location.search, anatomyShareState(snap))),
   })
   const activityPanel = <ActivityPanel activity={activity} state={state} />
+  const guidePanel = <SubjectGuidePanel subject="anatomy" />
 
   const select = (id: HeartPartId) => {
     dispatch({ type: 'select', partId: id })
@@ -166,6 +168,7 @@ export function HeartExplorer() {
           {tour}
         </div>
         {activityPanel}
+        {guidePanel}
         <Tabs
           label="Anatomy panels"
           className="mobile-tabs"
@@ -190,6 +193,7 @@ export function HeartExplorer() {
       </div>
       <aside className="chem-side chem-side--right">
         {activityPanel}
+        {guidePanel}
         {details}
       </aside>
     </div>

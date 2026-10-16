@@ -652,6 +652,42 @@ library only for events about `stem-explorer:saved`, `stem-explorer:recent`, or 
 writes, so tabs cannot set each other off. The only automatic write is the recent-visit record,
 made once per distinct view shown in that tab.
 
+## Subject guides and glossary
+
+**About this explorer.** Every explorer has the same collapsible panel, under the activity panel
+(on phones, between the 3D view and the tabs). It contains:
+- a plain-language summary, with a deeper explanation behind **Go deeper**;
+- **key terms**: buttons that expand the shared glossary definition in place (click, tap or
+  keyboard, never hover) and link to the glossary entry;
+- equations or structural relationships, with a table of symbols and units;
+- common misconceptions;
+- what the visualization simplifies;
+- what is **measured** data, what is **computed** from it, and what is only **illustrative**.
+
+Each claim names the source that supports it, beside the claim.
+
+**Glossary** (`#/glossary`, also in the top bar). It has search over terms and definitions, a subject
+filter, and `?term=<id>` deep links that scroll to and highlight one entry. Each entry links to
+places in the explorers where the term can be seen. Definitions are stored once
+(`src/data/glossary.ts`):
+- Biology structure terms are generated from the organelle content, not copied. A unit test fails
+  if two copies of a term disagree; this caught a duplicate "Endomembrane system" definition
+  during development.
+- Entries without a citation are labelled as an app convention (e.g. *anterior view*) or a unit
+  definition (*ångström*).
+- Home search includes glossary entries, ranked after explorer content.
+
+**Sources.** Guides and glossary cite sources by id from one registry (`src/data/sources.ts`), which
+reuses the existing anatomy, biology and mathematics registries. Material new in this milestone
+was checked against pages that could be read:
+- OpenStax Chemistry 2e §7.2 (covalent bond, bond length) and §7.6 (VSEPR, lone pairs, bond angle);
+- OpenStax University Physics Vol. 1 §3.5 (equal free-fall acceleration; 9.81 m/s² as an average) and §4.3;
+- OpenStax A&P 2e §20.1 (arteries and veins named by flow direction; pulmonary vessels);
+- OpenStax Biology 2e §4.3 (mitochondria in both plant and animal cells);
+- OpenStax Calculus Vol. 3 §4.7.
+
+No cell-size range is given, because the cited Biology page doesn't state one.
+
 ## Design conventions
 
 Shared rules live in `src/styles/tokens.css` (colours, type scale, spacing, radii, motion) and
@@ -834,6 +870,7 @@ How the URL is kept up to date:
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
 | `src/lib/backup.test.ts` | Export contents (saved only, no IDs, origins or history); round trip with fresh IDs; oversized, malformed, foreign and unsupported files; mixed new, duplicate and invalid entries, with existing titles kept and URL fields ignored; plain-text titles; the saved-item limit; a single write that leaves data unchanged on quota failure; refusing when the library changed since the preview, including when the count is unchanged but the entries differ; never overwriting a damaged list. |
 | `src/features/activities/activities.test.ts` | One activity per subject with goal, setup, 3–5 steps, conclusion and https sources; no setup completes a step; the change lists; detection rules for every detected step (including the wrong vertex, changed speed and other surfaces); the Anatomy tour snapshot; Physics replace never resuming; the Physics summary matching `solveTrajectory`. |
+| `src/data/glossary.test.ts` | Unique glossary ids and terms; biology terms shared by several structures have one definition and all reach the glossary; every entry cites known sources or is marked as a convention or unit; links are valid relative routes; every subject guide has every section, references existing terms and sources, and cites each deeper explanation. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -904,6 +941,10 @@ the production build:
   first and exiting paused, Anatomy ending a running tour, leaving for another subject mid-activity,
   and keyboard collapse. `mobile.e2e.ts` and `no-webgl.e2e.ts` add the phone layout and the
   no-WebGL fallbacks.
+- `glossary.e2e.ts`: the About this explorer panel in all five subjects (sections, Go deeper with
+  sources, key terms expanding by keyboard); a term linking to its glossary entry and back to an
+  explorer; glossary search, subject filter, convention labels and biology terms; Home search
+  ranking definitions after explorations.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):
@@ -932,6 +973,8 @@ src/
   components/                   shell: TopNav, AppLink, ErrorBoundary, Tabs, ViewportShell, CopyLinkButton, ShareActions, RangeField
   features/home/                Home page, search, saved/recent sections, backup, activity entries, SVG subject illustrations
   features/activities/          guided-activity types, hook (state, detection, snapshot/restore) and panel
+  features/guide/, features/glossary/   About this explorer panel, term buttons, source links; glossary page
+  data/guides.ts, data/glossary.ts, data/sources.ts   subject guide content, shared definitions, source registry
   features/*/activity.ts        each subject's activity definition and setup
   data/
     subjects.ts                 subject list and planned features

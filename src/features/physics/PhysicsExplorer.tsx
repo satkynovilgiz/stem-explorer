@@ -17,6 +17,7 @@ import {
   type ParamKey,
 } from '../../physics/projectile'
 import { ActivityPanel } from '../activities/ActivityPanel'
+import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
 import { anglesSetup, PHYSICS_ACTIVITY } from './activity'
 import { AboutPanel } from './AboutPanel'
@@ -130,6 +131,7 @@ export function PhysicsExplorer() {
     restoreUrl: (snap) => replaceUrlSearch(withPhysicsParams(window.location.search, snap.state.params)),
   })
   const activityPanel = <ActivityPanel activity={activity} state={state} />
+  const guidePanel = <SubjectGuidePanel subject="physics" />
 
   const setParam = (key: ParamKey, value: number) => dispatch({ type: 'setParam', key, value })
   const scrub = (t: number) => {
@@ -259,6 +261,7 @@ export function PhysicsExplorer() {
           {playback}
         </div>
         {activityPanel}
+        {guidePanel}
         <Tabs
           label="Physics panels"
           className="mobile-tabs"
@@ -286,6 +289,7 @@ export function PhysicsExplorer() {
       </div>
       <aside className="chem-side chem-side--right">
         {activityPanel}
+        {guidePanel}
         <section className="panel info" aria-labelledby="physics-heading">
           <header className="info-header">
             <p className="eyebrow">Physics</p>

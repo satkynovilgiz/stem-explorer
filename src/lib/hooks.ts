@@ -14,12 +14,12 @@ function subscribeHash(onChange: () => void) {
   }
 }
 
-export type Route = 'home' | SubjectId
+export type Route = 'home' | 'glossary' | SubjectId
 
 /** Route from a hash such as "#/physics". Anything unrecognized (including no hash) is Home. */
 export function routeFromHash(hash: string): Route {
   const id = hash.replace(/^#\/?/, '').split('/')[0]
-  return isSubjectId(id) ? id : 'home'
+  return isSubjectId(id) ? id : id === 'glossary' ? 'glossary' : 'home'
 }
 
 /** Current route from the URL hash; Home when there is no recognized subject. */

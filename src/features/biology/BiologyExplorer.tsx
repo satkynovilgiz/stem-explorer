@@ -7,6 +7,7 @@ import { ORGANELLE_IDS, type OrganelleId } from '../../data/biology/types'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { parseBiologyParams, withBiologyParams } from '../../lib/urlState'
 import { ActivityPanel } from '../activities/ActivityPanel'
+import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
 import { BIOLOGY_ACTIVITY, golgiSetup } from './activity'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
@@ -64,6 +65,7 @@ export function BiologyExplorer() {
       replaceUrlSearch(withBiologyParams(window.location.search, { structureId: snap.selection?.organelleId ?? null, cellView: snap.view })),
   })
   const activityPanel = <ActivityPanel activity={activity} state={state} />
+  const guidePanel = <SubjectGuidePanel subject="biology" />
 
   const select = (organelleId: OrganelleId, instance: number | null = null) => {
     dispatch({ type: 'select', organelleId, instance })
@@ -146,6 +148,7 @@ export function BiologyExplorer() {
         {announcer}
         <div className="chem-stage">{viewer}</div>
         {activityPanel}
+        {guidePanel}
         <Tabs
           label="Biology panels"
           className="mobile-tabs"
@@ -167,6 +170,7 @@ export function BiologyExplorer() {
       <div className="chem-stage">{viewer}</div>
       <aside className="chem-side chem-side--right">
         {activityPanel}
+        {guidePanel}
         {details}
       </aside>
     </div>

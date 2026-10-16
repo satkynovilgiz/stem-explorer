@@ -16,10 +16,12 @@ describe('search index', () => {
     expect(count('heart:')).toBe(14)
     expect(count('surface:')).toBe(4)
     expect(count('experiment:')).toBe(1)
+    expect(count('term:')).toBeGreaterThan(40)
   })
 
   it('links only to valid, relative routes', () => {
-    for (const item of SEARCH_INDEX) {
+    for (const item of SEARCH_INDEX.filter((i) => i.id.startsWith('term:'))) expect(item.href).toMatch(/^\?term=[a-z0-9-]+#\/glossary$/)
+    for (const item of SEARCH_INDEX.filter((i) => !i.id.startsWith('term:'))) {
       expect(item.href).toMatch(/^(\?[^#]*)?#\/[a-z]+$/)
       const { subject, params } = parse(item.href)
       expect(canonicalize(subject, params), item.href).not.toBeNull()
@@ -42,6 +44,8 @@ describe('searchExplorations', () => {
     expect(mitral).toMatchObject({ name: 'Mitral valve', subject: 'anatomy', href: '?part=mitral-valve&heart=cutaway#/anatomy' })
     expect(searchExplorations('saddle')[0].subject).toBe('mathematics')
     expect(searchExplorations('trajectory')[0].name).toBe('Projectile motion lab')
+    // Definitions follow the explorations.
+    expect(searchExplorations('trajectory')[1]).toMatchObject({ name: 'Trajectory', href: '?term=trajectory#/glossary' })
   })
 
   it('ranks exact and prefix name matches first', () => {

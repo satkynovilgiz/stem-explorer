@@ -99,3 +99,12 @@ test('activities adapt honestly without WebGL instead of requiring the 3D view',
   await page.locator('.activity').getByRole('button', { name: 'Next' }).click()
   await expect(page.locator('.activity')).toContainText('Isolating needs the 3D view')
 })
+
+test('guides and the glossary work without WebGL', async ({ page }) => {
+  await page.goto('/#/mathematics')
+  await waitForViewport(page)
+  await page.locator('.guide-toggle').click()
+  await expect(page.locator('.guide')).toContainText('Measured, computed or illustrative?')
+  await page.goto('/?term=vertical-trace#/glossary')
+  await expect(page.locator('#term-vertical-trace')).toHaveClass(/is-focused/)
+})

@@ -153,3 +153,14 @@ test('Physics scene labels stay inside the 3D view on a phone (no clipped axis t
   )
   expect(clipped).toEqual([])
 })
+
+test('About this explorer and the glossary fit a phone', async ({ page }) => {
+  await page.goto('/#/physics')
+  await waitForViewport(page)
+  await page.locator('.guide-toggle').tap()
+  await expect(page.locator('.guide-symbols')).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+  await page.goto('/#/glossary')
+  await expect(page.locator('.glossary-entry').first()).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+})

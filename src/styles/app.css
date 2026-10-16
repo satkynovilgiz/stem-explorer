@@ -3512,3 +3512,283 @@ button {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Subject guide and glossary ---------- */
+
+.guide {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.guide-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-2) var(--space-5);
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.guide-toggle:hover {
+  background: var(--color-surface-hover);
+}
+
+.guide-toggle > svg:first-child {
+  color: var(--color-accent-strong);
+}
+
+.guide-title {
+  flex: 1;
+}
+
+.guide-body {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.guide-body p {
+  margin: 0;
+}
+
+.guide-summary {
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.guide-more summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-accent-strong);
+}
+
+.guide-more p {
+  margin-top: var(--space-2) !important;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.guide-h {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  text-align: left;
+}
+
+.guide-list {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.guide-list li {
+  display: grid;
+  gap: 2px;
+}
+
+.guide-expr {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.cite {
+  color: var(--color-text-subtle);
+}
+
+.cite a {
+  color: var(--color-accent-strong);
+}
+
+.term-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.term {
+  display: contents;
+}
+
+.term-button {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 999px;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.term-button[aria-expanded='true'] {
+  border-style: solid;
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-soft);
+}
+
+.term-definition {
+  flex-basis: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-left: 2px solid var(--color-accent);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.term-more {
+  color: var(--color-accent-strong);
+}
+
+.guide-symbols {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.guide-symbols th,
+.guide-symbols td {
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.guide-symbols th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.guide-kinds {
+  margin: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.guide-kinds div {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: var(--space-2);
+}
+
+.guide-kinds dt {
+  font-weight: 600;
+}
+
+.guide-kinds dd {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.chem--mobile .guide {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.glossary {
+  width: min(900px, 100%);
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5);
+  display: grid;
+  gap: var(--space-5);
+}
+
+.glossary-head {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.glossary-head .eyebrow,
+.glossary-head .home-title,
+.glossary-head .home-lead {
+  margin: 0;
+}
+
+.glossary-controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.glossary-controls p {
+  margin: 0;
+}
+
+.glossary-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.glossary-filter .segmented-option {
+  min-height: 36px;
+  border-color: var(--color-border);
+}
+
+.glossary-list {
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.glossary-entry {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  scroll-margin-top: calc(var(--nav-height) + var(--space-4));
+}
+
+.glossary-entry.is-focused {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.glossary-entry dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 650;
+}
+
+.glossary-entry dd {
+  margin: var(--space-1) 0 0;
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.glossary-entry dd p {
+  margin: 0;
+}
+
+.glossary-links a {
+  color: var(--color-accent-strong);
+}
+
+@media (max-width: 899px) {
+  .glossary {
+    padding: var(--space-5) var(--space-4);
+  }
+}

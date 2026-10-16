@@ -5,6 +5,7 @@ import { HeartExplorer } from './features/anatomy/HeartExplorer'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
 import { ChemistryExplorer } from './features/chemistry/ChemistryExplorer'
 import { MathematicsExplorer } from './features/mathematics/MathematicsExplorer'
+import { GlossaryPage } from './features/glossary/GlossaryPage'
 import { Home } from './features/home/Home'
 import { PhysicsExplorer } from './features/physics/PhysicsExplorer'
 import { useRoute } from './lib/hooks'
@@ -14,8 +15,8 @@ export default function App() {
   const subjectName = SUBJECTS.find((s) => s.id === route)?.name
 
   useEffect(() => {
-    document.title = subjectName ? `${subjectName} · STEM Explorer` : 'STEM Explorer'
-  }, [subjectName])
+    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : 'STEM Explorer'
+  }, [subjectName, route])
 
   return (
     <div className="app">
@@ -49,6 +50,8 @@ export default function App() {
             <h1 className="visually-hidden">Biology Explorer: animal cell</h1>
             <BiologyExplorer />
           </>
+        ) : route === 'glossary' ? (
+          <GlossaryPage />
         ) : (
           <Home />
         )}

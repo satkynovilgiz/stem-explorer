@@ -128,7 +128,7 @@ test.describe('Home search', () => {
     await search(page).fill('golgi')
     await expect(results(page).getByRole('link', { name: /Golgi apparatus/ })).toHaveAttribute('href', '?structure=golgi&cell=cutaway#/biology')
     await search(page).fill('saddle')
-    await expect(results(page).getByRole('link', { name: /Saddle/ })).toHaveAttribute('href', '?surface=saddle#/mathematics')
+    await expect(results(page).getByRole('link', { name: /^Saddle \(hyperbolic/ })).toHaveAttribute('href', '?surface=saddle#/mathematics')
     await search(page).fill('projectile')
     await expect(results(page).getByRole('link', { name: /Projectile/ }).first()).toHaveAttribute('href', /#\/physics$/)
 

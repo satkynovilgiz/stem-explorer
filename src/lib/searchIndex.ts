@@ -1,5 +1,6 @@
 import { HEART_PARTS } from '../data/anatomy/heart'
 import { ORGANELLES } from '../data/biology/organelles'
+import { GLOSSARY } from '../data/glossary'
 import { MOLECULES } from '../data/chemistry/molecules'
 import { SUBJECTS, type SubjectId } from '../data/subjects'
 import { SURFACES } from '../math/surfaces'
@@ -78,12 +79,23 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     href: '#/physics',
     terms: ['projectile', 'trajectory', 'launch', 'gravity', 'parabola', 'range', 'velocity'],
   },
+  // Glossary definitions, ranked after explorer content (see searchExplorations).
+  ...GLOSSARY.map((g) => ({
+    id: `term:${g.id}`,
+    name: g.term,
+    subject: g.subjects[0],
+    description: `Glossary: ${g.definition}`,
+    href: `?term=${g.id}#/glossary`,
+    terms: [] as string[],
+  })),
 ]
 
 /**
  * Case-insensitive search over names and terms. Unicode subscripts match plain digits ("H₂O" and
  * "h2o"). Results are ranked: exact name, then name prefix, then name contains, then other terms.
  */
+const isTerm = (item: SearchItem) => (item.id.startsWith('term:') ? 1 : 0)
+
 export function searchExplorations(query: string, limit = 12): SearchItem[] {
   const q = normalize(query)
   if (!q) return []
@@ -99,7 +111,8 @@ export function searchExplorations(query: string, limit = 12): SearchItem[] {
     if (score) scored.push({ item, score })
   }
   return scored
-    .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name))
+    // Explorations first, then glossary definitions; within each group by match quality, then name.
+    .sort((a, b) => isTerm(a.item) - isTerm(b.item) || b.score - a.score || a.item.name.localeCompare(b.item.name))
     .slice(0, limit)
     .map((s) => s.item)
 }

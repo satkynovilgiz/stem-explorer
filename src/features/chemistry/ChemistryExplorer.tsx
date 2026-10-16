@@ -5,6 +5,7 @@ import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { parseChemistryParams, withChemistryParams } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { ActivityPanel } from '../activities/ActivityPanel'
+import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
 import { CHEMISTRY_ACTIVITY, waterSetup } from './activity'
 import { InfoPanel } from './InfoPanel'
@@ -62,6 +63,7 @@ export function ChemistryExplorer() {
       replaceUrlSearch(withChemistryParams(window.location.search, { moleculeId: snap.moleculeId, representation: snap.representation })),
   })
   const activityPanel = <ActivityPanel activity={activity} state={state} />
+  const guidePanel = <SubjectGuidePanel subject="chemistry" />
 
   const selectMolecule = (id: string) => {
     dispatch({ type: 'selectMolecule', moleculeId: id })
@@ -145,6 +147,7 @@ export function ChemistryExplorer() {
         {announcer}
         <div className="chem-stage">{viewer}</div>
         {activityPanel}
+        {guidePanel}
         <Tabs
           label="Chemistry panels"
           className="mobile-tabs"
@@ -166,6 +169,7 @@ export function ChemistryExplorer() {
       <div className="chem-stage">{viewer}</div>
       <aside className="chem-side chem-side--right">
         {activityPanel}
+        {guidePanel}
         {info}
       </aside>
     </div>

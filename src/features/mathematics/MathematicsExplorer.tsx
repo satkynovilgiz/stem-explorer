@@ -9,6 +9,7 @@ import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { heightGradientCss } from '../../math/heightColor'
 import { getSurface, heightRange, normalizeParamValue, num, type SurfaceDef, type SurfaceId } from '../../math/surfaces'
 import { ActivityPanel } from '../activities/ActivityPanel'
+import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
 import { MATHEMATICS_ACTIVITY, saddleSetup } from './activity'
 import { FormulaPanel, ParameterPanel, PointInspector, SliceControls, SourcesPanel, SurfaceLibrary } from './MathPanels'
@@ -68,6 +69,7 @@ export function MathematicsExplorer() {
       replaceUrlSearch(withMathParams(window.location.search, { surfaceId: snap.surfaceId, params: snap.params, slice: snap.slice })),
   })
   const activityPanel = <ActivityPanel activity={activity} state={state} />
+  const guidePanel = <SubjectGuidePanel subject="mathematics" />
 
   const selectSurface = (id: SurfaceId) => {
     dispatch({ type: 'selectSurface', surfaceId: id })
@@ -201,6 +203,7 @@ export function MathematicsExplorer() {
         {announcer}
         <div className="chem-stage">{viewer}</div>
         {activityPanel}
+        {guidePanel}
         <Tabs
           label="Mathematics panels"
           className="mobile-tabs"
@@ -232,6 +235,7 @@ export function MathematicsExplorer() {
       </div>
       <aside className="chem-side chem-side--right">
         {activityPanel}
+        {guidePanel}
         <section className="panel info" aria-labelledby="math-heading">
           <header className="info-header">
             <p className="eyebrow">Mathematics</p>

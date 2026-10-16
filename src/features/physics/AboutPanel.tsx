@@ -1,18 +1,12 @@
 import { ExternalLink } from 'lucide-react'
+import { SOURCES } from '../../data/sources'
 import { formatSig, type Trajectory } from '../../physics/projectile'
 import { markerRadius, sceneBounds, vectorScales } from './sceneMath'
 
+// Labels and links come from the shared registry; usedFor notes are specific to this panel.
 const PHYSICS_SOURCES = [
-  {
-    label: 'OpenStax University Physics Volume 1 — 4.3 Projectile Motion',
-    url: 'https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion',
-    usedFor: 'Equations of motion, independence of horizontal and vertical motion, maximum height',
-  },
-  {
-    label: 'OpenStax University Physics Volume 1 — 3.5 Free Fall',
-    url: 'https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall',
-    usedFor: 'Value and variation of g; sign convention with upward positive',
-  },
+  { ...SOURCES['up-4-3'], usedFor: 'Equations of motion, independence of horizontal and vertical motion, maximum height' },
+  { ...SOURCES['up-3-5'], usedFor: 'Value and variation of g; sign convention with upward positive' },
 ]
 
 export function AboutPanel({ trajectory, runA }: { trajectory: Trajectory; runA: Trajectory | null }) {
