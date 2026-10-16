@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   parseAnatomyParams,
   parseBiologyParams,
+  parsePhysicsExperiment,
+  parseSpringParams,
+  withoutSpringParams,
+  withSpringParams,
   parseChemistryParams,
   parseMathParams,
   parsePhysicsParams,
@@ -242,5 +246,25 @@ describe('parseAnatomyParams', () => {
 
   it('removes the part key when nothing is selected', () => {
     expect(new URLSearchParams(withAnatomyParams('?part=right-atrium', { partId: null, heartView: 'whole' })).has('part')).toBe(false)
+  })
+})
+
+describe('spring experiment links', () => {
+  const defaults = { mass: 1, k: 20, x0: 0.2 }
+  const valid = (key: 'mass' | 'k' | 'x0', v: number) => Number.isFinite(v) && (key === 'x0' ? Math.abs(v) <= 0.5 : v > 0)
+
+  it('reads the experiment, falling back to projectile for links without it', () => {
+    expect(parsePhysicsExperiment('?speed=20')).toEqual({ experiment: 'projectile', invalid: false })
+    expect(parsePhysicsExperiment('?experiment=spring')).toEqual({ experiment: 'spring', invalid: false })
+    expect(parsePhysicsExperiment('?experiment=pendulum')).toEqual({ experiment: 'projectile', invalid: true })
+  })
+
+  it('parses each spring value on its own and round-trips', () => {
+    expect(parseSpringParams('?mass=2&k=abc&x0=-0.7', defaults, valid)).toEqual({ params: { mass: 2, k: 20, x0: 0.2 }, invalid: ['k', 'x0'] })
+    const search = withSpringParams('?speed=15', { mass: 0.5, k: 40, x0: -0.1 })
+    expect(parseSpringParams(search, defaults, valid).params).toEqual({ mass: 0.5, k: 40, x0: -0.1 })
+    expect(new URLSearchParams(search).get('speed')).toBe('15')
+    const back = new URLSearchParams(withoutSpringParams(search))
+    expect([back.has('experiment'), back.has('mass'), back.get('speed')]).toEqual([false, false, '15'])
   })
 })

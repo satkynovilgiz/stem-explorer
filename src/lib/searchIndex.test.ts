@@ -15,7 +15,7 @@ describe('search index', () => {
     expect(count('organelle:')).toBe(14) // 10 animal-model structures + 4 plant-only
     expect(count('heart:')).toBe(14)
     expect(count('surface:')).toBe(4)
-    expect(count('experiment:')).toBe(1)
+    expect(count('experiment:')).toBe(2)
     expect(count('term:')).toBeGreaterThan(40)
   })
 

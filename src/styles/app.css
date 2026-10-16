@@ -4091,3 +4091,50 @@ button {
   text-decoration: none;
   color: var(--color-text);
 }
+
+/* ---------- Physics: spring lab ---------- */
+
+.energy-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.energy-bars li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'label value' 'track track';
+  gap: 2px var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.energy-label {
+  grid-area: label;
+  color: var(--color-text-muted);
+}
+
+.energy-value {
+  grid-area: value;
+  font-variant-numeric: tabular-nums;
+}
+
+.energy-track {
+  grid-area: track;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.energy-fill {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+}
+
+.graphs--single {
+  grid-template-columns: minmax(0, 560px);
+}

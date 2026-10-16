@@ -4,6 +4,7 @@ import { findMolecule, MOLECULES } from '../data/chemistry/molecules'
 import { isSubjectId, SUBJECTS, type SubjectId } from '../data/subjects'
 import { getSurface } from '../math/surfaces'
 import { DEFAULT_PARAMS, isValidParam, normalizeParam, PARAM_KEYS } from '../physics/projectile'
+import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
   anatomyParamEntries,
   mathParamEntries,
@@ -13,6 +14,9 @@ import {
   parseMathParams,
   parsePhysicsParams,
   physicsParamEntries,
+  parsePhysicsExperiment,
+  parseSpringParams,
+  springParamEntries,
 } from './urlState'
 
 /**
@@ -50,6 +54,15 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
       }
     }
     case 'physics': {
+      const exp = parsePhysicsExperiment(search)
+      if (exp.invalid) return null
+      if (exp.experiment === 'spring') {
+        const r = parseSpringParams(search, DEFAULT_SPRING, isValidSpringParam)
+        if (r.invalid.length) return null
+        const p = { ...r.params }
+        for (const key of SPRING_KEYS) p[key] = normalizeSpringParam(key, p[key]) ?? DEFAULT_SPRING[key]
+        return { subject, params: springParamEntries(p) }
+      }
       const r = parsePhysicsParams(search, DEFAULT_PARAMS, isValidParam)
       if (r.invalid.length) return null
       const p = { ...r.params }
@@ -96,6 +109,7 @@ export function defaultTitle(state: ShareState): string {
         ? `${findOrganelle(p.structure)?.name ?? 'Cell structure'} in the ${p.type === 'plant' ? 'plant' : 'animal'} cell`
         : `${p.type === 'plant' ? 'Plant' : 'Animal'} cell · ${p.cell === 'whole' ? 'whole' : 'cutaway'}`
     case 'physics':
+      if (p.experiment === 'spring') return `Spring: m = ${p.mass} kg, k = ${p.k} N/m, x₀ = ${p.x0} m`
       return `Launch at ${p.speed} m/s, ${p.angle}°${Number(p.height) > 0 ? ` from ${p.height} m` : ''}${p.gravity !== '9.81' ? `, g = ${p.gravity} m/s²` : ''}`
     case 'mathematics': {
       const name = getSurface(p.surface as never)?.name ?? 'Surface'

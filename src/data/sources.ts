@@ -27,6 +27,14 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax University Physics Volume 1 — 3.5 Free Fall',
     url: 'https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall',
   },
+  'up-15-1': {
+    label: 'OpenStax University Physics Volume 1 — 15.1 Simple Harmonic Motion',
+    url: 'https://openstax.org/books/university-physics-volume-1/pages/15-1-simple-harmonic-motion',
+  },
+  'up-15-2': {
+    label: 'OpenStax University Physics Volume 1 — 15.2 Energy in Simple Harmonic Motion',
+    url: 'https://openstax.org/books/university-physics-volume-1/pages/15-2-energy-in-simple-harmonic-motion',
+  },
   'chem-7-2': {
     label: 'OpenStax Chemistry 2e — 7.2 Covalent Bonding',
     url: 'https://openstax.org/books/chemistry-2e/pages/7-2-covalent-bonding',

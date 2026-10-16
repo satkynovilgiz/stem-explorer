@@ -39,6 +39,12 @@ describe('canonicalize', () => {
     expect(canonicalize('chemistry', { molecule: 'benzene' })).toEqual({ subject: 'chemistry', params: { molecule: 'benzene', view: 'ball-and-stick' } })
     expect(canonicalize('anatomy', { part: 'aorta' })).toEqual({ subject: 'anatomy', params: { part: 'aorta', heart: 'whole' } })
     expect(canonicalize('physics', { gravity: '9.806' })?.params.gravity).toBe('9.81')
+    expect(canonicalize('physics', { experiment: 'spring', mass: '2', x0: '0.234' })).toEqual({
+      subject: 'physics',
+      params: { experiment: 'spring', mass: '2', k: '20', x0: '0.23' },
+    })
+    expect(canonicalize('physics', { experiment: 'spring', k: '-1' })).toBeNull()
+    expect(canonicalize('physics', { experiment: 'pendulum' })).toBeNull()
   })
 
   it('rejects unknown subjects, invalid values and non-string values', () => {

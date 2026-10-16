@@ -36,14 +36,14 @@ export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; 
     action: 'Open the cells',
   },
   physics: {
-    title: 'Projectile motion lab',
-    summary: 'Ideal launches with no air resistance.',
+    title: 'Motion labs',
+    summary: 'Two ideal experiments: projectile motion and a spring–mass oscillator.',
     capabilities: [
-      'Set speed, angle, height and gravity, then launch',
-      'Scrub through time with live readouts and graphs',
-      'Save Run A and compare it with a second launch',
+      'Launch projectiles; compare two runs with live readouts and graphs',
+      'Oscillate a mass on a spring: period, forces and energy',
+      'Scrub through time; values come from exact equations',
     ],
-    action: 'Open the lab',
+    action: 'Open the labs',
   },
   mathematics: {
     title: 'Surfaces z = f(x, y)',

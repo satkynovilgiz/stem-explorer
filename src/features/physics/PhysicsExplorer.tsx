@@ -1,10 +1,10 @@
 import { GitCompare, RotateCcw, X } from 'lucide-react'
-import { lazy, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
 import { useMediaQuery } from '../../lib/hooks'
-import { parsePhysicsParams, physicsParamEntries, withPhysicsParams } from '../../lib/urlState'
+import { parsePhysicsExperiment, parsePhysicsParams, physicsParamEntries, withoutSpringParams, withPhysicsParams, type PhysicsExperiment } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import {
   advanceTime,
@@ -47,7 +47,41 @@ function initFromUrl() {
   return initialPhysicsState(params)
 }
 
+/**
+ * Physics has two experiments. `?experiment=spring` opens the spring–mass lab; links without it are
+ * projectile links, so every existing link opens as before. Each lab keeps its own state and keys.
+ */
+// The spring–mass lab (and its scene) load only when that experiment is opened.
+const SpringLab = lazy(() => import('./spring/SpringLab').then((m) => ({ default: m.SpringLab })))
+
 export function PhysicsExplorer() {
+  const [experiment, setExperiment] = useState<PhysicsExperiment>(() => parsePhysicsExperiment(window.location.search).experiment)
+  const guidePanel = <SubjectGuidePanel subject="physics" />
+  const choose = (next: PhysicsExperiment) => {
+    if (next === experiment) return
+    // Switching to the projectile drops the spring keys so the link is a plain projectile link again.
+    if (next === 'projectile') replaceUrlSearch(withoutSpringParams(window.location.search))
+    setExperiment(next)
+  }
+  const experimentSwitch = (
+    <div className="segmented section-switch" role="group" aria-label="Experiment">
+      {(['projectile', 'spring'] as const).map((e) => (
+        <button key={e} type="button" className="segmented-option" aria-pressed={experiment === e} onClick={() => choose(e)}>
+          {e === 'projectile' ? 'Projectile' : 'Spring–mass'}
+        </button>
+      ))}
+    </div>
+  )
+  return experiment === 'spring' ? (
+    <Suspense fallback={<p className="muted small panel">Loading the spring–mass lab…</p>}>
+      <SpringLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} />
+    </Suspense>
+  ) : (
+    <ProjectileLab experimentSwitch={experimentSwitch} />
+  )
+}
+
+function ProjectileLab({ experimentSwitch }: { experimentSwitch: ReactNode }) {
   const [state, rawDispatch] = useReducer(physicsReducer, undefined, initFromUrl)
   const clock = useMemo(() => createClock(0), [])
   const [view, setView] = useState<CameraView>('side')
@@ -256,6 +290,7 @@ export function PhysicsExplorer() {
     return (
       <div className="chem chem--mobile physics">
         {announcer}
+        {experimentSwitch}
         <div className="chem-stage">
           {viewer}
           {playback}
@@ -281,7 +316,10 @@ export function PhysicsExplorer() {
   return (
     <div className="chem physics">
       {announcer}
-      <aside className="chem-side chem-side--left">{inputs}</aside>
+      <aside className="chem-side chem-side--left">
+        <div className="section-switch-wrap">{experimentSwitch}</div>
+        {inputs}
+      </aside>
       <div className="chem-stage physics-stage">
         {viewer}
         {playback}

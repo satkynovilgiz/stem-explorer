@@ -79,6 +79,14 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     href: '#/physics',
     terms: ['projectile', 'trajectory', 'launch', 'gravity', 'parabola', 'range', 'velocity'],
   },
+  {
+    id: 'experiment:spring',
+    name: 'Spring–mass oscillation lab',
+    subject: 'physics',
+    description: 'Release a mass on an ideal spring and follow its position, velocity, force and energy (no friction).',
+    href: '?experiment=spring&mass=1&k=20&x0=0.2#/physics',
+    terms: ['spring', 'oscillation', 'harmonic', 'period', 'hooke', 'energy', 'frequency'],
+  },
   // Glossary definitions, ranked after explorer content (see searchExplorations).
   ...GLOSSARY.map((g) => ({
     id: `term:${g.id}`,

@@ -124,3 +124,12 @@ test('the plant cell is usable from the list without WebGL', async ({ page }) =>
   await expect(page.locator('#structure-heading')).toHaveText('Cell wall')
   await expect(page.locator('.cell-compare')).toHaveCount(0)
 })
+
+test('the spring lab keeps inputs, playback, readouts, energy and graph without WebGL', async ({ page }) => {
+  await page.goto('/?experiment=spring&mass=1&k=4&x0=0.3#/physics')
+  await waitForViewport(page)
+  await expect(page.locator('.viewport-message')).toContainText('readouts, energy bars and graph still work')
+  await page.getByRole('slider', { name: /^Time/ }).fill('0.79')
+  await expect(page.locator('.readout > div').filter({ hasText: 'Position x' }).locator('dd')).toHaveText('-0.003 m')
+  await expect(page.locator('.graph-readout')).toContainText('At t = 0.790 s')
+})

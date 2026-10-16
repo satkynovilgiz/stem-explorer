@@ -483,6 +483,38 @@ a slider never fights the user's camera.
 4. A table compares inputs, flight time, maximum height, landing distance and impact speed.
 5. **Clear comparison** removes Run A.
 
+### Spring–mass oscillation lab
+
+**Projectile / Spring–mass** at the top of the inputs switches experiments. Each lab keeps its own
+state and URL keys. The spring lab and its scene load only when opened (~15 kB + 3 kB).
+
+- **Model** (OpenStax University Physics Vol. 1, §15.1–15.2): an ideal spring, F = −kx, attached to
+  a block on a frictionless horizontal surface, with no damping.
+  - Displacement x is measured from equilibrium, with +x to the right.
+  - The block is released from rest; the initial velocity is fixed at 0 m/s and the panel says so.
+  - x(t) = x₀ cos ωt, v = −x₀ω sin ωt, a = −ω²x, F = −kx, with ω = √(k/m), T = 2π√(m/k),
+    f = 1/T.
+  - K = ½mv², U = ½kx², E = ½kA².
+  - Every value is evaluated analytically from one simulation clock (`src/physics/spring.ts`,
+    separate from rendering), so playback speed and frame rate can't change results.
+- **Inputs:** mass 0.1–10 kg (step 0.1), spring constant 1–200 N/m (step 1), initial
+  displacement −0.5 to 0.5 m (step 0.01). Zero displacement is allowed: the block stays at rest,
+  the energy is zero, and a note explains this (the period is still shown).
+- **Playback:** launch, pause, resume, reset and a scrubber over a window of three periods. At the
+  end of the window, playback stops ("End of the window") and **Launch again** restarts. When a
+  background tab becomes visible again, playback continues from where it was instead of jumping
+  ahead.
+- **Readouts:** time, position, velocity, acceleration and restoring force. Energy bars for kinetic,
+  spring-potential and total energy share one scale. A summary gives period, frequency, angular
+  frequency, amplitude, maximum speed and total energy. The position–time graph has a current-time
+  marker.
+- **Scene:** a side view with the wall, coil, block, a dashed equilibrium line, ticks every 0.25 m,
+  and a restoring-force arrow that always points toward x = 0. Without WebGL, the inputs, playback,
+  readouts, energy bars and graph all still work.
+- **Links:** `?experiment=spring&mass=…&k=…&x0=…`. Links without `experiment` are projectile links,
+  exactly as before. Switching back to the projectile removes the spring keys. Shared links open
+  paused at t = 0; off-step values are snapped and invalid ones fall back on their own.
+
 ### Physics sources
 
 - [OpenStax University Physics Volume 1 — 4.3 Projectile Motion](https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion)
@@ -836,7 +868,7 @@ query parameters, so neither subject can change the other:
 | --- | --- | --- |
 | Chemistry | `molecule`, `view` | `water`, `carbon-dioxide`, `methane`, `ammonia`, `ethanol`, `benzene` · `ball-and-stick`, `space-filling` |
 | Biology | `structure`, `cell`, `type` | `plasma-membrane`, `cytoplasm`, `nucleus`, `nucleolus`, `mitochondrion`, `rough-er`, `smooth-er`, `golgi`, `ribosome`, `lysosome`, plus (plant model) `cell-wall`, `chloroplast`, `central-vacuole`, `vacuole-membrane` · `whole`, `cutaway` · `plant` (omitted for the animal cell) |
-| Physics | `speed`, `angle`, `height`, `gravity` | plain numbers inside the ranges above; each invalid value falls back to its default on its own |
+| Physics | `speed`, `angle`, `height`, `gravity`; or `experiment=spring` with `mass`, `k`, `x0` | plain numbers inside the ranges above; each invalid value falls back to its default on its own; no `experiment` means projectile |
 | Anatomy | `part`, `heart` | one of the 14 structure IDs (e.g. `mitral-valve`) · `whole`, `cutaway` |
 | Mathematics | `surface`, the preset's parameters (`a`, `b`, `c` or `amp`, `k`), `slice`, `at` | `plane`, `paraboloid`, `saddle`, `sine` · numbers inside the preset's ranges · `x` or `y` · a position inside the domain |
 
@@ -941,6 +973,8 @@ How the URL is kept up to date:
 | `src/features/activities/activities.test.ts` | One activity per subject with goal, setup, 3–5 steps, conclusion and https sources; no setup completes a step; the change lists; detection rules for every detected step (including the wrong vertex, changed speed and other surfaces); the Anatomy tour snapshot; Physics replace never resuming; the Physics summary matching `solveTrajectory`. |
 | `src/data/glossary.test.ts` | Unique glossary ids and terms; biology terms shared by several structures have one definition and all reach the glossary; every entry cites known sources or is marked as a convention or unit; links are valid relative routes; every subject guide has every section, references existing terms and sources, and cites each deeper explanation. |
 | `src/data/chemistry/periodicTable.test.ts` | 118 elements with contiguous atomic numbers and unique symbols and names; positions of reference elements in every period and both f rows; no two elements in one cell; block counts (s 14, p 36, d 38, f 30) and helium in s; f rows agreeing with PubChem's categories; search by number, symbol (listed first) and name prefix; molecules containing an element. |
+| `src/physics/spring.test.ts` | Known period, frequency and ω; T scaling with m and k and independence from amplitude; start at rest, quarter- and half-period positions and velocities; energy conservation and F = ma at every instant; zero displacement; bad times; results independent of playback rate; input normalization. |
+| `src/features/physics/spring/springState.test.ts` | No auto-launch; launch, pause, resume, end of window and reset; edits returning to t = 0; scrubbing pausing; the zero-displacement announcement. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -1023,6 +1057,10 @@ the production build:
   wall vs membrane, relationships to structures the model lacks, switching back clearing a
   plant-only selection, unchanged animal links, the whole view and isolation, the comparison panel,
   and saving a plant view.
+- `spring.e2e.ts`: switching experiments with both labs' settings kept and backward-compatible links;
+  known analytic values (period, quarter-period readouts, force, energy); energy conservation while
+  scrubbing; launch, pause, resume, end of window and reset; zero displacement and input bounds; a
+  background tab not jumping ahead (Playwright's fake clock); saving a spring view.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

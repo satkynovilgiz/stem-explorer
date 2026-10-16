@@ -184,3 +184,10 @@ test('plant cell on a phone: type switch, model and list without overflow', asyn
   await expectNoHorizontalOverflow(page)
   expect(await smallTargets(page, '.section-switch button')).toEqual([])
 })
+
+test('spring lab on a phone fits without overflow', async ({ page }) => {
+  await page.goto('/?experiment=spring#/physics')
+  await waitForViewport(page)
+  await expect(page.locator('.viewport-badge-name')).toHaveText('Spring–mass oscillator')
+  await expectNoHorizontalOverflow(page)
+})

@@ -150,6 +150,56 @@ export function parsePhysicsParams<T extends Record<PhysicsKey, number>>(
   return { params, invalid }
 }
 
+/** Which Physics experiment a link opens. Links without `experiment` are projectile links. */
+export type PhysicsExperiment = 'projectile' | 'spring'
+
+export function parsePhysicsExperiment(search: string): { experiment: PhysicsExperiment; invalid: boolean } {
+  const raw = new URLSearchParams(search).get('experiment')
+  if (raw === null || raw === 'projectile') return { experiment: 'projectile', invalid: false }
+  if (raw === 'spring') return { experiment: 'spring', invalid: false }
+  return { experiment: 'projectile', invalid: true }
+}
+
+export const SPRING_URL_KEYS = { mass: 'mass', k: 'k', x0: 'x0' } as const
+type SpringUrlKey = keyof typeof SPRING_URL_KEYS
+
+/** Reads `?experiment=spring&mass=…&k=…&x0=…`; each invalid value falls back to its default on its own. */
+export function parseSpringParams<T extends Record<SpringUrlKey, number>>(
+  search: string,
+  defaults: T,
+  isValid: (key: SpringUrlKey, value: number) => boolean,
+): { params: T; invalid: string[] } {
+  const query = new URLSearchParams(search)
+  const params = { ...defaults }
+  const invalid: string[] = []
+  for (const key of Object.keys(SPRING_URL_KEYS) as SpringUrlKey[]) {
+    const raw = query.get(SPRING_URL_KEYS[key])
+    if (raw === null) continue
+    const value = /^[-+]?(\d+\.?\d*|\.\d+)$/.test(raw.trim()) ? Number(raw) : Number.NaN
+    if (isValid(key, value)) params[key] = value as T[SpringUrlKey]
+    else invalid.push(SPRING_URL_KEYS[key])
+  }
+  return { params, invalid }
+}
+
+export function springParamEntries(params: Record<SpringUrlKey, number>): Record<string, string> {
+  return { experiment: 'spring', mass: String(params.mass), k: String(params.k), x0: String(params.x0) }
+}
+
+/** `search` with the spring experiment's keys set (projectile keys are left alone). */
+export function withSpringParams(search: string, params: Record<SpringUrlKey, number>): string {
+  const query = new URLSearchParams(search)
+  for (const [key, value] of Object.entries(springParamEntries(params))) query.set(key, value)
+  return `?${query.toString()}`
+}
+
+/** `search` without the spring experiment (back to a projectile link). */
+export function withoutSpringParams(search: string): string {
+  const query = new URLSearchParams(search)
+  for (const key of ['experiment', ...Object.values(SPRING_URL_KEYS)]) query.delete(key)
+  return `?${query.toString()}`
+}
+
 /** Physics URL parameters as strings, for `shareUrl` and the address bar. */
 export function physicsParamEntries(params: Record<PhysicsKey, number>): Record<string, string> {
   return Object.fromEntries(
