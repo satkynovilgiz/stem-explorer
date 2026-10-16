@@ -267,3 +267,13 @@ test('deep links to every subject still open directly', async ({ page }) => {
   await page.goto('/?surface=paraboloid&slice=y&at=-1#/mathematics')
   await expect(page.locator('#math-heading')).toContainText('Elliptic paraboloid')
 })
+
+test('reduced motion: transitions are effectively off and Browse subjects jumps instead of gliding', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  const duration = await page.locator('.featured-item').first().evaluate((el) => getComputedStyle(el).transitionDuration)
+  expect(parseFloat(duration)).toBeLessThan(0.001)
+  await page.getByRole('button', { name: 'Browse subjects' }).click()
+  // No smooth scrolling: the subjects heading is in view straight away.
+  await expect(page.getByRole('heading', { name: 'Subjects', exact: true })).toBeInViewport({ timeout: 500 })
+})

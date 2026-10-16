@@ -4231,3 +4231,88 @@ button {
   border-style: dashed;
   border-width: 2px;
 }
+
+/* ---------- Notebook ---------- */
+
+.note-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.note-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--chip);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.note-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.note-title {
+  margin: 0;
+  font-size: var(--text-lg);
+  overflow-wrap: anywhere;
+}
+
+.note-meta,
+.note-card p {
+  margin: 0;
+}
+
+.note-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.note-editor {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.note-editor p {
+  margin: 0;
+}
+
+.note-body-input {
+  width: 100%;
+  min-height: 110px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.note-restore {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-measure-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-measure-soft);
+  font-size: var(--text-sm);
+}
+
+.notebook.has-toast {
+  padding-bottom: 120px;
+}

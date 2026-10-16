@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { BookA, House } from 'lucide-react'
+import { BookA, House, NotebookPen } from 'lucide-react'
 import { SUBJECTS } from '../data/subjects'
 import type { Route } from '../lib/hooks'
 import { SubjectIcon } from './SubjectIcon'
@@ -66,6 +66,16 @@ export function TopNav({ active }: { active: Route }) {
             >
               <BookA size={16} aria-hidden="true" />
               <span>Glossary</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#/notebook"
+              className={`subject-link${active === 'notebook' ? ' is-active' : ''}`}
+              aria-current={active === 'notebook' ? 'page' : undefined}
+            >
+              <NotebookPen size={16} aria-hidden="true" />
+              <span>Notebook</span>
             </a>
           </li>
         </ul>

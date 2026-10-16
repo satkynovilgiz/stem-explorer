@@ -54,6 +54,7 @@ export type BackupError =
   | { kind: 'too-large' }
   | { kind: 'not-json' }
   | { kind: 'wrong-format' }
+  | { kind: 'notebook-file' }
   | { kind: 'unsupported-version'; version: string }
 
 export interface PlannedEntry {
@@ -101,6 +102,7 @@ export function planImport(text: string, existing: readonly Exploration[], max =
   } catch {
     return { ok: false, error: { kind: 'not-json' } }
   }
+  if ((data as { format?: unknown } | null)?.format === 'stem-explorer.notebook') return { ok: false, error: { kind: 'notebook-file' } }
   if (typeof data !== 'object' || data === null || (data as { format?: unknown }).format !== BACKUP_FORMAT) {
     return { ok: false, error: { kind: 'wrong-format' } }
   }

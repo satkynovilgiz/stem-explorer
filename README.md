@@ -813,6 +813,48 @@ library only for events about `stem-explorer:saved`, `stem-explorer:recent`, or 
 writes, so tabs cannot set each other off. The only automatic write is the recent-visit record,
 made once per distinct view shown in that tab.
 
+## Exploration notebook
+
+**Add note** (next to Copy link and Save exploration in every explorer) opens an inline editor
+with a title (suggested from the view) and plain-text observations. Nothing is stored until
+**Save note**. The note keeps a snapshot of that explorer's canonical share settings, the same
+parameters Copy link uses. It never stores activity progress, animation time, tour steps or
+camera positions; a note written during the Anatomy tour stores the pre-tour view.
+
+**Notebook** (`#/notebook`, in the top bar) lists notes newest first, with a subject filter that
+shows counts. Each note has its created and updated times, **Reopen exploration** (a relative
+in-app link rebuilt from the stored state), **Edit** (the same editor, with **Save changes**) and
+**Delete**, which offers **Undo** and puts the note back in its place. The page says notes live
+in this browser only and can be lost when site data is cleared.
+
+- **Unsaved changes, without browser dialogs:**
+  - Cancel with edits asks *Discard your unsaved changes?* (Discard or Keep editing).
+  - If the editor closes without saving, for example when you open another subject, the draft is
+    kept in `sessionStorage` for this session, and the next editor for that subject or note offers
+    to restore it.
+- **Storage** (`stem-explorer:notes`, a JSON array of version-1 entries). It follows the same rules
+  as saved explorations:
+  - reads never write;
+  - a damaged list is reported and left untouched (new notes are paused);
+  - entries from newer versions are preserved;
+  - quota and other write failures are reported, and the editor stays open with the text;
+  - limits: 100 notes, 80-character titles, 5,000-character observations;
+  - control characters are removed except line breaks and tabs.
+
+  Text is always rendered as text, with line breaks kept by CSS. Imported markup such as
+  `<img onerror>` shows literally and never runs. Other tabs update through the `storage` event
+  (notes key only).
+- **Backup.** **Export notebook** downloads `stem-explorer-notebook-YYYY-MM-DD.json` (`format:
+  "stem-explorer.notebook"`, `version: 1`, `exportedAt`, `notes` with title, body, subject, params
+  and times; no IDs). **Import notebook** works like saved-exploration import:
+  - merge-only, under 1 MB, with a preview of new, duplicate (same title, text and exploration),
+    invalid and over-limit notes;
+  - **Import N notes** re-reads storage, checks the plan entry by entry, and writes once;
+  - a failed write changes nothing.
+
+  The two backup formats are kept apart. Each import recognizes the other's file and says where
+  to import it, so existing saved-exploration backups keep working unchanged.
+
 ## Subject guides and glossary
 
 **About this explorer.** Every explorer has the same collapsible panel, under the activity panel
@@ -1037,6 +1079,8 @@ How the URL is kept up to date:
 | `src/features/physics/spring/springState.test.ts` | No auto-launch; launch, pause, resume, end of window and reset; edits returning to t = 0; scrubbing pausing; the zero-displacement announcement. |
 | `src/math/tangent.test.ts` | Hand-derived partials against known values and against finite differences for every surface; tangent planes through the point with first-order agreement; the plane surface as its own tangent plane; the saddle origin (zero gradient, z = 0); flat-plane and sine residue degenerate cases; gradient magnitude and direction; the substituted equation. |
 | `src/data/anatomy/vessels.test.ts` | Vessel facts cover exactly the model's vessels, name them by direction (artery = away, vein = toward, including the reversed pulmonary pattern), agree with the heart entries' oxygenation and connections, and presets pair different vessels. |
+| `src/lib/notesStore.test.ts` | Add, edit, delete and undo with the canonical snapshot; empty titles and invalid explorations refused; length caps and control characters; the note limit; unavailable, damaged and quota states leaving data unchanged; newer-version entries preserved. |
+| `src/lib/notebookBackup.test.ts` | Export/import round trip without IDs; the notebook and saved-exploration formats recognising each other; duplicates, invalid notes and the limit; text kept as text; nothing written when the plan changed or the write fails. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -1130,6 +1174,11 @@ the production build:
   letter badges; presets and the direction-not-oxygen explanation; entering with a selected vessel
   and isolation, leaving with A selected and links unchanged; Whole/Cutaway; the tour ending and
   blocking the comparison.
+- `notebook.e2e.ts`: adding a note with an explicit save, opening the notebook, reopening the
+  exploration, editing, deleting and undoing; unsaved-change handling (Cancel confirmation and a
+  restored draft after leaving); subject filter, safe text rendering and no tour state stored;
+  empty, damaged and quota states; notebook export/import and cross-format messages; a second tab
+  updating.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):
@@ -1147,8 +1196,33 @@ the production build:
 
 The test fixture fails a test on any console error or warning except two known, harmless ones: the
 `THREE.Clock` notice (see Known issues), and Chrome's "GPU stall due to ReadPixels" driver note,
-which test screenshots trigger. **Only Chromium (Google Chrome) has been tested**; Safari and
-Firefox have not.
+which test screenshots trigger.
+
+**Browsers tested.** The browser tests run in Google Chrome (`channel: 'chrome'`) on macOS: desktop
+at 1440 × 900, phone emulation at 390 × 844, and Chrome with WebGL disabled. Firefox and Safari
+were **not** tested. Playwright can only drive them with its own engine builds, which aren't
+installed here, and driving Safari through safaridriver would mean changing Safari's settings.
+Microsoft Edge is installed, but it uses the same Chromium engine, so it would add no engine
+coverage.
+
+**Running a subset.** `npx playwright test e2e/notebook.e2e.ts` runs one file;
+`--project=mobile` or `--project=no-webgl` runs one project. Stop any manually started
+`vite preview` on port 4173 before running the suite. Otherwise Playwright reuses that server,
+which may be serving an older build.
+
+## Bundle and loading
+
+Measured on the production build (`npm run build`, Vite 8):
+- **Main chunk:** 479 kB, or 142 kB gzipped (React, the app shell, Home, search with the glossary
+  data, and all five explorers' panels and content).
+- **Three.js and React Three Fiber:** 912 kB, or 242 kB gzipped, loaded only when a 3D view
+  mounts. Home never loads it.
+- **Lazy-loaded on first use:** each subject's scene (3–25 kB), the periodic table (13 kB), the
+  spring–mass lab (15 kB), the Notebook page (12 kB) and the Glossary page (3 kB).
+
+From the local production preview in headless Chrome, Home was ready in about 0.2 s. An explorer
+became interactive at once, while its 3D view took about 3.5 s under software WebGL (SwiftShader).
+These are local measurements, not network or real-device figures.
 
 ## Project structure
 
@@ -1159,6 +1233,12 @@ src/
   features/home/                Home page, search, saved/recent sections, backup, activity entries, SVG subject illustrations
   features/activities/          guided-activity types, hook (state, detection, snapshot/restore) and panel
   features/guide/, features/glossary/   About this explorer panel, term buttons, source links; glossary page
+  features/notebook/            Notebook page, note editor (unsaved-draft handling), notebook backup
+  lib/notesStore.ts, lib/notebookBackup.ts, lib/useNotebook.ts   notes storage, backup format, sync hook
+  physics/spring.ts, features/physics/spring/   spring–mass model, lab, panels and scene
+  math/tangent.ts               analytic partial derivatives and tangent planes
+  data/anatomy/vessels.ts       vessel comparison facts
+  data/chemistry/periodicTable*.ts   element data (generated from PubChem) and layout
   data/guides.ts, data/glossary.ts, data/sources.ts   subject guide content, shared definitions, source registry
   features/*/activity.ts        each subject's activity definition and setup
   data/

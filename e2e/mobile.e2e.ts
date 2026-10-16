@@ -191,3 +191,9 @@ test('spring lab on a phone fits without overflow', async ({ page }) => {
   await expect(page.locator('.viewport-badge-name')).toHaveText('Spring–mass oscillator')
   await expectNoHorizontalOverflow(page)
 })
+
+test('notebook on a phone fits without overflow', async ({ page }) => {
+  await page.goto('/#/notebook')
+  await expect(page.getByRole('heading', { level: 1, name: 'Notebook' })).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+})

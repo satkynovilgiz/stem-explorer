@@ -1,21 +1,25 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { TopNav } from './components/TopNav'
 import { SUBJECTS } from './data/subjects'
 import { HeartExplorer } from './features/anatomy/HeartExplorer'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
 import { ChemistryExplorer } from './features/chemistry/ChemistryExplorer'
 import { MathematicsExplorer } from './features/mathematics/MathematicsExplorer'
-import { GlossaryPage } from './features/glossary/GlossaryPage'
 import { Home } from './features/home/Home'
 import { PhysicsExplorer } from './features/physics/PhysicsExplorer'
 import { useRoute } from './lib/hooks'
+
+// Pages reached from the top bar only; they load on first visit.
+const GlossaryPage = lazy(() => import('./features/glossary/GlossaryPage').then((m) => ({ default: m.GlossaryPage })))
+const NotebookPage = lazy(() => import('./features/notebook/NotebookPage').then((m) => ({ default: m.NotebookPage })))
+const pageLoading = <p className="muted small panel">Loading…</p>
 
 export default function App() {
   const route = useRoute()
   const subjectName = SUBJECTS.find((s) => s.id === route)?.name
 
   useEffect(() => {
-    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : 'STEM Explorer'
+    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : 'STEM Explorer'
   }, [subjectName, route])
 
   return (
@@ -51,7 +55,13 @@ export default function App() {
             <BiologyExplorer />
           </>
         ) : route === 'glossary' ? (
-          <GlossaryPage />
+          <Suspense fallback={pageLoading}>
+            <GlossaryPage />
+          </Suspense>
+        ) : route === 'notebook' ? (
+          <Suspense fallback={pageLoading}>
+            <NotebookPage />
+          </Suspense>
         ) : (
           <Home />
         )}

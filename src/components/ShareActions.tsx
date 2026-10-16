@@ -1,4 +1,4 @@
-import { Bookmark, Check } from 'lucide-react'
+import { Bookmark, Check, NotebookPen } from 'lucide-react'
 import { useId, useState } from 'react'
 import type { SubjectId } from '../data/subjects'
 import { canonicalize, defaultTitle } from '../lib/explorations'
@@ -6,6 +6,10 @@ import { browserStorage, MAX_TITLE_LENGTH, renameExploration, saveExploration, t
 import { storeFailureText } from '../lib/storeMessages'
 import { shareUrl } from '../lib/urlState'
 import { notifyLibraryChange } from '../lib/useExplorationLibrary'
+import { addNote } from '../lib/notesStore'
+import { notifyNotesChange } from '../lib/useNotebook'
+import { NoteEditor, type DraftValues } from '../features/notebook/NoteEditor'
+import { AppLink } from './AppLink'
 import { CopyLinkButton } from './CopyLinkButton'
 
 interface Props {
@@ -21,6 +25,7 @@ type Message =
   | { kind: 'duplicate'; existing: Exploration }
   | { kind: 'renamed'; title: string }
   | { kind: 'error'; text: string }
+  | { kind: 'note'; title: string }
 
 
 /** Copy link + Save exploration, both built from one canonical share state. */
@@ -29,6 +34,7 @@ export function ShareActions({ subject, params, restores }: Props) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [message, setMessage] = useState<Message | null>(null)
+  const [noteOpen, setNoteOpen] = useState(false)
   const state = canonicalize(subject, params)
   const suggested = state ? defaultTitle(state) : ''
 
@@ -57,6 +63,19 @@ export function ShareActions({ subject, params, restores }: Props) {
     }
   }
 
+  const addToNotebook = (values: DraftValues): boolean => {
+    if (!state) return false
+    const result = addNote(browserStorage(), state, values)
+    if (result.ok) {
+      setNoteOpen(false)
+      setMessage({ kind: 'note', title: result.value.title })
+      notifyNotesChange()
+      return true
+    }
+    setMessage({ kind: 'error', text: storeFailureText('note', result.reason) })
+    return false
+  }
+
   return (
     <div className="share-actions">
       <div className="share-row">
@@ -64,10 +83,24 @@ export function ShareActions({ subject, params, restores }: Props) {
         <button
           type="button"
           className="tool-button bordered"
+          aria-expanded={noteOpen}
+          onClick={() => {
+            setNoteOpen((o) => !o)
+            setOpen(false)
+            setMessage(null)
+          }}
+        >
+          <NotebookPen size={16} aria-hidden="true" />
+          <span>Add note</span>
+        </button>
+        <button
+          type="button"
+          className="tool-button bordered"
           aria-expanded={open}
           aria-controls={`${id}-form`}
           onClick={() => {
             setOpen((o) => !o)
+            setNoteOpen(false)
             setName(suggested)
             setMessage(null)
           }}
@@ -107,10 +140,27 @@ export function ShareActions({ subject, params, restores }: Props) {
           <p className="muted small">Saved on this browser.</p>
         </form>
       )}
-      <p className={`save-status${message?.kind === 'error' ? ' status-error' : message?.kind === 'saved' || message?.kind === 'renamed' ? ' status-success' : ''}`} role="status">
+      {noteOpen && state && (
+        <div className="save-form">
+          <NoteEditor
+            scope={`new:${subject}`}
+            initial={{ title: suggested, body: '' }}
+            saveLabel="Save note"
+            onSave={addToNotebook}
+            onCancel={() => setNoteOpen(false)}
+          />
+          <p className="muted small">The note keeps this view’s settings and lives in this browser only.</p>
+        </div>
+      )}
+      <p className={`save-status${message?.kind === 'error' ? ' status-error' : message?.kind === 'saved' || message?.kind === 'renamed' || message?.kind === 'note' ? ' status-success' : ''}`} role="status">
         {message?.kind === 'saved' && <>Saved on this browser as “{message.title}”. Find it on the Home page.</>}
         {message?.kind === 'renamed' && <>Saved entry renamed to “{message.title}”.</>}
         {message?.kind === 'error' && message.text}
+        {message?.kind === 'note' && (
+          <>
+            Note “{message.title}” saved. <AppLink href="#/notebook">Open the notebook</AppLink>
+          </>
+        )}
         {message?.kind === 'duplicate' && (
           <>
             Already saved as “{message.existing.title}”.{' '}

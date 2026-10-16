@@ -16,6 +16,8 @@ function errorText(error: BackupError): string {
       return 'That file is not valid JSON. Choose a backup exported from STEM Explorer.'
     case 'wrong-format':
       return 'That file is not a STEM Explorer saved-explorations backup.'
+    case 'notebook-file':
+      return 'That is a notebook backup. Import it in the Notebook instead; nothing was imported here.'
     case 'unsupported-version':
       return `That backup uses format version ${error.version}, which this version of STEM Explorer can’t read. Nothing was imported.`
   }
