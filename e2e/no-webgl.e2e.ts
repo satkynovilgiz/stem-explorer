@@ -116,3 +116,11 @@ test('the periodic table works without WebGL', async ({ page }) => {
   await expect(page.locator('#element-heading')).toHaveText('Carbon')
   await expect(page.getByRole('button', { name: 'Open Benzene' })).toBeVisible()
 })
+
+test('the plant cell is usable from the list without WebGL', async ({ page }) => {
+  await page.goto('/?type=plant#/biology')
+  await waitForViewport(page)
+  await page.locator('.structure-item', { hasText: 'Cell wall' }).click()
+  await expect(page.locator('#structure-heading')).toHaveText('Cell wall')
+  await expect(page.locator('.cell-compare')).toHaveCount(0)
+})

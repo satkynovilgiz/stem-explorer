@@ -1,4 +1,4 @@
-import type { BiologySource, Organelle, OrganelleId } from './types'
+import type { BiologySource, CellType, Organelle, OrganelleId } from './types'
 
 /*
  * Content is written for beginning college students and checked against the OpenStax
@@ -38,8 +38,15 @@ export const BIOLOGY_SOURCES: Record<string, BiologySource> = {
   },
 }
 
-export const CELL_DISCLAIMER =
-  'This is a simplified educational model of a generalized animal cell. Shapes, sizes, quantities, and positions are schematic; actual cells vary.'
+export const CELL_DISCLAIMERS: Record<CellType, string> = {
+  animal:
+    'This is a simplified educational model of a generalized animal cell. Shapes, sizes, quantities, and positions are schematic; actual cells vary.',
+  plant:
+    'This is a simplified educational model of a generalized plant cell. Shapes, sizes, quantities, and positions are schematic and not to scale; actual plant cells vary widely.',
+}
+
+/** @deprecated kept for existing imports; use CELL_DISCLAIMERS. */
+export const CELL_DISCLAIMER = CELL_DISCLAIMERS.animal
 
 export const COLOR_NOTE =
   'Colors are illustrative labels for telling structures apart. Real organelles are mostly colorless and are seen with stains or other imaging techniques.'
@@ -48,9 +55,9 @@ export const ORGANELLES: readonly Organelle[] = [
   {
     id: 'plasma-membrane',
     name: 'Plasma membrane',
-    tag: 'Outer boundary',
+    tag: 'Selective boundary',
     summary:
-      'The thin, flexible boundary that surrounds the cell and controls what enters and leaves it.',
+      'The thin, flexible boundary that surrounds the cell’s contents and controls what enters and leaves. In plant cells it lies just inside the cell wall.',
     functions: [
       'Separates the inside of the cell from its surroundings.',
       'Is selectively permeable: it lets some substances through, keeps others out, and moves still others in controlled amounts.',
@@ -72,7 +79,7 @@ export const ORGANELLES: readonly Organelle[] = [
     ],
     simplifications: [
       'Drawn as a smooth, solid surface. A real membrane is a fluid lipid bilayer studded with proteins, and is far thinner relative to the cell than shown.',
-      'The cell is drawn as a rounded ball. Animal cells take many shapes depending on their type and surroundings.',
+      'In the animal model the cell is drawn as a rounded ball; in the plant model the membrane lines a box-shaped cell wall. Real cells take many shapes depending on their type and surroundings.',
     ],
     sourceIds: ['bio-4-3', 'bio-5-1'],
     color: '#5fb3c9',
@@ -342,13 +349,152 @@ export const ORGANELLES: readonly Organelle[] = [
     majorLabel: true,
     internal: true,
   },
+  {
+    id: 'cell-wall',
+    name: 'Cell wall',
+    tag: 'Rigid outer support',
+    summary:
+      'A rigid layer outside the plasma membrane that protects the plant cell, supports it and gives it its shape. It is a separate structure from the membrane.',
+    functions: [
+      'Gives the cell its shape and keeps it from bursting.',
+      'Provides structural support; when the central vacuole holds less water, the wall is left unsupported and the plant wilts.',
+      'Protects the cell.',
+    ],
+    structure:
+      'Made mainly of cellulose, a polysaccharide built from glucose units. It lies outside the plasma membrane; the membrane, not the wall, controls what enters and leaves the cell.',
+    relationships: [
+      { targetId: 'plasma-membrane', text: 'Lies outside the plasma membrane. The wall supports; the membrane is the selective barrier.' },
+      { targetId: 'central-vacuole', text: 'Water pressure from the central vacuole pushes the cell against its wall, keeping it firm.' },
+      { targetId: 'golgi', text: 'In plant cells the Golgi apparatus also makes polysaccharides, some of which go into the cell wall.' },
+    ],
+    glossary: [{ term: 'Cellulose', definition: 'A polysaccharide made of glucose units; the main component of plant cell walls.' }],
+    simplifications: ['Drawn as a smooth box of even thickness. Real walls vary in thickness and layers, and connect to neighbouring cells.'],
+    sourceIds: ['bio-4-3', 'bio-4-4'],
+    color: '#9bbf6a',
+    majorLabel: true,
+    internal: false,
+  },
+  {
+    id: 'chloroplast',
+    name: 'Chloroplasts',
+    instanceName: 'Chloroplast',
+    tag: 'Photosynthesis',
+    summary:
+      'Organelles that carry out photosynthesis, using carbon dioxide, water and light energy to make glucose and oxygen.',
+    functions: ['Carry out photosynthesis, so the plant makes its own food.'],
+    structure:
+      'An outer and an inner membrane surround the stroma, a fluid around stacks of flattened membrane sacs called thylakoids; a stack is a granum. Chloroplasts have their own DNA and ribosomes.',
+    relationships: [
+      { targetId: 'mitochondrion', text: 'Plant cells have both: chloroplasts make glucose, and mitochondria release usable energy from it.' },
+      { targetId: 'ribosome', text: 'Chloroplasts contain their own ribosomes and DNA.' },
+    ],
+    glossary: [
+      { term: 'Photosynthesis', definition: 'The process that uses light energy, carbon dioxide and water to make glucose and oxygen.' },
+      { term: 'Thylakoid', definition: 'A flattened membrane sac inside a chloroplast; stacks of thylakoids are called grana.' },
+      { term: 'Stroma', definition: 'The fluid inside a chloroplast that surrounds the thylakoid stacks.' },
+    ],
+    simplifications: ['Five chloroplasts are shown; the number in real plant cells varies with the type of cell.'],
+    sourceIds: ['bio-4-3'],
+    color: '#4caf50',
+    majorLabel: true,
+    internal: true,
+  },
+  {
+    id: 'central-vacuole',
+    name: 'Central vacuole',
+    tag: 'Water, support, storage',
+    summary:
+      'A large, membrane-bound compartment that regulates the cell’s water content, helps keep the cell firm, and stores materials.',
+    functions: [
+      'Regulates the concentration of water in the cell as conditions change.',
+      'Its water pressure against the cell wall keeps the cell firm; when it loses water, the plant wilts.',
+      'Lets the cell grow larger without making much more cytoplasm.',
+      'Stores materials; the OpenStax text notes that digestion in plant cells takes place in vacuoles.',
+    ],
+    structure: 'A large sac of watery fluid enclosed by its own membrane. It can take up much of the cell’s volume.',
+    relationships: [
+      { targetId: 'vacuole-membrane', text: 'Enclosed by the vacuole membrane.' },
+      { targetId: 'cell-wall', text: 'Presses outward against the cell wall, keeping the cell firm.' },
+    ],
+    glossary: [{ term: 'Turgor pressure', definition: 'The pressure of the vacuole’s water pushing the cell outward against its wall.' }],
+    simplifications: ['Drawn as one smooth ellipsoid; its real size and shape change with the cell’s water content.'],
+    sourceIds: ['bio-4-3'],
+    color: '#5aa9d6',
+    majorLabel: true,
+    internal: true,
+  },
+  {
+    id: 'vacuole-membrane',
+    name: 'Vacuole membrane',
+    tag: 'Boundary of the vacuole',
+    summary: 'The membrane that surrounds the central vacuole and separates its contents from the cytoplasm.',
+    functions: ['Keeps the vacuole’s contents separate from the cytoplasm around it.'],
+    structure: 'A single membrane enclosing the central vacuole.',
+    relationships: [{ targetId: 'central-vacuole', text: 'Encloses the central vacuole.' }],
+    glossary: [],
+    simplifications: ['Drawn as a smooth shell, opened in the cutaway so the vacuole inside can be selected.'],
+    sourceIds: ['bio-4-3'],
+    color: '#8fd0f0',
+    majorLabel: false,
+    internal: true,
+  },
 ]
 
-/** How many copies of each repeated structure the model draws (selectable individually). */
-export const INSTANCE_COUNTS: Partial<Record<OrganelleId, number>> = {
-  mitochondrion: 4,
-  lysosome: 3,
+/** Which structures each simplified model contains (and therefore lists, draws and accepts in links). */
+export const CELL_STRUCTURES: Record<CellType, readonly OrganelleId[]> = {
+  animal: ['plasma-membrane', 'cytoplasm', 'nucleus', 'nucleolus', 'mitochondrion', 'rough-er', 'smooth-er', 'golgi', 'ribosome', 'lysosome'],
+  plant: [
+    'cell-wall',
+    'plasma-membrane',
+    'cytoplasm',
+    'nucleus',
+    'nucleolus',
+    'chloroplast',
+    'central-vacuole',
+    'vacuole-membrane',
+    'mitochondrion',
+    'rough-er',
+    'smooth-er',
+    'golgi',
+    'ribosome',
+  ],
 }
+
+const COUNTS: Record<CellType, Partial<Record<OrganelleId, number>>> = {
+  animal: { mitochondrion: 4, lysosome: 3 },
+  plant: { mitochondrion: 3, chloroplast: 5 },
+}
+
+/** Number of separately selectable copies of a repeated structure in a model, or undefined. */
+export function instanceCount(cellType: CellType, id: OrganelleId): number | undefined {
+  return COUNTS[cellType][id]
+}
+
+export function hasStructure(cellType: CellType, id: string): id is OrganelleId {
+  return (CELL_STRUCTURES[cellType] as readonly string[]).includes(id)
+}
+
+export function structuresOf(cellType: CellType): Organelle[] {
+  return CELL_STRUCTURES[cellType].map((id) => findOrganelle(id)!)
+}
+
+/** Inside the outer surface, so hidden in the whole-cell view. In the plant model only the wall is outside. */
+export function isInternal(cellType: CellType, id: OrganelleId): boolean {
+  return cellType === 'plant' ? id !== 'cell-wall' : !!findOrganelle(id)?.internal
+}
+
+/** Link parameters that open a structure: in the animal model when it has it, otherwise in the plant model. */
+export function structureParams(id: OrganelleId): Record<string, string> {
+  const cellType: CellType = hasStructure('animal', id) ? 'animal' : 'plant'
+  return { structure: id, cell: isInternal(cellType, id) ? 'cutaway' : 'whole', ...(cellType === 'plant' ? { type: 'plant' } : {}) }
+}
+
+/** The outer structure shown in the whole-cell view. */
+export const OUTER_STRUCTURE: Record<CellType, OrganelleId> = { animal: 'plasma-membrane', plant: 'cell-wall' }
+
+/** How many copies of each repeated structure the model draws (selectable individually). */
+/** @deprecated animal-model counts, kept for existing imports; use instanceCount(cellType, id). */
+export const INSTANCE_COUNTS: Partial<Record<OrganelleId, number>> = COUNTS.animal
 
 export function findOrganelle(id: string): Organelle | undefined {
   return ORGANELLES.find((o) => o.id === id)

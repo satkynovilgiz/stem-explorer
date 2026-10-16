@@ -1,16 +1,19 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
-import { ORGANELLES } from '../../../data/biology/organelles'
-import type { CellView, OrganelleId } from '../../../data/biology/types'
+import { structuresOf } from '../../../data/biology/organelles'
+import type { CellType, CellView, OrganelleId } from '../../../data/biology/types'
 import { instanceLabel, type BiologySelection } from '../state'
 import { CellCameraRig } from './CellCameraRig'
 import { CellLabelLayer, CellLabelProjector, type CellLabel, type LabelElements } from './CellLabels'
 import { CellModel } from './CellModel'
 import { visibleStructures } from './visibility'
-import { labelAnchor } from './layout'
+import { CELL_RADIUS, focusTarget, labelAnchor } from './layout'
+import { PlantCellModel } from './PlantParts'
+import { PLANT_CELL_RADIUS, plantFocusTarget, plantLabelAnchor } from './plantLayout'
 
 export interface CellSceneProps {
+  cellType: CellType
   view: CellView
   selection: BiologySelection | null
   isolated: boolean
@@ -25,6 +28,7 @@ export interface CellSceneProps {
 }
 
 export default function CellScene({
+  cellType,
   view,
   selection,
   isolated,
@@ -40,9 +44,10 @@ export default function CellScene({
   const labelElements = useRef<LabelElements>(new Map())
 
   const labels = useMemo<CellLabel[]>(() => {
-    const visible = visibleStructures(view, selection, isolated)
+    const visible = visibleStructures(view, selection, isolated, cellType)
+    const anchor = cellType === 'plant' ? plantLabelAnchor : labelAnchor
     const result: CellLabel[] = []
-    for (const o of ORGANELLES) {
+    for (const o of structuresOf(cellType)) {
       if (!visible.has(o.id)) continue
       const selected = selection?.organelleId === o.id
       // Default labels: major structures only, one per type. The selection is always labelled.
@@ -51,13 +56,13 @@ export default function CellScene({
       result.push({
         key: o.id,
         organelleId: o.id,
-        position: labelAnchor(o.id, instance, view),
-        text: instance !== null ? instanceLabel(o.id, instance).replace(/ of \d+$/, '') : o.name,
+        position: anchor(o.id, instance, view),
+        text: instance !== null ? instanceLabel(o.id, instance, cellType).replace(/ of \d+$/, '') : o.name,
         selected,
       })
     }
     return result
-  }, [view, selection, isolated, showLabels])
+  }, [cellType, view, selection, isolated, showLabels])
 
   const focus = selection ? { organelleId: selection.organelleId, instance: selection.instance } : null
 
@@ -83,10 +88,21 @@ export default function CellScene({
         <directionalLight position={[6, 8, 10]} intensity={1.7} />
         <directionalLight position={[-8, -4, -6]} intensity={0.4} />
 
-        <CellModel view={view} selection={selection} isolated={isolated} onSelect={onSelect} />
+        {cellType === 'plant' ? (
+          <PlantCellModel view={view} selection={selection} isolated={isolated} onSelect={onSelect} />
+        ) : (
+          <CellModel view={view} selection={selection} isolated={isolated} onSelect={onSelect} />
+        )}
 
         <OrbitControls makeDefault enablePan={false} enableDamping={!reducedMotion} dampingFactor={0.12} />
-        <CellCameraRig resetToken={resetToken} focusToken={focusToken} focus={focus} reducedMotion={reducedMotion} />
+        <CellCameraRig
+          resetToken={resetToken}
+          focusToken={focusToken}
+          focus={focus}
+          reducedMotion={reducedMotion}
+          cellRadius={cellType === 'plant' ? PLANT_CELL_RADIUS : CELL_RADIUS}
+          focusTarget={cellType === 'plant' ? plantFocusTarget : focusTarget}
+        />
         <CellLabelProjector labels={labels} elements={labelElements} />
       </Canvas>
       <CellLabelLayer labels={labels} elements={labelElements} />

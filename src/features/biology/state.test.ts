@@ -76,3 +76,46 @@ describe('biologyReducer', () => {
     expect(s.announcement).toMatch(/hidden/)
   })
 })
+
+describe('cell types', () => {
+  it('starts as an animal cell by default and opens a plant-cell structure from a plant link', () => {
+    expect(initialBiologyState(null, 'whole').cellType).toBe('animal')
+    const plant = initialBiologyState('chloroplast', 'whole', 'plant')
+    expect([plant.cellType, plant.selection?.organelleId, plant.view]).toEqual(['plant', 'chloroplast', 'cutaway'])
+    // A plant-only structure in an animal link is ignored.
+    expect(initialBiologyState('chloroplast', 'whole').selection).toBeNull()
+    // The cell wall is outside, so it stays in the whole-cell view.
+    expect(initialBiologyState('cell-wall', 'whole', 'plant').view).toBe('whole')
+  })
+
+  it('keeps a shared selection when switching, clears one the new model lacks, and ends isolation', () => {
+    let s = biologyReducer(initialBiologyState(null, 'cutaway'), { type: 'select', organelleId: 'mitochondrion', instance: 3 })
+    s = biologyReducer(s, { type: 'isolate' })
+    s = biologyReducer(s, { type: 'setCellType', cellType: 'plant' })
+    expect([s.cellType, s.selection, s.isolated]).toEqual(['plant', { organelleId: 'mitochondrion', instance: null }, false])
+
+    let a = biologyReducer(initialBiologyState(null, 'cutaway'), { type: 'select', organelleId: 'lysosome' })
+    a = biologyReducer(a, { type: 'setCellType', cellType: 'plant' })
+    expect(a.selection).toBeNull()
+    expect(a.announcement).toMatch(/not part of this model/)
+
+    let p = biologyReducer(initialBiologyState(null, 'cutaway', 'plant'), { type: 'select', organelleId: 'chloroplast', instance: 4 })
+    expect(p.selection).toEqual({ organelleId: 'chloroplast', instance: 4 })
+    p = biologyReducer(p, { type: 'setCellType', cellType: 'animal' })
+    expect(p.selection).toBeNull()
+  })
+
+  it('rejects structures that are not in the current model and validates copies per model', () => {
+    const plant = initialBiologyState(null, 'cutaway', 'plant')
+    expect(biologyReducer(plant, { type: 'select', organelleId: 'lysosome' })).toBe(plant)
+    // The plant model has 3 mitochondria, so copy 3 (the fourth) falls back to the whole type.
+    expect(biologyReducer(plant, { type: 'select', organelleId: 'mitochondrion', instance: 3 }).selection?.instance).toBeNull()
+    const animal = initialBiologyState(null, 'cutaway')
+    expect(biologyReducer(animal, { type: 'select', organelleId: 'cell-wall' })).toBe(animal)
+  })
+
+  it('selecting the plasma membrane in a whole plant cell opens the cutaway (it lies inside the wall)', () => {
+    const s = biologyReducer(initialBiologyState(null, 'whole', 'plant'), { type: 'select', organelleId: 'plasma-membrane' })
+    expect(s.view).toBe('cutaway')
+  })
+})

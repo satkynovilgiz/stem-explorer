@@ -52,33 +52,45 @@ export function withChemistryParams(search: string, state: ChemistryUrlState): s
 export const CELL_VIEWS = ['whole', 'cutaway'] as const
 export type CellViewParam = (typeof CELL_VIEWS)[number]
 
+export const CELL_TYPE_PARAMS = ['animal', 'plant'] as const
+export type CellTypeParam = (typeof CELL_TYPE_PARAMS)[number]
+
 export interface BiologyUrlState {
   /** Selected organelle type; repeated-instance choice is not stored in the URL. */
   structureId: string | null
   cellView: CellViewParam
+  /** Optional for backward compatibility: links without `type` are animal-cell links. */
+  cellType?: CellTypeParam
 }
 
 /**
- * Reads `?structure=<organelle id>&cell=<whole|cutaway>`. These keys never overlap with
- * Chemistry's `molecule`/`view`, so neither subject can change the other's state.
+ * Reads `?structure=<organelle id>&cell=<whole|cutaway>&type=plant`. These keys never overlap with
+ * Chemistry's `molecule`/`view`, so neither subject can change the other's state. `type` is absent
+ * for the animal cell, so links made before the plant model existed keep working unchanged.
+ * `validStructureIds` may depend on the cell type.
  */
 export function parseBiologyParams(
   search: string,
-  validStructureIds: readonly string[],
+  validStructureIds: readonly string[] | ((cellType: CellTypeParam) => readonly string[]),
   defaults: BiologyUrlState,
-): BiologyUrlState & { invalid: string[] } {
+): Required<BiologyUrlState> & { invalid: string[] } {
   const params = new URLSearchParams(search)
   const invalid: string[] = []
 
+  const type = params.get('type')
+  const cellType = CELL_TYPE_PARAMS.find((t) => t === type) ?? defaults.cellType ?? 'animal'
+  if (type !== null && cellType !== type) invalid.push('type')
+  const ids = typeof validStructureIds === 'function' ? validStructureIds(cellType) : validStructureIds
+
   const structure = params.get('structure')
-  const structureId = structure && validStructureIds.includes(structure) ? structure : defaults.structureId
+  const structureId = structure && ids.includes(structure) ? structure : defaults.structureId
   if (structure !== null && structureId !== structure) invalid.push('structure')
 
   const cell = params.get('cell')
   const cellView = CELL_VIEWS.find((v) => v === cell) ?? defaults.cellView
   if (cell !== null && cellView !== cell) invalid.push('cell')
 
-  return { structureId, cellView, invalid }
+  return { structureId, cellView, cellType, invalid }
 }
 
 /** Returns `search` with the Biology parameters set (structure removed when nothing is selected). */
@@ -87,6 +99,8 @@ export function withBiologyParams(search: string, state: BiologyUrlState): strin
   if (state.structureId) params.set('structure', state.structureId)
   else params.delete('structure')
   params.set('cell', state.cellView)
+  if (state.cellType === 'plant') params.set('type', 'plant')
+  else params.delete('type')
   return `?${params.toString()}`
 }
 

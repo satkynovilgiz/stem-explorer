@@ -1,5 +1,5 @@
 import { HEART_PARTS } from '../data/anatomy/heart'
-import { ORGANELLES } from '../data/biology/organelles'
+import { ORGANELLES, structureParams } from '../data/biology/organelles'
 import { GLOSSARY } from '../data/glossary'
 import { MOLECULES } from '../data/chemistry/molecules'
 import { SUBJECTS, type SubjectId } from '../data/subjects'
@@ -26,7 +26,7 @@ const SUBJECT_BLURBS: Record<SubjectId, string> = {
   chemistry: 'Molecules in 3D with distance and angle measurements, and the periodic table.',
   physics: 'An ideal projectile motion lab with graphs and comparisons.',
   mathematics: 'Surfaces z = f(x, y) with point inspection and cross-sections.',
-  biology: 'An interactive generalized animal cell with organelles.',
+  biology: 'Interactive generalized animal and plant cells with their organelles.',
 }
 
 export const SEARCH_INDEX: readonly SearchItem[] = [
@@ -52,7 +52,7 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     name: o.name,
     subject: 'biology' as const,
     description: o.summary,
-    href: hrefFor({ subject: 'biology', params: { structure: o.id, cell: o.internal ? 'cutaway' : 'whole' } }),
+    href: hrefFor({ subject: 'biology', params: structureParams(o.id) }),
     terms: [o.tag, o.instanceName ?? '', ...o.glossary.map((g) => g.term)],
   })),
   ...HEART_PARTS.map((p) => ({

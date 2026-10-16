@@ -124,7 +124,7 @@ export interface FocusTarget {
   radius: number
 }
 
-const TYPE_FOCUS: Record<OrganelleId, FocusTarget> = {
+const TYPE_FOCUS: Partial<Record<OrganelleId, FocusTarget>> = {
   'plasma-membrane': { center: [0, 0, 0], radius: CELL_RADIUS },
   cytoplasm: { center: [0, 0, 0], radius: CELL_RADIUS * 0.9 },
   nucleus: { center: NUCLEUS.center, radius: NUCLEUS.radius },
@@ -144,7 +144,7 @@ export function focusTarget(organelleId: OrganelleId, instance: number | null): 
   if (instance !== null && organelleId === 'lysosome' && LYSOSOMES[instance]) {
     return { center: LYSOSOMES[instance], radius: LYSOSOME_RADIUS * 2.5 }
   }
-  return TYPE_FOCUS[organelleId]
+  return TYPE_FOCUS[organelleId] ?? { center: [0, 0, 0], radius: CELL_RADIUS }
 }
 
 /**
@@ -177,5 +177,7 @@ export function labelAnchor(organelleId: OrganelleId, instance: number | null, v
       const l = LYSOSOMES[instance ?? 0]
       return [l[0], l[1] + LYSOSOME_RADIUS, l[2] + 0.05]
     }
+    default:
+      return [0, 0, 0]
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BIOLOGY_SOURCES, INSTANCE_COUNTS, ORGANELLES } from './organelles'
+import { BIOLOGY_SOURCES, CELL_STRUCTURES, findOrganelle, instanceCount, INSTANCE_COUNTS, isInternal, ORGANELLES, structureParams } from './organelles'
 import { ORGANELLE_IDS } from './types'
 
 describe('organelle content', () => {
@@ -56,5 +56,39 @@ describe('organelle content', () => {
       expect(organelle.instanceName, id).toBeDefined()
       expect(count).toBeGreaterThan(1)
     }
+  })
+})
+
+describe('plant-cell model', () => {
+  it('contains the required structures, and the animal model is unchanged', () => {
+    expect([...CELL_STRUCTURES.plant].sort()).toEqual(
+      ['cell-wall', 'central-vacuole', 'chloroplast', 'cytoplasm', 'golgi', 'mitochondrion', 'nucleolus', 'nucleus', 'plasma-membrane', 'ribosome', 'rough-er', 'smooth-er', 'vacuole-membrane'].sort(),
+    )
+    expect(CELL_STRUCTURES.animal).toHaveLength(10)
+    expect(CELL_STRUCTURES.animal).not.toContain('chloroplast')
+    for (const id of CELL_STRUCTURES.plant) expect(findOrganelle(id), id).toBeDefined()
+  })
+
+  it('distinguishes the cell wall from the plasma membrane and says plant cells have mitochondria', () => {
+    const wall = findOrganelle('cell-wall')!
+    expect(wall.summary).toMatch(/outside the plasma membrane/)
+    expect(wall.structure).toMatch(/membrane, not the wall/)
+    expect(findOrganelle('chloroplast')!.relationships.find((r) => r.targetId === 'mitochondrion')?.text).toMatch(/both/)
+  })
+
+  it('keeps the cytoplasm/cytosol distinction for both models', () => {
+    const cytoplasm = findOrganelle('cytoplasm')!
+    expect(cytoplasm.glossary.some((g) => /cytosol/i.test(g.term))).toBe(true)
+  })
+
+  it('only the cell wall is outside in the plant model; copy counts differ per model', () => {
+    expect(CELL_STRUCTURES.plant.filter((id) => !isInternal('plant', id))).toEqual(['cell-wall'])
+    expect(isInternal('animal', 'plasma-membrane')).toBe(false)
+    expect([instanceCount('plant', 'chloroplast'), instanceCount('plant', 'mitochondrion'), instanceCount('animal', 'mitochondrion')]).toEqual([5, 3, 4])
+  })
+
+  it('opens plant-only structures with type=plant links', () => {
+    expect(structureParams('chloroplast')).toEqual({ structure: 'chloroplast', cell: 'cutaway', type: 'plant' })
+    expect(structureParams('golgi')).toEqual({ structure: 'golgi', cell: 'cutaway' })
   })
 })

@@ -301,6 +301,44 @@ Selection is shown in several ways, not by color alone:
 
 Camera moves ease over about 0.6 s, or jump instantly with `prefers-reduced-motion`.
 
+### Animal and plant cells
+
+**Animal cell / Plant cell** at the top of the structure list switches between two simplified
+models. Both are schematic and not to scale.
+
+- **Plant model (13 structures):** cell wall, plasma membrane, cytoplasm (with the cytosol
+  distinction), nucleus and nucleolus, five chloroplasts, the large central vacuole and its
+  membrane, three mitochondria, rough and smooth ER, Golgi apparatus and ribosomes. The box-shaped
+  cell has the wall outside and the membrane just inside it.
+  - In the whole-cell view only the wall is drawn. Everything else counts as internal and opens
+    the cutaway when selected.
+  - The vacuole membrane is drawn as an outer shell, opened in the cutaway, so the vacuole inside
+    can be selected separately.
+- **Shared behaviour.** Selection, copies (chloroplast 1–5, mitochondrion 1–3), Focus, Isolate,
+  labels, the details tabs, sources and the accessible list work the same in both models.
+- **Content** is from OpenStax Biology 2e §4.3, plus §4.4 for the Golgi's role in making
+  cell-wall polysaccharides. It covers:
+  - the cell wall (cellulose, outside the membrane, support; the membrane is still the selective
+    barrier);
+  - chloroplasts (photosynthesis; two membranes, thylakoids, grana, stroma, own DNA and
+    ribosomes);
+  - the central vacuole (water regulation, firmness against the wall, storage);
+  - that plant cells also have mitochondria.
+
+  The word "tonoplast" is not used, because the cited page does not use it.
+- **Comparison panel** (details panel, nothing selected): structures in both models, those
+  emphasized in the plant model, the lysosome as animal-model only, and the functional
+  differences, each with its source. The textbook's statement about plant digestion is
+  attributed ("the textbook describes digestion in plant cells as taking place in vacuoles"), not
+  presented as a universal rule.
+- **Switching models.** A structure both models share stays selected (as a whole type, because
+  copy numbers differ), a structure the new model lacks is cleared with an announcement, and
+  isolation ends. Related-structure links to something the current model doesn't have are shown
+  as plain text, "(not in the plant model)".
+- **Links.** `type=plant` is added only for the plant cell. Links without `type` are animal-cell
+  links, so every existing link opens exactly as before. A plant-only structure in an animal link
+  falls back to no selection.
+
 ### Readable labels
 
 - Only major structures are labelled by default, one label per type (not one per mitochondrion).
@@ -797,7 +835,7 @@ query parameters, so neither subject can change the other:
 | Subject | Parameters | Values |
 | --- | --- | --- |
 | Chemistry | `molecule`, `view` | `water`, `carbon-dioxide`, `methane`, `ammonia`, `ethanol`, `benzene` · `ball-and-stick`, `space-filling` |
-| Biology | `structure`, `cell` | `plasma-membrane`, `cytoplasm`, `nucleus`, `nucleolus`, `mitochondrion`, `rough-er`, `smooth-er`, `golgi`, `ribosome`, `lysosome` · `whole`, `cutaway` |
+| Biology | `structure`, `cell`, `type` | `plasma-membrane`, `cytoplasm`, `nucleus`, `nucleolus`, `mitochondrion`, `rough-er`, `smooth-er`, `golgi`, `ribosome`, `lysosome`, plus (plant model) `cell-wall`, `chloroplast`, `central-vacuole`, `vacuole-membrane` · `whole`, `cutaway` · `plant` (omitted for the animal cell) |
 | Physics | `speed`, `angle`, `height`, `gravity` | plain numbers inside the ranges above; each invalid value falls back to its default on its own |
 | Anatomy | `part`, `heart` | one of the 14 structure IDs (e.g. `mitral-valve`) · `whole`, `cutaway` |
 | Mathematics | `surface`, the preset's parameters (`a`, `b`, `c` or `amp`, `k`), `slice`, `at` | `plane`, `paraboloid`, `saddle`, `sine` · numbers inside the preset's ranges · `x` or `y` · a position inside the domain |
@@ -981,6 +1019,10 @@ the production build:
   name, block and category filters, the list alternative, arrow-key movement, and opening a molecule
   from an element with the measurement tools still working. `mobile.e2e.ts` and `no-webgl.e2e.ts`
   add contained scrolling on phones and use without WebGL.
+- `plant.e2e.ts`: switching models (list, badge, link, shared selection kept), chloroplast copies,
+  wall vs membrane, relationships to structures the model lacks, switching back clearing a
+  plant-only selection, unchanged animal links, the whole view and isolation, the comparison panel,
+  and saving a plant view.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

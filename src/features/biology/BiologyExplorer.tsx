@@ -2,8 +2,8 @@ import { MousePointerClick } from 'lucide-react'
 import { lazy, useEffect, useReducer, useState } from 'react'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
-import { findOrganelle } from '../../data/biology/organelles'
-import { ORGANELLE_IDS, type OrganelleId } from '../../data/biology/types'
+import { CELL_STRUCTURES, findOrganelle, isInternal } from '../../data/biology/organelles'
+import type { OrganelleId } from '../../data/biology/types'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { parseBiologyParams, withBiologyParams } from '../../lib/urlState'
 import { ActivityPanel } from '../activities/ActivityPanel'
@@ -22,11 +22,11 @@ const CellScene = lazy(() => import('./scene/CellScene'))
 type MobileTab = 'details' | 'structures'
 
 function initFromUrl() {
-  const { structureId, cellView } = parseBiologyParams(window.location.search, ORGANELLE_IDS, {
+  const { structureId, cellView, cellType } = parseBiologyParams(window.location.search, (t) => CELL_STRUCTURES[t], {
     structureId: null,
     cellView: 'cutaway',
   })
-  return initialBiologyState(structureId, cellView)
+  return initialBiologyState(structureId, cellView, cellType)
 }
 
 export function BiologyExplorer() {
@@ -39,9 +39,9 @@ export function BiologyExplorer() {
 
   const reducedMotion = usePrefersReducedMotion()
   const isMobile = useMediaQuery('(max-width: 899px)')
-  const { view, selection, isolated } = state
+  const { cellType, view, selection, isolated } = state
   const selected = selection ? findOrganelle(selection.organelleId) : undefined
-  const selectionHidden = view === 'whole' && !isolated && !!selected?.internal
+  const selectionHidden = view === 'whole' && !isolated && !!selected && isInternal(cellType, selected.id)
 
   // Keep the address shareable (?structure=…&cell=…) without adding history entries;
   // Chemistry's molecule/view keys are left untouched.
@@ -49,20 +49,26 @@ export function BiologyExplorer() {
     const search = withBiologyParams(window.location.search, {
       structureId: selection?.organelleId ?? null,
       cellView: view,
+      cellType,
     })
     if (search !== window.location.search) {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
-  }, [selection?.organelleId, view])
+  }, [selection?.organelleId, view, cellType])
 
-  useRecordVisit({ subject: 'biology', params: { ...(selection ? { structure: selection.organelleId } : {}), cell: view } })
+  useRecordVisit({
+    subject: 'biology',
+    params: { ...(selection ? { structure: selection.organelleId } : {}), cell: view, ...(cellType === 'plant' ? { type: 'plant' } : {}) },
+  })
 
   const activity = useActivity(BIOLOGY_ACTIVITY, state, {
     capture: () => state,
-    apply: () => dispatch({ type: 'replace', state: golgiSetup(), announcement: 'Activity started: cutaway view, nothing selected.' }),
+    apply: () => dispatch({ type: 'replace', state: golgiSetup(state), announcement: 'Activity started: cutaway view, nothing selected.' }),
     restore: (snap) => dispatch({ type: 'replace', state: snap, announcement: ACTIVITY_ENDED }),
     restoreUrl: (snap) =>
-      replaceUrlSearch(withBiologyParams(window.location.search, { structureId: snap.selection?.organelleId ?? null, cellView: snap.view })),
+      replaceUrlSearch(
+        withBiologyParams(window.location.search, { structureId: snap.selection?.organelleId ?? null, cellView: snap.view, cellType: snap.cellType }),
+      ),
   })
   const activityPanel = <ActivityPanel activity={activity} state={state} />
   const guidePanel = <SubjectGuidePanel subject="biology" />
@@ -72,11 +78,27 @@ export function BiologyExplorer() {
     if (isMobile) setMobileTab('details')
   }
 
+  const typeSwitch = (
+    <div className="segmented section-switch" role="group" aria-label="Cell type">
+      {(['animal', 'plant'] as const).map((t) => (
+        <button key={t} type="button" className="segmented-option" aria-pressed={cellType === t} onClick={() => dispatch({ type: 'setCellType', cellType: t })}>
+          {t === 'animal' ? 'Animal cell' : 'Plant cell'}
+        </button>
+      ))}
+    </div>
+  )
   const list = (
-    <StructureList query={query} onQueryChange={setQuery} selectedId={selection?.organelleId ?? null} onSelect={(id) => select(id)} />
+    <StructureList
+      cellType={cellType}
+      query={query}
+      onQueryChange={setQuery}
+      selectedId={selection?.organelleId ?? null}
+      onSelect={(id) => select(id)}
+    />
   )
   const details = (
     <StructureDetails
+      cellType={cellType}
       selection={selection}
       view={view}
       onSelect={(id, instance) => dispatch({ type: 'select', organelleId: id, instance })}
@@ -86,10 +108,11 @@ export function BiologyExplorer() {
 
   const viewer = (
     <ViewportShell
-      label="3D model of a generalized animal cell. Drag to rotate, scroll or pinch to zoom."
+      label={`3D model of a generalized ${cellType} cell. Drag to rotate, scroll or pinch to zoom.`}
       fallbackNote="Every structure, its description and its sources remain available in the panels"
       renderScene={(callbacks) => (
         <CellScene
+          cellType={cellType}
           view={view}
           selection={selection}
           isolated={isolated}
@@ -105,7 +128,7 @@ export function BiologyExplorer() {
       overlay={
         <>
           <div className="viewport-badge">
-            <span className="viewport-badge-name">Generalized animal cell</span>
+            <span className="viewport-badge-name">Generalized {cellType} cell</span>
             <span className="viewport-badge-mode">
               {isolated && selected ? `Isolated: ${selected.name}` : view === 'whole' ? 'Whole cell' : 'Cutaway'} ·
               schematic, not to scale
@@ -146,6 +169,7 @@ export function BiologyExplorer() {
     return (
       <div className="chem chem--mobile">
         {announcer}
+        {typeSwitch}
         <div className="chem-stage">{viewer}</div>
         {activityPanel}
         {guidePanel}
@@ -166,7 +190,10 @@ export function BiologyExplorer() {
   return (
     <div className="chem">
       {announcer}
-      <aside className="chem-side chem-side--left">{list}</aside>
+      <aside className="chem-side chem-side--left">
+        <div className="section-switch-wrap">{typeSwitch}</div>
+        {list}
+      </aside>
       <div className="chem-stage">{viewer}</div>
       <aside className="chem-side chem-side--right">
         {activityPanel}

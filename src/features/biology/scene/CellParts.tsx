@@ -1,4 +1,3 @@
-import type { ThreeEvent } from '@react-three/fiber'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   BackSide,
@@ -30,6 +29,7 @@ import {
   SMOOTH_ER_PATHS,
   type V3,
 } from './layout'
+import { pick, shellAngles } from './sceneHelpers'
 
 /**
  * 'selected' = the chosen structure (or chosen copy); 'sibling' = other copies of the same type.
@@ -37,23 +37,13 @@ import {
  */
 export type Highlight = 'selected' | 'sibling' | null
 
-export type SelectHandler = (organelleId: OrganelleId, instance: number | null) => void
+export type { SelectHandler } from './sceneHelpers'
+import type { SelectHandler } from './sceneHelpers'
 
 
 const color = (id: OrganelleId) => findOrganelle(id)?.color ?? '#888888'
 
-/** Click handling shared by every pickable part. Hidden parts are never rendered, so they cannot be hit. */
-function pick(organelleId: OrganelleId, instance: number | null, onSelect: SelectHandler) {
-  return {
-    userData: { organelleId },
-    onClick: (e: ThreeEvent<MouseEvent>) => {
-      e.stopPropagation()
-      onSelect(organelleId, instance)
-    },
-  }
-}
-
-function Material({
+export function Material({
   base,
   highlight,
   side,
@@ -75,11 +65,6 @@ function Material({
       emissiveIntensity={highlight === 'selected' ? 0.45 : highlight === 'sibling' ? 0.12 : 0}
     />
   )
-}
-
-/** Sphere angles that leave a wedge open toward +z when `open` is true. */
-function shellAngles(open: boolean): [number, number] {
-  return open ? [Math.PI / 2 + CUT_HALF_ANGLE, 2 * Math.PI - 2 * CUT_HALF_ANGLE] : [0, 2 * Math.PI]
 }
 
 export function PlasmaMembrane({ open, highlight, onSelect }: { open: boolean; highlight: Highlight; onSelect: SelectHandler }) {

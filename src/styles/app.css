@@ -4062,3 +4062,32 @@ button {
 .ptable-swatch.is-p { --block: #f5c26b; }
 .ptable-swatch.is-d { --block: #8db4ff; }
 .ptable-swatch.is-f { --block: #a99cf0; }
+
+/* ---------- Biology: cell comparison ---------- */
+
+.cell-compare {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.compare-h {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.compare-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.relation-link.is-absent {
+  cursor: default;
+  text-decoration: none;
+  color: var(--color-text);
+}

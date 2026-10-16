@@ -108,7 +108,7 @@ export const GUIDES: Record<SubjectId, SubjectGuide> = {
       },
     ],
     simplifications: [
-      'One generalized animal cell; real cell types differ greatly in shape and contents.',
+      'One generalized animal cell and one generalized plant cell; real cell types differ greatly in shape and contents.',
       'Shapes, sizes, numbers and positions of organelles are schematic and not to scale.',
       'The cytoskeleton and most molecules are not drawn.',
     ],

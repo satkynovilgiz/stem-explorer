@@ -27,13 +27,13 @@ export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; 
   },
   biology: {
     title: 'Inside a cell',
-    summary: 'A generalized animal cell with ten structures.',
+    summary: 'Generalized animal and plant cells, side by side.',
     capabilities: [
+      'Animal cell (10 structures) and plant cell (13), with a comparison',
       'Whole-cell and cutaway views; isolate and focus',
       'Functions, structure and relationships of each part',
-      'Key terms and sources for every structure',
     ],
-    action: 'Open the cell',
+    action: 'Open the cells',
   },
   physics: {
     title: 'Projectile motion lab',

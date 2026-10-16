@@ -1,20 +1,22 @@
 import { Check, Search, X } from 'lucide-react'
 import { useId } from 'react'
-import { INSTANCE_COUNTS, ORGANELLES } from '../../data/biology/organelles'
-import type { OrganelleId } from '../../data/biology/types'
+import { instanceCount, structuresOf } from '../../data/biology/organelles'
+import type { CellType, OrganelleId } from '../../data/biology/types'
 import { searchOrganelles } from './search'
 
 interface Props {
+  cellType: CellType
   query: string
   onQueryChange: (q: string) => void
   selectedId: OrganelleId | null
   onSelect: (id: OrganelleId) => void
 }
 
-export function StructureList({ query, onQueryChange, selectedId, onSelect }: Props) {
+export function StructureList({ cellType, query, onQueryChange, selectedId, onSelect }: Props) {
   const inputId = useId()
   const statusId = useId()
-  const results = searchOrganelles(query)
+  const results = searchOrganelles(query, cellType)
+  const total = structuresOf(cellType).length
 
   return (
     <section className="panel library" aria-labelledby={`${inputId}-heading`}>
@@ -46,14 +48,14 @@ export function StructureList({ query, onQueryChange, selectedId, onSelect }: Pr
       </div>
 
       <p id={statusId} className="search-status" role="status">
-        {query ? `${results.length} of ${ORGANELLES.length} structures` : `${ORGANELLES.length} structures`}
+        {query ? `${results.length} of ${total} structures` : `${total} structures in the ${cellType} cell`}
       </p>
 
       {results.length > 0 ? (
         <ul className="structure-list">
           {results.map((o) => {
             const selected = o.id === selectedId
-            const count = INSTANCE_COUNTS[o.id]
+            const count = instanceCount(cellType, o.id)
             return (
               <li key={o.id}>
                 <button

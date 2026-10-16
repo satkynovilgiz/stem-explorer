@@ -1,6 +1,5 @@
 import { findHeartPart, HEART_PART_IDS } from '../data/anatomy/heart'
-import { findOrganelle } from '../data/biology/organelles'
-import { ORGANELLE_IDS } from '../data/biology/types'
+import { CELL_STRUCTURES, findOrganelle } from '../data/biology/organelles'
 import { findMolecule, MOLECULES } from '../data/chemistry/molecules'
 import { isSubjectId, SUBJECTS, type SubjectId } from '../data/subjects'
 import { getSurface } from '../math/surfaces'
@@ -42,8 +41,13 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
       return r.invalid.length ? null : { subject, params: { molecule: r.moleculeId, view: r.representation } }
     }
     case 'biology': {
-      const r = parseBiologyParams(search, ORGANELLE_IDS, { structureId: null, cellView: 'cutaway' })
-      return r.invalid.length ? null : { subject, params: { ...(r.structureId ? { structure: r.structureId } : {}), cell: r.cellView } }
+      const r = parseBiologyParams(search, (t) => CELL_STRUCTURES[t], { structureId: null, cellView: 'cutaway' })
+      if (r.invalid.length) return null
+      // `type` only for the plant cell, so animal-cell states keep their original canonical form.
+      return {
+        subject,
+        params: { ...(r.structureId ? { structure: r.structureId } : {}), cell: r.cellView, ...(r.cellType === 'plant' ? { type: 'plant' } : {}) },
+      }
     }
     case 'physics': {
       const r = parsePhysicsParams(search, DEFAULT_PARAMS, isValidParam)
@@ -88,7 +92,9 @@ export function defaultTitle(state: ShareState): string {
       return `${m?.name ?? 'Molecule'} · ${p.view === 'space-filling' ? 'space-filling' : 'ball and stick'}`
     }
     case 'biology':
-      return p.structure ? `${findOrganelle(p.structure)?.name ?? 'Cell structure'} in the animal cell` : `Animal cell · ${p.cell === 'whole' ? 'whole' : 'cutaway'}`
+      return p.structure
+        ? `${findOrganelle(p.structure)?.name ?? 'Cell structure'} in the ${p.type === 'plant' ? 'plant' : 'animal'} cell`
+        : `${p.type === 'plant' ? 'Plant' : 'Animal'} cell · ${p.cell === 'whole' ? 'whole' : 'cutaway'}`
     case 'physics':
       return `Launch at ${p.speed} m/s, ${p.angle}°${Number(p.height) > 0 ? ` from ${p.height} m` : ''}${p.gravity !== '9.81' ? `, g = ${p.gravity} m/s²` : ''}`
     case 'mathematics': {

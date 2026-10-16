@@ -175,3 +175,12 @@ test('periodic table scrolls inside its own panel on a phone; the page does not'
   await page.getByRole('group', { name: 'Layout' }).getByRole('button', { name: 'List' }).tap()
   await expect(page.getByRole('list', { name: 'Elements' }).getByRole('button')).toHaveCount(118)
 })
+
+test('plant cell on a phone: type switch, model and list without overflow', async ({ page }) => {
+  await page.goto('/#/biology')
+  await waitForViewport(page)
+  await page.getByRole('group', { name: 'Cell type' }).getByRole('button', { name: 'Plant cell' }).tap()
+  await expect(page.locator('.viewport-badge-name')).toHaveText('Generalized plant cell')
+  await expectNoHorizontalOverflow(page)
+  expect(await smallTargets(page, '.section-switch button')).toEqual([])
+})

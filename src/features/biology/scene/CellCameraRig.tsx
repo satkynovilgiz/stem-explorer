@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useEffectEvent, useRef } from 'react'
 import { PerspectiveCamera, Vector3 } from 'three'
 import type { OrganelleId } from '../../../data/biology/types'
-import { CELL_RADIUS, focusTarget } from './layout'
+import { CELL_RADIUS, focusTarget as animalFocusTarget, type FocusTarget } from './layout'
 
 interface Controls {
   target: Vector3
@@ -19,6 +19,9 @@ interface Props {
   focusToken: number
   focus: { organelleId: OrganelleId; instance: number | null } | null
   reducedMotion: boolean
+  /** Radius that frames the whole cell (differs between the animal and plant models). */
+  cellRadius?: number
+  focusTarget?: (organelleId: OrganelleId, instance: number | null) => FocusTarget
 }
 
 /** Default view: slightly above and to the right, looking into the cutaway. */
@@ -35,7 +38,7 @@ interface Flight {
 
 const ease = (t: number) => 1 - Math.pow(1 - t, 3)
 
-export function CellCameraRig({ resetToken, focusToken, focus, reducedMotion }: Props) {
+export function CellCameraRig({ resetToken, focusToken, focus, reducedMotion, cellRadius = CELL_RADIUS, focusTarget = animalFocusTarget }: Props) {
   const get = useThree((s) => s.get)
   const hasControls = useThree((s) => s.controls !== null)
   const flight = useRef<Flight | null>(null)
@@ -77,14 +80,15 @@ export function CellCameraRig({ resetToken, focusToken, focus, reducedMotion }: 
   const frameCell = useEffectEvent(() => {
     const controls = get().controls as unknown as Controls
     controls.minDistance = 1.2
-    controls.maxDistance = fitDistance(CELL_RADIUS) * 2.5
-    const distance = fitDistance(CELL_RADIUS)
+    controls.maxDistance = fitDistance(cellRadius) * 2.5
+    const distance = fitDistance(cellRadius)
     flyTo(new Vector3(0, 0, 0), VIEW_DIRECTION.clone().multiplyScalar(distance), !firstFrame.current && !reducedMotion)
     firstFrame.current = false
   })
+  // Also re-frames when the model changes (animal ↔ plant), since the cells differ in size.
   useEffect(() => {
     if (hasControls) frameCell()
-  }, [hasControls, resetToken])
+  }, [hasControls, resetToken, cellRadius])
 
   // Focus reads the selection at the moment the button is pressed; selecting alone never moves the camera.
   const focusSelection = useEffectEvent(() => {

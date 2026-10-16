@@ -1,5 +1,5 @@
 import type { SubjectId } from './subjects'
-import { ORGANELLES } from './biology/organelles'
+import { ORGANELLES, structureParams } from './biology/organelles'
 
 /**
  * The glossary: one definition per term, shared by the subject guides and the glossary page.
@@ -283,7 +283,7 @@ function organelleTerms(): GlossaryEntry[] {
     for (const g of o.glossary) {
       const id = slug(g.term)
       const existing = byTerm.get(id)
-      const link = { label: o.name, href: `?structure=${o.id}#/biology` }
+      const link = { label: o.name, href: `?${new URLSearchParams(structureParams(o.id)).toString()}#/biology` }
       if (existing) {
         existing.links.push(link)
         existing.sourceIds = [...new Set([...existing.sourceIds, ...o.sourceIds])]

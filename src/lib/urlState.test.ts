@@ -72,20 +72,23 @@ describe('parseBiologyParams', () => {
     expect(parseBiologyParams('?structure=golgi&cell=whole', structures, bioDefaults)).toEqual({
       structureId: 'golgi',
       cellView: 'whole',
+      cellType: 'animal',
       invalid: [],
     })
   })
 
   it('falls back for unknown values and reports them', () => {
-    expect(parseBiologyParams('?structure=chloroplast&cell=xray', structures, bioDefaults)).toEqual({
+    expect(parseBiologyParams('?structure=chloroplast&cell=xray&type=fungus', structures, bioDefaults)).toEqual({
       ...bioDefaults,
-      invalid: ['structure', 'cell'],
+      cellType: 'animal',
+      invalid: ['type', 'structure', 'cell'],
     })
   })
 
   it('ignores Chemistry parameters entirely', () => {
     expect(parseBiologyParams('?molecule=benzene&view=space-filling', structures, bioDefaults)).toEqual({
       ...bioDefaults,
+      cellType: 'animal',
       invalid: [],
     })
   })
@@ -102,7 +105,18 @@ describe('parseBiologyParams', () => {
     expect(params.get('cell')).toBe('whole')
     expect(params.get('molecule')).toBe('benzene')
     const state = { structureId: 'mitochondrion', cellView: 'cutaway' } as const
-    expect(parseBiologyParams(withBiologyParams('', state), structures, bioDefaults)).toEqual({ ...state, invalid: [] })
+    expect(parseBiologyParams(withBiologyParams('', state), structures, bioDefaults)).toEqual({ ...state, cellType: 'animal', invalid: [] })
+  })
+
+  it('reads type=plant, validates structures per cell type, and omits type for animal cells', () => {
+    const byType = (t: 'animal' | 'plant') => (t === 'plant' ? ['chloroplast', 'nucleus'] : ['lysosome', 'nucleus'])
+    expect(parseBiologyParams('?structure=chloroplast&type=plant', byType, bioDefaults)).toMatchObject({ structureId: 'chloroplast', cellType: 'plant', invalid: [] })
+    expect(parseBiologyParams('?structure=chloroplast', byType, bioDefaults)).toMatchObject({ structureId: null, cellType: 'animal', invalid: ['structure'] })
+    expect(parseBiologyParams('?structure=lysosome&type=plant', byType, bioDefaults)).toMatchObject({ structureId: null, invalid: ['structure'] })
+    expect(new URLSearchParams(withBiologyParams('?type=plant', { structureId: null, cellView: 'whole', cellType: 'animal' })).has('type')).toBe(false)
+    expect(new URLSearchParams(withBiologyParams('', { structureId: 'nucleus', cellView: 'whole', cellType: 'plant' })).get('type')).toBe('plant')
+    // An existing animal-cell link is unchanged by a round trip.
+    expect(withBiologyParams('?structure=golgi&cell=cutaway', { structureId: 'golgi', cellView: 'cutaway' })).toBe('?structure=golgi&cell=cutaway')
   })
 })
 

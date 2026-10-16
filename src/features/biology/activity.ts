@@ -2,8 +2,15 @@ import { BIOLOGY_SOURCES, findOrganelle } from '../../data/biology/organelles'
 import type { ActivityDef } from '../activities/types'
 import type { BiologyState } from './state'
 
-/** Setup: cutaway (the Golgi is internal), nothing selected, all structures shown. */
-export const golgiSetup = (): BiologyState => ({ view: 'cutaway', selection: null, isolated: false, announcement: '' })
+/** Setup: cutaway (the Golgi is internal), nothing selected, all structures shown. Keeps the cell
+ * type, since both models have a Golgi apparatus and rough ER. */
+export const golgiSetup = (s: Pick<BiologyState, 'cellType'> = { cellType: 'animal' }): BiologyState => ({
+  cellType: s.cellType,
+  view: 'cutaway',
+  selection: null,
+  isolated: false,
+  announcement: '',
+})
 
 const selected = (s: BiologyState, id: string) => s.selection?.organelleId === id
 

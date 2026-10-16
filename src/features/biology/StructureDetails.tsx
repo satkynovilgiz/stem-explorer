@@ -4,15 +4,19 @@ import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import {
   BIOLOGY_SOURCES,
-  CELL_DISCLAIMER,
+  CELL_DISCLAIMERS,
   COLOR_NOTE,
   findOrganelle,
-  INSTANCE_COUNTS,
+  hasStructure,
+  instanceCount,
+  isInternal,
 } from '../../data/biology/organelles'
-import type { CellView, Organelle, OrganelleId } from '../../data/biology/types'
+import type { CellType, CellView, Organelle, OrganelleId } from '../../data/biology/types'
+import { CellComparison } from './CellComparison'
 import type { BiologySelection } from './state'
 
 interface Props {
+  cellType: CellType
   selection: BiologySelection | null
   view: CellView
   onSelect: (id: OrganelleId, instance?: number | null) => void
@@ -21,13 +25,13 @@ interface Props {
 
 type DetailTab = 'overview' | 'structure' | 'sources'
 
-export function StructureDetails({ selection, view, onSelect, onClear }: Props) {
+export function StructureDetails({ cellType, selection, view, onSelect, onClear }: Props) {
   const [tab, setTab] = useState<DetailTab>('overview')
   const organelle = selection ? findOrganelle(selection.organelleId) : undefined
   const copyLink = (
     <ShareActions
       subject="biology"
-      params={{ ...(selection ? { structure: selection.organelleId } : {}), cell: view }}
+      params={{ ...(selection ? { structure: selection.organelleId } : {}), cell: view, ...(cellType === 'plant' ? { type: 'plant' } : {}) }}
       restores={organelle ? `this structure (${organelle.name}) and view` : 'this view'}
     />
   )
@@ -38,9 +42,9 @@ export function StructureDetails({ selection, view, onSelect, onClear }: Props) 
         <header className="info-header">
           <p className="eyebrow">Biology</p>
           <h2 id="cell-heading" className="info-title">
-            Animal cell
+            {cellType === 'plant' ? 'Plant cell' : 'Animal cell'}
           </h2>
-          <p className="info-summary">Explore the main structures of a generalized animal cell.</p>
+          <p className="info-summary">Explore the main structures of a generalized {cellType} cell.</p>
         </header>
         <div className="info-body">
           <div className="info-section">
@@ -49,20 +53,23 @@ export function StructureDetails({ selection, view, onSelect, onClear }: Props) 
               <li>
                 <Compass size={15} aria-hidden="true" /> Drag to rotate and scroll or pinch to zoom.
               </li>
-              <li>Choose <strong>Cutaway</strong> to look inside the membrane.</li>
+              <li>
+                Choose <strong>Cutaway</strong> to look inside the {cellType === 'plant' ? 'cell wall and membrane' : 'membrane'}.
+              </li>
               <li>Click a structure in the model, or pick one from the list.</li>
               <li>Use <strong>Focus</strong> to move closer and <strong>Isolate</strong> to show it alone.</li>
             </ol>
           </div>
-          <Disclaimer />
+          <CellComparison cellType={cellType} onSelect={(id) => onSelect(id)} />
+          <Disclaimer cellType={cellType} />
           {copyLink}
         </div>
       </section>
     )
   }
 
-  const count = INSTANCE_COUNTS[organelle.id]
-  const hiddenInView = view === 'whole' && organelle.internal
+  const count = instanceCount(cellType, organelle.id)
+  const hiddenInView = view === 'whole' && isInternal(cellType, organelle.id)
 
   return (
     <section className="panel info" aria-labelledby="structure-heading">
@@ -98,9 +105,9 @@ export function StructureDetails({ selection, view, onSelect, onClear }: Props) 
           {
             id: 'structure',
             label: 'Structure & relationships',
-            content: <StructureTab organelle={organelle} onSelect={onSelect} />,
+            content: <StructureTab organelle={organelle} cellType={cellType} onSelect={onSelect} />,
           },
-          { id: 'sources', label: 'Sources', content: <SourcesTab organelle={organelle} /> },
+          { id: 'sources', label: 'Sources', content: <SourcesTab organelle={organelle} cellType={cellType} /> },
         ]}
       />
     </section>
@@ -179,7 +186,7 @@ function Overview({ organelle }: { organelle: Organelle }) {
   )
 }
 
-function StructureTab({ organelle, onSelect }: { organelle: Organelle; onSelect: Props['onSelect'] }) {
+function StructureTab({ organelle, cellType, onSelect }: { organelle: Organelle; cellType: CellType; onSelect: Props['onSelect'] }) {
   return (
     <div className="info-body">
       <div className="info-section">
@@ -192,9 +199,16 @@ function StructureTab({ organelle, onSelect }: { organelle: Organelle; onSelect:
           <ul className="relations">
             {organelle.relationships.map((r) => (
               <li key={r.targetId + r.text}>
-                <button type="button" className="relation-link" onClick={() => onSelect(r.targetId)}>
-                  {findOrganelle(r.targetId)?.name}
-                </button>
+                {hasStructure(cellType, r.targetId) ? (
+                  <button type="button" className="relation-link" onClick={() => onSelect(r.targetId)}>
+                    {findOrganelle(r.targetId)?.name}
+                  </button>
+                ) : (
+                  // The other model has this structure; this one doesn't, so it can't be selected here.
+                  <span className="relation-link is-absent">
+                    {findOrganelle(r.targetId)?.name} <span className="muted">(not in the {cellType} model)</span>
+                  </span>
+                )}
                 <span className="relation-text">{r.text}</span>
               </li>
             ))}
@@ -213,7 +227,7 @@ function StructureTab({ organelle, onSelect }: { organelle: Organelle; onSelect:
   )
 }
 
-function SourcesTab({ organelle }: { organelle: Organelle }) {
+function SourcesTab({ organelle, cellType }: { organelle: Organelle; cellType: CellType }) {
   return (
     <div className="info-body">
       <ul className="sources">
@@ -231,18 +245,18 @@ function SourcesTab({ organelle }: { organelle: Organelle }) {
         })}
       </ul>
       <p className="muted small">Text is paraphrased from these OpenStax pages (CC BY 4.0).</p>
-      <Disclaimer />
+      <Disclaimer cellType={cellType} />
     </div>
   )
 }
 
-function Disclaimer() {
+function Disclaimer({ cellType }: { cellType: CellType }) {
   return (
     <div className="note">
       <p className="note-title">
         <Info size={14} aria-hidden="true" /> About this model
       </p>
-      <p className="prose">{CELL_DISCLAIMER}</p>
+      <p className="prose">{CELL_DISCLAIMERS[cellType]}</p>
       <p className="prose">{COLOR_NOTE}</p>
     </div>
   )

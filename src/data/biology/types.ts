@@ -9,7 +9,14 @@ export const ORGANELLE_IDS = [
   'golgi',
   'ribosome',
   'lysosome',
+  'cell-wall',
+  'chloroplast',
+  'central-vacuole',
+  'vacuole-membrane',
 ] as const
+
+export const CELL_TYPES = ['animal', 'plant'] as const
+export type CellType = (typeof CELL_TYPES)[number]
 
 export type OrganelleId = (typeof ORGANELLE_IDS)[number]
 
@@ -52,7 +59,8 @@ export interface Organelle {
   color: string
   /** Shown as a label by default (major structures only, to limit clutter). */
   majorLabel: boolean
-  /** True for structures inside the plasma membrane (hidden in the whole-cell view). */
+  /** True for structures inside the cell's outer surface (hidden in the whole-cell view). In the plant
+   * model everything except the cell wall is internal; see isInternal(). */
   internal: boolean
 }
 
