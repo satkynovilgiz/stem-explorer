@@ -6,6 +6,7 @@ import { findOrganelle } from '../../data/biology/organelles'
 import { ORGANELLE_IDS, type OrganelleId } from '../../data/biology/types'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { parseBiologyParams, withBiologyParams } from '../../lib/urlState'
+import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { CellToolbar } from './CellToolbar'
 import { biologyReducer, initialBiologyState } from './state'
 import { StructureDetails } from './StructureDetails'
@@ -49,6 +50,8 @@ export function BiologyExplorer() {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
   }, [selection?.organelleId, view])
+
+  useRecordVisit({ subject: 'biology', params: { ...(selection ? { structure: selection.organelleId } : {}), cell: view } })
 
   const select = (organelleId: OrganelleId, instance: number | null = null) => {
     dispatch({ type: 'select', organelleId, instance })

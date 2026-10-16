@@ -1,56 +1,56 @@
 import { useEffect } from 'react'
-import { ComingSoon } from './components/ComingSoon'
 import { TopNav } from './components/TopNav'
 import { SUBJECTS } from './data/subjects'
 import { HeartExplorer } from './features/anatomy/HeartExplorer'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
 import { ChemistryExplorer } from './features/chemistry/ChemistryExplorer'
 import { MathematicsExplorer } from './features/mathematics/MathematicsExplorer'
+import { Home } from './features/home/Home'
 import { PhysicsExplorer } from './features/physics/PhysicsExplorer'
-import { useHashSubject } from './lib/hooks'
+import { useRoute } from './lib/hooks'
 
 export default function App() {
-  const subjectId = useHashSubject()
-  const subject = SUBJECTS.find((s) => s.id === subjectId)!
+  const route = useRoute()
+  const subjectName = SUBJECTS.find((s) => s.id === route)?.name
 
   useEffect(() => {
-    document.title = `${subject.name} · STEM Explorer`
-  }, [subject.name])
+    document.title = subjectName ? `${subjectName} · STEM Explorer` : 'STEM Explorer'
+  }, [subjectName])
 
   return (
     <div className="app">
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <TopNav active={subjectId} />
+      <TopNav active={route} />
       <main id="main" className="main" tabIndex={-1}>
-        {subject.id === 'anatomy' ? (
+        {route === 'anatomy' ? (
           <>
             <h1 className="visually-hidden">Anatomy Explorer: the human heart</h1>
             <HeartExplorer />
           </>
-        ) : subject.id === 'chemistry' ? (
+        ) : route === 'chemistry' ? (
           <>
             <h1 className="visually-hidden">Chemistry Explorer</h1>
             <ChemistryExplorer />
           </>
-        ) : subject.id === 'physics' ? (
+        ) : route === 'physics' ? (
           <>
             <h1 className="visually-hidden">Physics Explorer: projectile motion lab</h1>
             <PhysicsExplorer />
           </>
-        ) : subject.id === 'mathematics' ? (
+        ) : route === 'mathematics' ? (
           <>
             <h1 className="visually-hidden">Mathematics Explorer: interactive 3D surfaces</h1>
             <MathematicsExplorer />
           </>
-        ) : subject.id === 'biology' ? (
+        ) : route === 'biology' ? (
           <>
             <h1 className="visually-hidden">Biology Explorer: animal cell</h1>
             <BiologyExplorer />
           </>
         ) : (
-          <ComingSoon subject={subject} />
+          <Home />
         )}
       </main>
     </div>

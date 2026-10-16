@@ -1,6 +1,6 @@
 import { Compass, ExternalLink, EyeOff, Info } from 'lucide-react'
 import { useState } from 'react'
-import { CopyLinkButton } from '../../components/CopyLinkButton'
+import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import {
   BIOLOGY_SOURCES,
@@ -10,7 +10,6 @@ import {
   INSTANCE_COUNTS,
 } from '../../data/biology/organelles'
 import type { CellView, Organelle, OrganelleId } from '../../data/biology/types'
-import { shareUrl } from '../../lib/urlState'
 import type { BiologySelection } from './state'
 
 interface Props {
@@ -26,14 +25,10 @@ export function StructureDetails({ selection, view, onSelect, onClear }: Props) 
   const [tab, setTab] = useState<DetailTab>('overview')
   const organelle = selection ? findOrganelle(selection.organelleId) : undefined
   const copyLink = (
-    <CopyLinkButton
+    <ShareActions
+      subject="biology"
+      params={{ ...(selection ? { structure: selection.organelleId } : {}), cell: view }}
       restores={organelle ? `this structure (${organelle.name}) and view` : 'this view'}
-      getUrl={() =>
-        shareUrl(window.location, 'biology', {
-          ...(selection ? { structure: selection.organelleId } : {}),
-          cell: view,
-        })
-      }
     />
   )
 

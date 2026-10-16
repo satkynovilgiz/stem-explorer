@@ -102,3 +102,16 @@ test('Anatomy on a phone: tabs, list selection and the tour without overflow', a
   await expect(page.locator('#tour-heading')).toContainText('Right atrium')
   await expectNoHorizontalOverflow(page)
 })
+
+test('Home fits a phone, searches and opens a subject', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Explore science. See how it works.' })).toBeVisible()
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+  expect(overflow).toBeLessThanOrEqual(0)
+  await page.getByRole('searchbox', { name: 'Search everything you can explore' }).fill('ribosome')
+  await page.getByRole('list', { name: 'Search results' }).getByRole('link', { name: /Ribosome/ }).first().tap()
+  await expect(page).toHaveURL(/#\/biology$/)
+  await page.getByRole('link', { name: 'STEM Explorer home' }).tap()
+  await page.locator('.subject-card.is-physics').getByRole('link').tap()
+  await expect(page.getByRole('heading', { level: 1, name: 'Physics Explorer: projectile motion lab' })).toBeAttached()
+})

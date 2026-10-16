@@ -1,10 +1,11 @@
 import { Box, Crosshair, Grid3x3, Maximize, RotateCcw } from 'lucide-react'
 import { lazy, useEffect, useMemo, useReducer, useState } from 'react'
-import { CopyLinkButton } from '../../components/CopyLinkButton'
+import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
 import { useMediaQuery } from '../../lib/hooks'
-import { mathParamEntries, parseMathParams, shareUrl, withMathParams } from '../../lib/urlState'
+import { mathParamEntries, parseMathParams, withMathParams } from '../../lib/urlState'
+import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { heightGradientCss } from '../../math/heightColor'
 import { getSurface, heightRange, normalizeParamValue, num, type SurfaceDef, type SurfaceId } from '../../math/surfaces'
 import { FormulaPanel, ParameterPanel, PointInspector, SliceControls, SourcesPanel, SurfaceLibrary } from './MathPanels'
@@ -53,6 +54,9 @@ export function MathematicsExplorer() {
     }
   }, [state.surfaceId, params, slice])
 
+  const shareParams = mathParamEntries({ surfaceId: state.surfaceId, params, slice })
+  useRecordVisit({ subject: 'mathematics', params: shareParams })
+
   const selectSurface = (id: SurfaceId) => {
     dispatch({ type: 'selectSurface', surfaceId: id })
     // A newly opened preset is framed from the default direction.
@@ -69,10 +73,7 @@ export function MathematicsExplorer() {
     />
   )
   const copyLink = (
-    <CopyLinkButton
-      restores="this surface, its parameters and the cross-section"
-      getUrl={() => shareUrl(window.location, 'mathematics', mathParamEntries({ surfaceId: state.surfaceId, params, slice }))}
-    />
+    <ShareActions subject="mathematics" params={shareParams} restores="this surface, its parameters and the cross-section" />
   )
 
   const explore = (

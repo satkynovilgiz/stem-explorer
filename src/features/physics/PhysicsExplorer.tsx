@@ -1,10 +1,11 @@
 import { GitCompare, RotateCcw, X } from 'lucide-react'
 import { lazy, useEffect, useMemo, useReducer, useRef, useState } from 'react'
-import { CopyLinkButton } from '../../components/CopyLinkButton'
+import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
 import { useMediaQuery } from '../../lib/hooks'
-import { parsePhysicsParams, physicsParamEntries, shareUrl, withPhysicsParams } from '../../lib/urlState'
+import { parsePhysicsParams, physicsParamEntries, withPhysicsParams } from '../../lib/urlState'
+import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import {
   advanceTime,
   DEFAULT_PARAMS,
@@ -106,6 +107,9 @@ export function PhysicsExplorer() {
     }
   }, [state.params])
 
+  const shareParams = physicsParamEntries(state.params)
+  useRecordVisit({ subject: 'physics', params: shareParams })
+
   const setParam = (key: ParamKey, value: number) => dispatch({ type: 'setParam', key, value })
   const scrub = (t: number) => {
     running.current = false
@@ -155,10 +159,7 @@ export function PhysicsExplorer() {
         </div>
       </div>
 
-      <CopyLinkButton
-        restores="these launch inputs (opened paused at t = 0)"
-        getUrl={() => shareUrl(window.location, 'physics', physicsParamEntries(state.params))}
-      />
+      <ShareActions subject="physics" params={shareParams} restores="these launch inputs (opened paused at t = 0)" />
     </section>
   )
 

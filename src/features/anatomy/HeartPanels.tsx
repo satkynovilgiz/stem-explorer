@@ -1,6 +1,6 @@
 import { Check, ChevronLeft, ChevronRight, Compass, ExternalLink, Eye, Focus, Info, Layers, Route, RotateCcw, ScanSearch, Search, Tag, X } from 'lucide-react'
 import { useId, useState } from 'react'
-import { CopyLinkButton } from '../../components/CopyLinkButton'
+import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import {
   COLOR_CONVENTION,
@@ -15,7 +15,7 @@ import {
   type HeartView,
 } from '../../data/anatomy/heart'
 import { normalize } from '../../lib/chemistry'
-import { anatomyParamEntries, shareUrl } from '../../lib/urlState'
+import { anatomyParamEntries } from '../../lib/urlState'
 import { HEART_COLORS } from './colors'
 
 const KIND_LABEL = { chamber: 'Chamber', valve: 'Valve', vessel: 'Vessel', wall: 'Wall' } as const
@@ -134,8 +134,9 @@ export function PartDetails({
   const [tab, setTab] = useState<DetailTab>('overview')
   const part = selected ? findHeartPart(selected) : undefined
   const copyLink = (
-    <CopyLinkButton
-      getUrl={() => shareUrl(window.location, 'anatomy', anatomyParamEntries(share))}
+    <ShareActions
+      subject="anatomy"
+      params={anatomyParamEntries(share)}
       restores={share.partId ? `this structure (${findHeartPart(share.partId)?.name}) and view` : 'this view'}
     />
   )

@@ -62,8 +62,6 @@ export const SUBJECTS: readonly Subject[] = [
   },
 ]
 
-export const DEFAULT_SUBJECT: SubjectId = 'chemistry'
-
 export function isSubjectId(value: string): value is SubjectId {
   return SUBJECTS.some((s) => s.id === value)
 }

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { DEFAULT_SUBJECT, isSubjectId, type SubjectId } from '../data/subjects'
+import { isSubjectId, type SubjectId } from '../data/subjects'
 
 /**
  * Back/Forward between entries whose query strings differ (each explorer keeps its own
@@ -14,11 +14,29 @@ function subscribeHash(onChange: () => void) {
   }
 }
 
-/** Current subject from the URL hash, e.g. "#/physics". */
-export function useHashSubject(): SubjectId {
-  const hash = useSyncExternalStore(subscribeHash, () => window.location.hash)
+export type Route = 'home' | SubjectId
+
+/** Route from a hash such as "#/physics". Anything unrecognized (including no hash) is Home. */
+export function routeFromHash(hash: string): Route {
   const id = hash.replace(/^#\/?/, '').split('/')[0]
-  return isSubjectId(id) ? id : DEFAULT_SUBJECT
+  return isSubjectId(id) ? id : 'home'
+}
+
+/** Current route from the URL hash; Home when there is no recognized subject. */
+export function useRoute(): Route {
+  return routeFromHash(useSyncExternalStore(subscribeHash, () => window.location.hash))
+}
+
+/**
+ * In-app navigation to a relative "?query#/route" link without reloading the page. It adds a
+ * history entry (so Back works) and notifies the router the same way Back/Forward does.
+ * Only relative links starting with "?" or "#" are accepted.
+ */
+export function navigateTo(relative: string): void {
+  if (!/^[?#]/.test(relative)) return
+  window.history.pushState(null, '', `${window.location.pathname}${relative}`)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+  window.scrollTo({ top: 0 })
 }
 
 export function useMediaQuery(query: string): boolean {

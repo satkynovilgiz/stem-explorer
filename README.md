@@ -3,7 +3,8 @@
 An interactive science exploration workspace: **explore → interact → understand**.
 Users rotate, zoom, select and measure parts of 3D models and read concise, sourced explanations.
 
-All five subjects are implemented:
+The app opens on a **Home page** (`#/home`) with search, the five subjects, featured explorations
+and the explorations you saved or visited recently. All five subjects are implemented:
 - **Anatomy Explorer:** the human heart, with a blood-flow tour.
 - **Chemistry Explorer:** molecules and measurements.
 - **Biology Explorer:** an interactive animal cell.
@@ -530,9 +531,62 @@ cross-section graph keep working, and the 3D-only toolbar is hidden.
   - traces;
   - elliptic and hyperbolic paraboloids.
 
+## Home page, search and the exploration library
+
+**Home** is `#/home`. It is also what you see with no hash or with any hash that is not a subject
+(`#/`, `#/nowhere`). The brand logo and the **Home** tab in the top bar lead back to it. Home does
+not mount a WebGL canvas and does not load the Three.js chunk; subject cards use small SVG
+illustrations that are labelled as simplified previews.
+
+Featured explorations are ordinary deep links that use only supported URL parameters. When a step
+can't be stored in a URL (picking atoms for an angle, starting the blood-flow tour, saving a physics
+Run A), the card says what to do next.
+
+**Search** runs locally over a fixed index built from the app's own data (no network):
+the five subjects, the six molecules (names, aliases and formulas, where `H2O` and `H₂O` both
+match), the ten cell structures, the 14 heart structures, the four surface presets and the
+projectile experiment. Each result shows its name, subject, a short description and a deep link.
+Ranking: exact name or formula, then name prefix, then name or formula contains, then other terms.
+The search box is a plain input followed by a list of links, so Tab moves into the results and
+Enter opens one.
+
+**Saved explorations.** Every explorer has **Save exploration** next to Copy link. It suggests a
+name (for example *Water · ball and stick* or *Aorta · whole heart*) that you can change. Saved
+entries appear on Home, where you can open, rename or remove them.
+
+**Continue exploring** lists up to six recently visited explorations. A visit is recorded after
+about 1.5 seconds on a state, so quickly clicking through presets does not fill the list. Revisiting
+the same state moves it to the top instead of adding a copy. **Clear history** empties the recent
+list only; saved explorations are separate. The section is hidden until there is at least one
+visit, and nothing is pre-filled.
+
+**What is stored.** Both lists live in `localStorage` under `stem-explorer:saved` and
+`stem-explorer:recent`, each as a JSON array. An entry has a schema version (`1`), a random ID, the
+subject, the subject's canonical parameters, a title (up to 80 characters) and creation/update
+times. Origins, camera positions, animation time, measurement picks and other transient state are
+never stored. Links are rebuilt from the subject and parameters as a relative `?…#/subject`
+address, so a stored entry can never navigate to another site.
+
+**Canonical share state.** Copy link, Save exploration and recent history all use the same
+parameters, produced by each subject's URL parser. Two states are the same exploration when their
+validated parameters match (parameter order does not matter), so saving the same view twice reports
+*Already saved as …* and offers to rename that entry instead of creating a duplicate. During the
+Anatomy blood-flow tour, Copy link and Save exploration use the selection and view from before the
+tour, which is what Exit tour restores.
+
+**Limits and failures.**
+- Saved explorations are kept **on this browser only**. They don't sync across devices or browsers,
+  and clearing site data, private windows or browser storage policies remove them.
+- At most 30 saved entries; saving more shows a message asking you to remove one.
+- If storage is unavailable (blocked or disabled), Home says so and every explorer keeps working;
+  Copy link still works. A full storage quota is reported instead of failing silently.
+- Malformed JSON, entries from an unknown schema version and entries whose parameters no longer
+  validate are ignored rather than crashing the page.
+
 ## Shareable links and URL state
 
-Subjects are hash routes (`#/chemistry`, `#/biology`). Each explorer keeps its state in its **own**
+Subjects are hash routes (`#/chemistry`, `#/biology`); `#/home` and unknown routes show Home.
+Each explorer keeps its state in its **own**
 query parameters, so neither subject can change the other:
 
 | Subject | Parameters | Values |
@@ -640,6 +694,8 @@ How the URL is kept up to date:
 | `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). |
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
+| `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
+| `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored; unavailable storage and quota errors. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
 
 **Browser tests** (`npm run test:e2e`, Playwright, `e2e/`), run in the local Google Chrome against
@@ -686,17 +742,28 @@ the production build:
   - grid lines and the legend; URL restore and invalid values;
   - subject switching with Back/Forward and refresh;
   - no history entries from sliders, and Copy link.
+- `home.e2e.ts`: covers
+  - no hash and unknown hashes opening Home, with no canvas;
+  - opening every subject from its card and returning with the logo and the Home tab;
+  - Choose a subject, How it works, featured deep links and footer links;
+  - search by formula (with subscripts), keyboard selection of a heart structure, cell structures,
+    surfaces, the projectile lab, empty results and Clear;
+  - save, duplicate detection, refresh, restore, rename and remove; Anatomy saved during the tour;
+  - malformed stored data; recent history (only after visits, deduped, Clear history);
+  - Back/Forward between Home and explorers, and direct deep links.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):
   - all five subjects with no horizontal overflow and a prominent viewport;
-  - touch targets of at least 40 px, the tab workflow, and normal page scrolling.
+  - touch targets of at least 40 px, the tab workflow, and normal page scrolling;
+  - Home without horizontal overflow, search and opening subjects by tap.
 - `no-webgl.e2e.ts` (Chrome with `--disable-3d-apis`):
   - Biology and Chemistry fall back to text;
   - Physics keeps inputs, playback, readouts and graphs working;
   - Mathematics keeps parameters, point evaluation and the slice graph working;
   - Anatomy keeps the list, sources and the HTML tour working;
-  - 3D-only controls are hidden.
+  - 3D-only controls are hidden;
+  - Home works and opens explorers.
 
 The test fixture fails a test on any console error or warning except two known, harmless ones: the
 `THREE.Clock` notice (see Known issues), and Chrome's "GPU stall due to ReadPixels" driver note,
@@ -707,8 +774,9 @@ Firefox have not.
 
 ```
 src/
-  App.tsx                       hash routing between subjects (#/chemistry, #/physics, …)
-  components/                   shell: TopNav, ComingSoon, ErrorBoundary, Tabs, ViewportShell, CopyLinkButton
+  App.tsx                       hash routing: Home (#/home, default) and subjects (#/chemistry, …)
+  components/                   shell: TopNav, AppLink, ErrorBoundary, Tabs, ViewportShell, CopyLinkButton, ShareActions, RangeField
+  features/home/                Home page, search, saved/recent sections, SVG subject illustrations
   data/
     subjects.ts                 subject list and planned features
     chemistry/                  typed element and molecule data (types.ts, elements.ts, molecules.ts)
@@ -717,7 +785,11 @@ src/
     measurement.ts              distance/angle math, selection rules, formatting
     urlState.ts                 per-subject URL parameters and share links
     chemistry.ts                search, formulas, composition, neighbors
-    hooks.ts, webgl.ts          media-query/hash hooks, WebGL detection
+    hooks.ts, webgl.ts          routing and media-query hooks, WebGL detection
+    explorations.ts             canonical share state, relative links and default titles
+    explorationStore.ts         saved and recent explorations in localStorage (versioned, validated)
+    useExplorationLibrary.ts    React hooks for the library and recording visits
+    searchIndex.ts              local search index and ranking
   features/chemistry/
     state.ts                    explorer reducer (molecule, view, mode, selections, announcements)
     ChemistryExplorer.tsx       layout, URL sync, live region
@@ -790,3 +862,5 @@ Also fixed during the review:
   - The warning is harmless and is deliberately not suppressed.
 - **Ending auto-rotate.** When a measurement mode pauses auto-rotate, the model glides to a stop over
   about half a second (camera damping). With `prefers-reduced-motion` it stops immediately.
+- **Saved explorations are per browser.** They are stored in `localStorage` and are not synced; see
+  *Home page, search and the exploration library* for limits.

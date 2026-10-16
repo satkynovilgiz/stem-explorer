@@ -1,0 +1,132 @@
+import { Bookmark, Check } from 'lucide-react'
+import { useId, useState } from 'react'
+import type { SubjectId } from '../data/subjects'
+import { canonicalize, defaultTitle } from '../lib/explorations'
+import { browserStorage, MAX_SAVED, MAX_TITLE_LENGTH, renameExploration, saveExploration, type Exploration } from '../lib/explorationStore'
+import { shareUrl } from '../lib/urlState'
+import { notifyLibraryChange } from '../lib/useExplorationLibrary'
+import { CopyLinkButton } from './CopyLinkButton'
+
+interface Props {
+  subject: SubjectId
+  /** The canonical share parameters — the same values Copy link uses. */
+  params: Record<string, string>
+  /** What the link restores, for the Copy link message. */
+  restores: string
+}
+
+type Message =
+  | { kind: 'saved'; title: string }
+  | { kind: 'duplicate'; existing: Exploration }
+  | { kind: 'renamed'; title: string }
+  | { kind: 'error'; text: string }
+
+const ERRORS: Record<string, string> = {
+  unavailable: 'Saving isn’t available: this browser is blocking local storage. Everything else still works.',
+  quota: 'This browser’s storage is full, so the exploration could not be saved.',
+  limit: `You already have ${MAX_SAVED} saved explorations, the maximum. Remove some on the Home page first.`,
+  invalid: 'This exploration could not be saved.',
+}
+
+/** Copy link + Save exploration, both built from one canonical share state. */
+export function ShareActions({ subject, params, restores }: Props) {
+  const id = useId()
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState('')
+  const [message, setMessage] = useState<Message | null>(null)
+  const state = canonicalize(subject, params)
+  const suggested = state ? defaultTitle(state) : ''
+
+  const save = () => {
+    if (!state) return setMessage({ kind: 'error', text: ERRORS.invalid })
+    const result = saveExploration(browserStorage(), state, name || suggested)
+    if (result.ok) {
+      setMessage({ kind: 'saved', title: result.value.title })
+      setOpen(false)
+      notifyLibraryChange()
+    } else if (result.reason === 'duplicate' && result.existing) {
+      setMessage({ kind: 'duplicate', existing: result.existing })
+    } else {
+      setMessage({ kind: 'error', text: ERRORS[result.reason] ?? ERRORS.invalid })
+    }
+  }
+
+  const renameExisting = (existing: Exploration) => {
+    const result = renameExploration(browserStorage(), existing.id, name || suggested)
+    if (result.ok) {
+      setMessage({ kind: 'renamed', title: result.value.title })
+      setOpen(false)
+      notifyLibraryChange()
+    } else {
+      setMessage({ kind: 'error', text: ERRORS[result.reason] ?? ERRORS.invalid })
+    }
+  }
+
+  return (
+    <div className="share-actions">
+      <div className="share-row">
+        <CopyLinkButton restores={restores} getUrl={() => shareUrl(window.location, subject, params)} />
+        <button
+          type="button"
+          className="tool-button bordered"
+          aria-expanded={open}
+          aria-controls={`${id}-form`}
+          onClick={() => {
+            setOpen((o) => !o)
+            setName(suggested)
+            setMessage(null)
+          }}
+        >
+          <Bookmark size={16} aria-hidden="true" />
+          <span>Save exploration</span>
+        </button>
+      </div>
+      {open && (
+        <form
+          id={`${id}-form`}
+          className="save-form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            save()
+          }}
+        >
+          <label htmlFor={`${id}-name`} className="param-label">
+            Name
+          </label>
+          <input
+            id={`${id}-name`}
+            className="search-input save-input"
+            value={name}
+            maxLength={MAX_TITLE_LENGTH}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <div className="share-row">
+            <button type="submit" className="button">
+              <Check size={16} aria-hidden="true" />
+              Save
+            </button>
+            <button type="button" className="tool-button bordered" onClick={() => setOpen(false)}>
+              Cancel
+            </button>
+          </div>
+          <p className="muted small">Saved on this browser.</p>
+        </form>
+      )}
+      <p className="save-status" role="status">
+        {message?.kind === 'saved' && <>Saved on this browser as “{message.title}”. Find it on the Home page.</>}
+        {message?.kind === 'renamed' && <>Saved entry renamed to “{message.title}”.</>}
+        {message?.kind === 'error' && message.text}
+        {message?.kind === 'duplicate' && (
+          <>
+            Already saved as “{message.existing.title}”.{' '}
+            {open && (
+              <button type="button" className="relation-link" onClick={() => renameExisting(message.existing)}>
+                Rename it to “{name || suggested}”
+              </button>
+            )}
+          </>
+        )}
+      </p>
+    </div>
+  )
+}

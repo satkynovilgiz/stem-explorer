@@ -63,3 +63,14 @@ test('Anatomy keeps the list, explanations, sources and tour without WebGL', asy
   await page.getByRole('tab', { name: 'Sources' }).click()
   await expect(page.locator('.sources a').first()).toHaveAttribute('href', /openstax\.org/)
 })
+
+test('Home works without WebGL and still opens explorers', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Explore science. See how it works.' })).toBeVisible()
+  await expect(page.locator('.subject-art')).toHaveCount(5)
+  await page.getByRole('searchbox', { name: 'Search everything you can explore' }).fill('aorta')
+  await page.getByRole('list', { name: 'Search results' }).getByRole('link', { name: /Aorta/ }).first().click()
+  await waitForViewport(page)
+  await expect(page.locator('.viewport-message')).toContainText('3D view unavailable')
+  await expect(page.locator('#part-heading')).toHaveText('Aorta')
+})

@@ -4,7 +4,8 @@ import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
 import { findHeartPart, HEART_PART_IDS, type HeartPartId } from '../../data/anatomy/heart'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
-import { parseAnatomyParams, withAnatomyParams } from '../../lib/urlState'
+import { anatomyParamEntries, parseAnatomyParams, withAnatomyParams } from '../../lib/urlState'
+import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { HEART_COLORS } from './colors'
 import { HeartToolbar, PartDetails, PartList, TourBar } from './HeartPanels'
 import { anatomyReducer, anatomyShareState, initialAnatomyState } from './state'
@@ -32,7 +33,7 @@ export function HeartExplorer() {
   const part = selected ? findHeartPart(selected) : undefined
   const canAct = !!part && !touring && (view === 'cutaway' || isolated || !part.internal)
 
-  // One canonical share state for the address bar and Copy link (see anatomyShareState):
+  // One canonical share state for the address bar, Copy link and Save (see anatomyShareState):
   // during the tour it is the exploration state the tour will restore; tour progress is never stored.
   const share = anatomyShareState(state)
   useEffect(() => {
@@ -41,6 +42,8 @@ export function HeartExplorer() {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
   }, [share.partId, share.heartView])
+
+  useRecordVisit({ subject: 'anatomy', params: anatomyParamEntries(share) })
 
   const select = (id: HeartPartId) => {
     dispatch({ type: 'select', partId: id })

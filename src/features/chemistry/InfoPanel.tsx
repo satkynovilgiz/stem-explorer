@@ -1,12 +1,11 @@
 import { ExternalLink, FlaskConical, Info } from 'lucide-react'
 import { useState } from 'react'
-import { CopyLinkButton } from '../../components/CopyLinkButton'
+import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import { BALL_AND_STICK_SCALE, ELEMENTS } from '../../data/chemistry/elements'
 import type { GeometryKind, Molecule, Representation } from '../../data/chemistry/types'
 import { bondedNeighbors, bondOrderName, composition } from '../../lib/chemistry'
 import type { InteractionMode } from '../../lib/measurement'
-import { shareUrl } from '../../lib/urlState'
 import { AtomPicker } from './AtomPicker'
 import { Formula } from './Formula'
 
@@ -38,12 +37,7 @@ export function InfoPanel({ molecule, representation, mode, inspectedAtomId, onP
         </h2>
         <Formula formula={molecule.formula} className="info-formula" />
         <p className="info-summary">{molecule.summary}</p>
-        <CopyLinkButton
-          restores="this molecule and display mode"
-          getUrl={() =>
-            shareUrl(window.location, 'chemistry', { molecule: molecule.id, view: representation })
-          }
-        />
+        <ShareActions subject="chemistry" params={{ molecule: molecule.id, view: representation }} restores="this molecule and display mode" />
       </header>
 
       <Tabs

@@ -3,6 +3,7 @@ import { Tabs } from '../../components/Tabs'
 import { DEFAULT_MOLECULE_ID, getMolecule, MOLECULES } from '../../data/chemistry/molecules'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { parseChemistryParams, withChemistryParams } from '../../lib/urlState'
+import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { InfoPanel } from './InfoPanel'
 import { MeasurementPanel } from './MeasurementPanel'
 import { MoleculeLibrary } from './MoleculeLibrary'
@@ -47,6 +48,8 @@ export function ChemistryExplorer() {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
   }, [state.moleculeId, representation])
+
+  useRecordVisit({ subject: 'chemistry', params: { molecule: state.moleculeId, view: representation } })
 
   const selectMolecule = (id: string) => {
     dispatch({ type: 'selectMolecule', moleculeId: id })
