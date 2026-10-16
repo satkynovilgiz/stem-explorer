@@ -33,7 +33,7 @@ test('Physics keeps inputs, playback, readouts and graphs without WebGL', async 
   await page.getByRole('slider', { name: /^Time/ }).fill('1.2')
   await expect(page.locator('.graph-readout').first()).toContainText('At t = 1.20 s: y = 9.91 m')
   await page.getByRole('button', { name: 'Resume' }).click()
-  await expect(page.locator('.status-tag')).toHaveText('Landed — values at impact', { timeout: 10_000 })
+  await expect(page.locator('.status-tag')).toHaveText('Landed — values at impact', { timeout: 30_000 })
 })
 
 test('Mathematics keeps parameters, point evaluation and the slice graph without WebGL', async ({ page }) => {

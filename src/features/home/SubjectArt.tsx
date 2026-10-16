@@ -6,12 +6,17 @@ import type { SubjectId } from '../../data/subjects'
  */
 
 function Heart() {
+  // Anterior view: the heart's right side (oxygen-poor, blue in the app's convention) is on the viewer's left.
   return (
     <g>
-      <path d="M58 30 q-14 -18 -26 -4 q-14 16 6 40 l20 22 l22 -22 q18 -24 4 -40 q-12 -14 -26 4z" fill="#cf4f4a" opacity="0.9" />
-      <path d="M58 30 q-14 -18 -26 -4 q-14 16 6 40 l20 22 z" fill="#5677c9" />
-      <path d="M52 26 v-16 M62 28 q4 -18 18 -18" stroke="#cf4f4a" strokeWidth="6" fill="none" strokeLinecap="round" />
-      <path d="M44 24 v-14" stroke="#5677c9" strokeWidth="6" strokeLinecap="round" />
+      <path d="M48 26 v-14 M42 26 v-12" stroke="#5677c9" strokeWidth="5" strokeLinecap="round" />
+      <path d="M58 30 q0 -22 18 -22 q12 0 12 12 v8" stroke="#cf4f4a" strokeWidth="7" fill="none" strokeLinecap="round" />
+      <path d="M54 34 q4 -14 -8 -20" stroke="#5677c9" strokeWidth="6" fill="none" strokeLinecap="round" />
+      <path d="M60 32 C 40 22 22 30 26 50 C 30 68 48 80 62 90 C 74 78 92 66 94 48 C 96 30 78 24 60 32 Z" fill="#a8615b" />
+      <path d="M60 34 C 44 28 30 34 32 50 C 34 64 48 76 60 86 Z" fill="#5677c9" opacity="0.85" />
+      <path d="M60 34 C 76 28 90 34 88 50 C 86 64 72 76 60 86 Z" fill="#cf4f4a" opacity="0.85" />
+      <path d="M60 36 V86" stroke="#ead9b5" strokeWidth="2" />
+      <path d="M33 54 H87" stroke="#ead9b5" strokeWidth="1.5" strokeDasharray="3 3" />
     </g>
   )
 }

@@ -1,42 +1,18 @@
-import { ArrowRight, BookOpen, ChevronDown, Compass, ExternalLink, Link2, MousePointerClick, Move3d, SlidersHorizontal } from 'lucide-react'
+import { ArrowRight, BookOpen, ChevronDown, Compass, ExternalLink, Link2, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SUBJECTS, type SubjectId } from '../../data/subjects'
+import { useExplorationLibrary } from '../../lib/useExplorationLibrary'
+import { requestActivity } from '../activities/requests'
 import { ActivityEntries } from './ActivityEntries'
+import { SUBJECT_CARDS } from './content'
 import { HomeSearch } from './HomeSearch'
-import { LibrarySections } from './LibrarySections'
+import { RecentStrip } from './RecentStrip'
+import { SavedPanel } from './SavedPanel'
 import { SubjectArt } from './SubjectArt'
 
 const ORDER: SubjectId[] = SUBJECTS.map((s) => s.id)
-
-/** What each explorer really offers today (no promises of missing features). */
-const CARDS: Record<SubjectId, { title: string; text: string; action: string }> = {
-  anatomy: {
-    title: 'Explore the human heart',
-    text: 'A schematic 3D heart: chambers, valves and great vessels, with a step-by-step blood-flow tour.',
-    action: 'Open the heart',
-  },
-  chemistry: {
-    title: 'Inspect molecules',
-    text: 'Six molecules from experimental geometry. Measure distances and bond angles between atoms.',
-    action: 'Open molecules',
-  },
-  biology: {
-    title: 'Explore an animal cell',
-    text: 'A cutaway cell with ten structures: select, isolate and read what each one does.',
-    action: 'Open the cell',
-  },
-  physics: {
-    title: 'Experiment with projectile motion',
-    text: 'Set speed, angle, height and gravity, then launch, scrub through time and compare two runs.',
-    action: 'Open the lab',
-  },
-  mathematics: {
-    title: 'Explore surfaces',
-    text: 'Reshape four surfaces z = f(x, y), read exact values at points and cut vertical cross-sections.',
-    action: 'Open surfaces',
-  },
-}
+const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
 
 /** Curated deep links using only supported URL parameters; next steps the URL cannot encode are spelled out. */
 const FEATURED: { subject: SubjectId; title: string; href: string; next: string }[] = [
@@ -99,9 +75,34 @@ function GuideSteps() {
   )
 }
 
-/** The guide sits near the top while "How it works" is expanded, and at the end of the page otherwise. */
+/** First visit (no history and nothing saved): two concrete starting points and how exploring works. */
+function WelcomePanel() {
+  return (
+    <section className="home-panel welcome" aria-labelledby="welcome-heading">
+      <h2 id="welcome-heading" className="home-h2">
+        <Sparkles size={18} aria-hidden="true" /> New here? Start with one of these
+      </h2>
+      <div className="welcome-starts">
+        <AppLink href="#/chemistry" className="welcome-start is-chemistry" onClick={() => requestActivity('chemistry')}>
+          <span className="welcome-start-kind">Guided activity · 3 steps</span>
+          <span className="welcome-start-title">Measure the H–O–H angle in water</span>
+        </AppLink>
+        <a href="#/anatomy" className="welcome-start is-anatomy">
+          <span className="welcome-start-kind">Explore freely</span>
+          <span className="welcome-start-title">Rotate and cut away a model heart</span>
+        </a>
+      </div>
+      <h3 className="welcome-subhead">How exploring works</h3>
+      <GuideSteps />
+    </section>
+  )
+}
+
 export function Home() {
+  const library = useExplorationLibrary()
+  const firstVisit = library.recent.length === 0 && library.saved.length === 0 && library.savedError === null
   const [guideOpen, setGuideOpen] = useState(false)
+  const [message, setMessage] = useState('')
   const subjectsRef = useRef<HTMLElement>(null)
   const guideRef = useRef<HTMLElement>(null)
 
@@ -110,29 +111,30 @@ export function Home() {
   }, [guideOpen])
 
   return (
-    <div className="home">
+    <div className={`home${message ? ' has-toast' : ''}`}>
       <section className="home-hero" aria-labelledby="home-title">
-        <div className="home-hero-text">
-          <p className="eyebrow">Interactive science models</p>
-          <h1 id="home-title" className="home-title">
-            Explore science. See how it works.
-          </h1>
-          <p className="home-lead">
-            Rotate 3D models, adjust experiments and inspect the details, with each view connected to a short scientific
-            explanation and its sources.
-          </p>
-          <div className="home-actions">
-            <button
-              type="button"
-              className="button home-primary"
-              onClick={() => {
-                subjectsRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
-                subjectsRef.current?.focus({ preventScroll: true })
-              }}
-            >
-              Choose a subject
-              <ArrowRight size={16} aria-hidden="true" />
-            </button>
+        <p className="eyebrow">Interactive science models</p>
+        <h1 id="home-title" className="home-title">
+          Explore science. See how it works.
+        </h1>
+        <p className="home-lead">
+          Five hands-on explorers for anatomy, chemistry, biology, physics and mathematics. Rotate 3D models, run small
+          experiments and read short, sourced explanations of what you see.
+        </p>
+        <HomeSearch />
+        <div className="home-actions">
+          <button
+            type="button"
+            className="tool-button bordered"
+            onClick={() => {
+              subjectsRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+              subjectsRef.current?.focus({ preventScroll: true })
+            }}
+          >
+            <span>Browse subjects</span>
+            <ArrowRight size={15} aria-hidden="true" />
+          </button>
+          {!firstVisit && (
             <button
               type="button"
               className="tool-button bordered"
@@ -140,16 +142,15 @@ export function Home() {
               aria-controls="home-guide"
               onClick={() => setGuideOpen((v) => !v)}
             >
-              <BookOpen size={16} aria-hidden="true" />
+              <BookOpen size={15} aria-hidden="true" />
               <span>How it works</span>
               <ChevronDown size={14} aria-hidden="true" className={guideOpen ? 'is-flipped' : ''} />
             </button>
-          </div>
+          )}
         </div>
-        <HomeSearch />
       </section>
 
-      {guideOpen && (
+      {guideOpen && !firstVisit && (
         <section id="home-guide" ref={guideRef} className="home-panel home-guide" aria-labelledby="guide-heading">
           <h2 id="guide-heading" className="home-h2">
             How to explore
@@ -158,21 +159,27 @@ export function Home() {
         </section>
       )}
 
+      {firstVisit ? <WelcomePanel /> : library.recent.length > 0 && <RecentStrip recent={library.recent} onMessage={setMessage} />}
+
       <section ref={subjectsRef} className="home-section" aria-labelledby="subjects-heading" tabIndex={-1}>
         <h2 id="subjects-heading" className="home-h2">
           Subjects
         </h2>
         <ul className="subject-cards">
           {ORDER.map((id) => {
-            const subject = SUBJECTS.find((s) => s.id === id)!
-            const card = CARDS[id]
+            const card = SUBJECT_CARDS[id]
             return (
               <li key={id} className={`subject-card is-${id}`}>
                 <SubjectArt subject={id} />
-                <p className="subject-card-name">{subject.name}</p>
+                <p className="subject-card-name">{subjectName(id)}</p>
                 <h3 className="subject-card-title">{card.title}</h3>
-                <p className="subject-card-text">{card.text}</p>
-                <a className="button subject-card-action" href={`#/${id}`}>
+                <p className="subject-card-text">{card.summary}</p>
+                <ul className="subject-card-list">
+                  {card.capabilities.map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+                <a className="subject-card-action" href={`#/${id}`}>
                   {card.action}
                   <ArrowRight size={16} aria-hidden="true" />
                 </a>
@@ -180,8 +187,10 @@ export function Home() {
             )
           })}
         </ul>
-        <p className="muted small">Illustrations are simplified previews, not scientific models.</p>
+        <p className="muted small">Card illustrations are simplified previews, not the scientific models.</p>
       </section>
+
+      <ActivityEntries />
 
       <section className="home-section" aria-labelledby="featured-heading">
         <h2 id="featured-heading" className="home-h2">
@@ -191,36 +200,23 @@ export function Home() {
           {FEATURED.map((f) => (
             <li key={f.href}>
               <AppLink href={f.href} className="featured-item">
-                <span className={`subject-chip is-${f.subject}`}>{SUBJECTS.find((s) => s.id === f.subject)!.name}</span>
+                <span className={`subject-chip is-${f.subject}`}>{subjectName(f.subject)}</span>
                 <span className="featured-title">{f.title}</span>
-                <span className="featured-next">
-                  <SlidersHorizontal size={13} aria-hidden="true" /> {f.next}
-                </span>
+                <span className="featured-next">{f.next}</span>
               </AppLink>
             </li>
           ))}
         </ul>
       </section>
 
-      <ActivityEntries />
-
-      <LibrarySections />
-
-      {!guideOpen && (
-        <section className="home-panel home-guide" aria-labelledby="guide-heading-2">
-          <h2 id="guide-heading-2" className="home-h2">
-            How to explore
-          </h2>
-          <GuideSteps />
-        </section>
-      )}
+      <SavedPanel saved={library.saved} savedError={library.savedError} onMessage={setMessage} />
 
       <footer className="home-footer">
         <nav aria-label="Subjects (footer)">
           <ul>
             {ORDER.map((id) => (
               <li key={id}>
-                <a href={`#/${id}`}>{SUBJECTS.find((s) => s.id === id)!.name}</a>
+                <a href={`#/${id}`}>{subjectName(id)}</a>
               </li>
             ))}
           </ul>
@@ -235,6 +231,18 @@ export function Home() {
           </a>
         </p>
       </footer>
+
+      {/* One live region for library messages, so a message survives its section disappearing (e.g. Clear history). */}
+      <div className="home-toast" role="status">
+        {message && (
+          <>
+            <p className="library-status">{message}</p>
+            <button type="button" className="icon-button" aria-label="Dismiss message" onClick={() => setMessage('')}>
+              <X size={15} aria-hidden="true" />
+            </button>
+          </>
+        )}
+      </div>
     </div>
   )
 }

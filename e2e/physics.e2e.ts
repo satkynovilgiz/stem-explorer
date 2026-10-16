@@ -64,7 +64,9 @@ test('launch, pause, resume, land and reset', async ({ page }) => {
   await expect(live(page, 'Time t')).toHaveText(pausedAt!)
 
   await page.getByRole('button', { name: 'Resume' }).click()
-  await expect(status(page)).toHaveText('Landed — values at impact', { timeout: 10_000 })
+  // Real-time playback: under parallel load, software WebGL renders few frames and the frame-step cap
+  // slows simulated time with it, so the 2.88 s flight can take well over 10 s of wall time.
+  await expect(status(page)).toHaveText('Landed — values at impact', { timeout: 30_000 })
   await expect(live(page, 'Time t')).toHaveText('2.88 s')
   await expect(live(page, 'Height y')).toHaveText('0 m')
   await expect(live(page, 'Position x')).toHaveText('40.8 m')

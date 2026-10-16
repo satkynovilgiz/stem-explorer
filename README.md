@@ -535,8 +535,22 @@ cross-section graph keep working, and the 3D-only toolbar is hidden.
 
 **Home** is `#/home`. It is also what you see with no hash or with any hash that is not a subject
 (`#/`, `#/nowhere`). The brand logo and the **Home** tab in the top bar lead back to it. Home does
-not mount a WebGL canvas and does not load the Three.js chunk; subject cards use small SVG
-illustrations that are labelled as simplified previews.
+not mount a WebGL canvas and does not load the Three.js chunk.
+
+Home is laid out as a dashboard, top to bottom:
+- A short introduction with the global search as the main action, plus **Browse subjects**.
+- A first-visit **welcome panel**, shown only while there is no history and nothing saved. It has
+  two concrete starting points (a guided activity and the heart) and how exploring works. For
+  returning visitors it is replaced by a compact **Continue exploring** strip of recent visits,
+  and the guide moves behind **How it works**.
+- **Subject cards** in each subject's accent colour (tokens `--subject-*`), with a small SVG
+  illustration labelled as a simplified preview and the capabilities that exist today
+  (`src/features/home/content.ts`, kept in step with the explorers).
+- **Guided activities** with their learning goals, **Featured explorations**, and **Saved
+  explorations** with backup.
+- Library messages (saved, renamed, removed, cleared, imported, errors) appear in one dismissible
+  status region at the bottom of the screen, so a message stays visible even when its section
+  disappears (for example after Clear history).
 
 Featured explorations are ordinary deep links that use only supported URL parameters. When a step
 can't be stored in a URL (picking atoms for an angle, starting the blood-flow tour, saving a physics

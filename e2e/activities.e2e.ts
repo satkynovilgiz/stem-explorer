@@ -14,7 +14,7 @@ async function start(page: Page) {
 
 test('Chemistry: from Home, measure the H–O–H angle, then exit back to the previous view', async ({ page }) => {
   await page.goto('/?molecule=benzene&view=space-filling#/home')
-  await page.getByRole('link', { name: /Measure the H–O–H angle in water/ }).click()
+  await page.locator('section', { has: page.locator('#activities-heading') }).getByRole('link', { name: /Measure the H–O–H angle in water/ }).click()
   await expect(page).toHaveURL(/#\/chemistry$/)
   await waitForViewport(page)
 

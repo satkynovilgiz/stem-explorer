@@ -43,17 +43,38 @@ test.describe('Home page', () => {
     }
   })
 
-  test('the primary action scrolls to the subjects and How it works expands the guide', async ({ page }) => {
+  test('first visit shows a welcome panel with starting points; returning visitors get How it works', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: 'Choose a subject' }).click()
+    const welcome = page.locator('section', { has: page.getByRole('heading', { name: /New here\?/ }) })
+    await expect(welcome).toContainText('How exploring works')
+    await expect(page.getByRole('button', { name: 'How it works' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Browse subjects' }).click()
     await expect(page.getByRole('heading', { name: 'Subjects', exact: true })).toBeInViewport()
 
+    // A starting point opens the chemistry activity introduction.
+    await welcome.getByRole('link', { name: /Measure the H–O–H angle/ }).click()
+    await expect(page.locator('.activity')).toContainText('Start activity')
+
+    // After a visit, the welcome panel gives way to Continue exploring, and the guide is a disclosure.
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('stem-explorer:recent'))).not.toBeNull()
+    await page.getByRole('link', { name: 'STEM Explorer home' }).click()
+    await expect(page.getByRole('heading', { name: /New here\?/ })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Continue exploring' })).toBeVisible()
     const toggle = page.getByRole('button', { name: 'How it works' })
     await expect(toggle).toHaveAttribute('aria-expanded', 'false')
     await toggle.click()
     await expect(toggle).toHaveAttribute('aria-expanded', 'true')
     await expect(page.locator('#home-guide')).toContainText('Share or save.')
-    await expect(page.getByRole('heading', { name: 'How to explore' })).toHaveCount(1)
+  })
+
+  test('subject cards list real capabilities and keyboard users can reach every card link', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('.subject-card.is-chemistry')).toContainText('Measure bond lengths and bond angles between atoms')
+    await expect(page.locator('.subject-card.is-physics')).toContainText('Save Run A and compare it with a second launch')
+    const link = page.locator('.subject-card.is-mathematics').getByRole('link')
+    await link.focus()
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/#\/mathematics$/)
   })
 
   test('featured explorations use supported deep links', async ({ page }) => {

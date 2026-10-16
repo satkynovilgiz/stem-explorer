@@ -25,6 +25,17 @@
   --color-on-accent: #06201f;
   --color-focus: #7ae8e4;
   --color-warning: #f0b75a;
+  --color-danger: #f07a72;
+  --color-danger-soft: rgb(240 122 114 / 0.12);
+  --color-danger-border: rgb(240 122 114 / 0.5);
+  --color-success: #6fd69a;
+
+  /* Subject accents, used consistently for chips, card edges and the active nav item. */
+  --subject-anatomy: #e8837e;
+  --subject-chemistry: #6fe0dc;
+  --subject-biology: #a99cf0;
+  --subject-physics: #8db4ff;
+  --subject-mathematics: #f5c26b;
 
   /* Measurement — amber, distinct from the teal selection accent */
   --color-measure: #f5c26b;
