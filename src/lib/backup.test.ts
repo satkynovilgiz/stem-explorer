@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applyImport, BACKUP_FORMAT, backupFileName, buildBackup, MAX_BACKUP_BYTES, planImport } from './backup'
-import { MAX_SAVED, readSaved, recordVisit, SAVED_KEY, saveExploration, type KeyValueStore } from './explorationStore'
+import { MAX_SAVED, readSaved, recordVisit, removeExploration, SAVED_KEY, saveExploration, type KeyValueStore } from './explorationStore'
 
 function memoryStore(): KeyValueStore & { data: Record<string, string> } {
   const data: Record<string, string> = {}
@@ -49,11 +49,12 @@ describe('planning an import', () => {
     saveExploration(source, water, 'My water')
     saveExploration(source, golgi, 'Golgi')
     const text = JSON.stringify(buildBackup(readSaved(source), now))
-    const r = planImport(text, [], now)
-    expect(r.ok && r.plan.toImport.map((e) => e.title)).toEqual(['Golgi', 'My water'])
+    const r = planImport(text, [])
+    if (!r.ok) throw new Error('expected a plan')
+    expect(r.plan.toImport.map((e) => e.title)).toEqual(['Golgi', 'My water'])
 
     const target = memoryStore()
-    expect(applyImport(target, text, 2, now)).toEqual({ ok: true, value: { imported: 2 } })
+    expect(applyImport(target, text, r.plan.toImport, now)).toEqual({ ok: true, value: { imported: 2 } })
     const imported = readSaved(target)
     expect(imported.map((e) => [e.title, e.subject])).toEqual([
       ['Golgi', 'biology'],
@@ -85,7 +86,7 @@ describe('planning an import', () => {
       'not an object',
       { subject: 'anatomy', params: { part: 'aorta' }, url: 'https://evil.example' },
     ])
-    const r = planImport(text, readSaved(store), now)
+    const r = planImport(text, readSaved(store))
     if (!r.ok) throw new Error('expected a plan')
     expect(r.plan.toImport.map((e) => [e.position, e.title])).toEqual([
       [2, 'Golgi'],
@@ -99,12 +100,12 @@ describe('planning an import', () => {
     // The URL field is ignored: only subject state is imported.
     expect(JSON.stringify(r.plan.toImport)).not.toContain('evil')
 
-    expect(applyImport(store, text, 2, now).ok).toBe(true)
+    expect(applyImport(store, text, r.plan.toImport, now).ok).toBe(true)
     expect(readSaved(store).map((e) => e.title)).toEqual(['Kept title', 'Golgi', 'Aorta · whole heart'])
   })
 
   it('treats titles as plain text', () => {
-    const r = planImport(file([{ title: '<img src=x onerror=alert(1)>\u0007  spaced ', ...water }]), [], now)
+    const r = planImport(file([{ title: '<img src=x onerror=alert(1)>\u0007  spaced ', ...water }]), [])
     expect(r.ok && r.plan.toImport[0].title).toBe('<img src=x onerror=alert(1)> spaced')
   })
 
@@ -112,11 +113,11 @@ describe('planning an import', () => {
     const store = memoryStore()
     for (let s = 1; s <= MAX_SAVED - 1; s++) saveExploration(store, { subject: 'physics', params: { speed: String(s) } }, `Speed ${s}`)
     const text = file([water, golgi, { subject: 'anatomy', params: { part: 'aorta' } }].map((e) => ({ title: 'x', ...e })))
-    const r = planImport(text, readSaved(store), now)
+    const r = planImport(text, readSaved(store))
     if (!r.ok) throw new Error('expected a plan')
     expect(r.plan.toImport).toHaveLength(1)
     expect(r.plan.overLimit.map((e) => e.position)).toEqual([2, 3])
-    expect(applyImport(store, text, 1, now).ok).toBe(true)
+    expect(applyImport(store, text, r.plan.toImport, now).ok).toBe(true)
     expect(readSaved(store)).toHaveLength(MAX_SAVED)
   })
 })
@@ -131,7 +132,10 @@ describe('applying an import', () => {
       writes++
       throw new DOMException('full', 'QuotaExceededError')
     }
-    expect(applyImport(store, file([{ title: 'G', ...golgi }]), 1, now)).toMatchObject({ ok: false, reason: 'quota' })
+    const text = file([{ title: 'G', ...golgi }])
+    const plan = planImport(text, readSaved(store))
+    if (!plan.ok) throw new Error('expected a plan')
+    expect(applyImport(store, text, plan.plan.toImport, now)).toMatchObject({ ok: false, reason: 'quota' })
     expect(writes).toBe(1)
     expect(store.data[SAVED_KEY]).toBe(before)
   })
@@ -139,15 +143,56 @@ describe('applying an import', () => {
   it('refuses when the library changed since the preview', () => {
     const store = memoryStore()
     const text = file([{ title: 'G', ...golgi }])
+    const preview = planImport(text, [])
+    if (!preview.ok) throw new Error('expected a plan')
     saveExploration(store, golgi, 'Saved in another tab')
-    expect(applyImport(store, text, 1, now)).toEqual({ ok: false, reason: 'changed' })
+    expect(applyImport(store, text, preview.plan.toImport, now)).toMatchObject({ ok: false, reason: 'changed' })
     expect(readSaved(store).map((e) => e.title)).toEqual(['Saved in another tab'])
   })
 
   it('never overwrites a damaged saved list', () => {
     const store = memoryStore()
     store.data[SAVED_KEY] = '{damaged'
-    expect(applyImport(store, file([{ title: 'G', ...golgi }]), 1, now)).toMatchObject({ ok: false, reason: 'unreadable' })
+    const text = file([{ title: 'G', ...golgi }])
+    const preview = planImport(text, [])
+    if (!preview.ok) throw new Error('expected a plan')
+    expect(applyImport(store, text, preview.plan.toImport, now)).toMatchObject({ ok: false, reason: 'unreadable' })
     expect(store.data[SAVED_KEY]).toBe('{damaged')
+  })
+
+  it('refuses when the count is unchanged but the planned explorations differ (regression)', () => {
+    // Library: Water. Backup: Water + Benzene, so the preview proposes Benzene only.
+    const store = memoryStore()
+    saveExploration(store, water, 'Water')
+    const benzene = { subject: 'chemistry' as const, params: { molecule: 'benzene', view: 'ball-and-stick' } }
+    const text = file([
+      { title: 'Water (backup)', ...water },
+      { title: 'Benzene (backup)', ...benzene },
+    ])
+    const preview = planImport(text, readSaved(store))
+    if (!preview.ok) throw new Error('expected a plan')
+    expect(preview.plan.toImport.map((e) => e.title)).toEqual(['Benzene (backup)'])
+
+    // Another tab removes Water and saves Benzene: the new plan also has one entry, but it is Water.
+    removeExploration(store, readSaved(store)[0].id)
+    saveExploration(store, benzene, 'Benzene from other tab')
+    const before = store.data[SAVED_KEY]
+    const result = applyImport(store, text, preview.plan.toImport, now)
+    expect(result).toMatchObject({ ok: false, reason: 'changed' })
+    expect(store.data[SAVED_KEY]).toBe(before)
+    if (result.ok || result.reason !== 'changed') throw new Error('expected changed')
+    expect(result.plan.toImport.map((e) => e.title)).toEqual(['Water (backup)'])
+
+    // Confirming the refreshed plan imports exactly that, keeping the existing title.
+    expect(applyImport(store, text, result.plan.toImport, now).ok).toBe(true)
+    expect(readSaved(store).map((e) => e.title)).toEqual(['Benzene from other tab', 'Water (backup)'])
+  })
+
+  it('also refuses when only a planned title differs', () => {
+    const text = file([{ title: 'Golgi', ...golgi }])
+    const preview = planImport(text, [])
+    if (!preview.ok) throw new Error('expected a plan')
+    const edited = preview.plan.toImport.map((e) => ({ ...e, title: 'Something else' }))
+    expect(applyImport(memoryStore(), text, edited, now)).toMatchObject({ ok: false, reason: 'changed' })
   })
 })

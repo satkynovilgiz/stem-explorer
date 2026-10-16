@@ -2,7 +2,7 @@ import { Download, Upload } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
 import { applyImport, backupFileName, buildBackup, MAX_BACKUP_BYTES, planImport, type BackupError, type ImportPlan } from '../../lib/backup'
 import { subjectName } from '../../lib/explorations'
-import { browserStorage, MAX_SAVED, readSaved, type Exploration } from '../../lib/explorationStore'
+import { browserStorage, MAX_SAVED, type Exploration } from '../../lib/explorationStore'
 import { storeFailureText } from '../../lib/storeMessages'
 import { notifyLibraryChange } from '../../lib/useExplorationLibrary'
 
@@ -63,18 +63,17 @@ export function BackupControls({ saved, disabled, onMessage }: { saved: Explorat
 
   const confirm = () => {
     if (!pending) return
-    const count = pending.plan.toImport.length
-    const result = applyImport(browserStorage(), pending.text, count)
+    const result = applyImport(browserStorage(), pending.text, pending.plan.toImport)
     if (result.ok) {
       onMessage(`Imported ${plural(result.value.imported, 'exploration')}.`)
       setPending(null)
       notifyLibraryChange()
     } else if (result.reason === 'changed') {
-      // Another tab changed the list since the preview: show an updated preview instead of guessing.
+      // Another tab changed the list since the preview: nothing was written. Show the plan computed
+      // from the current list, which needs its own confirmation.
       notifyLibraryChange()
-      const replanned = planImport(pending.text, readSaved(browserStorage()))
-      setPending(replanned.ok ? { ...pending, plan: replanned.plan } : null)
-      onMessage('Saved explorations changed since the preview (perhaps in another tab). Nothing was imported; review the updated preview.')
+      setPending({ ...pending, plan: result.plan })
+      onMessage('Saved explorations changed since the preview (perhaps in another tab). Nothing was imported. Review the updated preview and confirm again.')
     } else {
       onMessage(storeFailureText('import', result.reason))
     }

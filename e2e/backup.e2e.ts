@@ -148,3 +148,38 @@ test('another tab shows imported entries after a successful import', async ({ co
   await preview(a).getByRole('button', { name: 'Import 1 exploration' }).click()
   await expect(savedPanel(b).getByRole('link', { name: /Shared golgi/ })).toBeVisible()
 })
+
+test('regression: confirming a stale preview after another tab swaps entries imports nothing', async ({ context }) => {
+  const a = await context.newPage()
+  const b = await context.newPage()
+  await a.goto('/')
+  await seed(a, 'saved', [entry('seed01-1', 'water', 'Water')])
+  await a.reload()
+  await chooseFile(
+    a,
+    backup([
+      { title: 'Water (backup)', subject: 'chemistry', params: { molecule: 'water' } },
+      { title: 'Benzene (backup)', subject: 'chemistry', params: { molecule: 'benzene' } },
+    ]),
+  )
+  await expect(preview(a).getByRole('listitem').first()).toHaveText('Chemistry Benzene (backup)')
+
+  // Tab B removes Water and saves Benzene. The plan still has one entry, but now it would be Water.
+  await b.goto('/')
+  await savedPanel(b).getByRole('button', { name: 'Remove Water' }).click()
+  await b.goto('/?molecule=benzene#/chemistry')
+  await b.getByRole('button', { name: 'Save exploration' }).click()
+  await b.getByRole('textbox', { name: 'Name' }).fill('Benzene from B')
+  await b.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(b.locator('.save-status')).toContainText('Saved on this browser')
+
+  await preview(a).getByRole('button', { name: 'Import 1 exploration' }).click()
+  await expect(status(a)).toContainText('Saved explorations changed since the preview')
+  await expect(status(a)).toContainText('Nothing was imported')
+  expect(await storedTitles(a)).toEqual(['Benzene from B'])
+  // The refreshed preview shows the new plan and needs a second confirmation.
+  await expect(preview(a).getByRole('listitem').first()).toHaveText('Chemistry Water (backup)')
+  await preview(a).getByRole('button', { name: 'Import 1 exploration' }).click()
+  await expect(status(a)).toHaveText('Imported 1 exploration.')
+  expect(await storedTitles(a)).toEqual(['Benzene from B', 'Water (backup)'])
+})

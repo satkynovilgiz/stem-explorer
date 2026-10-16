@@ -61,7 +61,8 @@ export interface PlannedEntry {
   position: number
   title: string
   state: ShareState
-  createdAt: string
+  /** From the file when valid; null means "now", filled in when the import is written. */
+  createdAt: string | null
 }
 
 export interface ImportPlan {
@@ -92,7 +93,7 @@ function isStringRecord(v: unknown): v is Record<string, string> {
  * Validates a backup's text against the current saved list without changing anything. Every entry
  * goes through the same canonical validation as URLs and stored entries.
  */
-export function planImport(text: string, existing: readonly Exploration[], now = new Date(), max = MAX_SAVED): PlanResult {
+export function planImport(text: string, existing: readonly Exploration[], max = MAX_SAVED): PlanResult {
   if (byteLength(text) > MAX_BACKUP_BYTES) return { ok: false, error: { kind: 'too-large' } }
   let data: unknown
   try {
@@ -138,7 +139,7 @@ export function planImport(text: string, existing: readonly Exploration[], now =
       return
     }
     known.set(key, title)
-    const entry = { position, title, state, createdAt: isIso(r.createdAt) ? r.createdAt : now.toISOString() }
+    const entry = { position, title, state, createdAt: isIso(r.createdAt) ? r.createdAt : null }
     if (plan.toImport.length < capacity) plan.toImport.push(entry)
     else plan.overLimit.push(entry)
   })
@@ -146,23 +147,32 @@ export function planImport(text: string, existing: readonly Exploration[], now =
 }
 
 /**
- * Applies an import: re-reads the saved list, re-plans against it (another tab may have changed
- * it since the preview), builds the complete merged list and writes it once. Existing entries and
- * their titles are kept; imported entries get fresh local IDs. If the plan no longer matches what
- * the user confirmed, nothing is written.
+ * Identity of a planned import: each entry's canonical state, title and creation time, in order.
+ * Two plans with the same number of entries but different explorations have different signatures.
+ */
+export function planSignature(entries: readonly PlannedEntry[]): string {
+  return JSON.stringify(entries.map((e) => [canonicalKey(e.state), e.title, e.createdAt]))
+}
+
+/**
+ * Applies an import: re-reads the saved list immediately before writing, re-plans against it
+ * (another tab may have changed it since the preview) and checks that the result is exactly the
+ * set of entries the user confirmed. If anything differs, nothing is written and the caller shows
+ * the refreshed preview for a new confirmation. Otherwise the complete merged list is written once;
+ * existing entries and their titles are kept, and imported entries get fresh local IDs.
  */
 export function applyImport(
   store: KeyValueStore | null,
   text: string,
-  confirmedCount: number,
+  confirmed: readonly PlannedEntry[],
   now = new Date(),
-): StoreResult<{ imported: number }> | { ok: false; reason: 'changed' } {
+): StoreResult<{ imported: number }> | { ok: false; reason: 'changed'; plan: ImportPlan } {
   const read = loadList(store, SAVED_KEY)
   if (!read.ok) return { ok: false, reason: read.reason }
-  const planned = planImport(text, read.entries, now)
+  const planned = planImport(text, read.entries)
   if (!planned.ok) return { ok: false, reason: 'invalid' }
   const { toImport } = planned.plan
-  if (toImport.length !== confirmedCount) return { ok: false, reason: 'changed' }
+  if (planSignature(toImport) !== planSignature(confirmed)) return { ok: false, reason: 'changed', plan: planned.plan }
   if (toImport.length === 0) return { ok: true, value: { imported: 0 } }
   const iso = now.toISOString()
   const added: Exploration[] = toImport.map((p) => ({
@@ -170,7 +180,7 @@ export function applyImport(
     id: newId(now.getTime()),
     version: SCHEMA_VERSION,
     title: p.title,
-    createdAt: p.createdAt,
+    createdAt: p.createdAt ?? iso,
     updatedAt: iso,
   }))
   const result = writeSaved(store, [...read.entries, ...added], read.preserved)

@@ -623,8 +623,10 @@ Import is **merge-only**:
 - Nothing is written until a preview lists exactly which entries will be added, plus the duplicates
   (with the existing title that is kept), invalid entries with the reason, and entries beyond the
   30-item limit. The user then presses **Import N explorations**.
-- On confirm, the saved list is read again and the import re-planned. If another tab changed it
-  since the preview, nothing is written and an updated preview is shown. Otherwise the complete
+- On confirm, the saved list is read again immediately before writing and the import re-planned.
+  The new plan must match the confirmed one entry by entry (canonical state, title and creation
+  time), not just in count. If it differs (for example, another tab removed one entry and saved
+  another), nothing is written. The refreshed preview is shown and needs its own confirmation. Otherwise the complete
   merged list (existing entries first, unchanged; imported entries after them with fresh local IDs)
   is written in a single `setItem`. If that write fails (for example because storage is full),
   existing data is unchanged and the failure is reported. Success is announced only after the write.
@@ -795,7 +797,7 @@ How the URL is kept up to date:
 | `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). |
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
-| `src/lib/backup.test.ts` | Export contents (saved only, no IDs, origins or history); round trip with fresh IDs; oversized, malformed, foreign and unsupported files; mixed new, duplicate and invalid entries, with existing titles kept and URL fields ignored; plain-text titles; the saved-item limit; a single write that leaves data unchanged on quota failure; refusing when the library changed since the preview; never overwriting a damaged list. |
+| `src/lib/backup.test.ts` | Export contents (saved only, no IDs, origins or history); round trip with fresh IDs; oversized, malformed, foreign and unsupported files; mixed new, duplicate and invalid entries, with existing titles kept and URL fields ignored; plain-text titles; the saved-item limit; a single write that leaves data unchanged on quota failure; refusing when the library changed since the preview, including when the count is unchanged but the entries differ; never overwriting a damaged list. |
 | `src/features/activities/activities.test.ts` | One activity per subject with goal, setup, 3–5 steps, conclusion and https sources; no setup completes a step; the change lists; detection rules for every detected step (including the wrong vertex, changed speed and other surfaces); the Anatomy tour snapshot; Physics replace never resuming; the Physics summary matching `solveTrajectory`. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
@@ -860,7 +862,7 @@ the production build:
   messages; a failed Clear history keeping the entries.
 - `backup.e2e.ts`: export contents and the download name; export → import round trip; duplicates
   and invalid entries in the preview; malformed, foreign, unsupported-version and oversized files;
-  the saved-item limit; quota failure without data loss; another tab refreshing after an import.
+  the saved-item limit; quota failure without data loss; another tab refreshing after an import; a stale preview confirmed after another tab swapped entries (regression).
 - `activities.e2e.ts`: each subject's activity end to end with the ordinary controls. Covers the
   Home entry, the change list, nothing changing before Start, the wrong-vertex angle not counting,
   reflection steps never ticking by time, Exit restoring the previous view and URL, Physics pausing
