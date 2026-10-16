@@ -23,6 +23,9 @@ export function PlaybackBar(props: Props) {
   const id = useId()
   // 0.01 s steps (0.001 s for very short flights) keep keyboard scrubbing and typed times predictable.
   const step = flightTime >= 0.2 ? 0.01 : 0.001
+  // A range input cannot go past the last step below `max`, so round the end up to the step grid;
+  // the physics clamps time to the flight time, so the far end of the slider is exactly the impact.
+  const sliderMax = Number((Math.ceil(flightTime / step - 1e-9) * step).toFixed(3))
 
   const primary =
     status === 'playing'
@@ -58,12 +61,16 @@ export function PlaybackBar(props: Props) {
           type="range"
           className="param-slider playback-scrubber"
           min={0}
-          max={Math.max(flightTime, 0)}
+          max={sliderMax}
           step={step}
-          value={Math.min(t, flightTime)}
+          // Keep the input on its step grid (browsers snap off-grid values): impact is shown as the end.
+          value={t >= flightTime ? sliderMax : Math.min(t, flightTime)}
           disabled={flightTime === 0}
           aria-valuetext={`${formatSig(t, 3)} seconds of ${formatSig(flightTime, 3)}`}
-          onChange={(e) => props.onScrub(Number(e.target.value))}
+          onChange={(e) => {
+            const v = Number(e.target.value)
+            props.onScrub(v >= sliderMax - step / 2 ? flightTime : v)
+          }}
         />
       </div>
 

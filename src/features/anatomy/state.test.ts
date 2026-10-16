@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FLOW_STEPS } from '../../data/anatomy/heart'
-import { anatomyReducer, initialAnatomyState, type AnatomyAction, type AnatomyState } from './state'
+import { anatomyReducer, anatomyShareState, initialAnatomyState, type AnatomyAction, type AnatomyState } from './state'
 
 const run = (s: AnatomyState, ...a: AnatomyAction[]) => a.reduce(anatomyReducer, s)
 const start = () => initialAnatomyState(null, 'whole')
@@ -59,5 +59,22 @@ describe('blood-flow tour', () => {
     const before = run(start(), { type: 'select', partId: 'aorta' }, { type: 'isolate' })
     const after = run(before, { type: 'startTour' }, { type: 'nextStep' }, { type: 'exitTour' })
     expect(after).toMatchObject({ view: 'whole', selected: 'aorta', isolated: true, tourStep: null, beforeTour: null })
+  })
+})
+
+describe('anatomyShareState (review finding B)', () => {
+  it('shares the pre-tour selection and view during the tour, never tour progress', () => {
+    const touring = run(start(), { type: 'select', partId: 'aorta' }, { type: 'startTour' }, { type: 'nextStep' })
+    expect(touring.view).toBe('cutaway')
+    expect(anatomyShareState(touring)).toEqual({ partId: 'aorta', heartView: 'whole' })
+  })
+
+  it('shares no structure when the tour started without a selection', () => {
+    const touring = run(start(), { type: 'startTour' })
+    expect(anatomyShareState(touring)).toEqual({ partId: null, heartView: 'whole' })
+  })
+
+  it('shares the current state outside the tour', () => {
+    expect(anatomyShareState(run(start(), { type: 'select', partId: 'mitral-valve' }))).toEqual({ partId: 'mitral-valve', heartView: 'cutaway' })
   })
 })

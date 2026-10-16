@@ -572,6 +572,8 @@ How the URL is kept up to date:
   `popstate`.
 - **The address bar** keeps both subjects' parameters, so returning to a subject restores where you
   were.
+- **Off-grid values** in a shared link (for example `gravity=9.806` on a 0.01 step) are snapped to
+  the control's step when the page opens, and the address is rewritten to match what is shown.
 - **Copy link** builds a link from the current browser origin (`window.location.origin`) containing
   only the current subject's parameters. It reports success or failure. A `localhost` link only
   works on the computer running the dev server.
@@ -635,8 +637,8 @@ How the URL is kept up to date:
 | `src/features/physics/state.test.ts` | No auto-launch, edits reset to t = 0, Reset vs Restore defaults, pause/resume/landed announcements, scrubbing pauses, immediate impact, playback speed, and Run A storing inputs only. |
 | `src/features/physics/sceneMath.test.ts` | Equal axis scales, framing all compared runs, tick steps and labels, and separate vector scales. |
 | `src/data/anatomy/heart.test.ts` | All 14 structures, with URL-safe IDs, known sources and valid, reciprocal connections. Also oxygen-pathway colours by side, cusp counts, the exact 14-step blood-flow order with external lungs and body, and valve-after-chamber ordering. |
-| `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. |
-| `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude. Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
+| `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). |
+| `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
 
@@ -684,6 +686,8 @@ the production build:
   - grid lines and the legend; URL restore and invalid values;
   - subject switching with Back/Forward and refresh;
   - no history entries from sliders, and Copy link.
+- `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
+  values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):
   - all five subjects with no horizontal overflow and a prominent viewport;
   - touch targets of at least 40 px, the tab workflow, and normal page scrolling.
@@ -752,6 +756,28 @@ e2e/                            Playwright browser tests
    geometry kind, and sources.
 2. Add any new element to `elements.ts`.
 3. Add its reported values to the geometry table in `molecules.test.ts`.
+
+## Fixed review findings
+
+- **A. Small sine amplitudes shown as zero.** In Mathematics, a sine slice whose amplitude was tiny
+  but not zero (for example `amp=0.05`, `k=0.05`, slice `x = 0.05`, amplitude ≈ 1.25 × 10⁻⁴) was
+  described as the constant `z = 0`. A slice is now constant only when the amplitude is exactly
+  zero or within floating-point residue (10⁻¹² of `A`) of it. Very small values are shown in
+  scientific notation in the formula, table, readouts and graph ticks, and the formula uses `≈`
+  when the coefficient is rounded.
+- **B. Anatomy Copy link during the tour.** Copying a link during the blood-flow tour produced a
+  link without the selected structure. Copy link (and Save exploration) now use the state from
+  before the tour, the same state that Exit tour restores.
+
+Also fixed during the review:
+- Focusing and leaving a numeric field without typing could commit the rounded display value and
+  silently change the value (Physics, Mathematics parameters, slice position and point
+  coordinates). Fields now commit only when the text was edited.
+- Shared values off a control's step are snapped on load, and the address is rewritten to match.
+- The Physics time scrubber could stop just short of impact; its last position is now exactly the
+  impact time.
+- On phones, the Anatomy colour legend could cover the *Inferior* orientation label. Labels under
+  the legend are moved above it or hidden.
 
 ## Known issues
 

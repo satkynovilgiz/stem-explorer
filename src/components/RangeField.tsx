@@ -51,17 +51,27 @@ export function RangeField({ spec, value, onChange, note, showSlider = true, cla
   const formatted = value.toFixed(spec.decimals)
   // While typing, show the draft; otherwise always show the committed value.
   const [draft, setDraft] = useState<string | null>(null)
+  // The text shown when editing began (or after the last commit). Leaving the field with this text
+  // unchanged commits nothing, so display rounding never silently changes the stored value.
+  const [baseline, setBaseline] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const text = draft ?? formatted
   const unit = spec.unit ? ` ${spec.unit}` : ''
   const rangeText = `${spec.min}–${spec.max}${unit}`
 
   const commit = (keepEditing: boolean) => {
+    setError(null)
+    if (text === baseline) {
+      // Nothing was edited (or this exact text was already committed with Enter).
+      setDraft(keepEditing ? text : null)
+      return
+    }
     const parsed = parseNumber(text)
     const next = parsed === null ? null : clamp ? clampToStep(spec, parsed) : Number(parsed.toFixed(spec.decimals))
-    setError(null)
     if (next !== null) onChange(next)
-    setDraft(keepEditing && next !== null ? next.toFixed(spec.decimals) : null)
+    const shown = next !== null ? next.toFixed(spec.decimals) : null
+    setDraft(keepEditing ? shown : null)
+    setBaseline(keepEditing ? shown : null)
   }
 
   return (
@@ -80,7 +90,10 @@ export function RangeField({ spec, value, onChange, note, showSlider = true, cla
             value={text}
             aria-invalid={error ? true : undefined}
             aria-describedby={`${id}-hint`}
-            onFocus={() => setDraft(formatted)}
+            onFocus={() => {
+              setDraft(formatted)
+              setBaseline(formatted)
+            }}
             onChange={(e) => {
               setDraft(e.target.value)
               const parsed = parseNumber(e.target.value)
@@ -94,7 +107,10 @@ export function RangeField({ spec, value, onChange, note, showSlider = true, cla
                     : null,
               )
             }}
-            onBlur={() => commit(false)}
+            onBlur={() => {
+              commit(false)
+              setBaseline(null)
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') commit(true)
               if (e.key === 'Escape') {

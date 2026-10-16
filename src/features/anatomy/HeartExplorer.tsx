@@ -7,7 +7,7 @@ import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { parseAnatomyParams, withAnatomyParams } from '../../lib/urlState'
 import { HEART_COLORS } from './colors'
 import { HeartToolbar, PartDetails, PartList, TourBar } from './HeartPanels'
-import { anatomyReducer, initialAnatomyState } from './state'
+import { anatomyReducer, anatomyShareState, initialAnatomyState } from './state'
 
 // Three.js loads on demand; the list, details and tour work without it.
 const HeartScene = lazy(() => import('./scene/HeartScene'))
@@ -32,16 +32,15 @@ export function HeartExplorer() {
   const part = selected ? findHeartPart(selected) : undefined
   const canAct = !!part && !touring && (view === 'cutaway' || isolated || !part.internal)
 
-  // Shareable address (?part=…&heart=…) without history entries. Tour progress is never stored, and
-  // during the tour the address keeps the exploration state that the tour will restore.
-  const urlPart = touring ? (state.beforeTour?.selected ?? null) : selected
-  const urlView = touring ? (state.beforeTour?.view ?? view) : view
+  // One canonical share state for the address bar and Copy link (see anatomyShareState):
+  // during the tour it is the exploration state the tour will restore; tour progress is never stored.
+  const share = anatomyShareState(state)
   useEffect(() => {
-    const search = withAnatomyParams(window.location.search, { partId: urlPart, heartView: urlView })
+    const search = withAnatomyParams(window.location.search, { partId: share.partId, heartView: share.heartView })
     if (search !== window.location.search) {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
-  }, [urlPart, urlView])
+  }, [share.partId, share.heartView])
 
   const select = (id: HeartPartId) => {
     dispatch({ type: 'select', partId: id })
@@ -57,7 +56,15 @@ export function HeartExplorer() {
       onStartTour={() => dispatch({ type: 'startTour' })}
     />
   )
-  const details = <PartDetails selected={touring ? null : selected} view={view} onSelect={select} onClear={() => dispatch({ type: 'clearSelection' })} />
+  const details = (
+    <PartDetails
+      selected={touring ? null : selected}
+      view={view}
+      share={share}
+      onSelect={select}
+      onClear={() => dispatch({ type: 'clearSelection' })}
+    />
+  )
   const tour = touring ? (
     <TourBar
       step={tourStep}

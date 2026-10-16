@@ -1,6 +1,6 @@
 import { Eraser, ExternalLink, RotateCcw, Scissors } from 'lucide-react'
 import { RangeField } from '../../components/RangeField'
-import { MATH_SOURCES, num, SURFACES, type Params, type SliceAxis, type SurfaceDef, type SurfaceId } from '../../math/surfaces'
+import { formatValue, MATH_SOURCES, num, SURFACES, type Params, type SliceAxis, type SurfaceDef, type SurfaceId } from '../../math/surfaces'
 
 /* ---------- Left: library and parameters ---------- */
 
@@ -114,13 +114,13 @@ export function PointInspector({
             </div>
             <div className="is-wide">
               <dt>z = f(x, y)</dt>
-              <dd>≈ {num(z, 3)}</dd>
+              <dd>≈ {formatValue(z)}</dd>
             </div>
           </dl>
           <p className="substitution">
             <span className="muted">Exact rule:</span> {surface.formula}
             <br />
-            <span className="muted">Substituted:</span> z = {surface.substitution(params, point.x, point.y)} ≈ {num(z, 3)}
+            <span className="muted">Substituted:</span> z = {surface.substitution(params, point.x, point.y)} ≈ {formatValue(z)}
           </p>
           <p className="muted small">Displayed numbers are rounded; the formula is exact.</p>
           <button type="button" className="tool-button bordered" onClick={onClear}>

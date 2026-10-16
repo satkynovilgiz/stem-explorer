@@ -196,8 +196,14 @@ function LabelProjector({ labels, elements }: { labels: readonly Label[]; elemen
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => invalidate(), [invalidate, labels])
   const ordered = useMemo(() => [...labels].sort((a, b) => b.priority - a.priority), [labels])
-  useFrame(({ camera, size, scene }) => {
+  useFrame(({ camera, size, scene, gl }) => {
     camera.updateMatrixWorld()
+    // The colour legend is an HTML overlay on the canvas; labels must not end up underneath it.
+    const canvasRect = gl.domElement.getBoundingClientRect()
+    const legend = gl.domElement.closest('.viewport')?.querySelector('.heart-legend')?.getBoundingClientRect()
+    const obstacle = legend
+      ? { x: legend.left - canvasRect.left, y: legend.top - canvasRect.top, w: legend.width, h: legend.height }
+      : null
     const pickables: Object3D[] = []
     scene.traverse((o) => {
       if ((o as { isMesh?: boolean }).isMesh && partOf(o)) pickables.push(o)
@@ -217,16 +223,24 @@ function LabelProjector({ labels, elements }: { labels: readonly Label[]; elemen
       }
       v.project(camera)
       let x = ((v.x + 1) / 2) * size.width
-      const y = ((1 - v.y) / 2) * size.height
+      let y = ((1 - v.y) / 2) * size.height
       // Orientation labels are kept inside the viewport (they matter most on narrow screens).
       if (label.className === 'is-orientation') {
         const half = el.offsetWidth / 2 + 6
         x = Math.min(size.width - half, Math.max(half, x))
       }
-      const rect = { x: x - el.offsetWidth / 2, y: y - el.offsetHeight / 2, w: el.offsetWidth, h: el.offsetHeight }
+      let rect = { x: x - el.offsetWidth / 2, y: y - el.offsetHeight / 2, w: el.offsetWidth, h: el.offsetHeight }
+      const underLegend = (r: typeof rect) =>
+        !!obstacle && r.x < obstacle.x + obstacle.w && obstacle.x < r.x + r.w && r.y < obstacle.y + obstacle.h && obstacle.y < r.y + r.h
+      if (underLegend(rect) && label.className === 'is-orientation') {
+        // Orientation matters: lift the label just above the legend instead of hiding it.
+        y = obstacle!.y - rect.h / 2 - 4
+        rect = { ...rect, y: y - rect.h / 2 }
+      }
       const onScreen = v.z < 1 && x > 0 && x < size.width && y > 0 && y < size.height
       const clear = !placed.some((p) => rect.x < p.x + p.w + 3 && p.x < rect.x + rect.w + 3 && rect.y < p.y + p.h + 1 && p.y < rect.y + rect.h + 1)
-      const visible = onScreen && !blocked && clear
+      // Anything else that the legend would cover is hidden (it stays available in the list).
+      const visible = onScreen && !blocked && clear && !underLegend(rect)
       if (visible) placed.push(rect)
       el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`
       el.style.visibility = visible ? 'visible' : 'hidden'

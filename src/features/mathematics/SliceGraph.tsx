@@ -1,6 +1,6 @@
 import { useId, useMemo } from 'react'
 import { formatTick, niceStep, ticksBetween } from '../../lib/ticks'
-import { num, type Params, type SliceAxis, type SliceKind, type SurfaceDef } from '../../math/surfaces'
+import { formatValue, num, type Params, type SliceAxis, type SliceKind, type SurfaceDef } from '../../math/surfaces'
 
 interface Props {
   surface: SurfaceDef
@@ -70,7 +70,7 @@ export function SliceGraph({ surface, params, slice, point }: Props) {
   const zMin = Math.min(...zs)
   const zMax = Math.max(...zs)
   const sampleUs = [min, (min + max) / 2 - (max - min) / 4, (min + max) / 2, (min + max) / 2 + (max - min) / 4, max]
-  const summary = `At ${axis} = ${num(value)} the cross-section is ${KIND_TEXT[result.kind]}: ${result.formula}. Over ${num(min)} ≤ ${free} ≤ ${num(max)}, z ranges from ${num(zMin, 3)} to ${num(zMax, 3)}.`
+  const summary = `At ${axis} = ${num(value)} the cross-section is ${KIND_TEXT[result.kind]}: ${result.formula}. Over ${num(min)} ≤ ${free} ≤ ${num(max)}, z ranges from ${formatValue(zMin)} to ${formatValue(zMax)}.`
 
   return (
     <figure className="graph slice-graph" aria-labelledby={`${id}-title`}>
@@ -125,7 +125,7 @@ export function SliceGraph({ surface, params, slice, point }: Props) {
             <th scope="row">z</th>
             {sampleUs.map((u) => (
               <td key={u} className="num">
-                {num(result.evaluate(u), 3)}
+                {formatValue(result.evaluate(u))}
               </td>
             ))}
           </tr>

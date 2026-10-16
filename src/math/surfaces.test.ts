@@ -4,6 +4,8 @@ import { heightColor, heightFraction, HEIGHT_STOPS } from './heightColor'
 import {
   clampToDomain,
   defaultParams,
+  formatCoefficient,
+  formatValue,
   getSurface,
   heightRange,
   isValidParamValue,
@@ -198,5 +200,45 @@ describe('formula formatting', () => {
     expect(linearCombination([[0, 'x'], [0, '']])).toBe('0')
     expect(num(-0.001)).toBe('0.00')
     expect(num(-1.5)).toBe('−1.50')
+  })
+})
+
+describe('regression: small non-zero sine slices are not described as zero (review finding A)', () => {
+  const sine = getSurface('sine')
+
+  it('keeps the reported case A = 0.05, k = 0.05, x = 0.05 as a sinusoid with a consistent formula', () => {
+    const s = sine.slice({ A: 0.05, k: 0.05 }, 'x', 0.05)
+    // 0.05·sin(0.0025) ≈ 1.25 × 10⁻⁴, and the curve is that times cos(0.05·y).
+    expect(s.kind).toBe('sinusoid')
+    expect(s.evaluate(0)).toBeCloseTo(1.25e-4, 7)
+    expect(s.formula).toBe('z ≈ 1.25 × 10⁻⁴·cos(0.05·y)')
+    // The curve agrees with the surface itself.
+    expect(s.evaluate(1.3)).toBeCloseTo(sine.evaluate({ A: 0.05, k: 0.05 }, 0.05, 1.3), 15)
+  })
+
+  it('still treats genuine zeros (and floating-point residuals of exact zeros) as constant', () => {
+    expect(sine.slice({ A: 0, k: 1 }, 'x', 1).kind).toBe('constant')
+    expect(sine.slice({ A: 1.5, k: 0 }, 'y', 1).kind).toBe('constant')
+    expect(sine.slice({ A: 2, k: 1 }, 'x', 0).kind).toBe('constant') // sin(0) = 0
+    const atPi = sine.slice({ A: 2, k: 1 }, 'x', Math.PI) // sin(π) ≈ 1.2e-16 in floating point
+    expect(atPi.kind).toBe('constant')
+    expect(atPi.formula).toBe('z = 0')
+    expect(atPi.evaluate(0.7)).toBe(0)
+    expect(sine.slice({ A: 2, k: 1 }, 'y', Math.PI / 2).kind).toBe('constant') // cos(π/2) ≈ 6e-17
+  })
+
+  it('uses "=" for exact coefficients and "≈" for rounded ones', () => {
+    expect(sine.slice({ A: 2, k: 1 }, 'x', Math.PI / 2).formula).toBe('z = 2.000·cos(1.00·y)')
+    expect(sine.slice({ A: 1, k: 1 }, 'y', 1).formula).toBe('z ≈ 0.540·sin(1.00·x)')
+  })
+})
+
+describe('formatCoefficient / formatValue', () => {
+  it('never shows a non-zero value as zero', () => {
+    expect(formatCoefficient(1.2499987e-4)).toEqual({ text: '1.25 × 10⁻⁴', approx: true })
+    expect(formatCoefficient(-3e-6)).toEqual({ text: '−3.00 × 10⁻⁶', approx: false })
+    expect(formatCoefficient(0)).toEqual({ text: '0', approx: false })
+    expect(formatValue(0.5)).toBe('0.500')
+    expect(formatValue(2 / 3)).toBe('0.667')
   })
 })

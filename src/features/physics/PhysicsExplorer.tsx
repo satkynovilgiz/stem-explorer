@@ -10,6 +10,7 @@ import {
   DEFAULT_PARAMS,
   formatSig,
   isValidParam,
+  normalizeParam,
   PARAM_KEYS,
   solveTrajectory,
   type ParamKey,
@@ -34,6 +35,9 @@ type SideTab = 'results' | 'about'
 
 function initFromUrl() {
   const { params } = parsePhysicsParams(window.location.search, DEFAULT_PARAMS, isValidParam)
+  // Snap shared values to the input step so the URL, the stored value and the fields agree
+  // (e.g. gravity=9.806 becomes 9.81 and the address is rewritten to match).
+  for (const key of PARAM_KEYS) params[key] = normalizeParam(key, params[key]) ?? DEFAULT_PARAMS[key]
   // Shared experiments always open paused at t = 0.
   return initialPhysicsState(params)
 }

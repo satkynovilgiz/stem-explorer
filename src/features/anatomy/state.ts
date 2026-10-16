@@ -108,3 +108,14 @@ export function anatomyReducer(state: AnatomyState, action: AnatomyAction): Anat
     }
   }
 }
+
+/**
+ * The single shareable state used by the address bar, Copy link and Save exploration.
+ * During the tour it is the exploration state saved before the tour; tour progress is never shared.
+ */
+export function anatomyShareState(state: AnatomyState): { partId: HeartPartId | null; heartView: HeartView } {
+  if (state.tourStep !== null && state.beforeTour) {
+    return { partId: state.beforeTour.selected, heartView: state.beforeTour.view }
+  }
+  return { partId: state.selected, heartView: state.view }
+}

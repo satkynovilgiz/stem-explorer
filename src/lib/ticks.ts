@@ -19,6 +19,8 @@ export function ticksBetween(min: number, max: number, step: number): number[] {
 
 /** Tick label with as many decimals as the tick step needs ("5", "10", "0.5", "0.25"). */
 export function formatTick(value: number, step: number): string {
+  // Steps finer than 0.001 (e.g. a tiny cross-section) use exponent notation instead of "0.000" labels.
+  if (step < 0.001) return Math.abs(value) < step / 2 ? '0' : value.toExponential(1)
   const decimals = step >= 1 ? 0 : Math.min(3, Math.ceil(-Math.log10(step) - 1e-9))
   const text = value.toFixed(decimals)
   return Number(text) === 0 ? '0' : text

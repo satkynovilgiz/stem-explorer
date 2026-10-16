@@ -236,3 +236,13 @@ test.describe('URL state', () => {
     )
   })
 })
+
+test('regression: a tiny but non-zero sine slice is not described as zero (review finding A)', async ({ page }) => {
+  await page.goto('/?surface=sine&amp=0.05&k=0.05&slice=x&at=0.05#/mathematics')
+  await waitForViewport(page)
+  const g = graph(page)
+  await expect(g.locator('desc')).toContainText('a sinusoidal wave')
+  await expect(g.locator('.slice-formula')).toContainText('z ≈ 1.25 × 10⁻⁴·cos(0.05·y)')
+  // The table shows the non-zero value at y = 0 instead of 0.000.
+  await expect(g.locator('.slice-table tbody td').nth(2)).toHaveText('1.25 × 10⁻⁴')
+})

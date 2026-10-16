@@ -120,11 +120,14 @@ type DetailTab = 'overview' | 'connections' | 'sources'
 export function PartDetails({
   selected,
   view,
+  share,
   onSelect,
   onClear,
 }: {
   selected: HeartPartId | null
   view: HeartView
+  /** Canonical share state (the pre-tour state while touring), used by Copy link. */
+  share: { partId: HeartPartId | null; heartView: HeartView }
   onSelect: (id: HeartPartId) => void
   onClear: () => void
 }) {
@@ -132,8 +135,8 @@ export function PartDetails({
   const part = selected ? findHeartPart(selected) : undefined
   const copyLink = (
     <CopyLinkButton
-      restores={part ? `this structure (${part.name}) and view` : 'this view'}
-      getUrl={() => shareUrl(window.location, 'anatomy', anatomyParamEntries({ partId: selected, heartView: view }))}
+      getUrl={() => shareUrl(window.location, 'anatomy', anatomyParamEntries(share))}
+      restores={share.partId ? `this structure (${findHeartPart(share.partId)?.name}) and view` : 'this view'}
     />
   )
 

@@ -187,3 +187,34 @@ test.describe('URL state', () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${baseURL}/?part=mitral-valve&heart=cutaway#/anatomy`)
   })
 })
+
+test.describe('regression: Copy link during the tour (review finding B)', () => {
+  test('shares the pre-tour structure and view, restores it in a new page and on exit', async ({ page, context, baseURL }) => {
+    await item(page, 'Aorta').click()
+    await pressed(page.getByRole('button', { name: 'Whole' }))
+    await page.getByRole('button', { name: 'Start blood-flow tour' }).click()
+    await page.getByRole('button', { name: 'Next' }).click()
+    await pressed(page.getByRole('button', { name: 'Cutaway' }))
+    await page.getByRole('button', { name: 'Copy link' }).click()
+    const copied = await page.evaluate(() => navigator.clipboard.readText())
+    expect(copied).toBe(`${baseURL}/?part=aorta&heart=whole#/anatomy`)
+
+    const other = await context.newPage()
+    await other.goto(copied)
+    await waitForViewport(other)
+    await expect(other.locator('#part-heading')).toHaveText('Aorta')
+    await expect(other.getByRole('button', { name: 'Whole' })).toHaveAttribute('aria-pressed', 'true')
+    await expect(other.locator('.tour-bar')).toHaveCount(0)
+    await other.close()
+
+    await page.getByRole('button', { name: 'Exit tour' }).click()
+    await expect(heading(page)).toHaveText('Aorta')
+    await pressed(page.getByRole('button', { name: 'Whole' }))
+  })
+
+  test('a tour started without a selection shares no structure', async ({ page, baseURL }) => {
+    await page.getByRole('button', { name: 'Start blood-flow tour' }).click()
+    await page.getByRole('button', { name: 'Copy link' }).click()
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${baseURL}/?heart=whole#/anatomy`)
+  })
+})

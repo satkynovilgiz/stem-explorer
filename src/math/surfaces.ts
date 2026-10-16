@@ -78,6 +78,37 @@ export function num(value: number, decimals = 2): string {
   return v < 0 ? `${MINUS}${text}` : text
 }
 
+/** Relative size below which a trig factor is treated as a floating-point residual of an exact zero. */
+const ZERO_RESIDUAL = 1e-12
+
+const SUPERSCRIPT = '⁰¹²³⁴⁵⁶⁷⁸⁹'
+const superscript = (n: number) =>
+  `${n < 0 ? '⁻' : ''}${String(Math.abs(n)).split('').map((d) => SUPERSCRIPT[Number(d)]).join('')}`
+
+/**
+ * Display text for a computed value: 3 decimals for ordinary sizes, scientific notation
+ * ("1.25 × 10⁻⁴") for small non-zero values, so nothing non-zero is ever shown as 0.000.
+ * `approx` is true when the text is a rounded form of the value.
+ */
+export function formatCoefficient(value: number): { text: string; approx: boolean } {
+  if (value === 0 || Object.is(value, -0)) return { text: '0', approx: false }
+  const abs = Math.abs(value)
+  if (abs < 0.001) {
+    const exponent = Math.floor(Math.log10(abs))
+    const mantissa = value / 10 ** exponent
+    const m = mantissa.toFixed(2)
+    const text = `${m.startsWith('-') ? MINUS + m.slice(1) : m} × 10${superscript(exponent)}`
+    return { text, approx: Number(m) * 10 ** exponent !== value }
+  }
+  const text = num(value, 3)
+  return { text, approx: Number(value.toFixed(3)) !== value }
+}
+
+/** Value text for tables and readouts (same rules as formatCoefficient; callers add "≈" where they show rounded values). */
+export function formatValue(value: number): string {
+  return formatCoefficient(value).text
+}
+
 /** "(−2.00)" style for substitutions, so signs and powers stay unambiguous. */
 const paren = (value: number, decimals = 2) => `(${num(value, decimals)})`
 
@@ -224,11 +255,15 @@ const SINE: SurfaceDef = {
     const amplitude = axis === 'x' ? p.A * Math.sin(p.k * v) : p.A * Math.cos(p.k * v)
     const u = axis === 'x' ? 'y' : 'x'
     const fn = axis === 'x' ? 'cos' : 'sin'
-    const evaluate = (w: number) => amplitude * (axis === 'x' ? Math.cos(p.k * w) : Math.sin(p.k * w))
-    // A slice whose amplitude rounds to zero (or k = 0, which makes the whole surface z = 0) is
-    // described as constant; the curve itself is still evaluated exactly.
-    if (Math.abs(amplitude) < 5e-4 || p.k === 0) return { kind: 'constant', formula: 'z = 0', evaluate }
-    return { kind: 'sinusoid', formula: `z = ${num(amplitude, 3)}·${fn}(${num(p.k)}·${u})`, evaluate }
+    // Classification is mathematical, not based on display rounding: the slice is identically zero only
+    // when A = 0, k = 0, or the trig factor is an exact zero that floating point leaves as a residual
+    // (e.g. sin(π) ≈ 1.2e-16). A tiny but genuine amplitude such as 1.25e-4 stays a sinusoid.
+    const isZero = p.A === 0 || p.k === 0 || Math.abs(amplitude) <= ZERO_RESIDUAL * Math.abs(p.A)
+    const exactAmplitude = isZero ? 0 : amplitude
+    const evaluate = (w: number) => exactAmplitude * (axis === 'x' ? Math.cos(p.k * w) : Math.sin(p.k * w))
+    if (isZero) return { kind: 'constant', formula: 'z = 0', evaluate }
+    const coef = formatCoefficient(amplitude)
+    return { kind: 'sinusoid', formula: `z ${coef.approx ? '≈' : '='} ${coef.text}·${fn}(${num(p.k)}·${u})`, evaluate }
   },
   description: 'A grid of bumps and dips made by multiplying a sine wave in x with a cosine wave in y.',
   meaning: [

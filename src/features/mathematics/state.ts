@@ -1,6 +1,7 @@
 import {
   clampToDomain,
   defaultParams,
+  formatValue,
   getSurface,
   isSurfaceId,
   normalizeParamValue,
@@ -81,7 +82,7 @@ export function mathReducer(state: MathState, action: MathAction): MathState {
         ...state,
         point: { x: x.value, y: y.value },
         pointNote: note,
-        announcement: `Point x = ${num(x.value)}, y = ${num(y.value)}, z ≈ ${num(z, 3)}.${note ? ` ${note}` : ''}`,
+        announcement: `Point x = ${num(x.value)}, y = ${num(y.value)}, z ≈ ${formatValue(z)}.${note ? ` ${note}` : ''}`,
       }
     }
 

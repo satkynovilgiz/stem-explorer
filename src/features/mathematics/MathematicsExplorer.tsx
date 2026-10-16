@@ -6,7 +6,7 @@ import { ViewportShell } from '../../components/ViewportShell'
 import { useMediaQuery } from '../../lib/hooks'
 import { mathParamEntries, parseMathParams, shareUrl, withMathParams } from '../../lib/urlState'
 import { heightGradientCss } from '../../math/heightColor'
-import { getSurface, heightRange, num, type SurfaceDef, type SurfaceId } from '../../math/surfaces'
+import { getSurface, heightRange, normalizeParamValue, num, type SurfaceDef, type SurfaceId } from '../../math/surfaces'
 import { FormulaPanel, ParameterPanel, PointInspector, SliceControls, SourcesPanel, SurfaceLibrary } from './MathPanels'
 import type { MathView } from './scene/SurfaceScene'
 import { SliceGraph } from './SliceGraph'
@@ -27,6 +27,8 @@ const VIEWS: { value: MathView; label: string; hint: string }[] = [
 
 function initFromUrl() {
   const { surfaceId, params, slice } = parseMathParams(window.location.search)
+  // Snap shared values to each parameter's step so the URL, stored values and fields agree.
+  for (const def of getSurface(surfaceId).params) params[def.key] = normalizeParamValue(def, params[def.key]) ?? def.default
   return initialMathState(surfaceId, params, slice)
 }
 
