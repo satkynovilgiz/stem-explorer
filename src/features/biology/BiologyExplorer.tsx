@@ -6,6 +6,9 @@ import { findOrganelle } from '../../data/biology/organelles'
 import { ORGANELLE_IDS, type OrganelleId } from '../../data/biology/types'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { parseBiologyParams, withBiologyParams } from '../../lib/urlState'
+import { ActivityPanel } from '../activities/ActivityPanel'
+import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
+import { BIOLOGY_ACTIVITY, golgiSetup } from './activity'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { CellToolbar } from './CellToolbar'
 import { biologyReducer, initialBiologyState } from './state'
@@ -52,6 +55,15 @@ export function BiologyExplorer() {
   }, [selection?.organelleId, view])
 
   useRecordVisit({ subject: 'biology', params: { ...(selection ? { structure: selection.organelleId } : {}), cell: view } })
+
+  const activity = useActivity(BIOLOGY_ACTIVITY, state, {
+    capture: () => state,
+    apply: () => dispatch({ type: 'replace', state: golgiSetup(), announcement: 'Activity started: cutaway view, nothing selected.' }),
+    restore: (snap) => dispatch({ type: 'replace', state: snap, announcement: ACTIVITY_ENDED }),
+    restoreUrl: (snap) =>
+      replaceUrlSearch(withBiologyParams(window.location.search, { structureId: snap.selection?.organelleId ?? null, cellView: snap.view })),
+  })
+  const activityPanel = <ActivityPanel activity={activity} state={state} />
 
   const select = (organelleId: OrganelleId, instance: number | null = null) => {
     dispatch({ type: 'select', organelleId, instance })
@@ -133,6 +145,7 @@ export function BiologyExplorer() {
       <div className="chem chem--mobile">
         {announcer}
         <div className="chem-stage">{viewer}</div>
+        {activityPanel}
         <Tabs
           label="Biology panels"
           className="mobile-tabs"
@@ -152,7 +165,10 @@ export function BiologyExplorer() {
       {announcer}
       <aside className="chem-side chem-side--left">{list}</aside>
       <div className="chem-stage">{viewer}</div>
-      <aside className="chem-side chem-side--right">{details}</aside>
+      <aside className="chem-side chem-side--right">
+        {activityPanel}
+        {details}
+      </aside>
     </div>
   )
 }

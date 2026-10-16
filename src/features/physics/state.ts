@@ -35,6 +35,8 @@ export type PhysicsAction =
   | { type: 'setRate'; rate: PlaybackRate }
   | { type: 'saveRunA' }
   | { type: 'clearComparison' }
+  /** Replaces the whole state: a guided activity's setup, or restoring the state from before it. */
+  | { type: 'replace'; state: PhysicsState; announcement: string }
 
 export function initialPhysicsState(params: LaunchParams): PhysicsState {
   return { params, runA: null, status: 'ready', rate: 1, announcement: '' }
@@ -60,6 +62,9 @@ export function timeEffect(action: PhysicsAction): 'zero' | 'keep' {
 
 export function physicsReducer(state: PhysicsState, action: PhysicsAction): PhysicsState {
   switch (action.type) {
+    case 'replace':
+      // Never resumes playback by itself: a replaced state is at most paused.
+      return { ...action.state, status: action.state.status === 'playing' ? 'paused' : action.state.status, announcement: action.announcement }
     case 'setParam': {
       const value = normalizeParam(action.key, action.value)
       if (value === null || value === state.params[action.key]) return state

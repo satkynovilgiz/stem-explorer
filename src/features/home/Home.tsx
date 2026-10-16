@@ -2,6 +2,7 @@ import { ArrowRight, BookOpen, ChevronDown, Compass, ExternalLink, Link2, MouseP
 import { useEffect, useRef, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SUBJECTS, type SubjectId } from '../../data/subjects'
+import { ActivityEntries } from './ActivityEntries'
 import { HomeSearch } from './HomeSearch'
 import { LibrarySections } from './LibrarySections'
 import { SubjectArt } from './SubjectArt'
@@ -200,6 +201,8 @@ export function Home() {
           ))}
         </ul>
       </section>
+
+      <ActivityEntries />
 
       <LibrarySections />
 

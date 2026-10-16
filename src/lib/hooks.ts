@@ -34,7 +34,9 @@ export function useRoute(): Route {
  */
 export function navigateTo(relative: string): void {
   if (!/^[?#]/.test(relative)) return
-  window.history.pushState(null, '', `${window.location.pathname}${relative}`)
+  // A hash-only link keeps the current query string, as a plain `<a href="#/…">` does.
+  const search = relative.startsWith('#') ? window.location.search : ''
+  window.history.pushState(null, '', `${window.location.pathname}${search}${relative}`)
   window.dispatchEvent(new PopStateEvent('popstate'))
   window.scrollTo({ top: 0 })
 }

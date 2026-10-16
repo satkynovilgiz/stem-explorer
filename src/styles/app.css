@@ -3074,3 +3074,219 @@ button {
 .import-preview summary {
   cursor: pointer;
 }
+
+/* ---------- Guided activities ---------- */
+
+.activity {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+}
+
+.activity--closed {
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+}
+
+.activity p {
+  margin: 0;
+}
+
+.activity-launch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--color-accent-border);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.activity-launch:hover {
+  background: rgb(47 196 192 / 0.2);
+}
+
+.activity-launch svg,
+.activity-toggle > svg:first-child {
+  flex: none;
+  color: var(--color-accent-strong);
+}
+
+.activity-launch-label {
+  font-weight: 700;
+  color: var(--color-accent-strong);
+}
+
+.activity-title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.activity-goal {
+  font-size: var(--text-sm);
+}
+
+.activity-changes-title {
+  font-weight: 600;
+}
+
+.activity-changes {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: 2px;
+  color: var(--color-text-muted);
+}
+
+.activity-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.activity-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.activity-head-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+
+.activity-progress {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.activity-exit {
+  width: 44px;
+  height: 44px;
+}
+
+.activity-body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.activity-steps {
+  list-style: none;
+  display: flex;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+}
+
+.activity-steps li {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  color: var(--color-text-subtle);
+}
+
+.activity-steps li.is-current {
+  border-color: var(--color-accent);
+}
+
+.activity-steps li.is-done {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.activity-step-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.activity-text {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.activity-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.activity-status.is-done {
+  color: var(--color-accent-strong);
+  font-weight: 600;
+}
+
+.activity-hint summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-accent-strong);
+}
+
+.activity-hint p {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.activity .tool-button,
+.activity .button {
+  min-height: 40px;
+}
+
+.activity .tool-button {
+  padding: 0 var(--space-3);
+}
+
+.activity-explored {
+  justify-self: start;
+}
+
+.activity-sources {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: 2px;
+}
+
+.activity-sources a {
+  color: var(--color-accent-strong);
+}
+
+.chem--mobile .activity {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.chem--mobile .activity--closed {
+  padding: 0;
+  border: 0;
+}
+
+.home-section-lead {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+}

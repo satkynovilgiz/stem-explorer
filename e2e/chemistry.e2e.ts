@@ -39,13 +39,13 @@ test('selects all six molecules', async ({ page }) => {
 test('distance and angle measurements still work', async ({ page }) => {
   await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
-  await page.getByRole('button', { name: 'Distance' }).click()
+  await page.getByRole('button', { name: 'Distance', exact: true }).click()
   await chip(page, 'O1').click()
   await chip(page, 'H1').click()
   await expect(result(page)).toContainText('Bond length')
   await expect(result(page)).toContainText('0.958 Å')
 
-  await page.getByRole('button', { name: 'Angle' }).click()
+  await page.getByRole('button', { name: 'Angle', exact: true }).click()
   await chip(page, 'H1').click()
   await chip(page, 'O1').click()
   await chip(page, 'H2').click()

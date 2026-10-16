@@ -43,7 +43,7 @@ test('Biology on a phone: prominent viewport, tabs, touch-sized controls, no ove
 test('Chemistry on a phone still measures without overflow', async ({ page }) => {
   await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
-  await page.getByRole('button', { name: 'Angle' }).click()
+  await page.getByRole('button', { name: 'Angle', exact: true }).click()
   for (const id of ['H1', 'O1', 'H2']) {
     await page.locator('.measure-panel .chip').filter({ hasText: new RegExp(`^\\d?${id}$`) }).click()
   }
@@ -114,4 +114,25 @@ test('Home fits a phone, searches and opens a subject', async ({ page }) => {
   await page.getByRole('link', { name: 'STEM Explorer home' }).tap()
   await page.locator('.subject-card.is-physics').getByRole('link').tap()
   await expect(page.getByRole('heading', { level: 1, name: 'Physics Explorer: projectile motion lab' })).toBeAttached()
+})
+
+test('guided activity panel sits below the 3D view on a phone and keeps it usable', async ({ page }) => {
+  await page.goto('/#/mathematics')
+  await waitForViewport(page)
+  const viewport = page.locator('.viewport')
+  const before = await viewport.boundingBox()
+  await page.locator('.activity-launch').tap()
+  await page.locator('.activity').getByRole('button', { name: 'Start activity' }).tap()
+  await expect.poll(async () => new URL(page.url()).searchParams.get('surface')).toBe('saddle')
+  const after = await viewport.boundingBox()
+  // Same size, and the panel sits below it: it is not an overlay and doesn't shrink the model.
+  expect([after!.width, after!.height]).toEqual([before!.width, before!.height])
+  const panel = await page.locator('.activity').boundingBox()
+  expect(panel!.y).toBeGreaterThanOrEqual(after!.y + after!.height)
+  await expectNoHorizontalOverflow(page)
+  expect(await smallTargets(page, '.activity button')).toEqual([])
+  await page.locator('.activity-toggle').tap()
+  await expect(page.locator('.activity-body')).toHaveCount(0)
+  await page.locator('.activity').getByRole('button', { name: 'Exit activity and restore your previous view' }).tap()
+  await expect(page.locator('.activity-launch')).toBeVisible()
 })

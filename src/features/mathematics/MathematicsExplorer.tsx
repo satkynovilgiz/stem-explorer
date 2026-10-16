@@ -8,6 +8,9 @@ import { mathParamEntries, parseMathParams, withMathParams } from '../../lib/url
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { heightGradientCss } from '../../math/heightColor'
 import { getSurface, heightRange, normalizeParamValue, num, type SurfaceDef, type SurfaceId } from '../../math/surfaces'
+import { ActivityPanel } from '../activities/ActivityPanel'
+import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
+import { MATHEMATICS_ACTIVITY, saddleSetup } from './activity'
 import { FormulaPanel, ParameterPanel, PointInspector, SliceControls, SourcesPanel, SurfaceLibrary } from './MathPanels'
 import type { MathView } from './scene/SurfaceScene'
 import { SliceGraph } from './SliceGraph'
@@ -56,6 +59,15 @@ export function MathematicsExplorer() {
 
   const shareParams = mathParamEntries({ surfaceId: state.surfaceId, params, slice })
   useRecordVisit({ subject: 'mathematics', params: shareParams })
+
+  const activity = useActivity(MATHEMATICS_ACTIVITY, state, {
+    capture: () => state,
+    apply: () => dispatch({ type: 'replace', state: saddleSetup(), announcement: 'Activity started: saddle surface, cross-section at x = 1.' }),
+    restore: (snap) => dispatch({ type: 'replace', state: snap, announcement: ACTIVITY_ENDED }),
+    restoreUrl: (snap) =>
+      replaceUrlSearch(withMathParams(window.location.search, { surfaceId: snap.surfaceId, params: snap.params, slice: snap.slice })),
+  })
+  const activityPanel = <ActivityPanel activity={activity} state={state} />
 
   const selectSurface = (id: SurfaceId) => {
     dispatch({ type: 'selectSurface', surfaceId: id })
@@ -188,6 +200,7 @@ export function MathematicsExplorer() {
       <div className="chem chem--mobile mathematics">
         {announcer}
         <div className="chem-stage">{viewer}</div>
+        {activityPanel}
         <Tabs
           label="Mathematics panels"
           className="mobile-tabs"
@@ -218,6 +231,7 @@ export function MathematicsExplorer() {
         {graph}
       </div>
       <aside className="chem-side chem-side--right">
+        {activityPanel}
         <section className="panel info" aria-labelledby="math-heading">
           <header className="info-header">
             <p className="eyebrow">Mathematics</p>

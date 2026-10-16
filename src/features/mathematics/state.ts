@@ -32,6 +32,8 @@ export type MathAction =
   | { type: 'setSliceEnabled'; enabled: boolean }
   | { type: 'setSliceAxis'; axis: SliceAxis }
   | { type: 'setSliceValue'; value: number }
+  /** Replaces the whole state: a guided activity's setup, or restoring the state from before it. */
+  | { type: 'replace'; state: MathState; announcement: string }
 
 export function initialMathState(surfaceId: SurfaceId, params: Params, slice: MathState['slice']): MathState {
   return { surfaceId, params, point: null, pointNote: '', slice, announcement: '' }
@@ -40,6 +42,8 @@ export function initialMathState(surfaceId: SurfaceId, params: Params, slice: Ma
 export function mathReducer(state: MathState, action: MathAction): MathState {
   const surface = getSurface(state.surfaceId)
   switch (action.type) {
+    case 'replace':
+      return { ...action.state, announcement: action.announcement }
     case 'selectSurface': {
       if (!isSurfaceId(action.surfaceId) || action.surfaceId === state.surfaceId) return state
       const next = getSurface(action.surfaceId)

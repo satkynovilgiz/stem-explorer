@@ -28,6 +28,8 @@ export type ChemistryAction =
   | { type: 'setMode'; mode: InteractionMode }
   | { type: 'pickAtom'; atomId: string }
   | { type: 'clearSelection' }
+  /** Replaces the whole state: a guided activity's setup, or restoring the state from before it. */
+  | { type: 'replace'; state: ChemistryState; announcement: string }
 
 export function initialChemistryState(moleculeId: string, representation: Representation): ChemistryState {
   return {
@@ -48,6 +50,8 @@ const MODE_NAMES: Record<InteractionMode, string> = {
 
 export function chemistryReducer(state: ChemistryState, action: ChemistryAction): ChemistryState {
   switch (action.type) {
+    case 'replace':
+      return { ...action.state, announcement: action.announcement }
     case 'selectMolecule': {
       const molecule = findMolecule(action.moleculeId)
       if (!molecule || molecule.id === state.moleculeId) return state

@@ -22,6 +22,8 @@ export type BiologyAction =
   | { type: 'setView'; view: CellView }
   | { type: 'isolate' }
   | { type: 'showAll' }
+  /** Replaces the whole state: a guided activity's setup, or restoring the state from before it. */
+  | { type: 'replace'; state: BiologyState; announcement: string }
 
 export function initialBiologyState(structureId: string | null, view: CellView): BiologyState {
   const organelle = structureId ? findOrganelle(structureId) : undefined
@@ -41,6 +43,8 @@ export function instanceLabel(organelleId: OrganelleId, instance: number): strin
 
 export function biologyReducer(state: BiologyState, action: BiologyAction): BiologyState {
   switch (action.type) {
+    case 'replace':
+      return { ...action.state, announcement: action.announcement }
     case 'select': {
       const organelle = findOrganelle(action.organelleId)
       if (!organelle) return state

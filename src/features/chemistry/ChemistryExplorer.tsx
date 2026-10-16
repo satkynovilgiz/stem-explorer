@@ -4,6 +4,9 @@ import { DEFAULT_MOLECULE_ID, getMolecule, MOLECULES } from '../../data/chemistr
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { parseChemistryParams, withChemistryParams } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
+import { ActivityPanel } from '../activities/ActivityPanel'
+import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
+import { CHEMISTRY_ACTIVITY, waterSetup } from './activity'
 import { InfoPanel } from './InfoPanel'
 import { MeasurementPanel } from './MeasurementPanel'
 import { MoleculeLibrary } from './MoleculeLibrary'
@@ -50,6 +53,15 @@ export function ChemistryExplorer() {
   }, [state.moleculeId, representation])
 
   useRecordVisit({ subject: 'chemistry', params: { molecule: state.moleculeId, view: representation } })
+
+  const activity = useActivity(CHEMISTRY_ACTIVITY, state, {
+    capture: () => state,
+    apply: () => dispatch({ type: 'replace', state: waterSetup(), announcement: 'Activity started: water in ball-and-stick view, Inspect tool.' }),
+    restore: (snap) => dispatch({ type: 'replace', state: snap, announcement: ACTIVITY_ENDED }),
+    restoreUrl: (snap) =>
+      replaceUrlSearch(withChemistryParams(window.location.search, { moleculeId: snap.moleculeId, representation: snap.representation })),
+  })
+  const activityPanel = <ActivityPanel activity={activity} state={state} />
 
   const selectMolecule = (id: string) => {
     dispatch({ type: 'selectMolecule', moleculeId: id })
@@ -132,6 +144,7 @@ export function ChemistryExplorer() {
       <div className="chem chem--mobile">
         {announcer}
         <div className="chem-stage">{viewer}</div>
+        {activityPanel}
         <Tabs
           label="Chemistry panels"
           className="mobile-tabs"
@@ -151,7 +164,10 @@ export function ChemistryExplorer() {
       {announcer}
       <aside className="chem-side chem-side--left">{library}</aside>
       <div className="chem-stage">{viewer}</div>
-      <aside className="chem-side chem-side--right">{info}</aside>
+      <aside className="chem-side chem-side--right">
+        {activityPanel}
+        {info}
+      </aside>
     </div>
   )
 }

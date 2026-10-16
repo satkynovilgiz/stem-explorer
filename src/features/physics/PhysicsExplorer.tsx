@@ -16,6 +16,9 @@ import {
   solveTrajectory,
   type ParamKey,
 } from '../../physics/projectile'
+import { ActivityPanel } from '../activities/ActivityPanel'
+import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
+import { anglesSetup, PHYSICS_ACTIVITY } from './activity'
 import { AboutPanel } from './AboutPanel'
 import { createClock } from './clock'
 import { SCENE_COLORS } from './colors'
@@ -109,6 +112,24 @@ export function PhysicsExplorer() {
 
   const shareParams = physicsParamEntries(state.params)
   useRecordVisit({ subject: 'physics', params: shareParams })
+
+  // Activity snapshots include simulation time, which lives outside React state. A flight that is
+  // playing is paused first; Exit restores the configuration paused and never resumes playback.
+  const activity = useActivity(PHYSICS_ACTIVITY, state, {
+    capture: () => ({ state: { ...state, status: state.status === 'playing' ? ('paused' as const) : state.status }, t: clock.get() }),
+    apply: () => {
+      running.current = false
+      clock.set(0)
+      rawDispatch({ type: 'replace', state: anglesSetup(state), announcement: 'Activity started: 20 m/s at 30°, height 0 m, gravity 9.81 m/s², paused at t = 0.' })
+    },
+    restore: (snap) => {
+      running.current = false
+      clock.set(snap.t)
+      rawDispatch({ type: 'replace', state: snap.state, announcement: ACTIVITY_ENDED })
+    },
+    restoreUrl: (snap) => replaceUrlSearch(withPhysicsParams(window.location.search, snap.state.params)),
+  })
+  const activityPanel = <ActivityPanel activity={activity} state={state} />
 
   const setParam = (key: ParamKey, value: number) => dispatch({ type: 'setParam', key, value })
   const scrub = (t: number) => {
@@ -237,6 +258,7 @@ export function PhysicsExplorer() {
           {viewer}
           {playback}
         </div>
+        {activityPanel}
         <Tabs
           label="Physics panels"
           className="mobile-tabs"
@@ -263,6 +285,7 @@ export function PhysicsExplorer() {
         {graphs}
       </div>
       <aside className="chem-side chem-side--right">
+        {activityPanel}
         <section className="panel info" aria-labelledby="physics-heading">
           <header className="info-header">
             <p className="eyebrow">Physics</p>

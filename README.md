@@ -636,6 +636,54 @@ library only for events about `stem-explorer:saved`, `stem-explorer:recent`, or 
 writes, so tabs cannot set each other off. The only automatic write is the recent-visit record,
 made once per distinct view shown in that tab.
 
+## Guided activities
+
+Each explorer has one optional **Try this** activity, shown as a compact, collapsible panel at the top
+of the right-hand column (on phones, between the 3D view and the tabs, never over the model). Home's
+**Try a guided activity** section opens a subject with its activity introduction showing; the link
+itself is the plain subject route, and nothing is put in the URL.
+
+| Subject | Activity | Detected from app state | Marked by the user |
+| --- | --- | --- | --- |
+| Chemistry | Measure the H–O–H angle in water | Angle tool chosen; an angle with O as the vertex and both H as ends | Comparing with 109.5° |
+| Biology | Find the Golgi apparatus and trace its cargo | Golgi selected; Golgi isolated; rough ER selected (via its relationship link) | Where products go |
+| Physics | Compare 30° and 60° launches (20 m/s, h = 0, g = 9.81 m/s²) | 30° launch landed; Run A = 30°; angle 60° with everything else unchanged; 60° launch landed | — |
+| Mathematics | Slice a saddle two ways | y = constant section on the saddle; a point within 0.1 of (0, 0) | Reading the x = 1 section; comparing shapes |
+| Anatomy | Trace blood from the right ventricle to the lungs | Right ventricle selected; pulmonary valve selected; tour started; tour at “Lungs” | — |
+
+**How it behaves**
+- The introduction states the learning goal, the setup, and every parameter or selection that
+  Start will change, compared with the current state. Nothing changes until **Start activity**.
+- Each activity has 3–5 steps with optional hints, plus Previous, Next and Exit. Next is always
+  available because the activities are optional. The last page explains what the observation
+  shows, with source links.
+- Detected steps tick when the explorer's real state matches. Reading and reflection steps have an
+  **I’ve explored this** button. Nothing is ever ticked because time passed, and the summary says
+  that ticks record actions, not understanding.
+- Activity state lives outside the explorers' reducers. Progress is never written to the URL,
+  saved explorations or history. The address bar shows the setup's ordinary parameters while the
+  activity runs, so Copy link shares the view, not the activity.
+- **Exit** restores the exploration configuration from before Start. In Physics, a flight that is
+  playing is paused before the setup; Exit restores the earlier inputs, Run A and time, paused, and
+  never resumes playback. In Anatomy, a running blood-flow tour is ended by Start (the introduction
+  says so), and Exit returns to the view from before that tour. The activity's last steps use the
+  tour itself.
+- Going to another subject mid-activity ends it: the subject's own URL keys are put back to the
+  pre-activity values, and the destination's state is untouched.
+- **Without WebGL**, the steps that need the 3D view (the chemistry Angle tool and the biology
+  Isolate control) switch to reading the same facts from the panels and become self-marked; every
+  other step works as usual.
+
+**Sources for the explanations.** The activities reuse the explorers' content and calculations
+(the physics summary quotes `solveTrajectory`: both land 35.3 m away; 60° rises to 15.3 m in
+3.53 s of flight, 30° to 5.10 m in 2.04 s). New explanations were checked against:
+- OpenStax Chemistry 2e §7.6: lone pairs repel more strongly than bonding pairs, and water's
+  angle is 104.5° rather than 109.5°.
+- OpenStax University Physics Vol. 1 §4.3: R = v₀²·sin 2θ/g, and equal ranges for angles that add
+  up to 90°.
+- OpenStax Calculus Vol. 3 §4.7: saddle points, and the opposite-opening traces of z = x² − y².
+- OpenStax Biology 2e §4.4 and OpenStax A&P 2e §§3.2 and 19.1, the explorers' existing sources.
+
 ## Shareable links and URL state
 
 Subjects are hash routes (`#/chemistry`, `#/biology`); `#/home` and unknown routes show Home.
@@ -748,6 +796,7 @@ How the URL is kept up to date:
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
 | `src/lib/backup.test.ts` | Export contents (saved only, no IDs, origins or history); round trip with fresh IDs; oversized, malformed, foreign and unsupported files; mixed new, duplicate and invalid entries, with existing titles kept and URL fields ignored; plain-text titles; the saved-item limit; a single write that leaves data unchanged on quota failure; refusing when the library changed since the preview; never overwriting a damaged list. |
+| `src/features/activities/activities.test.ts` | One activity per subject with goal, setup, 3–5 steps, conclusion and https sources; no setup completes a step; the change lists; detection rules for every detected step (including the wrong vertex, changed speed and other surfaces); the Anatomy tour snapshot; Physics replace never resuming; the Physics summary matching `solveTrajectory`. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -812,6 +861,12 @@ the production build:
 - `backup.e2e.ts`: export contents and the download name; export → import round trip; duplicates
   and invalid entries in the preview; malformed, foreign, unsupported-version and oversized files;
   the saved-item limit; quota failure without data loss; another tab refreshing after an import.
+- `activities.e2e.ts`: each subject's activity end to end with the ordinary controls. Covers the
+  Home entry, the change list, nothing changing before Start, the wrong-vertex angle not counting,
+  reflection steps never ticking by time, Exit restoring the previous view and URL, Physics pausing
+  first and exiting paused, Anatomy ending a running tour, leaving for another subject mid-activity,
+  and keyboard collapse. `mobile.e2e.ts` and `no-webgl.e2e.ts` add the phone layout and the
+  no-WebGL fallbacks.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):
@@ -837,7 +892,9 @@ Firefox have not.
 src/
   App.tsx                       hash routing: Home (#/home, default) and subjects (#/chemistry, …)
   components/                   shell: TopNav, AppLink, ErrorBoundary, Tabs, ViewportShell, CopyLinkButton, ShareActions, RangeField
-  features/home/                Home page, search, saved/recent sections, SVG subject illustrations
+  features/home/                Home page, search, saved/recent sections, backup, activity entries, SVG subject illustrations
+  features/activities/          guided-activity types, hook (state, detection, snapshot/restore) and panel
+  features/*/activity.ts        each subject's activity definition and setup
   data/
     subjects.ts                 subject list and planned features
     chemistry/                  typed element and molecule data (types.ts, elements.ts, molecules.ts)

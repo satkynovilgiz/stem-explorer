@@ -6,6 +6,9 @@ import { findHeartPart, HEART_PART_IDS, type HeartPartId } from '../../data/anat
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { anatomyParamEntries, parseAnatomyParams, withAnatomyParams } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
+import { ActivityPanel } from '../activities/ActivityPanel'
+import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
+import { ANATOMY_ACTIVITY, anatomySnapshot, pulmonarySetup } from './activity'
 import { HEART_COLORS } from './colors'
 import { HeartToolbar, PartDetails, PartList, TourBar } from './HeartPanels'
 import { anatomyReducer, anatomyShareState, initialAnatomyState } from './state'
@@ -44,6 +47,15 @@ export function HeartExplorer() {
   }, [share.partId, share.heartView])
 
   useRecordVisit({ subject: 'anatomy', params: anatomyParamEntries(share) })
+
+  const activity = useActivity(ANATOMY_ACTIVITY, state, {
+    // A tour in progress is ended by the activity; Exit returns to the view from before that tour.
+    capture: () => anatomySnapshot(state),
+    apply: () => dispatch({ type: 'replace', state: pulmonarySetup(), announcement: 'Activity started: cutaway view, nothing selected.' }),
+    restore: (snap) => dispatch({ type: 'replace', state: snap, announcement: ACTIVITY_ENDED }),
+    restoreUrl: (snap) => replaceUrlSearch(withAnatomyParams(window.location.search, anatomyShareState(snap))),
+  })
+  const activityPanel = <ActivityPanel activity={activity} state={state} />
 
   const select = (id: HeartPartId) => {
     dispatch({ type: 'select', partId: id })
@@ -153,6 +165,7 @@ export function HeartExplorer() {
           {viewer}
           {tour}
         </div>
+        {activityPanel}
         <Tabs
           label="Anatomy panels"
           className="mobile-tabs"
@@ -175,7 +188,10 @@ export function HeartExplorer() {
         {viewer}
         {tour}
       </div>
-      <aside className="chem-side chem-side--right">{details}</aside>
+      <aside className="chem-side chem-side--right">
+        {activityPanel}
+        {details}
+      </aside>
     </div>
   )
 }

@@ -22,6 +22,8 @@ export type AnatomyAction =
   | { type: 'previousStep' }
   | { type: 'goToStep'; index: number }
   | { type: 'exitTour' }
+  /** Replaces the whole state: a guided activity's setup, or restoring the state from before it. */
+  | { type: 'replace'; state: AnatomyState; announcement: string }
 
 export function initialAnatomyState(partId: string | null, view: HeartView): AnatomyState {
   const part = partId ? findHeartPart(partId) : undefined
@@ -43,6 +45,8 @@ function stepAnnouncement(index: number): string {
 
 export function anatomyReducer(state: AnatomyState, action: AnatomyAction): AnatomyState {
   switch (action.type) {
+    case 'replace':
+      return { ...action.state, announcement: action.announcement }
     case 'select': {
       const part = findHeartPart(action.partId)
       if (!part || state.tourStep !== null) return state

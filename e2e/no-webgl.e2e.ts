@@ -74,3 +74,28 @@ test('Home works without WebGL and still opens explorers', async ({ page }) => {
   await expect(page.locator('.viewport-message')).toContainText('3D view unavailable')
   await expect(page.locator('#part-heading')).toHaveText('Aorta')
 })
+
+test('activities adapt honestly without WebGL instead of requiring the 3D view', async ({ page }) => {
+  await page.goto('/#/chemistry')
+  await waitForViewport(page)
+  await page.locator('.activity-launch').click()
+  await page.locator('.activity').getByRole('button', { name: 'Start activity' }).click()
+  const panel = page.locator('.activity')
+  // The Angle tool lives in the 3D toolbar, so these steps point to the Reported geometry table instead.
+  await expect(panel).toContainText('The Angle tool works in the 3D view, which isn’t available in this browser')
+  await expect(panel.getByRole('button', { name: 'I’ve explored this' })).toBeVisible()
+  await panel.getByRole('button', { name: 'Next' }).click()
+  await expect(panel).toContainText('Read the H–O–H angle in the Reported geometry table')
+  await page.locator('.info').getByRole('tab', { name: 'Structure' }).click()
+  await expect(page.locator('.info')).toContainText('104.5')
+
+  // Biology: Isolate is 3D-only, so that step falls back to reading; list selection still detects.
+  await page.goto('/#/biology')
+  await waitForViewport(page)
+  await page.locator('.activity-launch').click()
+  await page.locator('.activity').getByRole('button', { name: 'Start activity' }).click()
+  await page.locator('.structure-item', { hasText: 'Golgi apparatus' }).click()
+  await expect(page.locator('.activity-status')).toHaveText('Done')
+  await page.locator('.activity').getByRole('button', { name: 'Next' }).click()
+  await expect(page.locator('.activity')).toContainText('Isolating needs the 3D view')
+})
