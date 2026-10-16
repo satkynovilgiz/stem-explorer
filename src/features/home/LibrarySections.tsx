@@ -3,6 +3,7 @@ import { useId, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { hrefFor, subjectName } from '../../lib/explorations'
 import { browserStorage, clearRecent, MAX_SAVED, MAX_TITLE_LENGTH, removeExploration, renameExploration, type Exploration } from '../../lib/explorationStore'
+import { BackupControls } from './BackupControls'
 import { storeFailureText } from '../../lib/storeMessages'
 import { notifyLibraryChange, useExplorationLibrary } from '../../lib/useExplorationLibrary'
 
@@ -163,6 +164,7 @@ export function LibrarySections() {
           </ul>
         )}
         <p className="muted small">Saved on this browser. Clearing site data removes these entries.</p>
+        <BackupControls saved={saved} disabled={savedError !== null} onMessage={setMessage} />
       </section>
     </div>
   )

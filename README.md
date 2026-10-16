@@ -592,6 +592,44 @@ tour, which is what Exit tour restores.
 - **Clear history** reports success only after the browser has really removed the list; if it
   refuses, the entries stay listed with an explanation.
 
+**Backup and restore.** The Saved explorations panel has **Export** and **Import**.
+
+Export downloads `stem-explorer-saved-YYYY-MM-DD.json` containing saved entries only (no recent
+history, no local IDs, no origins):
+
+```json
+{
+  "format": "stem-explorer.saved-explorations",
+  "version": 1,
+  "exportedAt": "2026-10-15T12:00:00.000Z",
+  "entries": [
+    {
+      "title": "Bent water",
+      "subject": "chemistry",
+      "params": { "molecule": "water", "view": "ball-and-stick" },
+      "createdAt": "2026-10-15T10:00:00.000Z",
+      "updatedAt": "2026-10-15T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+Import is **merge-only**:
+- Files over 1 MB are rejected before they are read. Text that isn't JSON, files without the format
+  identifier, and other format versions are rejected with a message.
+- Each entry is validated with the same canonical rules as URLs and stored entries. Titles are
+  plain text (control characters removed, 80-character cap). Any other fields, such as a URL, are
+  ignored, so an imported entry can only open its own subject state on this site.
+- Nothing is written until a preview lists exactly which entries will be added, plus the duplicates
+  (with the existing title that is kept), invalid entries with the reason, and entries beyond the
+  30-item limit. The user then presses **Import N explorations**.
+- On confirm, the saved list is read again and the import re-planned. If another tab changed it
+  since the preview, nothing is written and an updated preview is shown. Otherwise the complete
+  merged list (existing entries first, unchanged; imported entries after them with fresh local IDs)
+  is written in a single `setItem`. If that write fails (for example because storage is full),
+  existing data is unchanged and the failure is reported. Success is announced only after the write.
+- Other open tabs pick up the imported entries through the `storage` event.
+
 **Multiple tabs.** Open tabs stay in sync through the browser's `storage` event. A tab re-reads the
 library only for events about `stem-explorer:saved`, `stem-explorer:recent`, or `localStorage.clear()`
 (key `null`) on `localStorage`. Other keys and `sessionStorage` are ignored. Re-reading never
@@ -709,6 +747,7 @@ How the URL is kept up to date:
 | `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). |
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
+| `src/lib/backup.test.ts` | Export contents (saved only, no IDs, origins or history); round trip with fresh IDs; oversized, malformed, foreign and unsupported files; mixed new, duplicate and invalid entries, with existing titles kept and URL fields ignored; plain-text titles; the saved-item limit; a single write that leaves data unchanged on quota failure; refusing when the library changed since the preview; never overwriting a damaged list. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -770,6 +809,9 @@ the production build:
   save, rename and remove propagating between tabs; idle tabs making no writes or events; unrelated
   keys not re-reading the library; full storage keeping entries readable and openable with accurate
   messages; a failed Clear history keeping the entries.
+- `backup.e2e.ts`: export contents and the download name; export → import round trip; duplicates
+  and invalid entries in the preview; malformed, foreign, unsupported-version and oversized files;
+  the saved-item limit; quota failure without data loss; another tab refreshing after an import.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):
@@ -807,7 +849,9 @@ src/
     hooks.ts, webgl.ts          routing and media-query hooks, WebGL detection
     explorations.ts             canonical share state, relative links and default titles
     explorationStore.ts         saved and recent explorations in localStorage (versioned, validated)
-    useExplorationLibrary.ts    React hooks for the library and recording visits
+    useExplorationLibrary.ts    React hooks for the library, cross-tab sync and recording visits
+    backup.ts                   backup export, import validation/preview planning and merge
+    storeMessages.ts            user-facing messages for failed library operations
     searchIndex.ts              local search index and ranking
   features/chemistry/
     state.ts                    explorer reducer (molecule, view, mode, selections, announcements)

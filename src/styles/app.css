@@ -3023,3 +3023,54 @@ button {
 .library-status:empty {
   display: none;
 }
+
+/* ---------- Backup ---------- */
+
+.backup {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.backup .tool-button {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+}
+
+.backup > p {
+  margin: 0;
+}
+
+.import-preview {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+}
+
+.import-title {
+  margin: 0;
+  font-size: var(--text-base);
+  overflow-wrap: anywhere;
+}
+
+.import-preview p {
+  margin: 0;
+}
+
+.import-list {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.import-preview summary {
+  cursor: pointer;
+}
