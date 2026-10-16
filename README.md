@@ -138,6 +138,40 @@ OpenStax A&P 2e §19.1:
   - Exit tour (or Finish) restores the previous view, selection and isolation.
   - Tour progress is never stored in the URL.
 
+### Comparing vessels
+
+**Compare vessels** (under Start blood-flow tour) compares two of the five great vessels side by
+side. The comparison covers direction relative to the heart, the name (artery or vein), the
+connected chamber, the circuit (pulmonary or systemic), oxygenation in normal adult circulation,
+and main function. The facts restate the heart entries (OpenStax A&P 2e §19.1) in a comparable
+form, `src/data/anatomy/vessels.ts`. A unit test checks that they agree with the heart data.
+
+The panel explains that arteries and veins are named by flow direction, not oxygen content, with
+the pulmonary vessels as the example (§20.1). It also states the context: a normal adult heart
+after birth, drawn as a schematic, and colours are a convention. Presets: *Aorta vs pulmonary
+trunk*, *Pulmonary arteries vs pulmonary veins* (the pulmonary trunk entry includes the
+arteries), *Venae cavae vs aorta*.
+
+**Rules.**
+- **Entering** ends isolation. If a vessel was selected it becomes **A**; otherwise both slots
+  start empty.
+- **Picks** from the list or the model fill A, then B; later picks replace B. Picking a vessel
+  already compared, or a chamber, valve or the septum, is refused with an announcement. Those
+  items are disabled in the list.
+- **Clear** one slot (clearing A moves B into A) or both. Clear selection clears both.
+- **Leaving** keeps vessel A selected in normal exploring.
+- Whole and Cutaway keep the comparison, because every vessel is visible in both views.
+- Focus and Isolate are unavailable while comparing.
+- **The tour:** comparison can't be entered during the tour (the button is disabled). Starting
+  the tour closes the comparison, and Exit tour returns to normal exploring with vessel A
+  selected, not to the comparison.
+- **Links and Save** share vessel A as the selected structure. The comparison itself isn't stored,
+  so existing `part`/`heart` links are unchanged.
+
+**Marking without colour.** Both vessels are highlighted. Their 3D labels read "A · …" and "B · …",
+with solid and dashed borders. The list shows A/B letter badges, and the slots and table headers
+repeat the letters. All of it works from the HTML list and table without WebGL.
+
 ### Model simplifications
 
 - Chambers are rounded shells and vessels are tubes. Sizes, wall thicknesses (including the thicker
@@ -992,7 +1026,7 @@ How the URL is kept up to date:
 | `src/features/physics/state.test.ts` | No auto-launch, edits reset to t = 0, Reset vs Restore defaults, pause/resume/landed announcements, scrubbing pauses, immediate impact, playback speed, and Run A storing inputs only. |
 | `src/features/physics/sceneMath.test.ts` | Equal axis scales, framing all compared runs, tick steps and labels, and separate vector scales. |
 | `src/data/anatomy/heart.test.ts` | All 14 structures, with URL-safe IDs, known sources and valid, reciprocal connections. Also oxygen-pathway colours by side, cusp counts, the exact 14-step blood-flow order with external lungs and body, and valve-after-chamber ordering. |
-| `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). |
+| `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). Vessel comparison: entering, filling and replacing slots, refusing non-vessels, clearing, leaving, views, the tour ending and blocking comparison, and the shared state. |
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
 | `src/lib/backup.test.ts` | Export contents (saved only, no IDs, origins or history); round trip with fresh IDs; oversized, malformed, foreign and unsupported files; mixed new, duplicate and invalid entries, with existing titles kept and URL fields ignored; plain-text titles; the saved-item limit; a single write that leaves data unchanged on quota failure; refusing when the library changed since the preview, including when the count is unchanged but the entries differ; never overwriting a damaged list. |
@@ -1002,6 +1036,7 @@ How the URL is kept up to date:
 | `src/physics/spring.test.ts` | Known period, frequency and ω; T scaling with m and k and independence from amplitude; start at rest, quarter- and half-period positions and velocities; energy conservation and F = ma at every instant; zero displacement; bad times; results independent of playback rate; input normalization. |
 | `src/features/physics/spring/springState.test.ts` | No auto-launch; launch, pause, resume, end of window and reset; edits returning to t = 0; scrubbing pausing; the zero-displacement announcement. |
 | `src/math/tangent.test.ts` | Hand-derived partials against known values and against finite differences for every surface; tangent planes through the point with first-order agreement; the plane surface as its own tangent plane; the saddle origin (zero gradient, z = 0); flat-plane and sine residue degenerate cases; gradient magnitude and direction; the substituted equation. |
+| `src/data/anatomy/vessels.test.ts` | Vessel facts cover exactly the model's vessels, name them by direction (artery = away, vein = toward, including the reversed pulmonary pattern), agree with the heart entries' oxygenation and connections, and presets pair different vessels. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -1091,6 +1126,10 @@ the production build:
 - `tangent.e2e.ts`: partial derivatives, gradient and the substituted tangent plane at a typed point,
   updating with parameters; the saddle origin's zero gradient and explanation; optional overlays
   that keep point inspection and cross-sections working and stay out of links.
+- `compare.e2e.ts`: choosing two vessels, replacing B, clearing one or both, the comparison table and
+  letter badges; presets and the direction-not-oxygen explanation; entering with a selected vessel
+  and isolation, leaving with A selected and links unchanged; Whole/Cutaway; the tour ending and
+  blocking the comparison.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

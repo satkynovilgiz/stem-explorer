@@ -10,6 +10,7 @@ import { ActivityPanel } from '../activities/ActivityPanel'
 import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
 import { ANATOMY_ACTIVITY, anatomySnapshot, pulmonarySetup } from './activity'
+import { ComparePanel } from './ComparePanel'
 import { HEART_COLORS } from './colors'
 import { HeartToolbar, PartDetails, PartList, TourBar } from './HeartPanels'
 import { anatomyReducer, anatomyShareState, initialAnatomyState } from './state'
@@ -32,7 +33,7 @@ export function HeartExplorer() {
   const [mobileTab, setMobileTab] = useState<MobileTab>('details')
   const reducedMotion = usePrefersReducedMotion()
   const isMobile = useMediaQuery('(max-width: 899px)')
-  const { view, selected, isolated, tourStep } = state
+  const { view, selected, isolated, tourStep, compare } = state
   const touring = tourStep !== null
   const part = selected ? findHeartPart(selected) : undefined
   const canAct = !!part && !touring && (view === 'cutaway' || isolated || !part.internal)
@@ -71,9 +72,19 @@ export function HeartExplorer() {
       touring={touring}
       onSelect={select}
       onStartTour={() => dispatch({ type: 'startTour' })}
+      compare={compare}
+      onToggleCompare={() => dispatch({ type: compare ? 'exitCompare' : 'enterCompare' })}
     />
   )
-  const details = (
+  const details = compare ? (
+    <ComparePanel
+      a={compare.a}
+      b={compare.b}
+      onClear={(slot) => dispatch({ type: 'compareClear', slot })}
+      onPreset={(a, b) => dispatch({ type: 'comparePreset', a, b })}
+      onExit={() => dispatch({ type: 'exitCompare' })}
+    />
+  ) : (
     <PartDetails
       selected={touring ? null : selected}
       view={view}
@@ -100,6 +111,7 @@ export function HeartExplorer() {
       renderScene={(callbacks) => (
         <HeartScene
           view={view}
+          compared={compare}
           selected={selected}
           isolated={isolated}
           tourStep={tourStep}
@@ -117,6 +129,7 @@ export function HeartExplorer() {
           <div className="viewport-badge">
             <span className="viewport-badge-name">Human heart · anterior view</span>
             <span className="viewport-badge-mode">
+              {compare ? 'Comparing vessels · ' : ''}
               {isolated && part ? `Isolated: ${part.name}` : view === 'whole' ? 'Whole heart' : 'Cutaway'} · schematic, not to scale
             </span>
           </div>

@@ -9,6 +9,7 @@ export const pulmonarySetup = (): AnatomyState => ({
   isolated: false,
   tourStep: null,
   beforeTour: null,
+  compare: null,
   announcement: '',
 })
 
@@ -18,7 +19,7 @@ export const pulmonarySetup = (): AnatomyState => ({
  */
 export function anatomySnapshot(s: AnatomyState): AnatomyState {
   if (s.tourStep === null || !s.beforeTour) return s
-  return { ...s, ...s.beforeTour, tourStep: null, beforeTour: null }
+  return { ...s, ...s.beforeTour, tourStep: null, beforeTour: null, compare: null }
 }
 
 const LUNGS = FLOW_STEPS.findIndex((step) => step.id === 'lungs')
@@ -31,6 +32,7 @@ export const ANATOMY_ACTIVITY: ActivityDef<AnatomyState> = {
   setup: 'The heart opens in cutaway view so the chambers and valves are visible, with nothing selected. The tour is then used for the last steps.',
   changes: (s) => [
     ...(s.tourStep !== null ? ['Ends the blood-flow tour in progress. Exit returns to your view from before that tour.'] : []),
+    ...(s.compare ? ['Ends the vessel comparison.'] : []),
     `View → Cutaway${s.view === 'cutaway' ? ' (already)' : ' (now whole heart)'}`,
     s.selected ? `Selection cleared (now ${findHeartPart(s.selected)?.name})` : 'No structure selected (already)',
     ...(s.isolated ? ['Isolation turned off, showing every structure'] : []),

@@ -21,6 +21,8 @@ import {
 export interface HeartSceneProps {
   view: HeartView
   selected: HeartPartId | null
+  /** Vessel comparison slots: both are highlighted and labelled "A ·" / "B ·". */
+  compared?: { a: HeartPartId | null; b: HeartPartId | null } | null
   isolated: boolean
   tourStep: number | null
   showLabels: boolean
@@ -351,11 +353,24 @@ function isPartVisible(id: HeartPartId, view: HeartView, selected: HeartPartId |
   return !HEART_PARTS.find((p) => p.id === id)!.internal || view === 'cutaway'
 }
 
-function buildLabels(view: HeartView, selected: HeartPartId | null, isolated: boolean, tourStep: number | null, showLabels: boolean): Label[] {
+function buildLabels(
+  view: HeartView,
+  selected: HeartPartId | null,
+  isolated: boolean,
+  tourStep: number | null,
+  showLabels: boolean,
+  compared: { a: HeartPartId | null; b: HeartPartId | null } | null = null,
+): Label[] {
   const step = tourStep !== null ? FLOW_STEPS[tourStep] : null
   const out: Label[] = []
   for (const p of HEART_PARTS) {
     if (!isPartVisible(p.id, view, selected, isolated)) continue
+    const slot = compared ? (compared.a === p.id ? 'A' : compared.b === p.id ? 'B' : null) : null
+    if (slot) {
+      // Letters and border style (solid A, dashed B) tell the two apart without relying on colour.
+      out.push({ key: p.id, position: labelAnchor(p.id), text: `${slot} · ${p.name}`, className: `is-selected is-compare-${slot.toLowerCase()}`, priority: 11, partId: p.id })
+      continue
+    }
     const isSel = p.id === selected && !step
     const inTour = !!step?.parts.includes(p.id)
     if (!isSel && !inTour && !(showLabels && p.majorLabel && !step)) continue
@@ -383,7 +398,7 @@ function buildLabels(view: HeartView, selected: HeartPartId | null, isolated: bo
 /* ---------- Root ---------- */
 
 export default function HeartScene(props: HeartSceneProps) {
-  const { view, selected, isolated, tourStep, showLabels, reducedMotion, resetToken, focusToken, onSelect, onBackgroundClick, onReady, onContextLost } = props
+  const { view, selected, compared = null, isolated, tourStep, showLabels, reducedMotion, resetToken, focusToken, onSelect, onBackgroundClick, onReady, onContextLost } = props
   const [hovered, setHovered] = useState(false)
   useCursor(hovered)
   const labelElements = useRef<Map<string, HTMLElement>>(new Map())
@@ -392,9 +407,12 @@ export default function HeartScene(props: HeartSceneProps) {
   const open = view === 'cutaway' || isolated
   const visible = (id: HeartPartId) => isPartVisible(id, view, selected, isolated)
   const highlight = (id: HeartPartId): Highlight =>
-    step ? (step.parts.includes(id) ? 'tour' : null) : id === selected ? 'selected' : null
+    step ? (step.parts.includes(id) ? 'tour' : null) : compared ? (id === compared.a || id === compared.b ? 'selected' : null) : id === selected ? 'selected' : null
 
-  const labels = useMemo(() => buildLabels(view, selected, isolated, tourStep, showLabels), [view, selected, isolated, tourStep, showLabels])
+  const labels = useMemo(
+    () => buildLabels(view, selected, isolated, tourStep, showLabels, compared),
+    [view, selected, isolated, tourStep, showLabels, compared],
+  )
 
   return (
     <>

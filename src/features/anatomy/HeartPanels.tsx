@@ -1,4 +1,4 @@
-import { Check, ChevronLeft, ChevronRight, Compass, ExternalLink, Eye, Focus, Info, Layers, Route, RotateCcw, ScanSearch, Search, Tag, X } from 'lucide-react'
+import { Check, ChevronLeft, GitCompare, ChevronRight, Compass, ExternalLink, Eye, Focus, Info, Layers, Route, RotateCcw, ScanSearch, Search, Tag, X } from 'lucide-react'
 import { useId, useState } from 'react'
 import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
@@ -16,6 +16,7 @@ import {
 } from '../../data/anatomy/heart'
 import { normalize } from '../../lib/chemistry'
 import { anatomyParamEntries } from '../../lib/urlState'
+import { isVessel } from '../../data/anatomy/vessels'
 import { HEART_COLORS } from './colors'
 
 const KIND_LABEL = { chamber: 'Chamber', valve: 'Valve', vessel: 'Vessel', wall: 'Wall' } as const
@@ -32,12 +33,17 @@ export function PartList({
   onSelect,
   onStartTour,
   touring,
+  compare,
+  onToggleCompare,
 }: {
   selected: HeartPartId | null
   disabled: boolean
   onSelect: (id: HeartPartId) => void
   onStartTour: () => void
   touring: boolean
+  /** Vessel comparison slots while comparing, otherwise null. */
+  compare: { a: HeartPartId | null; b: HeartPartId | null } | null
+  onToggleCompare: () => void
 }) {
   const [query, setQuery] = useState('')
   const id = useId()
@@ -52,6 +58,18 @@ export function PartList({
         <Route size={16} aria-hidden="true" />
         {touring ? 'Tour in progress' : 'Start blood-flow tour'}
       </button>
+      <button
+        type="button"
+        className="tool-button bordered compare-toggle"
+        aria-pressed={!!compare}
+        onClick={onToggleCompare}
+        disabled={touring}
+        title={touring ? 'Exit the tour to compare vessels' : undefined}
+      >
+        <GitCompare size={16} aria-hidden="true" />
+        <span>{compare ? 'Comparing vessels' : 'Compare vessels'}</span>
+      </button>
+      {compare && <p className="muted small">Choose two vessels. Chambers, valves and the septum can’t be compared and are disabled.</p>}
       <div className="search">
         <label htmlFor={id} className="visually-hidden">
           Search heart structures
@@ -79,21 +97,25 @@ export function PartList({
       {results.length > 0 ? (
         <ul className="structure-list">
           {results.map((p) => {
-            const active = p.id === selected
+            const slot = compare ? (compare.a === p.id ? 'A' : compare.b === p.id ? 'B' : null) : null
+            const active = compare ? !!slot : p.id === selected
             return (
               <li key={p.id}>
                 <button
                   type="button"
                   className={`structure-item${active ? ' is-active' : ''}`}
                   aria-pressed={active}
-                  disabled={disabled}
+                  disabled={disabled || (!!compare && !isVessel(p.id))}
                   onClick={() => onSelect(p.id)}
                 >
                   <span className="structure-swatch" style={{ background: swatch(p) }} aria-hidden="true">
-                    {active && <Check size={12} strokeWidth={3} />}
+                    {slot ? <span className={`compare-badge is-${slot.toLowerCase()}`}>{slot}</span> : active && <Check size={12} strokeWidth={3} />}
                   </span>
                   <span className="structure-text">
-                    <span className="structure-name">{p.name}</span>
+                    <span className="structure-name">
+                      {p.name}
+                      {slot && <span className="visually-hidden"> (vessel {slot})</span>}
+                    </span>
                     <span className="structure-tag">
                       {KIND_LABEL[p.kind]} · {p.tag}
                     </span>

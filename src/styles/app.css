@@ -4139,3 +4139,95 @@ button {
 .graphs--single {
   grid-template-columns: minmax(0, 560px);
 }
+
+/* ---------- Anatomy: vessel comparison ---------- */
+
+.compare-toggle {
+  width: 100%;
+  margin-top: var(--space-2);
+  min-height: 40px;
+}
+
+.compare-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-bg);
+  background: var(--color-text);
+}
+
+.compare-badge.is-b {
+  background: transparent;
+  color: var(--color-text);
+  border: 2px dashed var(--color-text);
+}
+
+.compare-slots {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.compare-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.compare-slot.is-b {
+  border-style: dashed;
+}
+
+.compare-slot-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.compare-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.compare-table th,
+.compare-table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.compare-table thead th {
+  font-weight: 650;
+}
+
+.compare-table tbody th {
+  width: 30%;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.heart-label.is-compare-a {
+  border-style: solid;
+  border-width: 2px;
+}
+
+.heart-label.is-compare-b {
+  border-style: dashed;
+  border-width: 2px;
+}

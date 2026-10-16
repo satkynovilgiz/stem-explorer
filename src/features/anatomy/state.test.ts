@@ -78,3 +78,66 @@ describe('anatomyShareState (review finding B)', () => {
     expect(anatomyShareState(run(start(), { type: 'select', partId: 'mitral-valve' }))).toEqual({ partId: 'mitral-valve', heartView: 'cutaway' })
   })
 })
+
+describe('vessel comparison', () => {
+  const start = () => initialAnatomyState(null, 'whole')
+
+  it('entering keeps a selected vessel as A, ends isolation and the single selection', () => {
+    let s = anatomyReducer(anatomyReducer(start(), { type: 'select', partId: 'aorta' }), { type: 'isolate' })
+    s = anatomyReducer(s, { type: 'enterCompare' })
+    expect([s.compare, s.selected, s.isolated]).toEqual([{ a: 'aorta', b: null }, null, false])
+    // A selected chamber is not carried into the comparison.
+    const c = anatomyReducer(anatomyReducer(start(), { type: 'select', partId: 'left-ventricle' }), { type: 'enterCompare' })
+    expect(c.compare).toEqual({ a: null, b: null })
+  })
+
+  it('picks fill A then B, replace B when both are set, and refuse non-vessels and repeats', () => {
+    let s = anatomyReducer(start(), { type: 'enterCompare' })
+    s = anatomyReducer(s, { type: 'select', partId: 'pulmonary-trunk' })
+    s = anatomyReducer(s, { type: 'select', partId: 'pulmonary-veins' })
+    expect(s.compare).toEqual({ a: 'pulmonary-trunk', b: 'pulmonary-veins' })
+    s = anatomyReducer(s, { type: 'select', partId: 'aorta' })
+    expect(s.compare).toEqual({ a: 'pulmonary-trunk', b: 'aorta' })
+    expect(s.announcement).toBe('Vessel B replaced with Aorta.')
+    const refused = anatomyReducer(s, { type: 'select', partId: 'mitral-valve' })
+    expect(refused.compare).toEqual(s.compare)
+    expect(refused.announcement).toMatch(/not a vessel/)
+    expect(anatomyReducer(s, { type: 'select', partId: 'aorta' }).announcement).toMatch(/already being compared/)
+  })
+
+  it('clearing one slot or both, and Clear selection clears both', () => {
+    let s = anatomyReducer(start(), { type: 'comparePreset', a: 'aorta', b: 'pulmonary-trunk' })
+    expect(anatomyReducer(s, { type: 'compareClear', slot: 'a' }).compare).toEqual({ a: 'pulmonary-trunk', b: null })
+    expect(anatomyReducer(s, { type: 'compareClear', slot: 'b' }).compare).toEqual({ a: 'aorta', b: null })
+    s = anatomyReducer(s, { type: 'clearSelection' })
+    expect(s.compare).toEqual({ a: null, b: null })
+  })
+
+  it('leaving keeps vessel A selected; isolate is unavailable while comparing', () => {
+    let s = anatomyReducer(start(), { type: 'comparePreset', a: 'superior-vena-cava', b: 'aorta' })
+    expect(anatomyReducer(s, { type: 'isolate' })).toBe(s)
+    s = anatomyReducer(s, { type: 'exitCompare' })
+    expect([s.compare, s.selected]).toEqual([null, 'superior-vena-cava'])
+  })
+
+  it('Whole/Cutaway keeps the comparison (vessels are visible in both views)', () => {
+    let s = anatomyReducer(start(), { type: 'comparePreset', a: 'aorta', b: 'pulmonary-veins' })
+    s = anatomyReducer(s, { type: 'setView', view: 'cutaway' })
+    expect([s.view, s.compare]).toEqual(['cutaway', { a: 'aorta', b: 'pulmonary-veins' }])
+  })
+
+  it('the tour ends the comparison; comparison cannot start during the tour; exit tour does not reopen it', () => {
+    let s = anatomyReducer(start(), { type: 'comparePreset', a: 'aorta', b: 'pulmonary-trunk' })
+    s = anatomyReducer(s, { type: 'startTour' })
+    expect([s.compare, s.tourStep, s.beforeTour?.selected]).toEqual([null, 0, 'aorta'])
+    expect(anatomyReducer(s, { type: 'enterCompare' })).toBe(s)
+    expect(anatomyReducer(s, { type: 'comparePreset', a: 'aorta', b: 'pulmonary-veins' })).toBe(s)
+    s = anatomyReducer(s, { type: 'exitTour' })
+    expect([s.compare, s.selected]).toEqual([null, 'aorta'])
+  })
+
+  it('links share vessel A while comparing', () => {
+    const s = anatomyReducer(start(), { type: 'comparePreset', a: 'pulmonary-veins', b: 'aorta' })
+    expect(anatomyShareState(s)).toEqual({ partId: 'pulmonary-veins', heartView: 'whole' })
+  })
+})

@@ -11,7 +11,7 @@ export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; 
     capabilities: [
       'Chambers, valves and great vessels in whole or cutaway view',
       'A 14-step blood-flow tour through both circuits',
-      'Connections and sources for every structure',
+      'Compare two vessels: direction, circuit, oxygenation and function',
     ],
     action: 'Open the heart',
   },

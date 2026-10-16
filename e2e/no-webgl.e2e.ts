@@ -145,3 +145,12 @@ test('tangent plane equation and gradient values work without WebGL; overlay tog
   await expect(page.locator('.tangent-equation')).toHaveText('z = 0.000 + 1.00·x + 0.00·y')
   await expect(page.getByRole('button', { name: 'Tangent plane' })).toHaveCount(0)
 })
+
+test('the vessel comparison works from HTML controls without WebGL', async ({ page }) => {
+  await page.goto('/#/anatomy')
+  await waitForViewport(page)
+  await page.locator('.compare-toggle').click()
+  await page.locator('.structure-item').filter({ has: page.locator('.structure-name', { hasText: /^Aorta$/ }) }).click()
+  await page.locator('.structure-item').filter({ has: page.locator('.structure-name', { hasText: /^Pulmonary veins/ }) }).click()
+  await expect(page.locator('.compare-table')).toContainText('Toward the heart')
+})
