@@ -16,14 +16,14 @@ export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; 
     action: 'Open the heart',
   },
   chemistry: {
-    title: 'Molecules in 3D',
-    summary: 'Six molecules built from experimental geometry.',
+    title: 'Molecules and elements',
+    summary: 'Six molecules built from experimental geometry, plus the periodic table.',
     capabilities: [
       'Ball-and-stick and space-filling views',
       'Measure bond lengths and bond angles between atoms',
-      'Composition, shape and reported geometry with sources',
+      'A periodic table of all 118 elements with search and filters',
     ],
-    action: 'Open molecules',
+    action: 'Open chemistry',
   },
   biology: {
     title: 'Inside a cell',

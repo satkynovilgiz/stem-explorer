@@ -108,3 +108,11 @@ test('guides and the glossary work without WebGL', async ({ page }) => {
   await page.goto('/?term=vertical-trace#/glossary')
   await expect(page.locator('#term-vertical-trace')).toHaveClass(/is-focused/)
 })
+
+test('the periodic table works without WebGL', async ({ page }) => {
+  await page.goto('/#/chemistry')
+  await page.getByRole('button', { name: 'Periodic table' }).click()
+  await page.getByRole('button', { name: 'Carbon, C, atomic number 6' }).click()
+  await expect(page.locator('#element-heading')).toHaveText('Carbon')
+  await expect(page.getByRole('button', { name: 'Open Benzene' })).toBeVisible()
+})

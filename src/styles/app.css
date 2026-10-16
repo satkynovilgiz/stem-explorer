@@ -3792,3 +3792,273 @@ button {
     padding: var(--space-5) var(--space-4);
   }
 }
+
+/* ---------- Chemistry: periodic table ---------- */
+
+.section-switch-wrap {
+  padding: var(--space-4) var(--space-5) 0;
+}
+
+.section-switch {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.section-switch .segmented-option {
+  flex: 1;
+  min-height: 40px;
+  border-color: var(--color-border);
+}
+
+.select {
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.ptable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  height: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: auto;
+}
+
+.ptable-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ptable-head .panel-title {
+  margin: 0;
+}
+
+.ptable-controls {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.ptable-controls p {
+  margin: 0;
+}
+
+.ptable-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ptable-scroll {
+  container-type: inline-size;
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+
+.ptable-grid {
+  /* Fit the container (18 px period column + 18 cells + 18 gaps); below 28 px cells it scrolls inside the panel. */
+  --cell: clamp(28px, calc((100cqw - 18px - 54px) / 18), 46px);
+  display: grid;
+  grid-template-columns: 18px repeat(18, var(--cell));
+  grid-template-rows: repeat(7, var(--cell)) 10px repeat(2, var(--cell));
+  gap: 3px;
+  width: max-content;
+}
+
+.ptable-period {
+  display: grid;
+  place-items: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.ptable-placeholder {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  color: var(--color-text-subtle);
+}
+
+.ptable-cell {
+  --block: var(--color-border-strong);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 2px 3px;
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--block);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ptable-cell.is-s { --block: #e8837e; }
+.ptable-cell.is-p { --block: #f5c26b; }
+.ptable-cell.is-d { --block: #8db4ff; }
+.ptable-cell.is-f { --block: #a99cf0; }
+
+.ptable-cell:hover {
+  background: var(--color-surface-hover);
+}
+
+.ptable-cell.is-dimmed {
+  opacity: 0.28;
+}
+
+.ptable-cell[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent);
+  opacity: 1;
+}
+
+.ptable-z {
+  font-size: 9px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  text-align: left;
+}
+
+.ptable-sym {
+  align-self: center;
+  font-size: calc(var(--cell) * 0.36);
+  font-weight: 650;
+  line-height: 1;
+}
+
+.ptable-hint {
+  margin: var(--space-2) 0 0;
+}
+
+.ptable-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.ptable-list-item {
+  display: grid;
+  grid-template-columns: 2.5em 2.5em 1fr auto;
+  align-items: baseline;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 40px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ptable-list-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.ptable-list-item[aria-pressed='true'] {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-soft);
+  font-weight: 600;
+}
+
+.ptable-list-z {
+  color: var(--color-text-muted);
+}
+
+.ptable-list-sym {
+  font-weight: 650;
+}
+
+.element-symbol {
+  margin: var(--space-2) 0 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-accent-strong);
+}
+
+.element-facts {
+  margin: 0;
+  padding: 0 var(--space-5);
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.element-facts div {
+  display: grid;
+  grid-template-columns: 8em 1fr;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.element-facts dt {
+  color: var(--color-text-muted);
+}
+
+.element-facts dd {
+  margin: 0;
+}
+
+.element-molecules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chem--mobile .ptable {
+  height: auto;
+}
+
+.chem--mobile .ptable-grid {
+  --cell: 32px;
+}
+
+.ptable-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  color: var(--color-text-muted);
+}
+
+.ptable-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
+  border-radius: 2px;
+  background: var(--block);
+}
+
+.ptable-swatch.is-s { --block: #e8837e; }
+.ptable-swatch.is-p { --block: #f5c26b; }
+.ptable-swatch.is-d { --block: #8db4ff; }
+.ptable-swatch.is-f { --block: #a99cf0; }

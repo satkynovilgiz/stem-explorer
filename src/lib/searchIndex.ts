@@ -23,7 +23,7 @@ export interface SearchItem {
 
 const SUBJECT_BLURBS: Record<SubjectId, string> = {
   anatomy: 'A schematic 3D heart with a guided blood-flow tour.',
-  chemistry: 'Molecules in 3D with distance and angle measurements.',
+  chemistry: 'Molecules in 3D with distance and angle measurements, and the periodic table.',
   physics: 'An ideal projectile motion lab with graphs and comparisons.',
   mathematics: 'Surfaces z = f(x, y) with point inspection and cross-sections.',
   biology: 'An interactive generalized animal cell with organelles.',

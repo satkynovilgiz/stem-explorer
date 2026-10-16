@@ -164,3 +164,14 @@ test('About this explorer and the glossary fit a phone', async ({ page }) => {
   await expect(page.locator('.glossary-entry').first()).toBeVisible()
   await expectNoHorizontalOverflow(page)
 })
+
+test('periodic table scrolls inside its own panel on a phone; the page does not', async ({ page }) => {
+  await page.goto('/#/chemistry')
+  await page.getByRole('button', { name: 'Periodic table' }).tap()
+  await expect(page.locator('.ptable-cell')).toHaveCount(118)
+  await expectNoHorizontalOverflow(page)
+  const [scrollWidth, clientWidth] = await page.locator('.ptable-scroll').evaluate((e) => [e.scrollWidth, e.clientWidth])
+  expect(scrollWidth).toBeGreaterThan(clientWidth)
+  await page.getByRole('group', { name: 'Layout' }).getByRole('button', { name: 'List' }).tap()
+  await expect(page.getByRole('list', { name: 'Elements' }).getByRole('button')).toHaveCount(118)
+})

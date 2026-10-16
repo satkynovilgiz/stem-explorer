@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react'
+import { lazy, Suspense, useEffect, useReducer, useState } from 'react'
 import { Tabs } from '../../components/Tabs'
 import { DEFAULT_MOLECULE_ID, getMolecule, MOLECULES } from '../../data/chemistry/molecules'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
@@ -16,6 +16,11 @@ import { SceneControls } from './SceneControls'
 import { chemistryReducer, initialChemistryState } from './state'
 
 type MobileTab = 'details' | 'library'
+type Section = 'molecules' | 'elements'
+
+// The periodic table and its data load only when that view is opened.
+const PeriodicTableView = lazy(() => import('./periodic/PeriodicTableView'))
+const ElementPanel = lazy(() => import('./periodic/PeriodicTableView').then((m) => ({ default: m.ElementPanel })))
 
 const URL_DEFAULTS = { moleculeId: DEFAULT_MOLECULE_ID, representation: 'ball-and-stick' } as const
 
@@ -35,6 +40,8 @@ export function ChemistryExplorer() {
   const [autoRotate, setAutoRotate] = useState(false)
   const [resetToken, setResetToken] = useState(0)
   const [mobileTab, setMobileTab] = useState<MobileTab>('details')
+  const [section, setSection] = useState<Section>('molecules')
+  const [elementZ, setElementZ] = useState(8)
 
   const reducedMotion = usePrefersReducedMotion()
   const isMobile = useMediaQuery('(max-width: 899px)')
@@ -57,7 +64,10 @@ export function ChemistryExplorer() {
 
   const activity = useActivity(CHEMISTRY_ACTIVITY, state, {
     capture: () => state,
-    apply: () => dispatch({ type: 'replace', state: waterSetup(), announcement: 'Activity started: water in ball-and-stick view, Inspect tool.' }),
+    apply: () => {
+      setSection('molecules')
+      dispatch({ type: 'replace', state: waterSetup(), announcement: 'Activity started: water in ball-and-stick view, Inspect tool.' })
+    },
     restore: (snap) => dispatch({ type: 'replace', state: snap, announcement: ACTIVITY_ENDED }),
     restoreUrl: (snap) =>
       replaceUrlSearch(withChemistryParams(window.location.search, { moleculeId: snap.moleculeId, representation: snap.representation })),
@@ -66,10 +76,32 @@ export function ChemistryExplorer() {
   const guidePanel = <SubjectGuidePanel subject="chemistry" />
 
   const selectMolecule = (id: string) => {
+    setSection('molecules')
     dispatch({ type: 'selectMolecule', moleculeId: id })
     if (isMobile) setMobileTab('details')
   }
   const pickAtom = (atomId: string) => dispatch({ type: 'pickAtom', atomId })
+
+  const sectionSwitch = (
+    <div className="segmented section-switch" role="group" aria-label="Chemistry view">
+      {(['molecules', 'elements'] as const).map((s) => (
+        <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => setSection(s)}>
+          {s === 'molecules' ? 'Molecules' : 'Periodic table'}
+        </button>
+      ))}
+    </div>
+  )
+  const loading = <p className="muted small panel">Loading the periodic table…</p>
+  const elementsView = (
+    <Suspense fallback={loading}>
+      <PeriodicTableView selected={elementZ} onSelect={setElementZ} />
+    </Suspense>
+  )
+  const elementPanel = (
+    <Suspense fallback={loading}>
+      <ElementPanel z={elementZ} onOpenMolecule={selectMolecule} />
+    </Suspense>
+  )
 
   const library = (
     <MoleculeLibrary
@@ -145,7 +177,8 @@ export function ChemistryExplorer() {
     return (
       <div className="chem chem--mobile">
         {announcer}
-        <div className="chem-stage">{viewer}</div>
+        {sectionSwitch}
+        <div className="chem-stage">{section === 'molecules' ? viewer : elementsView}</div>
         {activityPanel}
         {guidePanel}
         <Tabs
@@ -154,7 +187,7 @@ export function ChemistryExplorer() {
           active={mobileTab}
           onChange={setMobileTab}
           tabs={[
-            { id: 'details', label: 'Details', content: info },
+            { id: 'details', label: section === 'molecules' ? 'Details' : 'Element', content: section === 'molecules' ? info : elementPanel },
             { id: 'library', label: 'Molecule library', content: library },
           ]}
         />
@@ -165,12 +198,15 @@ export function ChemistryExplorer() {
   return (
     <div className="chem">
       {announcer}
-      <aside className="chem-side chem-side--left">{library}</aside>
-      <div className="chem-stage">{viewer}</div>
+      <aside className="chem-side chem-side--left">
+        <div className="section-switch-wrap">{sectionSwitch}</div>
+        {library}
+      </aside>
+      <div className="chem-stage">{section === 'molecules' ? viewer : elementsView}</div>
       <aside className="chem-side chem-side--right">
         {activityPanel}
         {guidePanel}
-        {info}
+        {section === 'molecules' ? info : elementPanel}
       </aside>
     </div>
   )

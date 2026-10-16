@@ -232,6 +232,37 @@ How the tools behave:
 positions). Distances are rounded to 0.001 Å and angles to 0.1°. Cosines are clamped to [−1, 1]
 before `acos`. They describe this static model, not a vibrating molecule.
 
+
+### Periodic table
+
+**Molecules / Periodic table** at the top of the Chemistry library switches the centre view. The
+table and its data load only when this view is opened (a separate ~13 kB chunk).
+
+- **Data.** All 118 elements, generated from the
+  [PubChem Periodic Table](https://pubchem.ncbi.nlm.nih.gov/periodic-table/) REST data (NIH/NLM),
+  retrieved 2026-10-16, into `src/data/chemistry/periodicTable.data.ts` (atomic number, symbol,
+  name, PubChem category). Names use PubChem's US spellings (Aluminum, Cesium).
+- **Positions** are computed from the atomic number (`positionOf`), not typed in. The layout
+  follows the common IUPAC-style table: group 3 of periods 6 and 7 holds the placeholders
+  "57–71" and "89–103", and La–Lu and Ac–Lr are drawn as two separate rows with no group number.
+- **Classifications** (one filter at a time):
+  - *Block* (s, p, d, f), derived from position. Helium is s-block (1s²) although it sits in group
+    18. All 30 elements of the two separate rows are listed as f-block. References differ here:
+    some place La and Ac, others Lu and Lr, in the d block under Sc and Y. This layout makes no
+    claim about that choice.
+  - *Category*, PubChem's GroupBlock labels (alkali metal … actinide). Other references draw the
+    metal/metalloid/nonmetal boundaries differently, so the label always says "(PubChem)".
+- **Not included:** atomic weights and isotope data. For elements with no stable isotopes, PubChem
+  lists one isotope's mass, which is not a standard atomic weight, so masses are left out rather
+  than shown misleadingly.
+- **Access.** Each cell is a button named "Oxygen, O, atomic number 8"; arrow keys move between
+  cells, and the selected cell is outlined and pressed. A **List** layout gives the same elements
+  as a plain list. On phones, the table scrolls sideways inside its own panel; the page never
+  does.
+- **Selected element.** Symbol, atomic number, period, group, block and category. **In this app's
+  molecules** opens any of the six molecules containing the element in the molecule view, where
+  the measurement tools work as before.
+
 ## Biology Explorer — animal cell
 
 > This is a simplified educational model of a generalized animal cell. Shapes, sizes, quantities,
@@ -871,6 +902,7 @@ How the URL is kept up to date:
 | `src/lib/backup.test.ts` | Export contents (saved only, no IDs, origins or history); round trip with fresh IDs; oversized, malformed, foreign and unsupported files; mixed new, duplicate and invalid entries, with existing titles kept and URL fields ignored; plain-text titles; the saved-item limit; a single write that leaves data unchanged on quota failure; refusing when the library changed since the preview, including when the count is unchanged but the entries differ; never overwriting a damaged list. |
 | `src/features/activities/activities.test.ts` | One activity per subject with goal, setup, 3–5 steps, conclusion and https sources; no setup completes a step; the change lists; detection rules for every detected step (including the wrong vertex, changed speed and other surfaces); the Anatomy tour snapshot; Physics replace never resuming; the Physics summary matching `solveTrajectory`. |
 | `src/data/glossary.test.ts` | Unique glossary ids and terms; biology terms shared by several structures have one definition and all reach the glossary; every entry cites known sources or is marked as a convention or unit; links are valid relative routes; every subject guide has every section, references existing terms and sources, and cites each deeper explanation. |
+| `src/data/chemistry/periodicTable.test.ts` | 118 elements with contiguous atomic numbers and unique symbols and names; positions of reference elements in every period and both f rows; no two elements in one cell; block counts (s 14, p 36, d 38, f 30) and helium in s; f rows agreeing with PubChem's categories; search by number, symbol (listed first) and name prefix; molecules containing an element. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -945,6 +977,10 @@ the production build:
   sources, key terms expanding by keyboard); a term linking to its glossary entry and back to an
   explorer; glossary search, subject filter, convention labels and biology terms; Home search
   ranking definitions after explorations.
+- `periodic.e2e.ts`: selecting elements into the panel (including a lanthanoid), search by number and
+  name, block and category filters, the list alternative, arrow-key movement, and opening a molecule
+  from an element with the measurement tools still working. `mobile.e2e.ts` and `no-webgl.e2e.ts`
+  add contained scrolling on phones and use without WebGL.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):
