@@ -136,3 +136,20 @@ test('guided activity panel sits below the 3D view on a phone and keeps it usabl
   await page.locator('.activity').getByRole('button', { name: 'Exit activity and restore your previous view' }).tap()
   await expect(page.locator('.activity-launch')).toBeVisible()
 })
+
+test('Physics scene labels stay inside the 3D view on a phone (no clipped axis titles)', async ({ page }) => {
+  await page.goto('/#/physics')
+  await waitForViewport(page)
+  await page.waitForTimeout(500)
+  const view = (await page.locator('.viewport').boundingBox())!
+  const clipped = await page.evaluate(
+    ({ left, right }) =>
+      [...document.querySelectorAll<HTMLElement>('.physics-label')]
+        .filter((el) => getComputedStyle(el).visibility === 'visible')
+        .map((el) => ({ text: el.textContent, r: el.getBoundingClientRect() }))
+        .filter(({ r }) => r.left < left - 0.5 || r.right > right + 0.5)
+        .map(({ text }) => text),
+    { left: view.x, right: view.x + view.width },
+  )
+  expect(clipped).toEqual([])
+})

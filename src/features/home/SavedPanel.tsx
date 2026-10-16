@@ -68,7 +68,7 @@ function SavedItem({ entry, onMessage }: { entry: Exploration; onMessage: (text:
             </button>
             <button
               type="button"
-              className="icon-button"
+              className="icon-button is-danger"
               aria-label={`Remove ${entry.title}`}
               onClick={() => {
                 const r = removeExploration(browserStorage(), entry.id)

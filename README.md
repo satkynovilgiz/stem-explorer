@@ -652,6 +652,27 @@ library only for events about `stem-explorer:saved`, `stem-explorer:recent`, or 
 writes, so tabs cannot set each other off. The only automatic write is the recent-visit record,
 made once per distinct view shown in that tab.
 
+## Design conventions
+
+Shared rules live in `src/styles/tokens.css` (colours, type scale, spacing, radii, motion) and
+`src/styles/app.css`:
+- **Buttons.** `.button` is the primary action. `.tool-button` is secondary and always has a visible
+  outline. `.is-danger` marks destructive actions (red outline or hover). Every button type has a
+  disabled style (dimmed, `not-allowed` cursor).
+- **Toggles and segmented choices** use `aria-pressed`. "On" adds a bottom bar and heavier text as
+  well as the accent fill, so the state never depends on colour alone.
+- **Icon-only buttons** are named with `aria-label` and keep a native `title` for mouse users.
+  Keyboard focus shows the same short name as a tooltip, with no hover needed.
+- **Subject accents** (`--subject-*`) are used for chips, card edges and the recent strip.
+- **Focus** is a 2 px ring on every focusable control (`:focus-visible`).
+- **Status text** uses `.status-success` and `.status-error`. Home's library messages share one
+  dismissible status region.
+- **Reduced motion.** With `prefers-reduced-motion`, transitions and animations are effectively
+  disabled, and scroll-into-view jumps instead of gliding. Camera damping already stops
+  immediately.
+- **3D labels** are kept inside the view (Anatomy and Physics clamp horizontally), so axis titles
+  aren't clipped on narrow phones.
+
 ## Guided activities
 
 Each explorer has one optional **Try this** activity, shown as a compact, collapsible panel at the top
@@ -888,7 +909,8 @@ the production build:
 - `mobile.e2e.ts` (390 × 844):
   - all five subjects with no horizontal overflow and a prominent viewport;
   - touch targets of at least 40 px, the tab workflow, and normal page scrolling;
-  - Home without horizontal overflow, search and opening subjects by tap.
+  - Home without horizontal overflow, search and opening subjects by tap;
+  - Physics scene labels kept inside the 3D view.
 - `no-webgl.e2e.ts` (Chrome with `--disable-3d-apis`):
   - Biology and Chemistry fall back to text;
   - Physics keeps inputs, playback, readouts and graphs working;

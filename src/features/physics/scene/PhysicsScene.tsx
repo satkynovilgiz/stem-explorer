@@ -60,12 +60,15 @@ function LabelProjector({ labels, elements }: { labels: readonly SceneLabel[]; e
       if (!el) continue
       projected.set(...label.position).project(camera)
       const [ox, oy] = label.offset ?? [0, 0]
-      const x = ((projected.x + 1) / 2) * size.width + ox
+      const ax = ((projected.x + 1) / 2) * size.width + ox
       const y = ((1 - projected.y) / 2) * size.height + oy
       const w = el.offsetWidth
       const h = el.offsetHeight
+      const onScreen = projected.z < 1 && ax > 0 && ax < size.width && y > 0 && y < size.height
+      // Keep the whole label inside the view (narrow phones would otherwise clip axis titles).
+      const margin = 4
+      const x = w + 2 * margin >= size.width ? size.width / 2 : Math.min(Math.max(ax, w / 2 + margin), size.width - w / 2 - margin)
       const rect = { x: x - w / 2, y: y - h / 2, w, h }
-      const onScreen = projected.z < 1 && x > 0 && x < size.width && y > 0 && y < size.height
       const clear = !placed.some(
         (p) => rect.x < p.x + p.w + 3 && p.x < rect.x + rect.w + 3 && rect.y < p.y + p.h + 1 && p.y < rect.y + rect.h + 1,
       )

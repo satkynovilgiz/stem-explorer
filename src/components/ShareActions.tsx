@@ -107,7 +107,7 @@ export function ShareActions({ subject, params, restores }: Props) {
           <p className="muted small">Saved on this browser.</p>
         </form>
       )}
-      <p className="save-status" role="status">
+      <p className={`save-status${message?.kind === 'error' ? ' status-error' : message?.kind === 'saved' || message?.kind === 'renamed' ? ' status-success' : ''}`} role="status">
         {message?.kind === 'saved' && <>Saved on this browser as “{message.title}”. Find it on the Home page.</>}
         {message?.kind === 'renamed' && <>Saved entry renamed to “{message.title}”.</>}
         {message?.kind === 'error' && message.text}
