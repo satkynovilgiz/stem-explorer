@@ -6,14 +6,14 @@ import type { SubjectId } from '../../data/subjects'
  */
 export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; capabilities: string[]; action: string }> = {
   anatomy: {
-    title: 'The human heart',
-    summary: 'A schematic adult heart, seen from the front.',
+    title: 'Body atlas and heart',
+    summary: 'A schematic whole-body atlas with eleven organ-system layers, plus a detailed heart.',
     capabilities: [
-      'Chambers, valves and great vessels in whole or cutaway view',
-      'A 14-step blood-flow tour through both circuits',
-      'Compare two vessels: direction, circuit, oxygenation and function',
+      'Front, back and side views; layers with adjustable opacity; regions and search',
+      'Selectable structures with functions, sources and model limitations',
+      'Detailed heart: cutaway, a 14-step blood-flow tour and vessel comparison',
     ],
-    action: 'Open the heart',
+    action: 'Open anatomy',
   },
   chemistry: {
     title: 'Molecules and elements',

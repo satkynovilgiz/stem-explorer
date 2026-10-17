@@ -27,7 +27,7 @@ export function ActivityEntries() {
       <ul className="featured-list">
         {ACTIVITIES.map((a) => (
           <li key={a.id}>
-            <AppLink href={`#/${a.subject}`} className="featured-item" onClick={() => requestActivity(a.subject)}>
+            <AppLink href={a.entryHref ?? `#/${a.subject}`} className="featured-item" onClick={() => requestActivity(a.subject)}>
               <span className={`subject-chip is-${a.subject}`}>{SUBJECTS.find((s) => s.id === a.subject)!.name}</span>
               <span className="featured-title">{a.title}</span>
               <span className="featured-next">

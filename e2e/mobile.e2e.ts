@@ -89,7 +89,7 @@ test('Mathematics on a phone: tabs, parameters, point entry and slice graph with
 })
 
 test('Anatomy on a phone: tabs, list selection and the tour without overflow', async ({ page }) => {
-  await page.goto('/#/anatomy')
+  await page.goto('/?heart=whole#/anatomy')
   await waitForViewport(page)
   await expectNoHorizontalOverflow(page)
   expect(await smallTargets(page, '.scene-controls button, .tab, .subject-link')).toEqual([])
@@ -195,5 +195,20 @@ test('spring lab on a phone fits without overflow', async ({ page }) => {
 test('notebook on a phone fits without overflow', async ({ page }) => {
   await page.goto('/#/notebook')
   await expect(page.getByRole('heading', { level: 1, name: 'Notebook' })).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+})
+
+test('Body atlas on a phone: module switch, tabs, layers and selection without overflow', async ({ page }) => {
+  await page.goto('/#/anatomy')
+  await waitForViewport(page)
+  await expectNoHorizontalOverflow(page)
+  await expect(page.locator('.heart-label', { hasText: 'Body’s right' })).toBeInViewport()
+  expect(await smallTargets(page, '.scene-controls button, .tab, .section-switch button')).toEqual([])
+  await page.getByRole('tab', { name: 'Structures' }).click()
+  await page.getByRole('searchbox', { name: 'Search body structures' }).fill('liver')
+  await page.locator('.structure-item', { hasText: 'Liver' }).click()
+  await expect(page.locator('#atlas-structure-heading')).toHaveText('Liver')
+  await page.getByRole('tab', { name: 'Layers' }).click()
+  await page.getByRole('checkbox', { name: 'Muscular' }).check()
   await expectNoHorizontalOverflow(page)
 })

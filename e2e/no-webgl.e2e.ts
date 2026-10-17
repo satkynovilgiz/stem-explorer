@@ -67,7 +67,8 @@ test('Anatomy keeps the list, explanations, sources and tour without WebGL', asy
 test('Home works without WebGL and still opens explorers', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1, name: 'Explore science. See how it works.' })).toBeVisible()
-  await expect(page.locator('.subject-art')).toHaveCount(5)
+  // Five subject cards plus the featured exploration.
+  await expect(page.locator('.subject-art')).toHaveCount(6)
   await page.getByRole('searchbox', { name: 'Search everything you can explore' }).fill('aorta')
   await page.getByRole('list', { name: 'Search results' }).getByRole('link', { name: /Aorta/ }).first().click()
   await waitForViewport(page)
@@ -147,10 +148,23 @@ test('tangent plane equation and gradient values work without WebGL; overlay tog
 })
 
 test('the vessel comparison works from HTML controls without WebGL', async ({ page }) => {
-  await page.goto('/#/anatomy')
+  await page.goto('/?heart=whole#/anatomy')
   await waitForViewport(page)
   await page.locator('.compare-toggle').click()
   await page.locator('.structure-item').filter({ has: page.locator('.structure-name', { hasText: /^Aorta$/ }) }).click()
   await page.locator('.structure-item').filter({ has: page.locator('.structure-name', { hasText: /^Pulmonary veins/ }) }).click()
   await expect(page.locator('.compare-table')).toContainText('Toward the heart')
+})
+
+test('the body atlas works from HTML without WebGL: list, search, layers, details and inventory', async ({ page }) => {
+  await page.goto('/#/anatomy')
+  await expect(page.locator('.viewport-message')).toContainText('The structure list, search, layers, descriptions, sources and the inventory still work')
+  await expect(page.getByRole('toolbar', { name: 'Body atlas view controls' })).toHaveCount(0)
+  await page.getByRole('searchbox', { name: 'Search body structures' }).fill('spleen')
+  await page.locator('.structure-item', { hasText: 'Spleen' }).click()
+  await expect(page.locator('#atlas-structure-heading')).toHaveText('Spleen')
+  await expect(page.locator('.info')).toContainText('Filters the blood')
+  await page.getByText('What is included').click()
+  await expect(page.locator('.atlas-inventory')).toContainText('Not included')
+  expect(new URL(page.url()).searchParams.get('atlas')).toBe('spleen')
 })

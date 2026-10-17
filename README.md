@@ -5,7 +5,8 @@ Users rotate, zoom, select and measure parts of 3D models and read concise, sour
 
 The app opens on a **Home page** (`#/home`) with search, the five subjects, featured explorations
 and the explorations you saved or visited recently. All five subjects are implemented:
-- **Anatomy Explorer:** the human heart, with a blood-flow tour.
+- **Anatomy Explorer:** a schematic whole-body atlas with eleven organ-system layers, and a
+  detailed heart module with a blood-flow tour.
 - **Chemistry Explorer:** molecules and measurements.
 - **Biology Explorer:** an interactive animal cell.
 - **Physics Explorer:** a projectile motion lab.
@@ -39,7 +40,79 @@ React 19 · TypeScript · Vite 8 · Three.js via React Three Fiber 9 and Drei 10
 plain CSS with design tokens · Vitest for unit tests · Playwright for browser tests. No backend, accounts, API keys or third-party
 3D assets. The Three.js bundle is lazy-loaded when the 3D viewer mounts, so text renders first.
 
-## Anatomy Explorer — the human heart
+## Anatomy Explorer — whole-body atlas
+
+`#/anatomy` opens the **body atlas**. The detailed heart explorer is a second module (**Body atlas
+| Heart (detailed)** switch, or **Open the detailed heart explorer**). Links that contain a heart key
+(`part`, `heart`) open the heart module, so every link, saved exploration and note made before the
+atlas existed opens exactly as before. Switching modules adds a history entry, so Back returns to
+the previous module.
+
+> Every shape in the atlas is schematic: simple ellipsoids, rods, tubes and plates placed to show
+> position and relationships. Shapes and sizes are not anatomically precise.
+
+**Model provenance.** No third-party anatomical asset is used. The figure is generated from
+primitives in `src/data/anatomy/atlas` (landmarks in `figure.ts`, eight-head drawing proportions,
+not measurements). Licensed anatomical models such as BodyParts3D/Z-Anatomy (CC BY-SA) were
+considered but not used: their accuracy, file size and share-alike terms could not be verified
+for this app in this release. The inventory in the app repeats this ("Assets: none").
+
+**Schema** (`src/data/anatomy/atlas/types.ts`). Each structure has:
+- a stable `id` (never renamed; used in links, saved explorations and notes) and `name`;
+- `system` (plus `alsoIn` for shared organs such as the pancreas) and `region`;
+- `parent` and `related` structures (each relation is worded, e.g. "Drains urine into");
+- `side` and `pairId` for left/right pairs, and `variant` for reproductive structures;
+- `description` and `function`;
+- `representation` (`individual`, `group` with a `grouping` explanation, or `container` for list
+  categories), the drawn `shapes`, and `limitations` (or the system's limitation);
+- `sources` (ids in `src/data/sources.ts`) and optional `aliases` for search.
+
+Coordinates: feet at y = 0, top of the head at y = 10, +x is the body's **left**, +y superior,
++z anterior.
+
+**Systems** (the eleven named in OpenStax A&P 2e §1.2): integumentary, skeletal, muscular,
+nervous, cardiovascular, respiratory, digestive, urinary, endocrine, lymphatic and immune, and
+reproductive. Each has a colour (identification only), default visibility and opacity, a summary,
+a general limitation, explicit omissions and sources.
+
+**Controls**
+- **Front / Back / Side** (left lateral) views, drag to rotate, scroll or pinch to zoom, **Reset**,
+  **Focus** (frames the selection), **Isolate** / **Show all**, **Labels**.
+- **Region**: whole body, head and neck, thorax, abdomen, pelvis, back, upper limbs, lower limbs.
+  The camera frames the region, the list shows only its structures, and everything else is drawn
+  faintly (8% opacity) and can't be clicked.
+- **Layers**: a checkbox and an opacity slider (10–100%) per system, plus presets (default,
+  skeleton + muscles, hide all). Opacity is a view preference and is not stored in links.
+- **Search** over names, well-established aliases (spine, windpipe, rib cage, fallopian tube, vas
+  deferens) and system names.
+- A hierarchical **HTML list** (system → category → structure) that does everything a click in
+  the model does, and works without WebGL.
+- **Orientation**: the panel states it in words for the current view ("Front (anterior) view: the
+  body's right is on your left"). The view labels *Superior*, *Inferior*, *Body's right*, *Body's
+  left*, *Anterior* and *Posterior* sit at fixed body positions, so they stay correct as you rotate;
+  an axis seen end-on is hidden. A unit test checks the text against the camera geometry.
+- Selecting a structure whose layer is hidden turns that layer on; one outside the region clears
+  the region. The live region announces each change.
+- **What is included**: per system, the individual and grouped structures, what else belongs to it,
+  what is not included, and its limitation, with sources.
+
+**Reproductive anatomy** is off by default. Turning it on requires choosing **Typical ovarian
+configuration** or **Typical testicular configuration** (OpenStax's terms; the chapter describes the
+typical anatomy of XX and XY individuals). The panel says neither is universal and that intersex
+variations are not modelled. Links store the choice (`repro=`), and a structure from one
+configuration can't appear in a link for the other.
+
+**Links**: `?atlas=<id>&bview=front|back|side&layers=<systems>&region=<id>&repro=ovarian|testicular`.
+`bview` is always present; `layers` only when it differs from the default; `region` only when it is
+not the whole body. Invalid values are rejected by the same parser that validates saved entries.
+
+**Sources** (each read for this release): OpenStax Anatomy and Physiology 2e §1.2, 1.6, 5.1, 5.2,
+7.1, 11.3–11.6, 12.1, 17.1, 17.3, 17.4, 17.6, 19.1, 20.5, 21.1, 22.1, 22.2, 23.1, 23.3–23.6, 25.2,
+25.3, 27.1 and 27.2. Unit tests check sourced relative positions (the right kidney lower than the
+left, adrenal glands on the kidneys, the right lung shorter and wider), and that every structure
+cites a registered source and states a limitation. Tests do not establish anatomical accuracy.
+
+## Anatomy: detailed heart module
 
 > This is a simplified educational diagram in 3D. Shapes, proportions, vessel positions, and
 > movement are schematic.
@@ -1112,6 +1185,8 @@ How the URL is kept up to date:
 | `src/features/physics/state.test.ts` | No auto-launch, edits reset to t = 0, Reset vs Restore defaults, pause/resume/landed announcements, scrubbing pauses, immediate impact, playback speed, and Run A storing inputs only. |
 | `src/features/physics/sceneMath.test.ts` | Equal axis scales, framing all compared runs, tick steps and labels, and separate vector scales. |
 | `src/data/anatomy/heart.test.ts` | All 14 structures, with URL-safe IDs, known sources and valid, reciprocal connections. Also oxygen-pathway colours by side, cusp counts, the exact 14-step blood-flow order with external lungs and body, and valve-after-chamber ordering. |
+| `src/data/anatomy/atlas/atlas.test.ts` | The eleven systems each with drawn structures and omissions; unique ids and resolvable parents, relations and pairs; descriptions, functions, regions, registered sources and limitations on every structure; groups explain their grouping; left structures on +x; sourced relative positions (right kidney lower, adrenals above kidneys, heart between the lungs, lungs above the diaphragm above the liver, right lung shorter and wider); reproductive structures always in a labelled variant and hidden by default; search; inventory completeness. |
+| `src/features/anatomy/atlas/atlas.test.ts` | View descriptions checked against camera geometry; defaults; selecting a hidden structure shows its layer and says so; reproductive selection and switching; no reproductive layer without a configuration; isolation of structures and groups; region dimming and clearing; opacity clamping; shared-system drawing; link round trip and invalid or inconsistent links. |
 | `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). Vessel comparison: entering, filling and replacing slots, refusing non-vessels, clearing, leaving, views, the tour ending and blocking comparison, and the shared state. |
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
@@ -1226,6 +1301,11 @@ the production build:
   stored); a full 100-note CJK notebook exported and imported; subject filter, safe text rendering and no tour state stored;
   empty, damaged and quota states; notebook export/import and cross-format messages; a second tab
   updating.
+- `atlas.e2e.ts`: Anatomy opening to the atlas, the heart module with Back/Forward between modules and
+  old heart links; list and search selection with sourced details, pairs, relations, a hidden layer
+  shown with an announcement, view and reload; layer toggles, opacity and regions; the explicit
+  reproductive choice; clicking the model, Isolate, Focus and Reset; orientation labels on the
+  correct sides in front, back and side views; the inventory; saving and reopening an atlas state.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

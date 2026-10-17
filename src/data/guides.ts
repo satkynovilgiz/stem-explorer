@@ -291,3 +291,50 @@ export const GUIDES: Record<SubjectId, SubjectGuide> = {
     },
   },
 }
+
+/** Guides for modules that share a subject with another explorer (the body atlas shares Anatomy). */
+export const MODULE_GUIDES: Record<'anatomy-atlas', SubjectGuide> = {
+  'anatomy-atlas': {
+    subject: 'anatomy',
+    summary:
+      'The body is organised into organ systems that work together. This atlas shows eleven of them as layers on a schematic figure in the anatomical position, so you can see where structures sit relative to each other.',
+    deeper: [
+      { text: 'OpenStax describes eleven organ systems, from the integumentary system (skin, hair, nails) to the reproductive system; each is a group of organs that work together.', sourceIds: ['ap-1-2'] },
+      { text: 'Directional terms assume the anatomical position: upright, feet parallel, palms facing forward. Left and right are always the body’s own sides.', sourceIds: ['ap-1-6'] },
+      { text: 'The skeleton has two divisions: the axial skeleton (head, neck, chest and back) and the appendicular skeleton (the limbs and the bones that attach them).', sourceIds: ['ap-7-1'] },
+      { text: 'The central nervous system is the brain and spinal cord; everything else in the nervous system is peripheral.', sourceIds: ['ap-12-1'] },
+    ],
+    keyTerms: ['organ-system', 'anatomical-position', 'body-left-right', 'superior-inferior', 'anterior-posterior', 'medial-lateral', 'proximal-distal', 'axial-skeleton', 'central-nervous-system'],
+    relations: [
+      {
+        expression: 'superior ↔ inferior · anterior ↔ posterior · medial ↔ lateral · proximal ↔ distal',
+        text: 'Paired directional terms, each relative to the anatomical position.',
+        sourceIds: ['ap-1-6'],
+      },
+    ],
+    symbols: [],
+    misconceptions: [
+      {
+        claim: '“Left” in a picture is the viewer’s left.',
+        text: 'Anatomical left and right are the body’s own. In a front view the body’s right is on the viewer’s left; the atlas labels both sides in every view.',
+        sourceIds: ['ap-1-6'],
+      },
+      {
+        claim: 'Each organ belongs to exactly one system.',
+        text: 'Some organs serve several systems. The pancreas, for example, has digestive cells and hormone-secreting endocrine cells; the atlas lists it under both.',
+        sourceIds: ['ap-17-1'],
+      },
+    ],
+    simplifications: [
+      'Every structure is a simple shape (ellipsoid, rod, tube or plate) placed to show position, not real form or size.',
+      'Many structures are grouped or omitted; “What is included” lists both.',
+      'Reproductive organs are shown only on request, as one of two typical configurations; anatomy varies, including intersex variations not modelled here.',
+      'Positions follow general textbook descriptions, not measurements of a particular body.',
+    ],
+    modelKinds: {
+      measured: [],
+      computed: ['Camera framing of regions and selections, from the shapes’ bounds'],
+      illustrative: ['All shapes, sizes, positions and colours (colours identify systems only)'],
+    },
+  },
+}

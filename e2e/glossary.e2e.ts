@@ -9,7 +9,7 @@ test('every explorer has the same About this explorer panel, with terms that exp
     ['biology', 'Organelle'],
     ['physics', 'Range'],
     ['mathematics', 'Saddle point'],
-    ['anatomy', 'Artery'],
+    ['anatomy', 'Organ system'],
   ] as const) {
     await page.goto(`/#/${subject}`)
     await waitForViewport(page)
@@ -31,7 +31,7 @@ test('every explorer has the same About this explorer panel, with terms that exp
 })
 
 test('a term links to its shared glossary entry, which links back to an explorer', async ({ page }) => {
-  await page.goto('/#/anatomy')
+  await page.goto('/?heart=whole#/anatomy')
   await waitForViewport(page)
   await guide(page).locator('.guide-toggle').click()
   await guide(page).getByRole('button', { name: 'Artery', exact: true }).click()

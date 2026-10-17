@@ -8,7 +8,7 @@ const slotName = (page: Page, letter: 'a' | 'b') => panel(page).locator(`.compar
 const toggle = (page: Page) => page.locator('.compare-toggle')
 
 test('select two vessels, replace B, clear one or both, and see the comparison table', async ({ page }) => {
-  await page.goto('/#/anatomy')
+  await page.goto('/?heart=whole#/anatomy')
   await waitForViewport(page)
   await toggle(page).click()
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true')
@@ -33,7 +33,7 @@ test('select two vessels, replace B, clear one or both, and see the comparison t
 })
 
 test('presets and the direction-not-oxygen explanation', async ({ page }) => {
-  await page.goto('/#/anatomy')
+  await page.goto('/?heart=whole#/anatomy')
   await toggle(page).click()
   await panel(page).getByRole('button', { name: 'Pulmonary arteries vs pulmonary veins' }).click()
   const named = panel(page).locator('.compare-table tr', { hasText: 'Named' })
@@ -62,7 +62,7 @@ test('entering keeps a selected vessel as A and ends isolation; leaving keeps A 
 })
 
 test('Whole/Cutaway keep the comparison; the tour ends it and blocks it', async ({ page }) => {
-  await page.goto('/#/anatomy')
+  await page.goto('/?heart=whole#/anatomy')
   await waitForViewport(page)
   await toggle(page).click()
   await panel(page).getByRole('button', { name: 'Aorta vs pulmonary trunk' }).click()

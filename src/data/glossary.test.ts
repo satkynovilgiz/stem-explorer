@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { canonicalize } from '../lib/explorations'
 import { ORGANELLES } from './biology/organelles'
 import { GLOSSARY, slug } from './glossary'
-import { GUIDES } from './guides'
+import { GUIDES, MODULE_GUIDES } from './guides'
 import { SOURCES } from './sources'
 import { SUBJECTS } from './subjects'
 
@@ -62,7 +62,7 @@ describe('subject guides', () => {
   })
 
   it('reference existing glossary terms and sources; explanations are always cited', () => {
-    for (const g of Object.values(GUIDES)) {
+    for (const g of [...Object.values(GUIDES), ...Object.values(MODULE_GUIDES)]) {
       for (const t of g.keyTerms) expect(ids.has(t), `${g.subject}: ${t}`).toBe(true)
       const cited = [...g.deeper, ...g.relations, ...g.misconceptions]
       for (const c of cited) for (const s of c.sourceIds) expect(SOURCES[s], `${g.subject}: ${s}`).toBeDefined()

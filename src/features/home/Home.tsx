@@ -96,7 +96,7 @@ function WelcomePanel() {
           <span className="welcome-start-kind">Guided activity · 3 steps</span>
           <span className="welcome-start-title">Measure the H–O–H angle in water</span>
         </AppLink>
-        <a href="#/anatomy" className="welcome-start is-anatomy">
+        <a href="?heart=cutaway#/anatomy" className="welcome-start is-anatomy">
           <span className="welcome-start-kind">Explore freely</span>
           <span className="welcome-start-title">Rotate and cut away a model heart</span>
         </a>

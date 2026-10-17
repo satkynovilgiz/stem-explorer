@@ -27,6 +27,8 @@ const LUNGS = FLOW_STEPS.findIndex((step) => step.id === 'lungs')
 export const ANATOMY_ACTIVITY: ActivityDef<AnatomyState> = {
   id: 'right-ventricle-to-lungs',
   subject: 'anatomy',
+  // The activity runs in the detailed heart module.
+  entryHref: '?heart=whole#/anatomy',
   title: 'Trace blood from the right ventricle to the lungs',
   goal: 'Follow oxygen-poor blood out of the right ventricle to the lungs, and name each structure it passes.',
   setup: 'The heart opens in cutaway view so the chambers and valves are visible, with nothing selected. The tour is then used for the last steps.',

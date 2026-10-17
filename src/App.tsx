@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { TopNav } from './components/TopNav'
 import { SUBJECTS } from './data/subjects'
-import { HeartExplorer } from './features/anatomy/HeartExplorer'
+import { AnatomyExplorer } from './features/anatomy/AnatomyExplorer'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
 import { ChemistryExplorer } from './features/chemistry/ChemistryExplorer'
 import { MathematicsExplorer } from './features/mathematics/MathematicsExplorer'
@@ -31,8 +31,8 @@ export default function App() {
       <main id="main" className="main" tabIndex={-1}>
         {route === 'anatomy' ? (
           <>
-            <h1 className="visually-hidden">Anatomy Explorer: the human heart</h1>
-            <HeartExplorer />
+            <h1 className="visually-hidden">Anatomy Explorer: body atlas and heart</h1>
+            <AnatomyExplorer />
           </>
         ) : route === 'chemistry' ? (
           <>

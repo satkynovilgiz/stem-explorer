@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import { expect, test, waitForViewport } from './fixtures.ts'
 
 const SUBJECT_HEADINGS = {
-  anatomy: 'Anatomy Explorer: the human heart',
+  anatomy: 'Anatomy Explorer: body atlas and heart',
   chemistry: 'Chemistry Explorer',
   biology: 'Biology Explorer: animal cell',
   physics: 'Physics Explorer: projectile motion lab',

@@ -1,6 +1,6 @@
 import { BookOpen, ChevronDown } from 'lucide-react'
 import { useId, useState } from 'react'
-import { GUIDES } from '../../data/guides'
+import { GUIDES, type SubjectGuide } from '../../data/guides'
 import type { SubjectId } from '../../data/subjects'
 import { SourceLinks } from './SourceLinks'
 import { TermButton } from './TermButton'
@@ -9,8 +9,8 @@ import { TermButton } from './TermButton'
  * "About this explorer": the same structure in every subject. A plain-language summary is always
  * visible once opened; the deeper explanation is a further disclosure, so beginners aren't flooded.
  */
-export function SubjectGuidePanel({ subject }: { subject: SubjectId }) {
-  const guide = GUIDES[subject]
+export function SubjectGuidePanel({ subject, guide: override }: { subject: SubjectId; guide?: SubjectGuide }) {
+  const guide = override ?? GUIDES[subject]
   const id = useId()
   const [open, setOpen] = useState(false)
   return (

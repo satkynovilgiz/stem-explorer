@@ -1,3 +1,5 @@
+import { ATLAS_CONFIG } from '../data/anatomy/atlas/config'
+import { findStructure } from '../data/anatomy/atlas'
 import { findHeartPart, HEART_PART_IDS } from '../data/anatomy/heart'
 import { CELL_STRUCTURES, findOrganelle } from '../data/biology/organelles'
 import { findMolecule, MOLECULES } from '../data/chemistry/molecules'
@@ -6,7 +8,10 @@ import { getSurface } from '../math/surfaces'
 import { DEFAULT_PARAMS, isValidParam, normalizeParam, PARAM_KEYS } from '../physics/projectile'
 import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
+  anatomyModule,
   anatomyParamEntries,
+  atlasParamEntries,
+  parseAtlasParams,
   mathParamEntries,
   parseAnatomyParams,
   parseBiologyParams,
@@ -74,6 +79,10 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
       return r.invalid.length ? null : { subject, params: mathParamEntries(r) }
     }
     case 'anatomy': {
+      if (anatomyModule(search) === 'atlas') {
+        const r = parseAtlasParams(search, ATLAS_CONFIG)
+        return r.invalid.length ? null : { subject, params: atlasParamEntries(r, ATLAS_CONFIG.defaultLayers) }
+      }
       const r = parseAnatomyParams(search, HEART_PART_IDS, { partId: null, heartView: 'whole' })
       return r.invalid.length ? null : { subject, params: anatomyParamEntries(r) }
     }
@@ -116,6 +125,11 @@ export function defaultTitle(state: ShareState): string {
       return p.slice ? `${name} · slice ${p.slice} = ${p.at}` : name
     }
     case 'anatomy':
+      if (p.bview) {
+        const views: Record<string, string> = { front: 'front', back: 'back', side: 'side' }
+        const s = p.atlas ? findStructure(p.atlas) : undefined
+        return s ? `Body atlas · ${s.name} · ${views[p.bview] ?? 'front'} view` : `Body atlas · ${views[p.bview] ?? 'front'} view`
+      }
       return p.part ? `${findHeartPart(p.part)?.name ?? 'Heart structure'} · ${p.heart === 'cutaway' ? 'cutaway' : 'whole'} heart` : `Human heart · ${p.heart === 'cutaway' ? 'cutaway' : 'whole'}`
   }
 }

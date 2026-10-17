@@ -326,3 +326,108 @@ export function withAnatomyParams(search: string, state: AnatomyUrlState): strin
   for (const [k, v] of Object.entries(anatomyParamEntries(state))) q.set(k, v)
   return `?${q.toString()}`
 }
+
+/* ---------- Anatomy: whole-body atlas ---------- */
+
+export type AtlasView = 'front' | 'back' | 'side'
+export const ATLAS_VIEWS: readonly AtlasView[] = ['front', 'back', 'side']
+export const ATLAS_URL_KEYS = ['atlas', 'bview', 'layers', 'region', 'repro'] as const
+export const HEART_URL_KEYS = ['part', 'heart'] as const
+
+export interface AtlasUrlState {
+  structureId: string | null
+  view: AtlasView
+  /** Visible systems, in the fixed system order. */
+  layers: string[]
+  region: string
+  variant: 'ovarian' | 'testicular' | null
+}
+
+export interface AtlasUrlConfig {
+  validIds: readonly string[]
+  systemIds: readonly string[]
+  defaultLayers: readonly string[]
+  regionIds: readonly string[]
+  /** Structures that belong to one reproductive configuration. */
+  variantOf: Readonly<Record<string, 'ovarian' | 'testicular'>>
+}
+
+/**
+ * Anatomy has two modules. Links with a heart key (`part`, `heart`) open the detailed heart
+ * explorer, so every link made before the atlas existed opens exactly as before; anything else
+ * opens the whole-body atlas.
+ */
+export function anatomyModule(search: string): 'atlas' | 'heart' {
+  const q = new URLSearchParams(search)
+  return HEART_URL_KEYS.some((k) => q.has(k)) ? 'heart' : 'atlas'
+}
+
+/**
+ * Reads `?atlas=<structure>&bview=front|back|side&layers=a,b&region=<id>&repro=ovarian|testicular`.
+ * The reproductive layer is only valid with a chosen variant, and a variant only with that layer.
+ */
+export function parseAtlasParams(search: string, cfg: AtlasUrlConfig): AtlasUrlState & { invalid: string[] } {
+  const q = new URLSearchParams(search)
+  const invalid: string[] = []
+  const atlas = q.get('atlas')
+  const structureId = atlas && cfg.validIds.includes(atlas) ? atlas : null
+  if (atlas !== null && structureId === null) invalid.push('atlas')
+
+  const v = q.get('bview')
+  const view = v && (ATLAS_VIEWS as readonly string[]).includes(v) ? (v as AtlasView) : 'front'
+  if (v !== null && view !== v) invalid.push('bview')
+
+  let layers = [...cfg.defaultLayers]
+  const rawLayers = q.get('layers')
+  if (rawLayers !== null) {
+    const parts = rawLayers === '' ? [] : rawLayers.split(',')
+    if (parts.every((p) => cfg.systemIds.includes(p)) && new Set(parts).size === parts.length) layers = parts
+    else invalid.push('layers')
+  }
+  layers = cfg.systemIds.filter((id) => layers.includes(id))
+
+  const r = q.get('region')
+  const region = r && cfg.regionIds.includes(r) ? r : 'whole-body'
+  if (r !== null && region !== r) invalid.push('region')
+
+  const rp = q.get('repro')
+  let variant: AtlasUrlState['variant'] = rp === 'ovarian' || rp === 'testicular' ? rp : null
+  if (rp !== null && variant === null) invalid.push('repro')
+  const reproShown = layers.includes('reproductive')
+  if (reproShown && !variant) {
+    invalid.push('layers')
+    layers = layers.filter((l) => l !== 'reproductive')
+  } else if (!reproShown && variant) {
+    invalid.push('repro')
+    variant = null
+  }
+  // A structure from one configuration is only valid in a link that shows that configuration.
+  if (structureId && cfg.variantOf[structureId] && cfg.variantOf[structureId] !== variant) invalid.push('atlas')
+  return { structureId, view, layers, region, variant, invalid: [...new Set(invalid)] }
+}
+
+export function atlasParamEntries(state: AtlasUrlState, defaultLayers: readonly string[]): Record<string, string> {
+  const sameLayers = state.layers.length === defaultLayers.length && state.layers.every((l) => defaultLayers.includes(l))
+  return {
+    ...(state.structureId ? { atlas: state.structureId } : {}),
+    bview: state.view,
+    ...(sameLayers ? {} : { layers: state.layers.join(',') }),
+    ...(state.region !== 'whole-body' ? { region: state.region } : {}),
+    ...(state.variant ? { repro: state.variant } : {}),
+  }
+}
+
+/** Replaces the atlas keys (and drops heart keys, so the link opens the atlas). */
+export function withAtlasParams(search: string, entries: Record<string, string>): string {
+  const q = new URLSearchParams(search)
+  for (const k of [...ATLAS_URL_KEYS, ...HEART_URL_KEYS]) q.delete(k)
+  for (const [k, v] of Object.entries(entries)) q.set(k, v)
+  return `?${q.toString()}`
+}
+
+/** Drops the atlas keys (used when opening the heart module). */
+export function withoutAtlasParams(search: string): string {
+  const q = new URLSearchParams(search)
+  for (const k of ATLAS_URL_KEYS) q.delete(k)
+  return `?${q.toString()}`
+}

@@ -287,3 +287,20 @@ describe('storage reliability', () => {
     expect(isLibraryStorageEvent({ key: SAVED_KEY, storageArea: session }, local)).toBe(false)
   })
 })
+
+describe('anatomy: atlas and heart modules share the subject', () => {
+  it('older heart states keep their canonical form; atlas states have their own keys', () => {
+    expect(canonicalize('anatomy', { part: 'mitral-valve', heart: 'cutaway' })).toEqual({ subject: 'anatomy', params: { part: 'mitral-valve', heart: 'cutaway' } })
+    expect(canonicalize('anatomy', { heart: 'whole' })).toEqual({ subject: 'anatomy', params: { heart: 'whole' } })
+    expect(canonicalize('anatomy', {})).toEqual({ subject: 'anatomy', params: { bview: 'front' } })
+    expect(canonicalize('anatomy', { atlas: 'liver', bview: 'back' })).toEqual({ subject: 'anatomy', params: { atlas: 'liver', bview: 'back' } })
+    expect(canonicalize('anatomy', { atlas: 'not-a-structure' })).toBeNull()
+    expect(canonicalize('anatomy', { atlas: 'uterus', bview: 'front' })).toBeNull() // reproductive needs its layer and variant
+  })
+
+  it('titles and links say which module they open', () => {
+    expect(defaultTitle({ subject: 'anatomy', params: { atlas: 'kidney-left', bview: 'side' } })).toBe('Body atlas · Left kidney · side view')
+    expect(defaultTitle({ subject: 'anatomy', params: { part: 'aorta', heart: 'whole' } })).toMatch(/Aorta/)
+    expect(hrefFor({ subject: 'anatomy', params: { atlas: 'liver', bview: 'front' } })).toBe('?atlas=liver&bview=front#/anatomy')
+  })
+})

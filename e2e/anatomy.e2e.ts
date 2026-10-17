@@ -15,7 +15,7 @@ async function clickPart(page: Page, labelText: string) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/#/anatomy')
+  await page.goto('/?heart=whole#/anatomy')
   await waitForViewport(page)
 })
 
@@ -160,6 +160,9 @@ test.describe('URL state', () => {
     await waitForViewport(page)
     await page.getByRole('link', { name: /^Anatomy/ }).click()
     await waitForViewport(page)
+    // The top-bar link opens the body atlas; the heart is one module switch away.
+    await page.getByRole('group', { name: 'Anatomy module' }).getByRole('button', { name: 'Heart (detailed)' }).click()
+    await waitForViewport(page)
     await item(page, 'Pulmonary veins').click()
     await page.getByRole('link', { name: /^Mathematics/ }).click()
     await waitForViewport(page)
@@ -167,9 +170,13 @@ test.describe('URL state', () => {
     await page.goBack()
     await waitForViewport(page)
     await expect(heading(page)).toHaveText('Pulmonary veins')
+    // Opening the heart module was its own history entry.
+    await page.goBack()
+    await expect(page.locator('#atlas-heading')).toHaveText('Body atlas')
     await page.goBack()
     await waitForViewport(page)
     await expect(page.locator('#structure-heading')).toHaveText('Golgi apparatus')
+    await page.goForward()
     await page.goForward()
     await waitForViewport(page)
     await expect(heading(page)).toHaveText('Pulmonary veins')
@@ -179,7 +186,7 @@ test.describe('URL state', () => {
   })
 
   test('Copy link copies an Anatomy-only link from the current origin', async ({ page, baseURL }) => {
-    await page.goto('/?molecule=water&surface=plane#/anatomy')
+    await page.goto('/?molecule=water&surface=plane&heart=whole#/anatomy')
     await waitForViewport(page)
     await item(page, 'Mitral valve').click()
     await page.getByRole('button', { name: 'Copy link' }).click()

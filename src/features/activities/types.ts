@@ -33,6 +33,8 @@ export interface ActivityDef<S> {
   /** Final explanation connecting the observation to the concept. */
   conclusion: string
   sources: ActivitySource[]
+  /** Link that opens the explorer where the activity runs (default `#/<subject>`). */
+  entryHref?: string
 }
 
 /** Activities listed on Home (entry points into the explorers). */

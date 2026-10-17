@@ -4668,3 +4668,191 @@ button {
     transform: none;
   }
 }
+
+/* ---------- Anatomy: body atlas ---------- */
+
+.atlas-nav .select,
+.atlas-nav select {
+  width: 100%;
+  min-height: 36px;
+  margin-bottom: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.atlas-tree {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.atlas-system > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.atlas-system > summary::-webkit-details-marker {
+  display: none;
+}
+
+.atlas-system > summary:hover {
+  background: var(--color-surface-hover);
+}
+
+.atlas-chevron {
+  transition: transform var(--duration) var(--ease);
+}
+
+.atlas-system[open] > summary .atlas-chevron {
+  transform: rotate(90deg);
+}
+
+.structure-subtree {
+  margin: 0;
+}
+
+.atlas-note {
+  margin: var(--space-1) var(--space-2) var(--space-2);
+}
+
+.legend-chip {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.layer-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-3) 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.layer-row {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
+.layer-row.is-on {
+  border-color: var(--color-border);
+  background: var(--color-surface-raised);
+}
+
+.layer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.layer-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.layer-name input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+}
+
+.layer-opacity {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.layer-opacity input {
+  width: 96px;
+  accent-color: var(--color-accent);
+}
+
+.layer-opacity-value {
+  min-width: 3.5ch;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.variant-choice {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-1) 0 var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.variant-choice label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+}
+
+.variant-choice p {
+  margin: var(--space-1) 0 0;
+}
+
+.atlas-inventory > summary {
+  cursor: pointer;
+}
+
+.inventory-system {
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.inventory-system p {
+  margin: var(--space-1) 0;
+}
+
+.inventory-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.atlas-path {
+  margin: 0;
+}
+
+.atlas-facts {
+  margin: var(--space-3) 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-chevron {
+    transition: none;
+  }
+}
+
+/* Atlas orientation labels sit over busy geometry, so they get a backing. */
+.atlas .heart-label.is-orientation {
+  background: rgb(15 17 19 / 0.78);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+}

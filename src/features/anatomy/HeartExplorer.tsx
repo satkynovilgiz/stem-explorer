@@ -1,5 +1,5 @@
 import { MousePointerClick } from 'lucide-react'
-import { lazy, useEffect, useReducer, useState } from 'react'
+import { lazy, useEffect, useReducer, useState, type ReactNode } from 'react'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
 import { findHeartPart, HEART_PART_IDS, type HeartPartId } from '../../data/anatomy/heart'
@@ -25,7 +25,7 @@ function initFromUrl() {
   return initialAnatomyState(partId, heartView)
 }
 
-export function HeartExplorer() {
+export function HeartExplorer({ moduleSwitch }: { moduleSwitch?: ReactNode }) {
   const [state, dispatch] = useReducer(anatomyReducer, undefined, initFromUrl)
   const [showLabels, setShowLabels] = useState(true)
   const [resetToken, setResetToken] = useState(0)
@@ -176,6 +176,7 @@ export function HeartExplorer() {
     return (
       <div className="chem chem--mobile anatomy">
         {announcer}
+        {moduleSwitch}
         <div className="chem-stage">
           {viewer}
           {tour}
@@ -199,7 +200,10 @@ export function HeartExplorer() {
   return (
     <div className="chem anatomy">
       {announcer}
-      <aside className="chem-side chem-side--left">{list}</aside>
+      <aside className="chem-side chem-side--left">
+        {moduleSwitch}
+        {list}
+      </aside>
       <div className="chem-stage physics-stage">
         {viewer}
         {tour}
