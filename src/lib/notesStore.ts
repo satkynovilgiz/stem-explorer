@@ -15,6 +15,17 @@ export const MAX_NOTES = 100
 export const MAX_NOTE_TITLE = 80
 export const MAX_NOTE_BODY = 5000
 
+/*
+ * Notebook backup size. Lengths above are UTF-16 code units (what a textarea's maxLength counts).
+ * After cleaning, every code unit costs at most 3 bytes in an exported file: BMP characters are 1–3
+ * bytes of UTF-8, an emoji is 4 bytes for 2 code units, JSON escapes (\n, \t, \", \\) are 2 bytes,
+ * and lone surrogates — which JSON.stringify would write as 6-byte \uXXXX escapes — are replaced
+ * with U+FFFD (3 bytes) by cleanText. So the text of a full notebook is at most
+ * 100 × (80 + 5000) × 3 ≈ 1.52 MB; settings, dates and indentation add well under 100 kB.
+ * The import limit leaves generous room above that while staying finite.
+ */
+export const MAX_NOTEBOOK_BACKUP_BYTES = 4_000_000
+
 export interface Note extends ShareState {
   id: string
   version: number
@@ -30,22 +41,32 @@ export type NoteResult<T = void> = { ok: true; value: T } | { ok: false; reason:
 
 const isIso = (v: unknown): v is string => typeof v === 'string' && !Number.isNaN(Date.parse(v))
 
+/** Replaces lone surrogates with U+FFFD, so text is valid Unicode and exports as plain UTF-8. */
+const wellFormed = (text: string) => text.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '\uFFFD')
+
+/** Caps at `max` UTF-16 code units without splitting an emoji (surrogate pair) in half. */
+export function capCodeUnits(text: string, max: number): string {
+  if (text.length <= max) return text
+  const cut = text.slice(0, max)
+  const last = cut.charCodeAt(cut.length - 1)
+  return last >= 0xd800 && last <= 0xdbff ? cut.slice(0, -1) : cut
+}
+
 /** Titles: one line, control characters removed, capped. Bodies: control characters except newlines and tabs removed, capped. */
 export function cleanNoteTitle(title: string): string {
-  return Array.from(title, (c) => (c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 ? ' ' : c))
+  const text = Array.from(wellFormed(title), (c) => (c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 ? ' ' : c))
     .join('')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, MAX_NOTE_TITLE)
+  return capCodeUnits(text, MAX_NOTE_TITLE).trim()
 }
 
 export function cleanNoteBody(body: string): string {
-  return Array.from(body.replace(/\r\n?/g, '\n'), (c) => {
+  const text = Array.from(wellFormed(body.replace(/\r\n?/g, '\n')), (c) => {
     const code = c.charCodeAt(0)
     return (code < 32 && c !== '\n' && c !== '\t') || code === 127 ? '' : c
-  })
-    .join('')
-    .slice(0, MAX_NOTE_BODY)
+  }).join('')
+  return capCodeUnits(text, MAX_NOTE_BODY)
 }
 
 export function parseNote(raw: unknown): Note | null {

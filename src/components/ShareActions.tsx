@@ -1,12 +1,13 @@
 import { Bookmark, Check, NotebookPen } from 'lucide-react'
 import { useId, useState } from 'react'
 import type { SubjectId } from '../data/subjects'
-import { canonicalize, defaultTitle } from '../lib/explorations'
+import { canonicalize, defaultTitle, subjectName, type ShareState } from '../lib/explorations'
 import { browserStorage, MAX_TITLE_LENGTH, renameExploration, saveExploration, type Exploration } from '../lib/explorationStore'
 import { storeFailureText } from '../lib/storeMessages'
 import { shareUrl } from '../lib/urlState'
 import { notifyLibraryChange } from '../lib/useExplorationLibrary'
 import { addNote } from '../lib/notesStore'
+import { readDraft, sessionStore } from '../lib/noteDrafts'
 import { notifyNotesChange } from '../lib/useNotebook'
 import { NoteEditor, type DraftValues } from '../features/notebook/NoteEditor'
 import { AppLink } from './AppLink'
@@ -37,6 +38,9 @@ export function ShareActions({ subject, params, restores }: Props) {
   const [noteOpen, setNoteOpen] = useState(false)
   const state = canonicalize(subject, params)
   const suggested = state ? defaultTitle(state) : ''
+  const draftScope = `new:${subject}`
+  // Re-read on each render while the editor is closed, so a draft left by a reload is mentioned.
+  const waitingDraft = !noteOpen ? readDraft(sessionStore(), draftScope) : null
 
   const save = () => {
     if (!state) return setMessage({ kind: 'error', text: storeFailureText('save', 'invalid') })
@@ -63,9 +67,10 @@ export function ShareActions({ subject, params, restores }: Props) {
     }
   }
 
-  const addToNotebook = (values: DraftValues): boolean => {
-    if (!state) return false
-    const result = addNote(browserStorage(), state, values)
+  const addToNotebook = (values: DraftValues, attachTo: ShareState | null): boolean => {
+    const target = attachTo ?? state
+    if (!target) return false
+    const result = addNote(browserStorage(), target, values)
     if (result.ok) {
       setNoteOpen(false)
       setMessage({ kind: 'note', title: result.value.title })
@@ -143,14 +148,21 @@ export function ShareActions({ subject, params, restores }: Props) {
       {noteOpen && state && (
         <div className="save-form">
           <NoteEditor
-            scope={`new:${subject}`}
+            scope={draftScope}
             initial={{ title: suggested, body: '' }}
+            current={state}
             saveLabel="Save note"
             onSave={addToNotebook}
             onCancel={() => setNoteOpen(false)}
           />
           <p className="muted small">The note keeps this view’s settings and lives in this browser only.</p>
         </div>
+      )}
+      {waitingDraft && !message && (
+        <p className="muted small note-waiting">
+          You have an unsaved {subjectName(subject)} note draft in this tab{waitingDraft.title ? <> (“{waitingDraft.title}”)</> : null}. Choose{' '}
+          <strong>Add note</strong> to restore or discard it.
+        </p>
       )}
       <p className={`save-status${message?.kind === 'error' ? ' status-error' : message?.kind === 'saved' || message?.kind === 'renamed' || message?.kind === 'note' ? ' status-success' : ''}`} role="status">
         {message?.kind === 'saved' && <>Saved on this browser as “{message.title}”. Find it on the Home page.</>}

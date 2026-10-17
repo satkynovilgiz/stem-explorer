@@ -4,6 +4,7 @@ import { AppLink } from '../../components/AppLink'
 import { SUBJECTS, type SubjectId } from '../../data/subjects'
 import { hrefFor, subjectName } from '../../lib/explorations'
 import { browserStorage } from '../../lib/explorationStore'
+import { readDraft, sessionStore } from '../../lib/noteDrafts'
 import { deleteNote, restoreNote, updateNote, type Note } from '../../lib/notesStore'
 import { storeFailureText } from '../../lib/storeMessages'
 import { notifyNotesChange, useNotebook } from '../../lib/useNotebook'
@@ -16,6 +17,7 @@ type Toast = { text: string; undo?: { note: Note; index: number } } | null
 
 function NoteCard({ note, onMessage }: { note: Note; onMessage: (t: Toast) => void }) {
   const [editing, setEditing] = useState(false)
+  const hasDraft = !editing && readDraft(sessionStore(), `edit:${note.id}`) !== null
   return (
     <li className={`note-card is-${note.subject}`}>
       {editing ? (
@@ -48,6 +50,7 @@ function NoteCard({ note, onMessage }: { note: Note; onMessage: (t: Toast) => vo
           </p>
           {/* Plain text: React escapes it, and line breaks are kept by CSS (white-space: pre-wrap). */}
           {note.body ? <p className="note-body">{note.body}</p> : <p className="muted small">No observations written.</p>}
+          {hasDraft && <p className="small note-waiting">Unsaved edits to this note are kept as a draft in this tab. Choose Edit to restore or discard them.</p>}
           <div className="share-row">
             <AppLink href={hrefFor(note)} className="button">
               <ExternalLink size={15} aria-hidden="true" />

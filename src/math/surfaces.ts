@@ -68,7 +68,7 @@ export interface SurfaceDef {
 
 /* ---------- Number formatting for formulas ---------- */
 
-const MINUS = '−'
+export const MINUS = '−'
 const EPS = 1e-9
 
 /** Fixed-decimal number with a real minus sign. */
@@ -86,19 +86,29 @@ const superscript = (n: number) =>
   `${n < 0 ? '⁻' : ''}${String(Math.abs(n)).split('').map((d) => SUPERSCRIPT[Number(d)]).join('')}`
 
 /**
- * Display text for a computed value: 3 decimals for ordinary sizes, scientific notation
- * ("1.25 × 10⁻⁴") for small non-zero values, so nothing non-zero is ever shown as 0.000.
+ * Display text for a computed value, never showing a non-zero value as 0:
+ * - |v| ≥ 0.1: three decimals ("1.118", "−0.500");
+ * - 0.001 ≤ |v| < 0.1: three significant figures ("0.00250");
+ * - smaller: scientific notation with three significant figures ("1.25 × 10⁻⁴").
  * `approx` is true when the text is a rounded form of the value.
  */
 export function formatCoefficient(value: number): { text: string; approx: boolean } {
   if (value === 0 || Object.is(value, -0)) return { text: '0', approx: false }
   const abs = Math.abs(value)
+  const sign = value < 0 ? MINUS : ''
   if (abs < 0.001) {
-    const exponent = Math.floor(Math.log10(abs))
-    const mantissa = value / 10 ** exponent
-    const m = mantissa.toFixed(2)
-    const text = `${m.startsWith('-') ? MINUS + m.slice(1) : m} × 10${superscript(exponent)}`
-    return { text, approx: Number(m) * 10 ** exponent !== value }
+    let exponent = Math.floor(Math.log10(abs))
+    let m = (abs / 10 ** exponent).toFixed(2)
+    // Rounding can carry the mantissa to 10.00 (e.g. 9.999 × 10⁻⁴); renormalise to 1.00 × 10⁻³.
+    if (Number(m) >= 10) {
+      exponent += 1
+      m = (abs / 10 ** exponent).toFixed(2)
+    }
+    return { text: `${sign}${m} × 10${superscript(exponent)}`, approx: Number(m) * 10 ** exponent !== abs }
+  }
+  if (abs < 0.1) {
+    const m = abs.toPrecision(3)
+    return { text: `${sign}${m}`, approx: Number(m) !== abs }
   }
   const text = num(value, 3)
   return { text, approx: Number(value.toFixed(3)) !== value }

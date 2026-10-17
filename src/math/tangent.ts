@@ -1,4 +1,4 @@
-import { num, type Params, type SurfaceDef, type SurfaceId } from './surfaces'
+import { formatCoefficient, MINUS, type Params, type SurfaceDef, type SurfaceId } from './surfaces'
 
 /*
  * Exact partial derivatives and tangent planes for the fixed surface library. Every surface is a
@@ -33,8 +33,12 @@ export const PARTIAL_FORMULAS: Record<SurfaceId, { fx: string; fy: string }> = {
   sine: { fx: '∂f/∂x = A·k·cos(k·x)·cos(k·y)', fy: '∂f/∂y = −A·k·sin(k·x)·sin(k·y)' },
 }
 
-/** Below this the gradient is treated as zero (floating-point residue, e.g. the saddle origin). */
-export const ZERO_GRADIENT = 1e-9
+/**
+ * Below this the gradient is treated as zero. Exact zeros of the sine surface (sin(k·π/k)) leave
+ * residue near 1e-16; genuine values within the parameter ranges are far larger (A = k = 0.05 at the
+ * origin gives fx = 0.0025), so the cut-off only removes floating-point noise.
+ */
+export const ZERO_GRADIENT = 1e-12
 
 export interface TangentPlane {
   x0: number
@@ -49,20 +53,36 @@ export interface TangentPlane {
   zeroGradient: boolean
   /** The plane z = z0 + fx·(x − x0) + fy·(y − y0). */
   evaluate: (x: number, y: number) => number
-  /** The plane's equation with the numbers substituted. */
+  /** The plane's equation with the numbers substituted ("z ≈ …" when any shown number is rounded). */
   equation: string
+  /** True when the displayed equation uses rounded numbers. */
+  approximate: boolean
 }
 
-const signed = (value: number, decimals = 2) => {
-  const text = num(value, decimals)
-  return text.startsWith('−') ? `− ${text.slice(1)}` : `+ ${text}`
-}
-
-/** "(x − 1.00)" or "(x + 0.50)"; a zero offset becomes just "x". */
-const shifted = (variable: string, at: number) => {
-  const text = num(at)
-  if (text === '0.00') return variable
-  return text.startsWith('−') ? `(${variable} + ${text.slice(1)})` : `(${variable} − ${text})`
+/**
+ * Display only: the analytic values above are never rounded. Numbers use formatCoefficient, so a
+ * small non-zero coefficient is written in scientific notation instead of collapsing to 0.
+ */
+export function tangentEquation(z0: number, fx: number, fy: number, x0: number, y0: number): { text: string; approximate: boolean } {
+  let approximate = false
+  const fmt = (v: number) => {
+    const f = formatCoefficient(v)
+    approximate ||= f.approx
+    // Exact values drop padding zeros ("1" rather than "1.000"); rounded ones keep their digits.
+    return f.approx || f.text.includes('×') ? f.text : f.text.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')
+  }
+  const signed = (v: number) => {
+    const text = fmt(v)
+    return text.startsWith(MINUS) ? `${MINUS} ${text.slice(1)}` : `+ ${text}`
+  }
+  /** "(x − 1.000)", "(x + 2.50 × 10⁻³)"; only an exactly zero offset becomes plain "x". */
+  const shifted = (variable: string, at: number) => {
+    if (at === 0) return variable
+    const text = fmt(at)
+    return text.startsWith(MINUS) ? `(${variable} + ${text.slice(1)})` : `(${variable} ${MINUS} ${text})`
+  }
+  const rhs = `${fmt(z0)} ${signed(fx)}·${shifted('x', x0)} ${signed(fy)}·${shifted('y', y0)}`
+  return { text: `z ${approximate ? '≈' : '='} ${rhs}`, approximate }
 }
 
 export function tangentPlane(surface: SurfaceDef, p: Params, x0: number, y0: number): TangentPlane {
@@ -73,7 +93,7 @@ export function tangentPlane(surface: SurfaceDef, p: Params, x0: number, y0: num
   const fy = Math.abs(rawFy) < ZERO_GRADIENT ? 0 : rawFy
   const gradientMagnitude = Math.hypot(fx, fy)
   const zeroGradient = gradientMagnitude < ZERO_GRADIENT
-  const equation = `z = ${num(z0, 3)} ${signed(fx)}·${shifted('x', x0)} ${signed(fy)}·${shifted('y', y0)}`
+  const { text: equation, approximate } = tangentEquation(z0, fx, fy, x0, y0)
   return {
     x0,
     y0,
@@ -85,5 +105,6 @@ export function tangentPlane(surface: SurfaceDef, p: Params, x0: number, y0: num
     zeroGradient,
     evaluate: (x, y) => z0 + fx * (x - x0) + fy * (y - y0),
     equation,
+    approximate,
   }
 }

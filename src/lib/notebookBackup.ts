@@ -1,7 +1,7 @@
-import { BACKUP_FORMAT, MAX_BACKUP_BYTES } from './backup'
+import { BACKUP_FORMAT } from './backup'
 import { canonicalize, canonicalKey, type ShareState } from './explorations'
 import type { KeyValueStore, StoreFailure } from './explorationStore'
-import { cleanNoteBody, cleanNoteTitle, loadNotes, MAX_NOTES, newNoteId, NOTES_VERSION, writeNotes, type Note } from './notesStore'
+import { cleanNoteBody, cleanNoteTitle, loadNotes, MAX_NOTEBOOK_BACKUP_BYTES, MAX_NOTES, newNoteId, NOTES_VERSION, writeNotes, type Note } from './notesStore'
 
 /*
  * Notebook backups: their own versioned format, separate from saved-exploration backups (each
@@ -27,6 +27,9 @@ export function buildNotebookBackup(notes: readonly Note[], now = new Date()): N
     notes: notes.map((n) => ({ title: n.title, body: n.body, subject: n.subject, params: { ...n.params }, createdAt: n.createdAt, updatedAt: n.updatedAt })),
   }
 }
+
+/** The exact text written to an exported file. */
+export const notebookFileText = (notes: readonly Note[], now = new Date()) => JSON.stringify(buildNotebookBackup(notes, now), null, 2)
 
 export const notebookFileName = (now = new Date()) => `stem-explorer-notebook-${now.toISOString().slice(0, 10)}.json`
 
@@ -58,7 +61,7 @@ const isIso = (v: unknown): v is string => typeof v === 'string' && !Number.isNa
 const noteKey = (title: string, body: string, state: ShareState) => JSON.stringify([title, body, canonicalKey(state)])
 
 export function planNotebookImport(text: string, existing: readonly Note[], max = MAX_NOTES): { ok: true; plan: NotebookPlan } | { ok: false; error: NotebookImportError } {
-  if (new TextEncoder().encode(text).length > MAX_BACKUP_BYTES) return { ok: false, error: { kind: 'too-large' } }
+  if (new TextEncoder().encode(text).length > MAX_NOTEBOOK_BACKUP_BYTES) return { ok: false, error: { kind: 'too-large' } }
   let data: unknown
   try {
     data = JSON.parse(text)

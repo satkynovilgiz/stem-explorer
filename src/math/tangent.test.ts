@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultParams, getSurface, SURFACES } from './surfaces'
+import { defaultParams, formatCoefficient, getSurface, SURFACES } from './surfaces'
 import { partials, tangentPlane } from './tangent'
 
 /** Central finite difference, as an independent check on the hand-derived partials. */
@@ -53,7 +53,7 @@ describe('tangent planes', () => {
   it('saddle origin: zero gradient, horizontal plane z = 0', () => {
     const t = tangentPlane(getSurface('saddle'), { a: 0.5, b: 0.5 }, 0, 0)
     expect([t.fx, t.fy, t.zeroGradient, t.gradientDirectionDeg]).toEqual([0, 0, true, null])
-    expect(t.equation).toBe('z = 0.000 + 0.00·x + 0.00·y')
+    expect(t.equation).toBe('z = 0 + 0·x + 0·y')
     expect(t.evaluate(1.5, -1)).toBe(0)
   })
 
@@ -74,6 +74,51 @@ describe('tangent planes', () => {
 
   it('writes the substituted equation', () => {
     const t = tangentPlane(getSurface('saddle'), { a: 0.5, b: 0.5 }, 1, -1)
-    expect(t.equation).toBe('z = 0.000 + 1.00·(x − 1.00) + 1.00·(y + 1.00)')
+    expect(t.equation).toBe('z = 0 + 1·(x − 1) + 1·(y + 1)')
+    expect(t.approximate).toBe(false)
+  })
+})
+
+describe('tangent-plane display formatting (analytic values are never rounded)', () => {
+  it('sine A = 0.05, k = 0.05 at (0, 0): fx = 0.0025 is shown, not 0', () => {
+    const t = tangentPlane(getSurface('sine'), { A: 0.05, k: 0.05 }, 0, 0)
+    expect(t.fx).toBe(0.05 * 0.05)
+    expect(t.zeroGradient).toBe(false)
+    // 0.05 × 0.05 is 0.0025000000000000005 in binary floating point, so the text is a rounding.
+    expect(t.equation).toBe('z ≈ 0 + 0.00250·x + 0·y')
+    expect(formatCoefficient(t.fx).text).toBe('0.00250')
+  })
+
+  it('small negative coefficients keep their sign and digits', () => {
+    const t = tangentPlane(getSurface('sine'), { A: -0.05, k: 0.05 }, 0, 0)
+    expect(t.fx).toBeCloseTo(-0.0025, 15)
+    expect(t.equation).toBe('z ≈ 0 − 0.00250·x + 0·y')
+    expect(formatCoefficient(-0.0004321).text).toBe('−4.32 × 10⁻⁴')
+    expect(formatCoefficient(-0.0004321).approx).toBe(true)
+  })
+
+  it('tiny coefficients use scientific notation and mark the equation approximate', () => {
+    const t = tangentPlane(getSurface('plane'), { a: 0.0001234, b: -0.00005, c: 0 }, 1, 1)
+    expect(t.equation).toBe('z ≈ 7.34 × 10⁻⁵ + 1.23 × 10⁻⁴·(x − 1) − 5.00 × 10⁻⁵·(y − 1)')
+    expect(t.approximate).toBe(true)
+    expect(t.fx).toBe(0.0001234)
+  })
+
+  it('small coordinate offsets are written out instead of being dropped', () => {
+    const t = tangentPlane(getSurface('paraboloid'), { a: 0.5, b: 0.5 }, 0.004, -0.003)
+    expect(t.equation).toBe('z ≈ 1.25 × 10⁻⁵ + 0.004·(x − 0.004) − 0.003·(y + 0.003)')
+    expect(t.evaluate(0.004, -0.003)).toBeCloseTo(0.5 * 0.004 ** 2 + 0.5 * 0.003 ** 2, 15)
+  })
+
+  it('rounded ordinary values are marked approximate', () => {
+    const t = tangentPlane(getSurface('sine'), { A: 1, k: 1 }, 0.3, 0.2)
+    expect(t.approximate).toBe(true)
+    expect(t.equation.startsWith('z ≈ ')).toBe(true)
+  })
+
+  it('mantissa rounding renormalises (9.999 × 10⁻⁴ → 1.00 × 10⁻³)', () => {
+    expect(formatCoefficient(0.0009999).text).toBe('1.00 × 10⁻³')
+    expect(formatCoefficient(0.05).text).toBe('0.0500')
+    expect(formatCoefficient(0.05).approx).toBe(false)
   })
 })

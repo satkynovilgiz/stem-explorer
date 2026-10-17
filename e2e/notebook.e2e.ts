@@ -53,7 +53,7 @@ test('unsaved changes: Cancel asks first, and a draft left behind is offered bac
   await waitForViewport(page)
   await page.getByRole('button', { name: 'Add note' }).click()
   await page.getByRole('textbox', { name: 'Observations' }).fill('Cis face near the ER')
-  await expect(page.locator('.note-editor')).toContainText('Unsaved changes.')
+  await expect(page.locator('.note-editor')).toContainText('Unsaved changes, kept as a draft in this tab.')
   await page.locator('.note-editor').getByRole('button', { name: 'Cancel' }).click()
   await expect(page.getByRole('group', { name: 'Discard unsaved changes?' })).toBeVisible()
   await page.getByRole('button', { name: 'Keep editing' }).click()
@@ -62,11 +62,113 @@ test('unsaved changes: Cancel asks first, and a draft left behind is offered bac
   // Leave the explorer without saving, then come back.
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Physics' }).click()
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Biology' }).click()
+  await expect(page.locator('.note-waiting')).toContainText('You have an unsaved Biology note draft')
   await page.getByRole('button', { name: 'Add note' }).click()
-  await expect(page.locator('.note-restore')).toContainText('unsaved note from earlier')
-  await page.locator('.note-restore').getByRole('button', { name: 'Restore it' }).click()
+  await expect(page.locator('.note-restore')).toContainText('unsaved note draft')
+  await page.locator('.note-restore').getByRole('button', { name: 'Restore draft' }).click()
   await expect(page.getByRole('textbox', { name: 'Observations' })).toHaveValue('Cis face near the ER')
   expect(await storedNotes(page)).toEqual([])
+})
+
+const drafts = (page: Page) =>
+  page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith('stem-explorer:note-draft:')))
+
+test('drafts survive a reload, are kept apart from saved notes, and Save clears them', async ({ page }) => {
+  await page.goto('/?molecule=water#/chemistry')
+  await waitForViewport(page)
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await page.getByRole('textbox', { name: 'Title' }).fill('Water angle')
+  await page.getByRole('textbox', { name: 'Observations' }).fill('About 104.5°')
+  await expect(page.locator('.note-draft-status')).toContainText('kept as a draft in this tab')
+  // No cleanup step runs before this reload: the draft must already be stored.
+  await page.reload()
+  await waitForViewport(page)
+  expect(await storedNotes(page)).toEqual([])
+  await expect(page.locator('.note-waiting')).toContainText('“Water angle”')
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await expect(page.locator('.note-restore')).toContainText('started in Water · ball and stick')
+  // Fields stay hidden until you choose, so the earlier draft can’t be overwritten by accident.
+  await expect(page.getByRole('textbox', { name: 'Observations' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Restore draft' }).click()
+  await expect(page.getByRole('textbox', { name: 'Observations' })).toHaveValue('About 104.5°')
+  await page.getByRole('button', { name: 'Save note' }).click()
+  await expect(page.locator('.save-status')).toContainText('Note “Water angle” saved.')
+  expect(await drafts(page)).toEqual([])
+  await page.reload()
+  await expect(page.locator('.note-waiting')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await expect(page.locator('.note-restore')).toHaveCount(0)
+})
+
+test('a Water draft restored while viewing Benzene stays attached to Water unless you choose otherwise', async ({ page }) => {
+  await page.goto('/?molecule=water#/chemistry')
+  await waitForViewport(page)
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await page.getByRole('textbox', { name: 'Title' }).fill('Bent shape')
+  await page.goto('/?molecule=benzene#/chemistry')
+  await waitForViewport(page)
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await expect(page.locator('.note-restore')).toContainText('started in Water')
+  await page.getByRole('button', { name: 'Restore draft' }).click()
+  const attach = page.locator('.note-attach')
+  await expect(attach).toContainText('Attached to: Water · ball and stick')
+  await expect(attach).toContainText('started in a different view')
+  await expect(attach.getByRole('link', { name: 'Open that view' })).toHaveAttribute('href', /molecule=water/)
+  await page.getByRole('button', { name: 'Save note' }).click()
+  await expect(page.locator('.save-status')).toContainText('Note “Bent shape” saved.')
+  expect((await storedNotes(page))[0].params).toMatchObject({ molecule: 'water' })
+
+  // Choosing the view on screen is an explicit action.
+  await page.goto('/?molecule=water#/chemistry')
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await page.getByRole('textbox', { name: 'Title' }).fill('Actually about rings')
+  await page.goto('/?molecule=benzene#/chemistry')
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await page.getByRole('button', { name: 'Restore draft' }).click()
+  await page.getByRole('button', { name: /^Attach to Benzene/ }).click()
+  await expect(page.locator('.note-attach')).not.toContainText('different view')
+  await page.getByRole('button', { name: 'Save note' }).click()
+  expect((await storedNotes(page))[0]).toMatchObject({ title: 'Actually about rings', params: { molecule: 'benzene' } })
+})
+
+test('explicit discard removes the draft; edits to saved notes have their own drafts', async ({ page }) => {
+  await page.goto('/?surface=saddle#/mathematics')
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await page.getByRole('textbox', { name: 'Observations' }).fill('throwaway')
+  await page.locator('.note-editor').getByRole('button', { name: 'Cancel' }).click()
+  await page.getByRole('button', { name: 'Discard', exact: true }).click()
+  expect(await drafts(page)).toEqual([])
+  await page.reload()
+  await expect(page.locator('.note-waiting')).toHaveCount(0)
+
+  await addNote(page, 'Saddle', 'level at 0')
+  await page.goto('/#/notebook')
+  await cards(page).first().getByRole('button', { name: 'Edit' }).click()
+  await page.getByRole('textbox', { name: 'Observations' }).fill('level at 0, rising along x')
+  await page.reload()
+  await expect(cards(page).first().locator('.note-body')).toHaveText('level at 0')
+  await expect(cards(page).first()).toContainText('Unsaved edits to this note are kept as a draft')
+  await cards(page).first().getByRole('button', { name: 'Edit' }).click()
+  await page.getByRole('button', { name: 'Discard draft' }).click()
+  await expect(page.getByRole('textbox', { name: 'Observations' })).toHaveValue('level at 0')
+  expect(await drafts(page)).toEqual([])
+})
+
+test('explains when a draft cannot be kept', async ({ page }) => {
+  await page.addInitScript(() => {
+    const real = Storage.prototype.setItem
+    Storage.prototype.setItem = function (this: Storage, k: string, v: string) {
+      if (this === window.sessionStorage && k.startsWith('stem-explorer:note-draft:')) throw new DOMException('full', 'QuotaExceededError')
+      return real.call(this, k, v)
+    }
+  })
+  await page.goto('/?molecule=water#/chemistry')
+  await page.getByRole('button', { name: 'Add note' }).click()
+  await page.getByRole('textbox', { name: 'Observations' }).fill('x')
+  await expect(page.getByRole('alert')).toContainText('This draft can’t be kept if the page reloads: this browser reports its storage is full')
+  // Saving still works: drafts and notes are stored separately.
+  await page.getByRole('button', { name: 'Save note' }).click()
+  await expect(page.locator('.save-status')).toContainText('saved.')
 })
 
 test('filter by subject; notes render text safely; tour state is never stored', async ({ page }) => {
@@ -133,6 +235,31 @@ test('notebook backup: export, import round trip, and the formats stay apart', a
   await page.goto('/')
   await page.locator('section', { has: page.getByRole('heading', { name: 'Saved explorations' }) }).locator('input[type="file"]').setInputFiles({ name: 'n.json', mimeType: 'application/json', buffer: Buffer.from(text) })
   await expect(page.locator('.home-toast')).toContainText('That is a notebook backup')
+})
+
+test('a full notebook of maximum-length CJK notes exports and imports into an empty notebook', async ({ page }) => {
+  await page.goto('/#/notebook')
+  // Build 100 maximum-length notes directly in storage (typing 500 000 characters would be slow).
+  await page.evaluate(() => {
+    const body = '细胞核与线粒体'.repeat(800).slice(0, 5000)
+    const now = new Date().toISOString()
+    const notes = Array.from({ length: 100 }, (_, i) => ({
+      id: `nfull-${i}-abcdef`, version: 1, title: `${i} ${'细胞'.repeat(40)}`.slice(0, 80), body,
+      subject: 'chemistry', params: { molecule: 'water', view: 'ball-and-stick' }, createdAt: now, updatedAt: now,
+    }))
+    localStorage.setItem('stem-explorer:notes', JSON.stringify(notes))
+  })
+  await page.reload()
+  await expect(cards(page)).toHaveCount(100)
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export notebook' }).click()])
+  const buffer = await readFile((await download.path())!)
+  expect(buffer.byteLength).toBeGreaterThan(1_000_000) // larger than the old 1 MB import limit
+  await page.evaluate(() => localStorage.removeItem('stem-explorer:notes'))
+  await page.reload()
+  await page.locator('.notebook input[type="file"]').setInputFiles({ name: 'full.json', mimeType: 'application/json', buffer })
+  await page.getByRole('button', { name: 'Import 100 notes' }).click()
+  await expect(toast(page)).toContainText('Imported 100 notes.')
+  await expect(cards(page)).toHaveCount(100)
 })
 
 test('a note added in one tab appears in another tab’s notebook', async ({ context }) => {

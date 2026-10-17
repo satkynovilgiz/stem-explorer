@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { BACKUP_FORMAT, planImport } from './backup'
 import type { KeyValueStore } from './explorationStore'
-import { applyNotebookImport, buildNotebookBackup, NOTEBOOK_FORMAT, planNotebookImport } from './notebookBackup'
-import { addNote, loadNotes, MAX_NOTES, NOTES_KEY } from './notesStore'
+import { applyNotebookImport, buildNotebookBackup, NOTEBOOK_FORMAT, notebookFileText, planNotebookImport } from './notebookBackup'
+import { addNote, capCodeUnits, cleanNoteBody, cleanNoteTitle, loadNotes, MAX_NOTE_BODY, MAX_NOTE_TITLE, MAX_NOTEBOOK_BACKUP_BYTES, MAX_NOTES, NOTES_KEY } from './notesStore'
 
 function memoryStore(): KeyValueStore & { data: Record<string, string> } {
   const data: Record<string, string> = {}
@@ -71,5 +71,67 @@ describe('notebook backups', () => {
     }
     expect(applyNotebookImport(fresh, text, preview.plan.toImport)).toMatchObject({ ok: false, reason: 'quota' })
     expect(s.data[NOTES_KEY]).toBe(before)
+  })
+})
+
+describe('notebook size limits: every valid export can be imported into an empty notebook', () => {
+  /** Fills exactly MAX_NOTE_BODY / MAX_NOTE_TITLE code units with a repeating sample. */
+  const fill = (sample: string, max: number) => capCodeUnits(sample.repeat(Math.ceil(max / sample.length) + 1), max)
+  const SAMPLES: Record<string, string> = {
+    ascii: 'abc 123 ',
+    cyrillic: 'Клетка и ядро ',
+    cjk: '细胞核与线粒体',
+    emoji: '🧪🫀🧬🌱',
+    escaped: '"\\\t\n</script>&',
+  }
+  const state = { subject: 'mathematics' as const, params: { surface: 'sine', amp: '-1.95', k: '2.95', slice: 'x', at: '-2.10', px: '1.23', py: '-0.45' } }
+
+  for (const [name, sample] of Object.entries(SAMPLES)) {
+    it(`${MAX_NOTES} maximum-length ${name} notes`, () => {
+      const store = memoryStore()
+      for (let i = 0; i < MAX_NOTES; i++) {
+        const r = addNote(store, i % 2 ? water : state, { title: fill(`${i} ${sample}`, MAX_NOTE_TITLE), body: fill(sample, MAX_NOTE_BODY) })
+        expect(r.ok).toBe(true)
+      }
+      const full = notes(store)
+      expect(full).toHaveLength(MAX_NOTES)
+      expect(full.every((n) => n.body.length <= MAX_NOTE_BODY && n.title.length <= MAX_NOTE_TITLE)).toBe(true)
+      const text = notebookFileText(full)
+      expect(new TextEncoder().encode(text).length).toBeLessThanOrEqual(MAX_NOTEBOOK_BACKUP_BYTES)
+      const plan = planNotebookImport(text, [])
+      if (!plan.ok) throw new Error(`plan failed: ${plan.error.kind}`)
+      expect(plan.plan.toImport).toHaveLength(MAX_NOTES)
+      expect(plan.plan.invalid).toEqual([])
+      const empty = memoryStore()
+      expect(applyNotebookImport(empty, text, plan.plan.toImport)).toEqual({ ok: true, value: { imported: MAX_NOTES } })
+      expect(notes(empty).map((n) => [n.title, n.body])).toEqual(full.map((n) => [n.title, n.body]))
+    })
+  }
+
+  it('the worst case per code unit (3-byte characters) still fits, with headroom', () => {
+    const notesFull = Array.from({ length: MAX_NOTES }, (_, i) => ({
+      ...state,
+      id: `n-worst-${i}`,
+      version: 1,
+      title: fill('￿', MAX_NOTE_TITLE),
+      body: fill('￿', MAX_NOTE_BODY),
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    }))
+    const bytes = new TextEncoder().encode(notebookFileText(notesFull)).length
+    expect(bytes).toBeGreaterThan(1_500_000)
+    expect(bytes).toBeLessThan(MAX_NOTEBOOK_BACKUP_BYTES / 2)
+  })
+
+  it('cleaning never splits an emoji and replaces lone surrogates (which JSON would escape to 6 bytes)', () => {
+    const body = cleanNoteBody('a'.repeat(MAX_NOTE_BODY - 1) + '🧪')
+    expect(body).toBe('a'.repeat(MAX_NOTE_BODY - 1))
+    expect(cleanNoteBody('x\uD800y\uDC00')).toBe('x�y�')
+    expect(cleanNoteTitle('🧬'.repeat(60))).toHaveLength(80)
+    expect(JSON.stringify(cleanNoteBody('\uD83E'))).toBe('"�"')
+  })
+
+  it('keeps a finite input limit', () => {
+    expect(planNotebookImport(' '.repeat(MAX_NOTEBOOK_BACKUP_BYTES + 1), [])).toEqual({ ok: false, error: { kind: 'too-large' } })
   })
 })

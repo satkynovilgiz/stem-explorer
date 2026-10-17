@@ -19,7 +19,7 @@ test('shows partial derivatives, gradient and the substituted tangent plane at t
   await expect(value(page, '∂f/∂x = 2a·x')).toHaveText('1.000')
   await expect(value(page, '∂f/∂y = 2b·y')).toHaveText('−0.500')
   await expect(value(page, 'Steepest slope')).toHaveText('1.118')
-  await expect(slope(page).locator('.tangent-equation')).toHaveText('z = 0.625 + 1.00·(x − 1.00) − 0.50·(y + 0.50)')
+  await expect(slope(page).locator('.tangent-equation')).toHaveText('z = 0.625 + 1·(x − 1) − 0.5·(y + 0.5)')
   await expect(slope(page)).toContainText('It is not the surface normal')
   // Changing a parameter updates the derivatives.
   await page.getByRole('slider', { name: 'Curvature in x slider' }).fill('1')
@@ -31,7 +31,7 @@ test('the saddle origin has zero gradient and a horizontal tangent plane, with a
   await waitForViewport(page)
   await setPoint(page, '0', '0')
   await expect(value(page, 'Direction of ∇f')).toHaveText('none (∇f = 0)')
-  await expect(slope(page).locator('.tangent-equation')).toHaveText('z = 0.000 + 0.00·x + 0.00·y')
+  await expect(slope(page).locator('.tangent-equation')).toHaveText('z = 0 + 0·x + 0·y')
   await expect(slope(page).locator('.inline-note')).toContainText('rate of change is zero in every direction')
 })
 
@@ -52,4 +52,13 @@ test('overlays are optional and keep point inspection and cross-sections working
   expect(new URL(page.url()).search).not.toMatch(/tangent|gradient/)
   await page.getByRole('button', { name: 'Clear point' }).click()
   await expect(slope(page)).toHaveCount(0)
+})
+
+test('small sine coefficients are shown, not rounded to zero, and the equation is marked approximate', async ({ page }) => {
+  await page.goto('/?surface=sine&amp=0.05&k=0.05#/mathematics')
+  await waitForViewport(page)
+  await setPoint(page, '0', '0')
+  await expect(value(page, '∂f/∂x = A·k·cos(k·x)·cos(k·y)')).toHaveText('0.00250')
+  await expect(slope(page).locator('.tangent-equation')).toHaveText('z ≈ 0 + 0.00250·x + 0·y')
+  await expect(slope(page)).toContainText('rounded for display')
 })

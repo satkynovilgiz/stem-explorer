@@ -192,6 +192,9 @@ export function LocalSlope({
         <br />
         <span className="muted">At P:</span> <span className="tangent-equation">{t.equation}</span>
       </p>
+      {t.approximate && (
+        <p className="muted small">≈: the numbers in this equation are rounded for display. The plane drawn and every readout use the exact values.</p>
+      )}
       {t.zeroGradient ? (
         <p className="inline-note">
           ∇f = 0 here: the tangent plane is horizontal, and the rate of change is zero in every direction. This can be a maximum, a

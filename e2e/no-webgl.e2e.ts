@@ -142,7 +142,7 @@ test('tangent plane equation and gradient values work without WebGL; overlay tog
     await f.fill(v)
     await f.press('Enter')
   }
-  await expect(page.locator('.tangent-equation')).toHaveText('z = 0.000 + 1.00·x + 0.00·y')
+  await expect(page.locator('.tangent-equation')).toHaveText('z = 0 + 1·x + 0·y')
   await expect(page.getByRole('button', { name: 'Tangent plane' })).toHaveCount(0)
 })
 

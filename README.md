@@ -630,6 +630,14 @@ When a point is inspected, **Local slope at P** shows:
 - the tangent plane z = f(x₀, y₀) + fₓ(x − x₀) + fᵧ(y − y₀), with the numbers substituted;
 - a sentence on steepest increase.
 
+**Display formatting** is separate from the analytic values, which are never rounded. Numbers with
+|v| ≥ 0.1 show three decimals, 0.001 ≤ |v| < 0.1 three significant figures (0.00250), and smaller
+values scientific notation (1.23 × 10⁻⁴), so a small non-zero coefficient or offset is never shown
+as 0. Exact values drop padding zeros (`z = 0 + 1·(x − 1) + 1·(y + 1)`). When any number in the
+equation is rounded it reads `z ≈ …`, with a line saying the plane and readouts use exact values.
+Example: sine, A = k = 0.05, at (0, 0) gives fx = 0.0025 and `z ≈ 0 + 0.00250·x + 0·y` (≈ because
+0.05 × 0.05 is not exactly 0.0025 in binary floating point).
+
 The derivatives are derived by hand for each fixed surface (`src/math/tangent.ts`) and never read
 from the mesh: plane (a, b), paraboloid (2ax, 2by), saddle (2ax, −2by), and sine
 (Ak·cos kx·cos ky, −Ak·sin kx·sin ky). Unit tests check them against finite differences, and check
@@ -637,7 +645,7 @@ that each plane passes through the point and agrees with the surface to first or
 
 - **Zero gradient** (e.g. the saddle origin, or a flat plane): the panel says the tangent plane is
   horizontal, that the rate of change is zero in every direction, and that such a point can be a
-  maximum, a minimum or a saddle point. Floating-point residue below 10⁻⁹ is shown as 0.
+  maximum, a minimum or a saddle point. Floating-point residue below 10⁻¹² (such as sin(π) ≈ 1.2 × 10⁻¹⁶) is treated as 0.
 - **Gradient vs normal.** ∇f is two-dimensional, in the x–y input plane, and the scene draws it
   flat on the floor under P. The panel states that it is not the surface normal, which is
   (−fₓ, −fᵧ, 1).
@@ -829,17 +837,27 @@ in this browser only and can be lost when site data is cleared.
 
 - **Unsaved changes, without browser dialogs:**
   - Cancel with edits asks *Discard your unsaved changes?* (Discard or Keep editing).
-  - If the editor closes without saving, for example when you open another subject, the draft is
-    kept in `sessionStorage` for this session, and the next editor for that subject or note offers
-    to restore it.
+  - Every edit is written straight away to this tab's `sessionStorage`
+    (`stem-explorer:note-draft:new:<subject>` or `…:edit:<note id>`), separately from saved notes.
+    A reload, leaving the explorer or opening another subject keeps it; the explorer (or the note
+    card) then mentions the draft, and the next editor offers **Restore draft** or **Discard draft**
+    before showing the fields, so the earlier draft can't be overwritten by accident. Save and an
+    explicit Discard remove it. Drafts last as long as the tab's session.
+  - A new-note draft stores the exploration it was started in. The editor always shows
+    *Attached to: …*; if that is not the view on screen (a Water draft restored while viewing
+    Benzene), it says so, links to that view and offers *Attach to Benzene instead*. Nothing is
+    reattached silently.
+  - If a draft can't be stored (session storage blocked or full), the editor says that the draft
+    won't survive a reload and to save the note.
 - **Storage** (`stem-explorer:notes`, a JSON array of version-1 entries). It follows the same rules
   as saved explorations:
   - reads never write;
   - a damaged list is reported and left untouched (new notes are paused);
   - entries from newer versions are preserved;
   - quota and other write failures are reported, and the editor stays open with the text;
-  - limits: 100 notes, 80-character titles, 5,000-character observations;
-  - control characters are removed except line breaks and tabs.
+  - limits: 100 notes, 80-character titles, 5,000-character observations (UTF-16 code units, as a
+    textarea counts them); the cap never splits an emoji;
+  - control characters are removed except line breaks and tabs, and lone surrogates become U+FFFD.
 
   Text is always rendered as text, with line breaks kept by CSS. Imported markup such as
   `<img onerror>` shows literally and never runs. Other tabs update through the `storage` event
@@ -847,10 +865,17 @@ in this browser only and can be lost when site data is cleared.
 - **Backup.** **Export notebook** downloads `stem-explorer-notebook-YYYY-MM-DD.json` (`format:
   "stem-explorer.notebook"`, `version: 1`, `exportedAt`, `notes` with title, body, subject, params
   and times; no IDs). **Import notebook** works like saved-exploration import:
-  - merge-only, under 1 MB, with a preview of new, duplicate (same title, text and exploration),
+  - merge-only, under 4 MB, with a preview of new, duplicate (same title, text and exploration),
     invalid and over-limit notes;
   - **Import N notes** re-reads storage, checks the plan entry by entry, and writes once;
   - a failed write changes nothing.
+
+  **Size limits are compatible.** After cleaning, each code unit costs at most 3 bytes in a file
+  (CJK and other BMP text 3, emoji 4 bytes per 2 code units, JSON escapes 2), so a full notebook's
+  text is at most 100 × 5,080 × 3 ≈ 1.52 MB. The 4 MB import limit leaves room for settings and
+  formatting while staying finite. Tests export 100 maximum-length notes of ASCII, Cyrillic, CJK,
+  emoji and escape-heavy text and import each into an empty notebook. (The earlier 1 MB limit
+  rejected valid exports of multibyte text.) Saved-exploration backups keep their 1 MB limit.
 
   The two backup formats are kept apart. Each import recognizes the other's file and says where
   to import it, so existing saved-exploration backups keep working unchanged.
@@ -1077,10 +1102,11 @@ How the URL is kept up to date:
 | `src/data/chemistry/periodicTable.test.ts` | 118 elements with contiguous atomic numbers and unique symbols and names; positions of reference elements in every period and both f rows; no two elements in one cell; block counts (s 14, p 36, d 38, f 30) and helium in s; f rows agreeing with PubChem's categories; search by number, symbol (listed first) and name prefix; molecules containing an element. |
 | `src/physics/spring.test.ts` | Known period, frequency and ω; T scaling with m and k and independence from amplitude; start at rest, quarter- and half-period positions and velocities; energy conservation and F = ma at every instant; zero displacement; bad times; results independent of playback rate; input normalization. |
 | `src/features/physics/spring/springState.test.ts` | No auto-launch; launch, pause, resume, end of window and reset; edits returning to t = 0; scrubbing pausing; the zero-displacement announcement. |
-| `src/math/tangent.test.ts` | Hand-derived partials against known values and against finite differences for every surface; tangent planes through the point with first-order agreement; the plane surface as its own tangent plane; the saddle origin (zero gradient, z = 0); flat-plane and sine residue degenerate cases; gradient magnitude and direction; the substituted equation. |
+| `src/math/tangent.test.ts` | Hand-derived partials against known values and against finite differences for every surface; tangent planes through the point with first-order agreement; the plane surface as its own tangent plane; the saddle origin (zero gradient, z = 0); flat-plane and sine residue degenerate cases; gradient magnitude and direction; the substituted equation; display formatting that never shows small non-zero coefficients or offsets as 0 (A = k = 0.05 sine case, small negatives, scientific notation, ≈ marking). |
 | `src/data/anatomy/vessels.test.ts` | Vessel facts cover exactly the model's vessels, name them by direction (artery = away, vein = toward, including the reversed pulmonary pattern), agree with the heart entries' oxygenation and connections, and presets pair different vessels. |
 | `src/lib/notesStore.test.ts` | Add, edit, delete and undo with the canonical snapshot; empty titles and invalid explorations refused; length caps and control characters; the note limit; unavailable, damaged and quota states leaving data unchanged; newer-version entries preserved. |
-| `src/lib/notebookBackup.test.ts` | Export/import round trip without IDs; the notebook and saved-exploration formats recognising each other; duplicates, invalid notes and the limit; text kept as text; nothing written when the plan changed or the write fails. |
+| `src/lib/notebookBackup.test.ts` | Export/import round trip without IDs; the notebook and saved-exploration formats recognising each other; duplicates, invalid notes and the limit; text kept as text; nothing written when the plan changed or the write fails; 100 maximum-length notes of ASCII, Cyrillic, CJK, emoji and escaped text exported and imported into an empty notebook; emoji never split, lone surrogates replaced; a finite input limit. |
+| `src/lib/noteDrafts.test.ts` | Draft round trip with its exploration snapshot, never touching saved notes; scopes kept apart; older drafts without a snapshot; malformed drafts and unknown versions ignored; quota, refused and unavailable storage reported. |
 | `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
@@ -1175,8 +1201,10 @@ the production build:
   and isolation, leaving with A selected and links unchanged; Whole/Cutaway; the tour ending and
   blocking the comparison.
 - `notebook.e2e.ts`: adding a note with an explicit save, opening the notebook, reopening the
-  exploration, editing, deleting and undoing; unsaved-change handling (Cancel confirmation and a
-  restored draft after leaving); subject filter, safe text rendering and no tour state stored;
+  exploration, editing, deleting and undoing; unsaved-change handling (Cancel confirmation, a
+  restored draft after leaving, drafts surviving a reload, a Water draft restored over Benzene
+  staying attached to Water, explicit discard, edit drafts, and the message when a draft can't be
+  stored); a full 100-note CJK notebook exported and imported; subject filter, safe text rendering and no tour state stored;
   empty, damaged and quota states; notebook export/import and cross-format messages; a second tab
   updating.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared

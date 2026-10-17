@@ -1,17 +1,16 @@
 import { Download, Upload } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
-import { MAX_BACKUP_BYTES } from '../../lib/backup'
 import { subjectName } from '../../lib/explorations'
 import { browserStorage } from '../../lib/explorationStore'
 import {
   applyNotebookImport,
-  buildNotebookBackup,
   notebookFileName,
+  notebookFileText,
   planNotebookImport,
   type NotebookImportError,
   type NotebookPlan,
 } from '../../lib/notebookBackup'
-import { MAX_NOTES, type Note } from '../../lib/notesStore'
+import { MAX_NOTEBOOK_BACKUP_BYTES, MAX_NOTES, type Note } from '../../lib/notesStore'
 import { storeFailureText } from '../../lib/storeMessages'
 import { notifyNotesChange } from '../../lib/useNotebook'
 
@@ -20,7 +19,7 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 function errorText(e: NotebookImportError): string {
   switch (e.kind) {
     case 'too-large':
-      return 'That file is larger than 1 MB, so it was not read.'
+      return `That file is larger than ${MAX_NOTEBOOK_BACKUP_BYTES / 1_000_000} MB, so it was not read. A full notebook export is well under this size.`
     case 'not-json':
       return 'That file is not valid JSON. Choose a notebook backup exported from STEM Explorer.'
     case 'wrong-format':
@@ -39,7 +38,7 @@ export function NotebookBackupControls({ notes, disabled, onMessage }: { notes: 
   const [pending, setPending] = useState<{ name: string; text: string; plan: NotebookPlan } | null>(null)
 
   const exportFile = () => {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(buildNotebookBackup(notes), null, 2)], { type: 'application/json' }))
+    const url = URL.createObjectURL(new Blob([notebookFileText(notes)], { type: 'application/json' }))
     const a = document.createElement('a')
     a.href = url
     a.download = notebookFileName()
@@ -52,7 +51,7 @@ export function NotebookBackupControls({ notes, disabled, onMessage }: { notes: 
     if (fileRef.current) fileRef.current.value = ''
     if (!file) return
     setPending(null)
-    if (file.size > MAX_BACKUP_BYTES) return onMessage(errorText({ kind: 'too-large' }))
+    if (file.size > MAX_NOTEBOOK_BACKUP_BYTES) return onMessage(errorText({ kind: 'too-large' }))
     const text = await file.text().catch(() => null)
     if (text === null) return onMessage('That file could not be read.')
     const r = planNotebookImport(text, notes)
