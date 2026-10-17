@@ -83,10 +83,25 @@ export function withChemistrySection(search: string, section: ChemistrySection, 
   return `?${q.toString()}`
 }
 
+/* Biology sections. Links without `bsec` are cell links, so older links open as before. */
+export type BiologySection = 'cells' | 'dna' | 'division' | 'energy'
+export function parseBiologySection(search: string): { section: BiologySection; invalid: string[] } {
+  const raw = new URLSearchParams(search).get('bsec')
+  const section: BiologySection = raw === 'dna' || raw === 'division' || raw === 'energy' ? raw : 'cells'
+  return { section, invalid: raw !== null && section !== raw ? ['bsec'] : [] }
+}
+export const biologySectionEntries = (section: BiologySection): Record<string, string> => (section === 'cells' ? {} : { bsec: section })
+export function withBiologySection(search: string, section: BiologySection): string {
+  const q = new URLSearchParams(search)
+  q.delete('bsec')
+  if (section !== 'cells') q.set('bsec', section)
+  return `?${q.toString()}`
+}
+
 export const CELL_VIEWS = ['whole', 'cutaway'] as const
 export type CellViewParam = (typeof CELL_VIEWS)[number]
 
-export const CELL_TYPE_PARAMS = ['animal', 'plant'] as const
+export const CELL_TYPE_PARAMS = ['animal', 'plant', 'bacterium'] as const
 export type CellTypeParam = (typeof CELL_TYPE_PARAMS)[number]
 
 export interface BiologyUrlState {
@@ -133,7 +148,7 @@ export function withBiologyParams(search: string, state: BiologyUrlState): strin
   if (state.structureId) params.set('structure', state.structureId)
   else params.delete('structure')
   params.set('cell', state.cellView)
-  if (state.cellType === 'plant') params.set('type', 'plant')
+  if (state.cellType && state.cellType !== 'animal') params.set('type', state.cellType)
   else params.delete('type')
   return `?${params.toString()}`
 }

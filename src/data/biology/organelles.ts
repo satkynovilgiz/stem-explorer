@@ -6,6 +6,76 @@ import type { BiologySource, CellType, Organelle, OrganelleId } from './types'
  * paraphrased; see `sourceIds` on every entry for where it comes from.
  */
 export const BIOLOGY_SOURCES: Record<string, BiologySource> = {
+  'bio-4-2': {
+    id: 'bio-4-2',
+    label: 'OpenStax Biology 2e — 4.2 Prokaryotic Cells',
+    url: 'https://openstax.org/books/biology-2e/pages/4-2-prokaryotic-cells',
+  },
+  'bio-7-2': {
+    id: 'bio-7-2',
+    label: 'OpenStax Biology 2e — 7.2 Glycolysis',
+    url: 'https://openstax.org/books/biology-2e/pages/7-2-glycolysis',
+  },
+  'bio-7-3': {
+    id: 'bio-7-3',
+    label: 'OpenStax Biology 2e — 7.3 Oxidation of Pyruvate and the Citric Acid Cycle',
+    url: 'https://openstax.org/books/biology-2e/pages/7-3-oxidation-of-pyruvate-and-the-citric-acid-cycle',
+  },
+  'bio-7-4': {
+    id: 'bio-7-4',
+    label: 'OpenStax Biology 2e — 7.4 Oxidative Phosphorylation',
+    url: 'https://openstax.org/books/biology-2e/pages/7-4-oxidative-phosphorylation',
+  },
+  'bio-8-1': {
+    id: 'bio-8-1',
+    label: 'OpenStax Biology 2e — 8.1 Overview of Photosynthesis',
+    url: 'https://openstax.org/books/biology-2e/pages/8-1-overview-of-photosynthesis',
+  },
+  'bio-8-2': {
+    id: 'bio-8-2',
+    label: 'OpenStax Biology 2e — 8.2 The Light-Dependent Reactions of Photosynthesis',
+    url: 'https://openstax.org/books/biology-2e/pages/8-2-the-light-dependent-reactions-of-photosynthesis',
+  },
+  'bio-8-3': {
+    id: 'bio-8-3',
+    label: 'OpenStax Biology 2e — 8.3 Using Light Energy to Make Organic Molecules',
+    url: 'https://openstax.org/books/biology-2e/pages/8-3-using-light-energy-to-make-organic-molecules',
+  },
+  'bio-10-1': {
+    id: 'bio-10-1',
+    label: 'OpenStax Biology 2e — 10.1 Cell Division',
+    url: 'https://openstax.org/books/biology-2e/pages/10-1-cell-division',
+  },
+  'bio-10-2': {
+    id: 'bio-10-2',
+    label: 'OpenStax Biology 2e — 10.2 The Cell Cycle',
+    url: 'https://openstax.org/books/biology-2e/pages/10-2-the-cell-cycle',
+  },
+  'bio-11-1': {
+    id: 'bio-11-1',
+    label: 'OpenStax Biology 2e — 11.1 The Process of Meiosis',
+    url: 'https://openstax.org/books/biology-2e/pages/11-1-the-process-of-meiosis',
+  },
+  'bio-14-2': {
+    id: 'bio-14-2',
+    label: 'OpenStax Biology 2e — 14.2 DNA Structure and Sequencing',
+    url: 'https://openstax.org/books/biology-2e/pages/14-2-dna-structure-and-sequencing',
+  },
+  'bio-15-1': {
+    id: 'bio-15-1',
+    label: 'OpenStax Biology 2e — 15.1 The Genetic Code',
+    url: 'https://openstax.org/books/biology-2e/pages/15-1-the-genetic-code',
+  },
+  'bio-15-2': {
+    id: 'bio-15-2',
+    label: 'OpenStax Biology 2e — 15.2 Prokaryotic Transcription',
+    url: 'https://openstax.org/books/biology-2e/pages/15-2-prokaryotic-transcription',
+  },
+  'cob-4-1': {
+    id: 'cob-4-1',
+    label: 'OpenStax Concepts of Biology — 4.1 Energy and Metabolism',
+    url: 'https://openstax.org/books/concepts-biology/pages/4-1-energy-and-metabolism',
+  },
   'bio-4-3': {
     id: 'bio-4-3',
     label: 'OpenStax Biology 2e — 4.3 Eukaryotic Cells',
@@ -43,6 +113,8 @@ export const CELL_DISCLAIMERS: Record<CellType, string> = {
     'This is a simplified educational model of a generalized animal cell. Shapes, sizes, quantities, and positions are schematic; actual cells vary.',
   plant:
     'This is a simplified educational model of a generalized plant cell. Shapes, sizes, quantities, and positions are schematic and not to scale; actual plant cells vary widely.',
+  bacterium:
+    'This is a simplified model of one representative rod-shaped bacterium. Bacteria differ in shape, size and features: many lack a capsule, flagella, pili or fimbriae. Not to scale: at 0.1–5.0 µm across, prokaryotic cells are far smaller than eukaryotic cells (10–100 µm).',
 }
 
 /** @deprecated kept for existing imports; use CELL_DISCLAIMERS. */
@@ -438,6 +510,151 @@ export const ORGANELLES: readonly Organelle[] = [
     majorLabel: false,
     internal: true,
   },
+  /* ---------- Bacterial cell (a representative rod-shaped bacterium) ---------- */
+  {
+    id: 'capsule',
+    name: 'Capsule',
+    tag: 'Present in many bacteria, not all',
+    summary: 'A polysaccharide layer outside the cell wall. Many bacteria have one; many do not.',
+    functions: ['Enables the cell to attach to surfaces in its environment.'],
+    structure: 'A layer of polysaccharide (sugar polymer) surrounding the cell wall.',
+    relationships: [{ targetId: 'bacterial-wall', text: 'Surrounds the cell wall.' }],
+    glossary: [{ term: 'Polysaccharide', definition: 'A large molecule made of many sugar units joined together.' }],
+    simplifications: ['Drawn as an even, translucent coat; real capsules vary in thickness and some bacteria have none.'],
+    sourceIds: ['bio-4-2'],
+    color: '#7a8a6a',
+    majorLabel: true,
+    internal: false,
+  },
+  {
+    id: 'bacterial-wall',
+    name: 'Cell wall (bacterial)',
+    tag: 'Protection and shape',
+    summary: 'A rigid layer outside the plasma membrane. In most bacteria it is made of peptidoglycan — a different material from the cellulose wall of plant cells.',
+    functions: ['Acts as an extra layer of protection.', 'Helps the cell keep its shape.', 'Helps prevent dehydration.'],
+    structure: 'Most bacteria have a peptidoglycan cell wall. OpenStax lists a cell wall among the features of all prokaryotes; this is a general statement, and walls differ in composition between groups.',
+    relationships: [
+      { targetId: 'bacterial-membrane', text: 'Lies just outside the plasma membrane.' },
+      { targetId: 'capsule', text: 'Surrounded, in many bacteria, by a capsule.' },
+    ],
+    glossary: [{ term: 'Peptidoglycan', definition: 'The material of the cell wall in most bacteria.' }],
+    simplifications: ['Drawn as a smooth shell of even thickness; its layered structure is not shown.'],
+    sourceIds: ['bio-4-2'],
+    color: '#a68b5b',
+    majorLabel: true,
+    internal: false,
+  },
+  {
+    id: 'bacterial-membrane',
+    name: 'Plasma membrane (bacterial)',
+    tag: 'Boundary of the cytoplasm',
+    summary: 'The outer covering of the cytoplasm, just inside the cell wall. All cells have a plasma membrane.',
+    functions: ['Separates the cell’s interior from its surroundings.'],
+    structure: 'A membrane enclosing the cytoplasm. In prokaryotes it also carries the electron transport chain used in aerobic respiration.',
+    relationships: [
+      { targetId: 'bacterial-wall', text: 'Lies just inside the cell wall.' },
+      { targetId: 'bacterial-cytoplasm', text: 'Encloses the cytoplasm.' },
+    ],
+    glossary: [],
+    simplifications: ['Drawn as a thin shell just inside the wall.'],
+    sourceIds: ['bio-4-2', 'bio-7-4'],
+    color: '#c9a76a',
+    majorLabel: false,
+    internal: true,
+  },
+  {
+    id: 'bacterial-cytoplasm',
+    name: 'Cytoplasm (bacterial)',
+    tag: 'Jelly-like interior',
+    summary: 'The jelly-like cytosol and the components within it. A prokaryote has no nucleus or other membrane-bound organelles, so everything inside the membrane is in one compartment.',
+    functions: ['Holds the nucleoid and the ribosomes.', 'Glycolysis takes place in the cytoplasm of prokaryotic and eukaryotic cells alike.'],
+    structure: 'Cytosol — a jelly-like fluid — with the cell’s other components in it.',
+    relationships: [
+      { targetId: 'nucleoid', text: 'Contains the nucleoid, where the DNA is.' },
+      { targetId: 'bacterial-ribosomes', text: 'Contains the ribosomes.' },
+    ],
+    glossary: [{ term: 'Prokaryote', definition: 'A simple, mostly single-celled organism (bacteria and archaea) with no nucleus or other membrane-bound organelles.' }],
+    simplifications: ['Shown as a pale inner volume.'],
+    sourceIds: ['bio-4-2', 'bio-7-2'],
+    color: '#2f4a4a',
+    majorLabel: false,
+    internal: true,
+  },
+  {
+    id: 'nucleoid',
+    name: 'Nucleoid',
+    tag: 'Region holding the DNA',
+    summary: 'The central part of the cell where the chromosomal DNA is. It is not enclosed by a membrane — unlike a nucleus.',
+    functions: ['Holds the cell’s chromosomal DNA.'],
+    structure: 'A region of the cytoplasm, not a membrane-bound organelle.',
+    relationships: [{ targetId: 'bacterial-cytoplasm', text: 'Lies in the cytoplasm, with no membrane around it.' }],
+    glossary: [{ term: 'Nucleoid', definition: 'The region of a prokaryotic cell where its chromosomal DNA is found; it has no surrounding membrane.' }],
+    simplifications: ['The DNA is drawn as a loose tangle; real DNA is far longer and more tightly organized.'],
+    sourceIds: ['bio-4-2'],
+    color: '#c77dbe',
+    majorLabel: true,
+    internal: true,
+  },
+  {
+    id: 'bacterial-ribosomes',
+    name: 'Ribosomes (bacterial)',
+    tag: 'Protein synthesis',
+    summary: 'Complexes that build proteins. All prokaryotes have ribosomes; they float in the cytoplasm because there is no endoplasmic reticulum.',
+    functions: ['Make proteins by reading messenger RNA. In prokaryotes, transcription and translation can happen together because there is no membrane separating them.'],
+    structure: 'Small complexes of RNA and protein, not surrounded by a membrane.',
+    relationships: [{ targetId: 'bacterial-cytoplasm', text: 'Sit in the cytoplasm.' }],
+    glossary: [],
+    simplifications: ['Shown as enlarged dots; a real cell holds far more.'],
+    sourceIds: ['bio-4-2', 'bio-15-2'],
+    color: '#e6c86e',
+    majorLabel: false,
+    internal: true,
+  },
+  {
+    id: 'flagellum',
+    name: 'Flagellum',
+    tag: 'Present in some bacteria',
+    summary: 'A long, whip-like structure used for locomotion. Some prokaryotes have flagella; others have none, and the number and placement vary.',
+    functions: ['Moves the cell (locomotion).'],
+    structure: 'A long filament extending from the cell surface.',
+    relationships: [{ targetId: 'bacterial-wall', text: 'Extends out through the cell surface.' }],
+    glossary: [{ term: 'Flagellum', definition: 'A long, whip-like structure used for locomotion (plural: flagella).' }],
+    simplifications: ['One flagellum is drawn at one end, as a fixed helix; it does not move.'],
+    sourceIds: ['bio-4-2'],
+    color: '#8db4ff',
+    majorLabel: true,
+    internal: false,
+  },
+  {
+    id: 'pili',
+    name: 'Pili',
+    tag: 'Present in some bacteria',
+    summary: 'Hair-like appendages present on some prokaryotes.',
+    functions: ['Exchange genetic material during conjugation, when one bacterium transfers genetic material to another through direct contact.'],
+    structure: 'Longer, fewer appendages than fimbriae in this drawing.',
+    relationships: [{ targetId: 'fimbriae', text: 'Another kind of surface appendage.' }],
+    glossary: [{ term: 'Conjugation', definition: 'The transfer of genetic material from one bacterium to another through direct contact.' }],
+    simplifications: ['Two are drawn; numbers vary, and many bacteria have none.'],
+    sourceIds: ['bio-4-2'],
+    color: '#6fd69a',
+    majorLabel: false,
+    internal: false,
+  },
+  {
+    id: 'fimbriae',
+    name: 'Fimbriae',
+    tag: 'Present in some bacteria',
+    summary: 'Short appendages present on some prokaryotes.',
+    functions: ['Bacteria use fimbriae to attach to a host cell.'],
+    structure: 'Many short projections from the surface.',
+    relationships: [{ targetId: 'pili', text: 'Another kind of surface appendage.' }],
+    glossary: [{ term: 'Fimbriae', definition: 'Short appendages that bacteria use to attach to host cells.' }],
+    simplifications: ['Drawn as short spikes; their number and length vary.'],
+    sourceIds: ['bio-4-2'],
+    color: '#9fd0b4',
+    majorLabel: false,
+    internal: false,
+  },
 ]
 
 /** Which structures each simplified model contains (and therefore lists, draws and accepts in links). */
@@ -458,11 +675,13 @@ export const CELL_STRUCTURES: Record<CellType, readonly OrganelleId[]> = {
     'golgi',
     'ribosome',
   ],
+  bacterium: ['capsule', 'bacterial-wall', 'bacterial-membrane', 'bacterial-cytoplasm', 'nucleoid', 'bacterial-ribosomes', 'flagellum', 'pili', 'fimbriae'],
 }
 
 const COUNTS: Record<CellType, Partial<Record<OrganelleId, number>>> = {
   animal: { mitochondrion: 4, lysosome: 3 },
   plant: { mitochondrion: 3, chloroplast: 5 },
+  bacterium: {},
 }
 
 /** Number of separately selectable copies of a repeated structure in a model, or undefined. */
@@ -483,14 +702,19 @@ export function isInternal(cellType: CellType, id: OrganelleId): boolean {
   return cellType === 'plant' ? id !== 'cell-wall' : !!findOrganelle(id)?.internal
 }
 
+/** The cell type whose model contains a structure (each bacterial structure belongs only to the bacterium). */
+export function cellTypeOf(id: OrganelleId): CellType {
+  return hasStructure('animal', id) ? 'animal' : hasStructure('plant', id) ? 'plant' : 'bacterium'
+}
+
 /** Link parameters that open a structure: in the animal model when it has it, otherwise in the plant model. */
 export function structureParams(id: OrganelleId): Record<string, string> {
-  const cellType: CellType = hasStructure('animal', id) ? 'animal' : 'plant'
-  return { structure: id, cell: isInternal(cellType, id) ? 'cutaway' : 'whole', ...(cellType === 'plant' ? { type: 'plant' } : {}) }
+  const cellType = cellTypeOf(id)
+  return { structure: id, cell: isInternal(cellType, id) ? 'cutaway' : 'whole', ...(cellType !== 'animal' ? { type: cellType } : {}) }
 }
 
 /** The outer structure shown in the whole-cell view. */
-export const OUTER_STRUCTURE: Record<CellType, OrganelleId> = { animal: 'plasma-membrane', plant: 'cell-wall' }
+export const OUTER_STRUCTURE: Record<CellType, OrganelleId> = { animal: 'plasma-membrane', plant: 'cell-wall', bacterium: 'capsule' }
 
 /** How many copies of each repeated structure the model draws (selectable individually). */
 /** @deprecated animal-model counts, kept for existing imports; use instanceCount(cellType, id). */

@@ -1,4 +1,4 @@
-import { CELL_STRUCTURES, OUTER_STRUCTURE } from '../../../data/biology/organelles'
+import { CELL_STRUCTURES, isInternal, OUTER_STRUCTURE } from '../../../data/biology/organelles'
 import type { CellType, CellView, OrganelleId } from '../../../data/biology/types'
 import type { BiologySelection } from '../state'
 
@@ -10,6 +10,8 @@ export function visibleStructures(
   cellType: CellType = 'animal',
 ): Set<OrganelleId> {
   if (isolated && selection) return new Set([selection.organelleId])
+  // The bacterium's surface appendages (flagellum, pili, fimbriae) are outside the capsule, so they show in the whole view.
+  if (view === 'whole' && cellType === 'bacterium') return new Set(CELL_STRUCTURES.bacterium.filter((id) => !isInternal('bacterium', id)))
   if (view === 'whole') return new Set([OUTER_STRUCTURE[cellType]])
   return new Set<OrganelleId>(CELL_STRUCTURES[cellType])
 }

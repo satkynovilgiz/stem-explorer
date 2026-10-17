@@ -12,7 +12,7 @@ describe('search index', () => {
     const count = (prefix: string) => SEARCH_INDEX.filter((i) => i.id.startsWith(prefix)).length
     expect(count('subject:')).toBe(5)
     expect(count('molecule:')).toBe(12)
-    expect(count('organelle:')).toBe(14) // 10 animal-model structures + 4 plant-only
+    expect(count('organelle:')).toBe(23) // 10 animal-model structures + 4 plant-only + 9 bacterial
     expect(count('heart:')).toBe(14)
     expect(count('surface:')).toBe(4)
     expect(count('experiment:')).toBe(2)

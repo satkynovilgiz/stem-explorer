@@ -532,7 +532,69 @@ table and its data load only when this view is opened (a separate ~13 kB chunk).
   molecules** opens any of the six molecules containing the element in the molecule view, where
   the measurement tools work as before.
 
-## Biology Explorer — animal cell
+## Biology Explorer — cells, DNA, division and energy
+
+Biology has four sections (**Cells**, **DNA and RNA**, **Cell division**, **Energy processes**).
+Links without `bsec` are cell links, so older links and saves open as before; the other sections
+add `bsec=dna|division|energy`. Process sections are saved and shared as the section alone. They
+are plain HTML and SVG, load when first opened, and need no WebGL.
+
+### Bacterial cell
+
+A third model, **Bacterium** (`type=bacterium`), is one representative rod-shaped bacterium with
+nine structures of its own: capsule, cell wall, plasma membrane, cytoplasm, nucleoid, ribosomes,
+flagellum, pili and fimbriae. It does not reuse the eukaryotic entries, whose text mentions the
+nucleus and ER. Based on OpenStax Biology 2e §4.2:
+- **Representative**: chromosomal DNA in a nucleoid (no membrane), ribosomes, a cell membrane and
+  a cell wall. OpenStax lists these for prokaryotes in general, and the wall entry says this is a
+  general statement.
+- **Variable**: a capsule (many bacteria), and flagella, pili or fimbriae (some prokaryotes). Each
+  is tagged "present in some bacteria", and the disclaimer says shape and size vary and states the
+  0.1–5.0 µm vs 10–100 µm size difference.
+- Whole view: the translucent capsule with the appendages outside it. Cutaway: a wedge opens
+  through the capsule, wall and membrane.
+- **Animal, plant and bacterial cells compared**: a table of membrane, ribosomes, where DNA is,
+  membrane-bound organelles, chloroplasts, cell wall (cellulose vs peptidoglycan), appendages and
+  typical diameter. Links select the structure in the model on screen.
+
+### DNA and RNA
+
+A flat, schematic segment of 12 base pairs, not a real gene and not a helix: coding strand 5′→3′
+on top, template strand 3′→5′ below. Base letters are coloured by base and also written out. Rung
+dashes show 2 or 3 hydrogen bonds. **Inspect a base pair** (buttons, or letters in the drawing)
+gives both bases, purine/pyrimidine and the hydrogen bonds. Four manual steps cover the backbone,
+pairing, strand direction and transcription. In the transcription step, **Add the next RNA
+nucleotide** builds the RNA 5′→3′ against the template, and the result is the coding strand with
+U for T (OpenStax §14.2, 15.1, 15.2). `src/data/biology/dna.ts` holds pairing, validation and
+transcription, unit tested (mismatch detection included).
+
+### Cell division
+
+Seven manual steps: interphase (labelled *not part of mitosis*), prophase, prometaphase,
+metaphase, anaphase and telophase (*part of mitosis*), and cytokinesis (*not part of mitosis:
+divides the cytoplasm*).
+- The illustrative cell has **4 chromosomes** (two homologous pairs, told apart by colour and
+  length), stated with the note that human body cells have 46.
+- Terms are consistent: 4 chromosomes of 2 sister chromatids until anaphase; then each chromatid
+  is called a chromosome (8 in total, 4 to each pole); each daughter cell has 4.
+- A note says mitosis does not make gametes; gametes come from meiosis, which halves the
+  chromosome number (§10.1, 10.2, 11.1).
+- A unit test checks that the drawing's chromatid count matches the text at every stage.
+
+### Energy processes
+
+Photosynthesis and cellular respiration side by side. Each has a **Simplified net equation**
+(6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ and its reverse, from OpenStax Concepts of Biology §4.1) kept apart
+from its **pathway stages**:
+- photosynthesis: light-dependent reactions (thylakoid membranes) and the Calvin cycle (stroma);
+- respiration: glycolysis (cytoplasm), pyruvate oxidation and the citric acid cycle (matrix), and
+  oxidative phosphorylation (inner mitochondrial membrane in eukaryotes).
+
+Each stage has a short explanation, *Go deeper* and sources, and opens the chloroplast or
+mitochondrion in the cell model where relevant. No ATP yields are given. A test checks that both
+equations balance and are reverses of each other.
+
+## Biology: animal cell model
 
 > This is a simplified educational model of a generalized animal cell. Shapes, sizes, quantities,
 > and positions are schematic; actual cells vary.
@@ -1339,6 +1401,7 @@ How the URL is kept up to date:
 | `src/lib/measurement.test.ts` | Distance and angle maths against known geometry. Also the cosine clamp, zero-length arms, duplicate and restarting selections, and how results are labelled. |
 | `src/data/chemistry/molecules.test.ts` | Atom counts against formulas, IDs, bonds and connectivity. Also cited sources, and that coordinates reproduce every reported bond length and angle. |
 | `src/data/chemistry/atomic.test.ts` | Every element's PubChem configuration expands to exactly Z electrons; shell counts for H, O, Na, Ca, Fe and Cr (a filling exception); predicted/calculated notes kept apart; PubChem electronegativities and missing values; N = A − Z; the isotope library has distinct, plausible entries. |
+| `src/data/biology/processes.test.ts` | A–T/G–C pairing with 2/3 hydrogen bonds and purine–pyrimidine pairs; duplex validation and mismatch reporting; RNA from the template equals the coding strand with U; mitosis stage kinds, consistent chromosome/chromatid counts in text and drawing, the no-gametes note; energy sources and structure links; balanced, mutually reverse net equations. |
 | `src/features/chemistry/state.test.ts` | Switching molecules mid-measurement, duplicate picks, announcements and clearing. |
 | `src/features/chemistry/scene/measurementGeometry.test.ts` | Angle arc and label placement, including straight and degenerate angles. |
 | `src/data/biology/organelles.test.ts` | Required structures with stable, URL-safe IDs; every content field present; known sources and related structures. Also that cytoplasm and cytosol are distinguished, and that the text never claims all proteins pass through the Golgi. |
@@ -1481,6 +1544,9 @@ the production build:
   view; food-tour contributions labelled apart from the route; CNS/PNS labels; brain regions and
   spinal nerves; the nephron close-up; circulation linking to the heart module; still markers with
   reduced motion.
+- `biology-sections.e2e.ts`: the bacterial model, its comparison and reload; old plant links; DNA pair
+  inspection, steps and building the RNA; mitosis stages, terms, cytokinesis and the gamete note;
+  energy stages opening the mitochondrion; saving and reopening a section.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

@@ -51,7 +51,7 @@ export default function App() {
           </>
         ) : route === 'biology' ? (
           <>
-            <h1 className="visually-hidden">Biology Explorer: animal cell</h1>
+            <h1 className="visually-hidden">Biology Explorer: cells, DNA, division and energy</h1>
             <BiologyExplorer />
           </>
         ) : route === 'glossary' ? (

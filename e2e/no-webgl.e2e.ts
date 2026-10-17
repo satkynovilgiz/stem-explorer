@@ -197,3 +197,10 @@ test('atomic structure and bonding need no WebGL', async ({ page }) => {
   await page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Bonding and geometry' }).click()
   await expect(page.locator('.bonding-view')).toContainText('Covalent network solid')
 })
+
+test('biology process sections need no WebGL', async ({ page }) => {
+  await page.goto('/?bsec=dna#/biology')
+  await expect(page.locator('.dna-svg')).toBeVisible()
+  await page.getByRole('group', { name: 'Biology section' }).getByRole('button', { name: 'Energy processes' }).click()
+  await expect(page.locator('.process-view')).toContainText('Glycolysis')
+})

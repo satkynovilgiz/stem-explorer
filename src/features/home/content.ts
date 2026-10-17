@@ -26,15 +26,16 @@ export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; 
     action: 'Open chemistry',
   },
   biology: {
-    title: 'Inside a cell',
-    summary: 'Generalized animal and plant cells, side by side.',
+    title: 'Cells and life processes',
+    summary: 'Animal, plant and bacterial cells, plus DNA, cell division and energy processes.',
     capabilities: [
-      'Animal cell (10 structures) and plant cell (13), with a comparison',
-      'Whole-cell and cutaway views; isolate and focus',
-      'Functions, structure and relationships of each part',
+      'Three cell models with whole and cutaway views and a comparison',
+      'Inspect paired DNA strands and step through transcription',
+      'Step through mitosis, photosynthesis and cellular respiration',
     ],
-    action: 'Open the cells',
+    action: 'Open biology',
   },
+
   physics: {
     title: 'Motion labs',
     summary: 'Two ideal experiments: projectile motion and a spring–mass oscillator.',

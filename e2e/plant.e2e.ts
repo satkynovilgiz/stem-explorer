@@ -8,8 +8,8 @@ const typeButton = (page: Page, name: string) => page.getByRole('group', { name:
 test('switching to the plant cell changes the model, list, badge and link', async ({ page }) => {
   await page.goto('/?structure=golgi&cell=cutaway#/biology')
   await waitForViewport(page)
-  await typeButton(page, 'Plant cell').click()
-  await expect(typeButton(page, 'Plant cell')).toHaveAttribute('aria-pressed', 'true')
+  await typeButton(page, 'Plant').click()
+  await expect(typeButton(page, 'Plant')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.viewport-badge-name')).toHaveText('Generalized plant cell')
   await expect(page.locator('.search-status')).toHaveText('13 structures in the plant cell')
   await expect(item(page, 'Lysosomes')).toHaveCount(0)
@@ -41,7 +41,7 @@ test('switching back to the animal cell clears a plant-only selection; old anima
   await page.goto('/?type=plant&structure=chloroplast#/biology')
   await waitForViewport(page)
   await expect(page.locator('#structure-heading')).toHaveText('Chloroplasts')
-  await typeButton(page, 'Animal cell').click()
+  await typeButton(page, 'Animal').click()
   await expect(page.locator('#structure-heading')).toHaveCount(0)
   await expect(page.locator('#cell-heading')).toHaveText('Animal cell')
   const q = await search(page)
@@ -50,7 +50,7 @@ test('switching back to the animal cell clears a plant-only selection; old anima
   // A link made before the plant model existed opens exactly as before.
   await page.goto('/?structure=lysosome&cell=whole#/biology')
   await expect(page.locator('#structure-heading')).toHaveText('Lysosomes')
-  await expect(typeButton(page, 'Animal cell')).toHaveAttribute('aria-pressed', 'true')
+  await expect(typeButton(page, 'Animal')).toHaveAttribute('aria-pressed', 'true')
   // A plant-only structure in an animal link falls back and is removed from the address.
   await page.goto('/?structure=chloroplast#/biology')
   await expect(page.locator('#cell-heading')).toHaveText('Animal cell')
@@ -70,10 +70,10 @@ test('whole view shows only the cell wall; isolating a plant structure works', a
 test('the comparison panel lists shared and model-specific structures with sources', async ({ page }) => {
   await page.goto('/?type=plant#/biology')
   const compare = page.locator('.cell-compare')
-  await expect(compare).toContainText('In both models')
+  await expect(compare.getByRole('row', { name: /Chloroplasts/ })).toContainText('NoYesNo')
   await expect(compare).toContainText('also have mitochondria')
   await expect(compare.locator('.cite a').first()).toHaveAttribute('href', /openstax\.org/)
-  await compare.getByRole('button', { name: 'Chloroplasts' }).click()
+  await compare.getByRole('row', { name: /Chloroplasts/ }).getByRole('button', { name: 'Yes' }).click()
   await expect(page.locator('#structure-heading')).toHaveText('Chloroplasts')
 })
 

@@ -10,6 +10,8 @@ import { DEFAULT_PARAMS, isValidParam, normalizeParam, PARAM_KEYS } from '../phy
 import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
   anatomyModule,
+  biologySectionEntries,
+  parseBiologySection,
   chemistrySectionEntries,
   parseChemistrySection,
   anatomyParamEntries,
@@ -56,11 +58,13 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
     }
     case 'biology': {
       const r = parseBiologyParams(search, (t) => CELL_STRUCTURES[t], { structureId: null, cellView: 'cutaway' })
-      if (r.invalid.length) return null
+      const sec = parseBiologySection(search)
+      if (r.invalid.length || sec.invalid.length) return null
+      if (sec.section !== 'cells') return { subject, params: { cell: r.cellView, ...biologySectionEntries(sec.section) } }
       // `type` only for the plant cell, so animal-cell states keep their original canonical form.
       return {
         subject,
-        params: { ...(r.structureId ? { structure: r.structureId } : {}), cell: r.cellView, ...(r.cellType === 'plant' ? { type: 'plant' } : {}) },
+        params: { ...(r.structureId ? { structure: r.structureId } : {}), cell: r.cellView, ...(r.cellType && r.cellType !== 'animal' ? { type: r.cellType } : {}) },
       }
     }
     case 'physics': {
@@ -123,9 +127,12 @@ export function defaultTitle(state: ShareState): string {
       return `${m?.name ?? 'Molecule'} · ${p.view === 'space-filling' ? 'space-filling' : 'ball and stick'}`
     }
     case 'biology':
+      if (p.bsec === 'dna') return 'DNA and RNA'
+      if (p.bsec === 'division') return 'Cell division: mitosis'
+      if (p.bsec === 'energy') return 'Energy processes'
       return p.structure
-        ? `${findOrganelle(p.structure)?.name ?? 'Cell structure'} in the ${p.type === 'plant' ? 'plant' : 'animal'} cell`
-        : `${p.type === 'plant' ? 'Plant' : 'Animal'} cell · ${p.cell === 'whole' ? 'whole' : 'cutaway'}`
+        ? `${findOrganelle(p.structure)?.name ?? 'Cell structure'} in the ${p.type === 'plant' ? 'plant cell' : p.type === 'bacterium' ? 'bacterial cell' : 'animal cell'}`
+        : `${p.type === 'plant' ? 'Plant cell' : p.type === 'bacterium' ? 'Bacterial cell' : 'Animal cell'} · ${p.cell === 'whole' ? 'whole' : 'cutaway'}`
     case 'physics':
       if (p.experiment === 'spring') return `Spring: m = ${p.mass} kg, k = ${p.k} N/m, x₀ = ${p.x0} m`
       return `Launch at ${p.speed} m/s, ${p.angle}°${Number(p.height) > 0 ? ` from ${p.height} m` : ''}${p.gravity !== '9.81' ? `, g = ${p.gravity} m/s²` : ''}`

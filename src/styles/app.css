@@ -5216,3 +5216,199 @@ button {
   gap: var(--space-4);
   margin-bottom: var(--space-3);
 }
+
+/* ---------- Biology process sections ---------- */
+
+.process-stage .process-view {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.step-nav .tour-title {
+  margin: var(--space-1) 0;
+}
+
+.dna-svg,
+.division-svg {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: var(--space-3) auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.dna-backbone {
+  stroke: var(--color-text-subtle);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.dna-phosphate {
+  fill: var(--color-measure);
+}
+
+.dna-rung {
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+}
+
+.dna-rung.is-emphasis {
+  stroke: var(--color-text-muted);
+}
+
+.dna-rung.is-selected {
+  stroke: var(--color-accent-strong);
+  stroke-width: 3;
+}
+
+.dna-base {
+  font: 700 14px var(--font-mono);
+  cursor: pointer;
+}
+
+.dna-base.is-A { fill: #e8837e; }
+.dna-base.is-T { fill: #f5c26b; }
+.dna-base.is-G { fill: #6fd69a; }
+.dna-base.is-C { fill: #8db4ff; }
+.dna-base.is-U { fill: #c78be0; }
+
+.dna-base.is-selected {
+  text-decoration: underline;
+}
+
+.dna-end,
+.dna-strand-label {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.dna-end {
+  font-weight: 700;
+}
+
+.pair-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.pair-picker .tool-button {
+  min-height: 30px;
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.div-cell {
+  fill: rgb(169 156 240 / 0.08);
+  stroke: var(--subject-biology);
+  stroke-width: 2;
+}
+
+.div-nucleus {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 1.5;
+}
+
+.div-nucleus.is-breaking {
+  stroke-dasharray: 5 5;
+}
+
+.div-spindle {
+  stroke: rgb(232 236 239 / 0.22);
+  stroke-width: 1;
+}
+
+.div-centrosome {
+  fill: var(--color-text);
+}
+
+.div-plate {
+  stroke: var(--color-measure);
+  stroke-dasharray: 3 4;
+}
+
+.centromere {
+  fill: var(--color-bg);
+  stroke: var(--color-text);
+}
+
+.stage-kind {
+  display: inline-block;
+  margin: 0;
+  padding: 2px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.stage-kind.is-interphase,
+.stage-kind.is-cytokinesis {
+  border-style: dashed;
+  color: var(--color-measure);
+}
+
+.energy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.net-equation {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.net-equation p {
+  margin: 0 0 var(--space-1);
+}
+
+.net-equation .equation {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+}
+
+.stage-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage-button {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stage-button.is-active {
+  border-color: var(--color-accent);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.stage-name {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.stage-where {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+

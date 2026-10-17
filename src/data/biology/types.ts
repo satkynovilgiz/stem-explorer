@@ -13,9 +13,18 @@ export const ORGANELLE_IDS = [
   'chloroplast',
   'central-vacuole',
   'vacuole-membrane',
+  'capsule',
+  'bacterial-wall',
+  'bacterial-membrane',
+  'bacterial-cytoplasm',
+  'nucleoid',
+  'bacterial-ribosomes',
+  'flagellum',
+  'pili',
+  'fimbriae',
 ] as const
 
-export const CELL_TYPES = ['animal', 'plant'] as const
+export const CELL_TYPES = ['animal', 'plant', 'bacterium'] as const
 export type CellType = (typeof CELL_TYPES)[number]
 
 export type OrganelleId = (typeof ORGANELLE_IDS)[number]

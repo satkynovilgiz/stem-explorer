@@ -31,7 +31,7 @@ export function StructureDetails({ cellType, selection, view, onSelect, onClear 
   const copyLink = (
     <ShareActions
       subject="biology"
-      params={{ ...(selection ? { structure: selection.organelleId } : {}), cell: view, ...(cellType === 'plant' ? { type: 'plant' } : {}) }}
+      params={{ ...(selection ? { structure: selection.organelleId } : {}), cell: view, ...(cellType !== 'animal' ? { type: cellType } : {}) }}
       restores={organelle ? `this structure (${organelle.name}) and view` : 'this view'}
     />
   )
@@ -42,9 +42,9 @@ export function StructureDetails({ cellType, selection, view, onSelect, onClear 
         <header className="info-header">
           <p className="eyebrow">Biology</p>
           <h2 id="cell-heading" className="info-title">
-            {cellType === 'plant' ? 'Plant cell' : 'Animal cell'}
+            {cellType === 'plant' ? 'Plant cell' : cellType === 'bacterium' ? 'Bacterial cell' : 'Animal cell'}
           </h2>
-          <p className="info-summary">Explore the main structures of a generalized {cellType} cell.</p>
+          <p className="info-summary">{cellType === 'bacterium' ? 'Explore one representative rod-shaped bacterium: the features all prokaryotes share, and some that vary between bacteria.' : `Explore the main structures of a generalized ${cellType} cell.`}</p>
         </header>
         <div className="info-body">
           <div className="info-section">
@@ -54,7 +54,7 @@ export function StructureDetails({ cellType, selection, view, onSelect, onClear 
                 <Compass size={15} aria-hidden="true" /> Drag to rotate and scroll or pinch to zoom.
               </li>
               <li>
-                Choose <strong>Cutaway</strong> to look inside the {cellType === 'plant' ? 'cell wall and membrane' : 'membrane'}.
+                Choose <strong>Cutaway</strong> to look inside the {cellType === 'plant' ? 'cell wall and membrane' : cellType === 'bacterium' ? 'capsule, wall and membrane' : 'membrane'}.
               </li>
               <li>Click a structure in the model, or pick one from the list.</li>
               <li>Use <strong>Focus</strong> to move closer and <strong>Isolate</strong> to show it alone.</li>

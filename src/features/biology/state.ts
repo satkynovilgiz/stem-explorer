@@ -98,7 +98,7 @@ export function biologyReducer(state: BiologyState, action: BiologyAction): Biol
 
     case 'setCellType': {
       if (action.cellType === state.cellType) return state
-      const name = action.cellType === 'plant' ? 'Plant cell' : 'Animal cell'
+      const name = action.cellType === 'plant' ? 'Plant cell' : action.cellType === 'bacterium' ? 'Bacterial cell' : 'Animal cell'
       const current = state.selection ? findOrganelle(state.selection.organelleId) : undefined
       // A structure both models share stays selected (as a whole type: copies differ between models).
       // Anything the new model lacks is cleared, and isolation ends either way.

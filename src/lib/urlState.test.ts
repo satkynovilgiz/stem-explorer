@@ -113,10 +113,12 @@ describe('parseBiologyParams', () => {
   })
 
   it('reads type=plant, validates structures per cell type, and omits type for animal cells', () => {
-    const byType = (t: 'animal' | 'plant') => (t === 'plant' ? ['chloroplast', 'nucleus'] : ['lysosome', 'nucleus'])
+    const byType = (t: 'animal' | 'plant' | 'bacterium') => (t === 'plant' ? ['chloroplast', 'nucleus'] : t === 'bacterium' ? ['nucleoid'] : ['lysosome', 'nucleus'])
     expect(parseBiologyParams('?structure=chloroplast&type=plant', byType, bioDefaults)).toMatchObject({ structureId: 'chloroplast', cellType: 'plant', invalid: [] })
     expect(parseBiologyParams('?structure=chloroplast', byType, bioDefaults)).toMatchObject({ structureId: null, cellType: 'animal', invalid: ['structure'] })
     expect(parseBiologyParams('?structure=lysosome&type=plant', byType, bioDefaults)).toMatchObject({ structureId: null, invalid: ['structure'] })
+    expect(parseBiologyParams('?structure=nucleoid&type=bacterium', byType, bioDefaults)).toMatchObject({ structureId: 'nucleoid', cellType: 'bacterium', invalid: [] })
+    expect(parseBiologyParams('?structure=nucleus&type=bacterium', byType, bioDefaults)).toMatchObject({ structureId: null, invalid: ['structure'] })
     expect(new URLSearchParams(withBiologyParams('?type=plant', { structureId: null, cellView: 'whole', cellType: 'animal' })).has('type')).toBe(false)
     expect(new URLSearchParams(withBiologyParams('', { structureId: 'nucleus', cellView: 'whole', cellType: 'plant' })).get('type')).toBe('plant')
     // An existing animal-cell link is unchanged by a round trip.

@@ -1,11 +1,11 @@
 import { MousePointerClick } from 'lucide-react'
-import { lazy, useEffect, useReducer, useState } from 'react'
+import { lazy, Suspense, useEffect, useReducer, useState } from 'react'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
 import { CELL_STRUCTURES, findOrganelle, isInternal } from '../../data/biology/organelles'
 import type { OrganelleId } from '../../data/biology/types'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
-import { parseBiologyParams, withBiologyParams } from '../../lib/urlState'
+import { biologySectionEntries, parseBiologyParams, parseBiologySection, withBiologyParams, withBiologySection, type BiologySection } from '../../lib/urlState'
 import { ActivityPanel } from '../activities/ActivityPanel'
 import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
@@ -18,6 +18,15 @@ import { StructureList } from './StructureList'
 
 // Three.js is loaded on demand so the list and descriptions render immediately.
 const CellScene = lazy(() => import('./scene/CellScene'))
+// The process sections are plain HTML and SVG, loaded when first opened.
+const DnaView = lazy(() => import('./processes/DnaView').then((m) => ({ default: m.DnaView })))
+const DnaPanel = lazy(() => import('./processes/DnaView').then((m) => ({ default: m.DnaPanel })))
+const DivisionView = lazy(() => import('./processes/DivisionView').then((m) => ({ default: m.DivisionView })))
+const DivisionPanel = lazy(() => import('./processes/DivisionView').then((m) => ({ default: m.DivisionPanel })))
+const EnergyView = lazy(() => import('./processes/EnergyView').then((m) => ({ default: m.EnergyView })))
+const EnergyPanel = lazy(() => import('./processes/EnergyView').then((m) => ({ default: m.EnergyPanel })))
+
+const SECTION_LABEL: Record<BiologySection, string> = { cells: 'Cells', dna: 'DNA and RNA', division: 'Cell division', energy: 'Energy processes' }
 
 type MobileTab = 'details' | 'structures'
 
@@ -36,6 +45,7 @@ export function BiologyExplorer() {
   const [resetToken, setResetToken] = useState(0)
   const [focusToken, setFocusToken] = useState(0)
   const [mobileTab, setMobileTab] = useState<MobileTab>('details')
+  const [section, setSection] = useState<BiologySection>(() => parseBiologySection(window.location.search).section)
 
   const reducedMotion = usePrefersReducedMotion()
   const isMobile = useMediaQuery('(max-width: 899px)')
@@ -46,19 +56,27 @@ export function BiologyExplorer() {
   // Keep the address shareable (?structure=…&cell=…) without adding history entries;
   // Chemistry's molecule/view keys are left untouched.
   useEffect(() => {
-    const search = withBiologyParams(window.location.search, {
-      structureId: selection?.organelleId ?? null,
-      cellView: view,
-      cellType,
-    })
+    const search = withBiologySection(
+      withBiologyParams(window.location.search, {
+        structureId: selection?.organelleId ?? null,
+        cellView: view,
+        cellType,
+      }),
+      section,
+    )
     if (search !== window.location.search) {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
-  }, [selection?.organelleId, view, cellType])
+  }, [selection?.organelleId, view, cellType, section])
 
+  // Process sections are shared and saved as the section alone (see canonicalize).
+  const sectionParams = { cell: view, ...biologySectionEntries(section) }
   useRecordVisit({
     subject: 'biology',
-    params: { ...(selection ? { structure: selection.organelleId } : {}), cell: view, ...(cellType === 'plant' ? { type: 'plant' } : {}) },
+    params:
+      section === 'cells'
+        ? { ...(selection ? { structure: selection.organelleId } : {}), cell: view, ...(cellType !== 'animal' ? { type: cellType } : {}) }
+        : sectionParams,
   })
 
   const activity = useActivity(BIOLOGY_ACTIVITY, state, {
@@ -78,11 +96,38 @@ export function BiologyExplorer() {
     if (isMobile) setMobileTab('details')
   }
 
+  const sectionSwitch = (
+    <div className="segmented section-switch section-switch--grid" role="group" aria-label="Biology section">
+      {(['cells', 'dna', 'division', 'energy'] as const).map((s) => (
+        <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => setSection(s)}>
+          {SECTION_LABEL[s]}
+        </button>
+      ))}
+    </div>
+  )
+  const openStructure = (t: typeof cellType, id: OrganelleId) => {
+    setSection('cells')
+    if (t !== cellType) dispatch({ type: 'setCellType', cellType: t })
+    dispatch({ type: 'setView', view: 'cutaway' })
+    dispatch({ type: 'select', organelleId: id, instance: null })
+  }
+  const loading = <p className="muted small panel">Loading {SECTION_LABEL[section].toLowerCase()}…</p>
+  const processStage =
+    section === 'dna' ? <DnaView /> : section === 'division' ? <DivisionView /> : section === 'energy' ? <EnergyView onOpenStructure={openStructure} /> : null
+  const processPanel =
+    section === 'dna' ? (
+      <DnaPanel shareParams={sectionParams} />
+    ) : section === 'division' ? (
+      <DivisionPanel shareParams={sectionParams} />
+    ) : section === 'energy' ? (
+      <EnergyPanel shareParams={sectionParams} />
+    ) : null
+
   const typeSwitch = (
     <div className="segmented section-switch" role="group" aria-label="Cell type">
-      {(['animal', 'plant'] as const).map((t) => (
+      {(['animal', 'plant', 'bacterium'] as const).map((t) => (
         <button key={t} type="button" className="segmented-option" aria-pressed={cellType === t} onClick={() => dispatch({ type: 'setCellType', cellType: t })}>
-          {t === 'animal' ? 'Animal cell' : 'Plant cell'}
+          {t === 'animal' ? 'Animal' : t === 'plant' ? 'Plant' : 'Bacterium'}
         </button>
       ))}
     </div>
@@ -128,7 +173,7 @@ export function BiologyExplorer() {
       overlay={
         <>
           <div className="viewport-badge">
-            <span className="viewport-badge-name">Generalized {cellType} cell</span>
+            <span className="viewport-badge-name">{cellType === 'bacterium' ? 'Representative bacterial cell' : `Generalized ${cellType} cell`}</span>
             <span className="viewport-badge-mode">
               {isolated && selected ? `Isolated: ${selected.name}` : view === 'whole' ? 'Whole cell' : 'Cutaway'} ·
               schematic, not to scale
@@ -169,6 +214,15 @@ export function BiologyExplorer() {
     return (
       <div className="chem chem--mobile">
         {announcer}
+        {sectionSwitch}
+        {section !== 'cells' ? (
+          <Suspense fallback={loading}>
+            <div className="chem-stage process-stage">{processStage}</div>
+            {guidePanel}
+            {processPanel}
+          </Suspense>
+        ) : (
+          <>
         {typeSwitch}
         <div className="chem-stage">{viewer}</div>
         {activityPanel}
@@ -183,6 +237,8 @@ export function BiologyExplorer() {
             { id: 'structures', label: 'Structures', content: list },
           ]}
         />
+          </>
+        )}
       </div>
     )
   }
@@ -191,15 +247,30 @@ export function BiologyExplorer() {
     <div className="chem">
       {announcer}
       <aside className="chem-side chem-side--left">
-        <div className="section-switch-wrap">{typeSwitch}</div>
-        {list}
+        <div className="section-switch-wrap">{sectionSwitch}</div>
+        {section === 'cells' ? (
+          <>
+            <div className="section-switch-wrap">{typeSwitch}</div>
+            {list}
+          </>
+        ) : (
+          <p className="muted small panel">
+            {section === 'dna'
+              ? 'A small schematic DNA segment and a transcription example.'
+              : section === 'division'
+                ? 'A step-by-step mitosis sequence, with interphase and cytokinesis shown separately.'
+                : 'Photosynthesis and cellular respiration, linked to the chloroplast and mitochondrion.'}
+          </p>
+        )}
       </aside>
-      <div className="chem-stage">{viewer}</div>
-      <aside className="chem-side chem-side--right">
-        {activityPanel}
-        {guidePanel}
-        {details}
-      </aside>
+      <Suspense fallback={loading}>
+        <div className={`chem-stage${section !== 'cells' ? ' process-stage' : ''}`}>{section === 'cells' ? viewer : processStage}</div>
+        <aside className="chem-side chem-side--right">
+          {section === 'cells' && activityPanel}
+          {guidePanel}
+          {section === 'cells' ? details : processPanel}
+        </aside>
+      </Suspense>
     </div>
   )
 }

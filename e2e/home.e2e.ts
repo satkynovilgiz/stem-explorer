@@ -4,7 +4,7 @@ import { expect, test, waitForViewport } from './fixtures.ts'
 const SUBJECT_HEADINGS = {
   anatomy: 'Anatomy Explorer: body atlas and heart',
   chemistry: 'Chemistry Explorer',
-  biology: 'Biology Explorer: animal cell',
+  biology: 'Biology Explorer: cells, DNA, division and energy',
   physics: 'Physics Explorer: projectile motion lab',
   mathematics: 'Mathematics Explorer: interactive 3D surfaces',
 } as const

@@ -179,7 +179,7 @@ test('periodic table scrolls inside its own panel on a phone; the page does not'
 test('plant cell on a phone: type switch, model and list without overflow', async ({ page }) => {
   await page.goto('/#/biology')
   await waitForViewport(page)
-  await page.getByRole('group', { name: 'Cell type' }).getByRole('button', { name: 'Plant cell' }).tap()
+  await page.getByRole('group', { name: 'Cell type' }).getByRole('button', { name: 'Plant' }).tap()
   await expect(page.locator('.viewport-badge-name')).toHaveText('Generalized plant cell')
   await expectNoHorizontalOverflow(page)
   expect(await smallTargets(page, '.section-switch button')).toEqual([])
@@ -220,4 +220,12 @@ test('Chemistry sections fit a phone: atomic structure and bonding tables withou
   await page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Bonding and geometry' }).click()
   await expect(page.locator('.bonding-view')).toContainText('Ionic bonding')
   await expectNoHorizontalOverflow(page)
+})
+
+test('Biology sections fit a phone', async ({ page }) => {
+  for (const sec of ['dna', 'division', 'energy']) {
+    await page.goto(`/?bsec=${sec}#/biology`)
+    await expect(page.locator('.process-view')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  }
 })

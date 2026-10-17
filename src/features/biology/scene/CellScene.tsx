@@ -11,6 +11,8 @@ import { visibleStructures } from './visibility'
 import { CELL_RADIUS, focusTarget, labelAnchor } from './layout'
 import { PlantCellModel } from './PlantParts'
 import { PLANT_CELL_RADIUS, plantFocusTarget, plantLabelAnchor } from './plantLayout'
+import { BacteriumModel } from './BacteriumParts'
+import { BACTERIUM_RADIUS, bacteriumFocusTarget, bacteriumLabelAnchor } from './bacteriumLayout'
 
 export interface CellSceneProps {
   cellType: CellType
@@ -45,7 +47,7 @@ export default function CellScene({
 
   const labels = useMemo<CellLabel[]>(() => {
     const visible = visibleStructures(view, selection, isolated, cellType)
-    const anchor = cellType === 'plant' ? plantLabelAnchor : labelAnchor
+    const anchor = cellType === 'plant' ? plantLabelAnchor : cellType === 'bacterium' ? bacteriumLabelAnchor : labelAnchor
     const result: CellLabel[] = []
     for (const o of structuresOf(cellType)) {
       if (!visible.has(o.id)) continue
@@ -90,6 +92,8 @@ export default function CellScene({
 
         {cellType === 'plant' ? (
           <PlantCellModel view={view} selection={selection} isolated={isolated} onSelect={onSelect} />
+        ) : cellType === 'bacterium' ? (
+          <BacteriumModel view={view} selection={selection} isolated={isolated} onSelect={onSelect} />
         ) : (
           <CellModel view={view} selection={selection} isolated={isolated} onSelect={onSelect} />
         )}
@@ -100,8 +104,8 @@ export default function CellScene({
           focusToken={focusToken}
           focus={focus}
           reducedMotion={reducedMotion}
-          cellRadius={cellType === 'plant' ? PLANT_CELL_RADIUS : CELL_RADIUS}
-          focusTarget={cellType === 'plant' ? plantFocusTarget : focusTarget}
+          cellRadius={cellType === 'plant' ? PLANT_CELL_RADIUS : cellType === 'bacterium' ? BACTERIUM_RADIUS : CELL_RADIUS}
+          focusTarget={cellType === 'plant' ? plantFocusTarget : cellType === 'bacterium' ? bacteriumFocusTarget : focusTarget}
         />
         <CellLabelProjector labels={labels} elements={labelElements} />
       </Canvas>
