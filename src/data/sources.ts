@@ -215,6 +215,42 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax University Physics Volume 1 — 15.2 Energy in Simple Harmonic Motion',
     url: 'https://openstax.org/books/university-physics-volume-1/pages/15-2-energy-in-simple-harmonic-motion',
   },
+  'chem-2-3': {
+    label: 'OpenStax Chemistry 2e — 2.3 Atomic Structure and Symbolism',
+    url: 'https://openstax.org/books/chemistry-2e/pages/2-3-atomic-structure-and-symbolism',
+  },
+  'chem-6-2': {
+    label: 'OpenStax Chemistry 2e — 6.2 The Bohr Model',
+    url: 'https://openstax.org/books/chemistry-2e/pages/6-2-the-bohr-model',
+  },
+  'chem-6-3': {
+    label: 'OpenStax Chemistry 2e — 6.3 Development of Quantum Theory',
+    url: 'https://openstax.org/books/chemistry-2e/pages/6-3-development-of-quantum-theory',
+  },
+  'chem-6-4': {
+    label: 'OpenStax Chemistry 2e — 6.4 Electronic Structure of Atoms (Electron Configurations)',
+    url: 'https://openstax.org/books/chemistry-2e/pages/6-4-electronic-structure-of-atoms-electron-configurations',
+  },
+  'chem-7-1': {
+    label: 'OpenStax Chemistry 2e — 7.1 Ionic Bonding',
+    url: 'https://openstax.org/books/chemistry-2e/pages/7-1-ionic-bonding',
+  },
+  'chem-8-3': {
+    label: 'OpenStax Chemistry 2e — 8.3 Multiple Bonds',
+    url: 'https://openstax.org/books/chemistry-2e/pages/8-3-multiple-bonds',
+  },
+  'chem-10-5': {
+    label: 'OpenStax Chemistry 2e — 10.5 The Solid State of Matter',
+    url: 'https://openstax.org/books/chemistry-2e/pages/10-5-the-solid-state-of-matter',
+  },
+  'nist-isotopes': {
+    label: 'NIST — Atomic Weights and Isotopic Compositions for All Elements',
+    url: 'https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl',
+  },
+  'pubchem-periodic': {
+    label: 'PubChem — Periodic Table of Elements (electron configurations, electronegativities)',
+    url: 'https://pubchem.ncbi.nlm.nih.gov/periodic-table/',
+  },
   'chem-7-2': {
     label: 'OpenStax Chemistry 2e — 7.2 Covalent Bonding',
     url: 'https://openstax.org/books/chemistry-2e/pages/7-2-covalent-bonding',

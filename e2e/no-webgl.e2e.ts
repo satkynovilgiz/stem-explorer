@@ -190,3 +190,10 @@ test('atlas tours and close-ups are fully usable as text without WebGL', async (
   await page.locator('.atlas-modules').getByRole('button', { name: 'Gas exchange in an alveolus' }).click()
   await expect(page.locator('[data-view="alveolus"] .schematic-svg')).toBeVisible()
 })
+
+test('atomic structure and bonding need no WebGL', async ({ page }) => {
+  await page.goto('/?csec=atomic&el=1#/chemistry')
+  await expect(page.locator('.info table')).toContainText('3 − 1 = 2')
+  await page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Bonding and geometry' }).click()
+  await expect(page.locator('.bonding-view')).toContainText('Covalent network solid')
+})

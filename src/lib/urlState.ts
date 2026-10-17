@@ -49,6 +49,40 @@ export function withChemistryParams(search: string, state: ChemistryUrlState): s
   return `?${params.toString()}`
 }
 
+/* Chemistry sections. Links without `csec` are molecule links, so every older link opens as before. */
+export type ChemistrySection = 'periodic' | 'atomic' | 'molecules' | 'bonding'
+export const CHEMISTRY_SECTIONS: readonly ChemistrySection[] = ['periodic', 'atomic', 'molecules', 'bonding']
+export const DEFAULT_ELEMENT = 8
+
+/** Reads `?csec=periodic|atomic|bonding&el=<1–118>`; `el` belongs to the periodic and atomic sections. */
+export function parseChemistrySection(search: string): { section: ChemistrySection; element: number; invalid: string[] } {
+  const q = new URLSearchParams(search)
+  const invalid: string[] = []
+  const raw = q.get('csec')
+  const section: ChemistrySection = raw === 'periodic' || raw === 'atomic' || raw === 'bonding' ? raw : 'molecules'
+  if (raw !== null && section !== raw) invalid.push('csec')
+  const el = q.get('el')
+  const n = el !== null && /^\d{1,3}$/.test(el) ? Number(el) : NaN
+  const element = Number.isInteger(n) && n >= 1 && n <= 118 ? n : DEFAULT_ELEMENT
+  if (el !== null && (element !== n || (section !== 'periodic' && section !== 'atomic'))) invalid.push('el')
+  return { section, element, invalid }
+}
+
+export function chemistrySectionEntries(section: ChemistrySection, element: number): Record<string, string> {
+  if (section === 'molecules') return {}
+  if (section === 'bonding') return { csec: 'bonding' }
+  return { csec: section, el: String(element) }
+}
+
+/** Replaces the section keys in `search`, keeping everything else. */
+export function withChemistrySection(search: string, section: ChemistrySection, element: number): string {
+  const q = new URLSearchParams(search)
+  q.delete('csec')
+  q.delete('el')
+  for (const [k, v] of Object.entries(chemistrySectionEntries(section, element))) q.set(k, v)
+  return `?${q.toString()}`
+}
+
 export const CELL_VIEWS = ['whole', 'cutaway'] as const
 export type CellViewParam = (typeof CELL_VIEWS)[number]
 

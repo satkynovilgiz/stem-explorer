@@ -3,12 +3,15 @@ import { findStructure } from '../data/anatomy/atlas'
 import { findHeartPart, HEART_PART_IDS } from '../data/anatomy/heart'
 import { CELL_STRUCTURES, findOrganelle } from '../data/biology/organelles'
 import { findMolecule, MOLECULES } from '../data/chemistry/molecules'
+import { findElement } from '../data/chemistry/periodicTable'
 import { isSubjectId, SUBJECTS, type SubjectId } from '../data/subjects'
 import { getSurface } from '../math/surfaces'
 import { DEFAULT_PARAMS, isValidParam, normalizeParam, PARAM_KEYS } from '../physics/projectile'
 import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
   anatomyModule,
+  chemistrySectionEntries,
+  parseChemistrySection,
   anatomyParamEntries,
   atlasParamEntries,
   parseAtlasParams,
@@ -47,7 +50,9 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
   switch (subject) {
     case 'chemistry': {
       const r = parseChemistryParams(search, MOLECULES.map((m) => m.id), { moleculeId: 'water', representation: 'ball-and-stick' })
-      return r.invalid.length ? null : { subject, params: { molecule: r.moleculeId, view: r.representation } }
+      const sec = parseChemistrySection(search)
+      if (r.invalid.length || sec.invalid.length) return null
+      return { subject, params: { molecule: r.moleculeId, view: r.representation, ...chemistrySectionEntries(sec.section, sec.element) } }
     }
     case 'biology': {
       const r = parseBiologyParams(search, (t) => CELL_STRUCTURES[t], { structureId: null, cellView: 'cutaway' })
@@ -110,6 +115,10 @@ export function defaultTitle(state: ShareState): string {
   const p = state.params
   switch (state.subject) {
     case 'chemistry': {
+      const element = p.el ? findElement(Number(p.el))?.name : undefined
+      if (p.csec === 'periodic') return `Periodic table · ${element ?? 'element'}`
+      if (p.csec === 'atomic') return `Atomic structure · ${element ?? 'element'}`
+      if (p.csec === 'bonding') return 'Bonding and geometry'
       const m = findMolecule(p.molecule)
       return `${m?.name ?? 'Molecule'} · ${p.view === 'space-filling' ? 'space-filling' : 'ball and stick'}`
     }

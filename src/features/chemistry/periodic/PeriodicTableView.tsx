@@ -10,6 +10,7 @@ import {
   type Block,
   type ElementInfo,
 } from '../../../data/chemistry/periodicTable'
+import { MOLECULES } from '../../../data/chemistry/molecules'
 
 type FilterKind = 'block' | 'category'
 const BLOCKS: Block[] = ['s', 'p', 'd', 'f']
@@ -215,7 +216,7 @@ export default function PeriodicTableView({ selected, onSelect }: PeriodicTableV
 }
 
 /** Details for the selected element, with links to the app's molecules that contain it. */
-export function ElementPanel({ z, onOpenMolecule }: { z: number; onOpenMolecule: (moleculeId: string) => void }) {
+export function ElementPanel({ z, onOpenMolecule, onOpenAtomic }: { z: number; onOpenMolecule: (moleculeId: string) => void; onOpenAtomic?: () => void }) {
   const e = findElement(z)!
   const molecules = moleculesWith(e.symbol)
   return (
@@ -228,6 +229,13 @@ export function ElementPanel({ z, onOpenMolecule }: { z: number; onOpenMolecule:
         <p className="element-symbol" aria-hidden="true">
           {e.symbol}
         </p>
+        {onOpenAtomic && (
+          <div className="header-actions">
+            <button type="button" className="tool-button bordered" onClick={onOpenAtomic}>
+              Atomic structure of {e.name.toLowerCase()}
+            </button>
+          </div>
+        )}
       </header>
       <dl className="element-facts">
         <div>
@@ -268,7 +276,7 @@ export function ElementPanel({ z, onOpenMolecule }: { z: number; onOpenMolecule:
             ))}
           </ul>
         ) : (
-          <p className="muted small">None of the six molecules here contain {e.name.toLowerCase()}.</p>
+          <p className="muted small">None of this app’s {MOLECULES.length} molecules contain {e.name.toLowerCase()}.</p>
         )}
       </div>
       <div className="info-section">

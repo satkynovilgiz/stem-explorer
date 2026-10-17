@@ -212,3 +212,12 @@ test('Body atlas on a phone: module switch, tabs, layers and selection without o
   await page.getByRole('checkbox', { name: 'Muscular' }).check()
   await expectNoHorizontalOverflow(page)
 })
+
+test('Chemistry sections fit a phone: atomic structure and bonding tables without page overflow', async ({ page }) => {
+  await page.goto('/?csec=atomic&el=26#/chemistry')
+  await expect(page.locator('.atom-svg')).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+  await page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Bonding and geometry' }).click()
+  await expect(page.locator('.bonding-view')).toContainText('Ionic bonding')
+  await expectNoHorizontalOverflow(page)
+})

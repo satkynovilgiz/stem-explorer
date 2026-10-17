@@ -69,7 +69,7 @@ test.describe('Home page', () => {
 
   test('subject cards list real capabilities and keyboard users can reach every card link', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('.subject-card.is-chemistry')).toContainText('Measure bond lengths and bond angles between atoms')
+    await expect(page.locator('.subject-card.is-chemistry')).toContainText('Measure bond lengths and angles in ball-and-stick or space-filling models')
     await expect(page.locator('.subject-card.is-physics')).toContainText('Oscillate a mass on a spring: period, forces and energy')
     const link = page.locator('.subject-card.is-mathematics').getByRole('link')
     await link.focus()

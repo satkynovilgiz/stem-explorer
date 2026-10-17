@@ -4917,7 +4917,17 @@ button {
   font-size: 9px;
 }
 
-.inline-note p {
+.note-block {
+  display: block;
+  margin: var(--space-2) 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-measure-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-measure-soft);
+  line-height: 1.5;
+}
+
+.note-block p {
   margin: 0 0 var(--space-1);
 }
 
@@ -5076,4 +5086,133 @@ button {
 .schematic-svg g.is-active .sv-label {
   fill: var(--color-accent-strong);
   font-weight: 700;
+}
+
+/* ---------- Chemistry: sections, atomic structure, bonding ---------- */
+
+.section-switch--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.section-switch--grid .segmented-option {
+  min-height: 40px;
+  padding: 4px 8px;
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.atomic-view,
+.bonding-view {
+  overflow-y: auto;
+  height: 100%;
+}
+
+.atomic-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.element-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.element-picker .select {
+  min-height: 34px;
+  max-width: 220px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.atom-svg {
+  display: block;
+  width: min(100%, 420px);
+  height: auto;
+  margin: var(--space-3) auto;
+}
+
+.atom-shell {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 1.5;
+}
+
+.atom-electron {
+  fill: var(--subject-chemistry);
+}
+
+.atom-nucleus {
+  fill: rgb(240 122 114 / 0.25);
+  stroke: var(--color-danger);
+  stroke-width: 2;
+}
+
+.atom-nucleus-label {
+  fill: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.atom-nucleus-sub,
+.atom-shell-label {
+  fill: var(--color-text-muted);
+  font-size: 9px;
+}
+
+.orbital-s {
+  fill: rgb(111 224 220 / 0.18);
+  stroke: var(--subject-chemistry);
+  stroke-width: 1.5;
+}
+
+.orbital-p {
+  fill: rgb(141 180 255 / 0.14);
+  stroke: var(--subject-physics);
+  stroke-width: 1.5;
+}
+
+.orbital-p.is-z {
+  stroke-dasharray: 4 3;
+}
+
+.subshell-table {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.bond-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.bond-card {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+}
+
+.bond-card p {
+  margin: 0 0 var(--space-2);
+}
+
+.en-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
 }

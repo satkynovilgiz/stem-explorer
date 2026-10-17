@@ -16,12 +16,12 @@ export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; 
     action: 'Open anatomy',
   },
   chemistry: {
-    title: 'Molecules and elements',
-    summary: 'Six molecules built from experimental geometry, plus the periodic table.',
+    title: 'Atoms, molecules and bonds',
+    summary: 'Twelve molecules built from experimental geometry, the periodic table, atomic structure and bonding.',
     capabilities: [
-      'Ball-and-stick and space-filling views',
-      'Measure bond lengths and bond angles between atoms',
-      'A periodic table of all 118 elements with search and filters',
+      'Measure bond lengths and angles in ball-and-stick or space-filling models',
+      'All 118 elements: protons, electrons, configurations and isotopes',
+      'Covalent, ionic and metallic bonding; shape and polarity',
     ],
     action: 'Open chemistry',
   },

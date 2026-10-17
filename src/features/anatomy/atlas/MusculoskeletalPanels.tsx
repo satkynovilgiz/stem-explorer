@@ -158,7 +158,7 @@ export function MovementPanel({
               </li>
             ))}
           </ul>
-          <div className="inline-note small">
+          <div className="note-block small">
             <p>
               <strong>What this shows and does not.</strong> Rigid segments turn about one fixed axis through the joint. The range is conceptual — no measured range of
               motion for any population is claimed, so no angles are given. Muscles that cross the joint simply stretch between their ends; muscle shortening, forces,

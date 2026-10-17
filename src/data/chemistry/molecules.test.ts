@@ -11,7 +11,7 @@ const pos = (moleculeId: string, atomId: string) => {
 }
 
 describe('molecule data integrity', () => {
-  it('contains the six expected molecules with unique IDs', () => {
+  it('contains the twelve expected molecules with unique IDs', () => {
     expect(MOLECULES.map((m) => m.id)).toEqual([
       'water',
       'carbon-dioxide',
@@ -19,6 +19,12 @@ describe('molecule data integrity', () => {
       'ammonia',
       'ethanol',
       'benzene',
+      'oxygen',
+      'nitrogen',
+      'hydrogen-peroxide',
+      'formaldehyde',
+      'acetylene',
+      'ethene',
     ])
   })
 
@@ -93,6 +99,16 @@ describe('coordinates reproduce the reported experimental geometry', () => {
     ['ethanol', 'O1', 'H6', 0.971, 0.001],
     ['ethanol', 'C2', 'H4', 1.086, 0.001],
     ['benzene', 'C1', 'H1', 1.084, 0.001],
+    ['oxygen', 'O1', 'O2', 1.208, 0.001],
+    ['nitrogen', 'N1', 'N2', 1.098, 0.001],
+    ['hydrogen-peroxide', 'O1', 'O2', 1.475, 0.001],
+    ['hydrogen-peroxide', 'O1', 'H1', 0.95, 0.001],
+    ['formaldehyde', 'C1', 'O1', 1.205, 0.001],
+    ['formaldehyde', 'C1', 'H1', 1.111, 0.001],
+    ['acetylene', 'C1', 'C2', 1.203, 0.001],
+    ['acetylene', 'C1', 'H1', 1.063, 0.001],
+    ['ethene', 'C1', 'C2', 1.339, 0.001],
+    ['ethene', 'C1', 'H1', 1.086, 0.001],
   ]
   it.each(distances)('%s %s–%s ≈ %f Å', (m, a, b, expected, tol) => {
     expect(Math.abs(distance(pos(m, a), pos(m, b)) - expected)).toBeLessThanOrEqual(tol)
@@ -106,6 +122,10 @@ describe('coordinates reproduce the reported experimental geometry', () => {
     ['ethanol', 'C1', 'C2', 'O1', 107.8, 0.05],
     ['ethanol', 'C2', 'O1', 'H6', 105.4, 0.05],
     ['benzene', 'C1', 'C2', 'C3', 120, 0.01],
+    ['hydrogen-peroxide', 'H1', 'O1', 'O2', 94.8, 0.05],
+    ['formaldehyde', 'H1', 'C1', 'H2', 116.133, 0.05],
+    ['acetylene', 'H1', 'C1', 'C2', 180, 0.001],
+    ['ethene', 'H1', 'C1', 'H2', 117.6, 0.05],
   ]
   it.each(angles)('%s %s–%s–%s ≈ %f°', (m, a, b, c, expected, tol) => {
     expect(Math.abs(angleAt(pos(m, a), pos(m, b), pos(m, c))! - expected)).toBeLessThanOrEqual(tol)
@@ -128,5 +148,33 @@ describe('coordinates reproduce the reported experimental geometry', () => {
     const side = (p: readonly number[]) =>
       (o1[0] - c2[0]) * (p[1] - c2[1]) - (o1[1] - c2[1]) * (p[0] - c2[0])
     expect(Math.sign(side(c1))).toBe(-Math.sign(side(h6)))
+  })
+})
+
+describe('new molecules: bond orders and shapes', () => {
+  /** Dihedral angle a–b–c–d in degrees. */
+  function dihedral(a: readonly number[], b: readonly number[], c: readonly number[], d: readonly number[]) {
+    const sub = (p: readonly number[], q: readonly number[]) => p.map((v, i) => v - q[i])
+    const cross = (u: number[], v: number[]) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
+    const dot = (u: number[], v: number[]) => u.reduce((s, x, i) => s + x * v[i], 0)
+    const n1 = cross(sub(b, a), sub(c, b))
+    const n2 = cross(sub(c, b), sub(d, c))
+    return (Math.acos(dot(n1, n2) / Math.sqrt(dot(n1, n1) * dot(n2, n2))) * 180) / Math.PI
+  }
+
+  it('uses the bond orders CCCBDB lists (O=O, N≡N, C=O, C≡C, C=C)', () => {
+    const order = (m: string, a: string, b: string) => getMolecule(m).bonds.find((x) => x.atoms.includes(a) && x.atoms.includes(b))!.order
+    expect(order('oxygen', 'O1', 'O2')).toBe(2)
+    expect(order('nitrogen', 'N1', 'N2')).toBe(3)
+    expect(order('formaldehyde', 'C1', 'O1')).toBe(2)
+    expect(order('acetylene', 'C1', 'C2')).toBe(3)
+    expect(order('ethene', 'C1', 'C2')).toBe(2)
+    expect(order('hydrogen-peroxide', 'O1', 'O2')).toBe(1)
+  })
+
+  it('hydrogen peroxide is non-planar with the reported H–O–O–H dihedral; ethene and formaldehyde are planar', () => {
+    const [h1, o1, o2, h2] = ['H1', 'O1', 'O2', 'H2'].map((id) => pos('hydrogen-peroxide', id))
+    expect(Math.abs(dihedral(h1, o1, o2, h2) - 119.8)).toBeLessThan(0.1)
+    for (const m of ['ethene', 'formaldehyde']) for (const a of getMolecule(m).atoms) expect(a.position[0]).toBe(0)
   })
 })

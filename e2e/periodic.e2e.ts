@@ -5,7 +5,7 @@ const cell = (page: Page, name: string) => page.locator('.ptable-cell', { has: p
 const open = async (page: Page) => {
   await page.goto('/#/chemistry')
   await waitForViewport(page)
-  await page.getByRole('group', { name: 'Chemistry view' }).getByRole('button', { name: 'Periodic table' }).click()
+  await page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Periodic table' }).click()
   await expect(page.locator('.ptable-cell')).toHaveCount(118)
 }
 
@@ -17,7 +17,7 @@ test('shows all 118 elements and selects one into the element panel', async ({ p
   await expect(page.locator('.element-facts')).toContainText('Period4')
   await expect(page.locator('.element-facts')).toContainText('Group8')
   await expect(page.locator('.element-facts')).toContainText('d block')
-  await expect(page.locator('.info')).toContainText('None of the six molecules here contain iron.')
+  await expect(page.locator('.info')).toContainText('None of this app’s 12 molecules contain iron.')
   // The lanthanoids have no group number in this layout, and say so.
   await page.getByRole('button', { name: 'Cerium, Ce, atomic number 58' }).click()
   await expect(page.locator('.element-facts')).toContainText('Lanthanoid row (no group number in this layout)')
@@ -67,7 +67,7 @@ test('opens a molecule containing the element, and the molecule tools still work
   await page.getByRole('button', { name: 'Nitrogen, N, atomic number 7' }).click()
   await page.getByRole('button', { name: 'Open Ammonia' }).click()
   await expect(page.locator('#molecule-heading')).toHaveText('Ammonia')
-  await expect(page.getByRole('group', { name: 'Chemistry view' }).getByRole('button', { name: 'Molecules' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Molecules' })).toHaveAttribute('aria-pressed', 'true')
   await waitForViewport(page)
   await page.getByRole('button', { name: 'Distance', exact: true }).click()
   await page.locator('.measure-panel .chip').filter({ hasText: /^\d?N1$/ }).click()

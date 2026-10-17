@@ -29,7 +29,7 @@ export const GUIDES: Record<SubjectId, SubjectGuide> = {
   chemistry: {
     subject: 'chemistry',
     summary:
-      'A molecule is a group of atoms held together by covalent bonds. Its 3D shape, set by bond lengths and bond angles, affects how it behaves. These six molecules are built from measured geometry.',
+      'A molecule is a group of atoms held together by covalent bonds. Its 3D shape, set by bond lengths and bond angles, affects how it behaves. The molecules here are built from measured geometry.',
     deeper: [
       { text: 'In a covalent bond, two atoms share a pair of electrons. The bond length is the separation at which the pair of atoms has its lowest energy.', sourceIds: ['chem-7-2'] },
       {

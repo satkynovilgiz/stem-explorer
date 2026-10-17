@@ -304,3 +304,15 @@ describe('anatomy: atlas and heart modules share the subject', () => {
     expect(hrefFor({ subject: 'anatomy', params: { atlas: 'liver', bview: 'front' } })).toBe('?atlas=liver&bview=front#/anatomy')
   })
 })
+
+describe('chemistry sections in links', () => {
+  it('older molecule links keep their form; sections add csec (and el for elements)', () => {
+    expect(canonicalize('chemistry', { molecule: 'water', view: 'space-filling' })).toEqual({ subject: 'chemistry', params: { molecule: 'water', view: 'space-filling' } })
+    expect(canonicalize('chemistry', { csec: 'atomic', el: '26' })).toEqual({ subject: 'chemistry', params: { molecule: 'water', view: 'ball-and-stick', csec: 'atomic', el: '26' } })
+    expect(canonicalize('chemistry', { csec: 'bonding' })!.params).toMatchObject({ csec: 'bonding' })
+    expect(canonicalize('chemistry', { csec: 'bonding', el: '6' })).toBeNull()
+    expect(canonicalize('chemistry', { csec: 'periodic', el: '119' })).toBeNull()
+    expect(canonicalize('chemistry', { csec: 'nope' })).toBeNull()
+    expect(defaultTitle({ subject: 'chemistry', params: { molecule: 'water', view: 'ball-and-stick', csec: 'atomic', el: '26' } })).toBe('Atomic structure · Iron')
+  })
+})

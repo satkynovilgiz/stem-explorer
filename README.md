@@ -374,6 +374,12 @@ Only the 3D view and its toolbar are replaced by a message.
 
 ## Chemistry Explorer
 
+Chemistry has four sections (**Periodic table**, **Atomic structure**, **Molecules**, **Bonding and
+geometry**), chosen with a 2 × 2 switch. Links without a section key are molecule links, so every
+older link and saved exploration opens as before. Other sections add `csec=periodic|atomic|bonding`,
+plus `el=<1–118>` for the selected element. Invalid values are rejected by the same parser that
+validates saved entries.
+
 ### Molecules
 
 | Molecule | Formula | Geometry shown |
@@ -384,6 +390,20 @@ Only the 3D view and its toolbar are replaced by a message.
 | Ammonia | NH₃ | Trigonal pyramidal around N1 (lone pair not drawn) |
 | Ethanol | C₂H₆O | Approximately tetrahedral around C1 and C2, bent around O1; **one conformation** (anti) |
 | Benzene | C₆H₆ | Planar ring, trigonal planar around every carbon; **aromatic** ring bonds |
+| Oxygen | O₂ | Linear (diatomic); O=O double bond |
+| Nitrogen | N₂ | Linear (diatomic); N≡N triple bond |
+| Hydrogen peroxide | H₂O₂ | Bent around each O; **non-planar** (H–O–O–H dihedral 119.8°) |
+| Formaldehyde | CH₂O | Trigonal planar around C; C=O double bond; H–C–H 116.1° |
+| Acetylene | C₂H₂ | Linear; C≡C triple bond |
+| Ethene | C₂H₄ | Planar; trigonal planar around each C; C=C double bond |
+
+The six molecules added in this release use CCCBDB experimental coordinates exactly as listed
+(fetched for this release), with PubChem CIDs 977, 947, 784, 712, 6326 and 6325 checked for
+formula. Each molecule's notes name the reference CCCBDB gives: Huber & Herzberg (1979) for O₂ and
+N₂ (equilibrium re), Redington et al. (1962) for H₂O₂, Gurvich et al. (1989) for formaldehyde,
+Kuchitsu (1998, an "rm structure") for acetylene, and Herzberg (1966) for ethene. All are labelled
+*experimental*; none are computed. Unit tests reproduce each reported bond length, angle and the
+H₂O₂ dihedral from the coordinates, and check the listed bond orders.
 
 Ethanol's groups rotate around its single bonds. The model shows only the anti (trans)
 conformation listed by the source. Benzene's six equal C–C bonds are drawn as a solid stick plus a
@@ -435,6 +455,52 @@ How the tools behave:
 positions). Distances are rounded to 0.001 Å and angles to 0.1°. Cosines are clamped to [−1, 1]
 before `acos`. They describe this static model, not a vibrating molecule.
 
+
+### Atomic structure
+
+Pick an element (list, or Previous/Next). The panel shows:
+- protons (Z) and electrons in the neutral atom (also Z);
+- the electron configuration exactly as PubChem lists it, with superscripts, and PubChem's
+  *predicted* or *calculated* note for some heavy elements;
+- electrons per shell (from that configuration) and the molecules in this app containing the
+  element.
+
+**Neutrons** are shown only for isotopes in a small verified library: H-1/2/3 (deuterium, tritium),
+C-12/13/14, N-14/15, O-16/17/18, Mg-24/25/26, Cl-35/37, Fe-54/56/57/58 and U-233/234/235/236/238, as
+listed by NIST's *Atomic Weights and Isotopic Compositions*. Each row shows N = A − Z worked out.
+Other elements say no isotope is in the library. Neutron counts are never estimated from atomic
+weight, and abundances and isotopic masses are not shown.
+
+The center shows either a **Shell diagram (simplified)** or **Orbitals (quantum picture)**:
+- **Shell diagram**: electrons are evenly spaced, motionless dots on circles, one per shell, with
+  the text that this is a counting picture. Electrons do not travel on circles like planets; the
+  Bohr model's precise orbits were found untenable and it ignores electron–electron interactions
+  (OpenStax §6.2).
+- **Orbitals**: generic s (spherical) and p (dumbbell) shapes, described as regions where an
+  electron is likely to be found, not paths (§6.3), plus a table of the element's occupied
+  subshells.
+Nothing in this section animates.
+
+Data: `src/data/chemistry/atomic.data.ts` is generated from PubChem's periodic-table JSON (retrieved
+2026-10-16: configurations and Pauling electronegativities, null where none is listed).
+`atomic.ts` expands noble-gas cores, and unit tests check that every element expands to exactly Z
+electrons.
+
+### Bonding and geometry
+
+- **Covalent, ionic and metallic bonding**, each with what holds the particles together, an
+  example and typical properties (OpenStax §7.1, 7.2, 10.5).
+- **When a single-molecule model does not apply**: the four kinds of crystalline solid. Only
+  molecular solids are made of discrete molecules; in ionic, metallic and covalent network solids
+  the bonding extends through the crystal, and a formula such as NaCl is a ratio of ions.
+- **Geometry and polarity** for every molecule in the library. Polarity is given only where the
+  cited section states it: water polar; CO₂, CH₄, O₂ and N₂ nonpolar. The rest say "not stated in
+  this app's sources".
+- **Electronegativity: a rough guide with limits**: pick two elements to see PubChem's values,
+  |ΔEN| and a rule of thumb by element kind (two nonmetals generally covalent; a metal with a
+  nonmetal often ionic). The text quotes OpenStax's counter-examples: HF (ΔEN ≈ 1.9) and NH₃ (≈ 0.9)
+  are both polar covalent, while NaCl (≈ 2.1) and MnI₂ (≈ 1.0) are both ionic. It notes that
+  tables differ, and no bond type is assigned from ΔEN alone.
 
 ### Periodic table
 
@@ -1272,6 +1338,7 @@ How the URL is kept up to date:
 | --- | --- |
 | `src/lib/measurement.test.ts` | Distance and angle maths against known geometry. Also the cosine clamp, zero-length arms, duplicate and restarting selections, and how results are labelled. |
 | `src/data/chemistry/molecules.test.ts` | Atom counts against formulas, IDs, bonds and connectivity. Also cited sources, and that coordinates reproduce every reported bond length and angle. |
+| `src/data/chemistry/atomic.test.ts` | Every element's PubChem configuration expands to exactly Z electrons; shell counts for H, O, Na, Ca, Fe and Cr (a filling exception); predicted/calculated notes kept apart; PubChem electronegativities and missing values; N = A − Z; the isotope library has distinct, plausible entries. |
 | `src/features/chemistry/state.test.ts` | Switching molecules mid-measurement, duplicate picks, announcements and clearing. |
 | `src/features/chemistry/scene/measurementGeometry.test.ts` | Angle arc and label placement, including straight and degenerate angles. |
 | `src/data/biology/organelles.test.ts` | Required structures with stable, URL-safe IDs; every content field present; known sources and related structures. Also that cytoplasm and cytosol are distinguished, and that the text never claims all proteins pass through the Golgi. |
