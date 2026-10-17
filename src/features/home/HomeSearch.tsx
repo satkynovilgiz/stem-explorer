@@ -3,7 +3,8 @@ import { useId, useRef, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { formulaParts } from '../../lib/chemistry'
 import { subjectName } from '../../lib/explorations'
-import { searchExplorations } from '../../lib/searchIndex'
+import { nameShowsFormula, searchAll } from '../../lib/searchIndex'
+import { searchUrl } from '../../lib/searchUrl'
 import { SEARCH_EXAMPLES as EXAMPLES } from './content'
 
 /** Plain input + result list (no custom autocomplete): Tab moves through results, Enter opens one. */
@@ -11,7 +12,8 @@ export function HomeSearch() {
   const id = useId()
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  const results = searchExplorations(query)
+  const all = searchAll(query)
+  const results = all.slice(0, 12)
   const trimmed = query.trim()
 
   return (
@@ -63,7 +65,7 @@ export function HomeSearch() {
         </div>
       )}
       <p id={`${id}-status`} className="search-status" role="status">
-        {trimmed ? (results.length ? `${results.length} result${results.length === 1 ? '' : 's'}` : '') : ''}
+        {trimmed ? (all.length ? `${all.length} result${all.length === 1 ? '' : 's'}${all.length > results.length ? `, showing the first ${results.length}` : ''}` : '') : ''}
       </p>
       {trimmed && results.length > 0 && (
         <ul className="search-results" aria-label="Search results">
@@ -73,7 +75,7 @@ export function HomeSearch() {
                 <span className="search-result-head">
                   <span className="search-result-name">
                     {r.name}
-                    {r.formula && (
+                    {r.formula && !nameShowsFormula(r) && (
                       <span className="search-result-formula">
                         {' '}
                         ({formulaParts(r.formula).map((p, i) => (p.sub ? <sub key={i}>{p.text}</sub> : <span key={i}>{p.text}</span>))})
@@ -88,12 +90,17 @@ export function HomeSearch() {
           ))}
         </ul>
       )}
+      {trimmed && all.length > 0 && (
+        <AppLink href={`${searchUrl({ q: trimmed, subject: null, kind: null })}#/search`} className="search-all-link">
+          See all {all.length} result{all.length === 1 ? '' : 's'}, grouped by subject with filters
+        </AppLink>
+      )}
       {trimmed && results.length === 0 && (
         <div className="empty-state">
           <p>Nothing matches “{trimmed}”.</p>
           <p className="muted">
-            Search covers subjects, molecules (names or formulas), cell structures, heart structures, surfaces and the projectile
-            lab. Try “benzene”, “ribosome”, “aorta” or “plane”.
+            Search covers body structures, elements, molecules, cell structures, biology processes, physics labs, functions,
+            surfaces, vector tools and the glossary. Try “benzene”, “ribosome”, “femur”, “Fe” or “derivative”.
           </p>
         </div>
       )}

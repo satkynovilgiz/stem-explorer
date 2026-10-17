@@ -5747,3 +5747,213 @@ button {
 .preset-row .tool-button {
   min-height: 32px;
 }
+
+/* ---------- Header actions: search and presentation ---------- */
+
+.topnav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.present-toggle {
+  min-height: 34px;
+}
+
+@media (max-width: 760px) {
+  .topnav-actions {
+    order: 1;
+    margin: 0 var(--space-4) var(--space-2) auto;
+  }
+
+  .subject-nav {
+    order: 2;
+  }
+}
+
+/* ---------- Search page ---------- */
+
+.search-page {
+  width: min(960px, 100%);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-8);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.page-title {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.search-page-controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.search-subjects {
+  flex-wrap: wrap;
+}
+
+.search-kind-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search-kind-filter select {
+  width: auto;
+  min-width: 180px;
+}
+
+.search-subject {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.search-subject-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+.search-kind {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.search-kind > .search-results {
+  width: 100%;
+}
+
+.search-kind-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.search-page-item {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.search-related,
+.related-topics {
+  margin: 0;
+  padding: 0 var(--space-3);
+  list-style: none;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.relation-kind {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* The kind is also written out in words, so the dashed underline is only a supporting cue. */
+.relation-kind.is-analogy {
+  text-decoration: underline dashed;
+  text-underline-offset: 3px;
+}
+
+.search-examples-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.related-topics li {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ---------- Presentation mode ---------- */
+
+.present-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.present-title {
+  font-weight: 600;
+}
+
+.present-label {
+  flex: 1 1 260px;
+  color: var(--color-text-muted);
+}
+
+.present-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.present-kbd {
+  margin-left: var(--space-1);
+  padding: 0 4px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+
+.present-message {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.present-message:empty {
+  display: none;
+}
+
+html.is-presenting .topnav,
+html.is-presenting .chem-side,
+html.is-presenting .chem--mobile > :not(.chem-stage) {
+  display: none;
+}
+
+html.is-presenting .chem {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: calc(100dvh - 64px);
+  padding: var(--space-3);
+}
+
+html.is-presenting .chem-stage {
+  flex: 1;
+}
+
+html.is-presenting .chem .viewport {
+  flex: 1;
+  min-height: calc(100dvh - 140px);
+}

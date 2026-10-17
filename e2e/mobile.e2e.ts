@@ -245,3 +245,14 @@ test('2D functions and vectors fit a phone', async ({ page }) => {
     await expectNoHorizontalOverflow(page)
   }
 })
+
+test('search page and presentation mode fit a phone', async ({ page }) => {
+  await page.goto('/?q=heart#/search')
+  await expect(page.locator('.search-page .search-result').first()).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+  await page.goto('/?experiment=wave#/physics')
+  await page.getByRole('button', { name: 'Present' }).click()
+  await expect(page.getByRole('toolbar', { name: 'Presentation' })).toBeVisible()
+  await expect(page.locator('.mobile-tabs')).toBeHidden()
+  await expectNoHorizontalOverflow(page)
+})

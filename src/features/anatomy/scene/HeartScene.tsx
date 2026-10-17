@@ -421,7 +421,7 @@ export default function HeartScene(props: HeartSceneProps) {
         dpr={[1, 2]}
         frameloop="demand"
         camera={{ fov: 35, near: 0.1, far: 100, position: [0, 0.5, 12] }}
-        gl={{ antialias: true, powerPreference: 'low-power' }}
+        gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}
         onPointerMissed={onBackgroundClick}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (e) => {

@@ -2,6 +2,7 @@ import { BookOpen, ChevronDown } from 'lucide-react'
 import { useId, useState } from 'react'
 import { GUIDES, type SubjectGuide } from '../../data/guides'
 import type { SubjectId } from '../../data/subjects'
+import { RelatedTopics } from './RelatedTopics'
 import { SourceLinks } from './SourceLinks'
 import { TermButton } from './TermButton'
 
@@ -110,6 +111,8 @@ export function SubjectGuidePanel({ subject, guide: override }: { subject: Subje
               </div>
             ))}
           </dl>
+
+          <RelatedTopics subject={subject} />
         </div>
       )}
     </section>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { canonicalize } from './explorations'
-import { SEARCH_INDEX, searchExplorations } from './searchIndex'
+import { ATLAS_STRUCTURES } from '../data/anatomy/atlas'
+import { groupResults, SEARCH_INDEX, searchAll, searchExplorations } from './searchIndex'
 
 const parse = (href: string) => {
   const [query, hash] = href.split('#/')
@@ -15,7 +16,13 @@ describe('search index', () => {
     expect(count('organelle:')).toBe(23) // 10 animal-model structures + 4 plant-only + 9 bacterial
     expect(count('heart:')).toBe(14)
     expect(count('surface:')).toBe(4)
-    expect(count('experiment:')).toBe(2)
+    expect(count('experiment:')).toBe(4)
+    expect(count('structure:')).toBe(ATLAS_STRUCTURES.length)
+    expect(count('element:')).toBe(118)
+    expect(count('process:')).toBe(4)
+    expect(count('function:')).toBe(7)
+    expect(count('section:')).toBe(3)
+    expect(count('cell:')).toBe(3)
     expect(count('term:')).toBeGreaterThan(40)
   })
 
@@ -26,6 +33,47 @@ describe('search index', () => {
       const { subject, params } = parse(item.href)
       expect(canonicalize(subject, params), item.href).not.toBeNull()
     }
+  })
+})
+
+describe('searchAll', () => {
+  it('finds the new content and opens its exact state', () => {
+    expect(searchAll('femur')[0]).toMatchObject({ subject: 'anatomy', kind: 'structure' })
+    expect(searchAll('femur')[0].href).toContain('atlas=femur-')
+    // A structure in a layer that is off by default turns that layer on.
+    expect(new URLSearchParams(searchAll('biceps')[0].href.split('#')[0]).get('layers')).toContain('muscular')
+    expect(searchAll('Fe')[0]).toMatchObject({ name: 'Iron', kind: 'element' })
+    expect(searchAll('Fe')[0].href).toMatch(/csec=periodic&el=26#\/chemistry$/)
+    expect(searchAll('prophase')[0]).toMatchObject({ id: 'process:division' })
+    expect(searchAll('glycolysis').map((r) => r.id)).toContain('process:respiration')
+    expect(searchAll('resistor')[0]).toMatchObject({ id: 'experiment:circuit' })
+    expect(searchAll('wavelength')[0]).toMatchObject({ id: 'experiment:wave' })
+    expect(searchAll('derivative').some((r) => r.id === 'function:sine')).toBe(true)
+    expect(searchAll('determinant')[0]).toMatchObject({ id: 'tool:vectors' })
+    expect(searchAll('prokaryote')[0]).toMatchObject({ id: 'cell:bacterium' })
+  })
+
+  it('matches synonyms and plain plurals', () => {
+    expect(searchAll('windpipe')[0]).toMatchObject({ name: 'Trachea' })
+    expect(searchAll('ribosomes')[0].name).toBe('Ribosomes')
+    expect(searchAll('isotopes')[0]).toMatchObject({ id: 'section:atomic' })
+  })
+
+  it('filters by subject and kind, and reproductive structures open their own configuration', () => {
+    expect(new Set(searchAll('energy').map((r) => r.subject))).toEqual(new Set(['biology', 'physics']))
+    expect(searchAll('energy', { subject: 'physics' }).every((r) => r.subject === 'physics')).toBe(true)
+    expect(searchAll('oxygen', { subject: 'chemistry' }).every((r) => r.subject === 'chemistry')).toBe(true)
+    expect(searchAll('oxygen', { kind: 'element' }).map((r) => r.name)).toEqual(['Oxygen'])
+    expect(searchAll('quasar', { subject: 'physics' })).toEqual([])
+    const ovary = searchAll('ovary').find((r) => r.kind === 'structure')!
+    expect(ovary.href).toContain('repro=ovarian')
+    expect(ovary.description).toContain('ovarian configuration')
+  })
+
+  it('groups by subject in app order, then by kind', () => {
+    expect(groupResults(searchAll('energy')).map((g) => g.subject)).toEqual(['physics', 'biology'])
+    const chem = groupResults(searchAll('carbon')).find((g) => g.subject === 'chemistry')!
+    expect(chem.kinds.map((k) => k.kind)).toEqual(expect.arrayContaining(['element', 'molecule']))
   })
 })
 

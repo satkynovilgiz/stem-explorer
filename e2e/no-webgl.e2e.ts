@@ -219,3 +219,12 @@ test('2D functions and vectors need no WebGL', async ({ page }) => {
   await page.getByRole('group', { name: 'Mathematics section' }).getByRole('button', { name: 'Vectors and transformations' }).click()
   await expect(page.locator('.vec-det-value')).toContainText('= 1')
 })
+
+test('presentation export explains the failure when there is no picture', async ({ page }) => {
+  await page.goto('/?molecule=water#/chemistry')
+  await page.getByRole('button', { name: 'Present' }).click()
+  await page.getByRole('button', { name: 'Export PNG' }).click()
+  await expect(page.locator('.present-message[role="alert"]')).toContainText('Export failed: There is no picture to export in this view')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.topnav')).toBeVisible()
+})

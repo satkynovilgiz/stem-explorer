@@ -270,3 +270,29 @@ test('a note added in one tab appears in another tab’s notebook', async ({ con
   await addNote(a, 'Nucleus', 'Holds DNA')
   await expect(b.locator('.note-card .note-title')).toHaveText('Nucleus')
 })
+
+test('notes on the new sections keep their exact snapshot and reopen it', async ({ page }) => {
+  const cases: [string, string, (p: Page) => Promise<void>][] = [
+    ['/?msec=vectors&vm=1,2,0.5,1#/mathematics', 'Vectors and a 2×2 transformation', async (p) => expect(p.locator('.vec-det-meaning')).toContainText('flattened onto a line')],
+    ['/?experiment=circuit&arr=parallel-2#/physics', 'Circuit: Two resistors in parallel', async (p) => expect(p.getByRole('radio', { name: 'Two resistors in parallel' })).toBeChecked()],
+    ['/?bsec=dna#/biology', 'DNA', async (p) => expect(p.locator('.dna-svg')).toBeVisible()],
+    ['/?csec=atomic&el=26#/chemistry', 'Atomic structure · Iron', async (p) => expect(p.locator('.atom-svg')).toBeVisible()],
+  ]
+  for (const [url, title] of cases) {
+    await page.goto(url)
+    await page.getByRole('button', { name: 'Add note' }).click()
+    await expect(page.getByRole('textbox', { name: 'Title' })).toHaveValue(new RegExp(title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    await page.getByRole('textbox', { name: 'Observations' }).fill(`Seen at ${url}`)
+    await page.getByRole('button', { name: 'Save note' }).click()
+    await expect(page.locator('.save-status')).toContainText('saved')
+  }
+  await page.goto('/#/notebook')
+  await expect(cards(page)).toHaveCount(cases.length)
+  for (const [url, , check] of cases) {
+    await page.goto('/#/notebook')
+    await cards(page).filter({ hasText: `Seen at ${url}` }).getByRole('link', { name: 'Reopen exploration' }).click()
+    await check(page)
+    const want = new URLSearchParams(url.split('#')[0].replace(/^\/\?/, ''))
+    for (const [k, v] of want) expect(new URL(page.url()).searchParams.get(k), `${url} ${k}`).toBe(v)
+  }
+})

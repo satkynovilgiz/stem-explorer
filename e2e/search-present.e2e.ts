@@ -1,0 +1,117 @@
+import { readFile } from 'node:fs/promises'
+import type { Page } from '@playwright/test'
+import { expect, test, waitForViewport } from './fixtures.ts'
+
+const params = (page: Page) => new URL(page.url()).searchParams
+const status = (page: Page) => page.locator('.search-page .search-status')
+
+test('global search: grouped results open the real state; synonyms, plurals and symbols', async ({ page }) => {
+  await page.goto('/#/chemistry')
+  await page.getByRole('link', { name: 'Search', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Search', level: 1 })).toBeVisible()
+  const box = page.getByRole('searchbox', { name: 'Search everything you can explore' })
+  await expect(box).toBeFocused()
+  await box.fill('windpipe')
+  await expect(page.locator('.search-page .search-result-name').first()).toHaveText('Trachea')
+  await box.fill('femur')
+  await expect(page.getByRole('heading', { name: /Body structures/ })).toBeVisible()
+  await expect.poll(() => params(page).get('q')).toBe('femur')
+  await page.getByRole('link', { name: /^Left femur/ }).click()
+  await waitForViewport(page)
+  await expect(page.locator('#atlas-structure-heading')).toHaveText('Left femur')
+  await page.goBack()
+  await expect(box).toHaveValue('femur')
+  await box.fill('Fe')
+  // Results are grouped by subject, so "Fe" also lists the femur under Anatomy; the element comes first in Chemistry.
+  const chemistry = page.locator('.search-subject', { has: page.locator('#results-chemistry') })
+  await expect(chemistry.locator('.search-result-name').first()).toHaveText('Iron')
+  await chemistry.locator('.search-result').first().click()
+  await expect(page.locator('.periodic, .chem').first()).toBeVisible()
+  expect(params(page).get('csec')).toBe('periodic')
+  expect(params(page).get('el')).toBe('26')
+})
+
+test('filters by subject and type, explains filtered-out results, and keeps them in the link', async ({ page }) => {
+  await page.goto('/?q=oxygen#/search')
+  await expect(status(page)).toContainText('results')
+  await page.getByRole('group', { name: 'Filter by subject' }).getByRole('button', { name: 'Chemistry' }).click()
+  await page.getByRole('combobox', { name: 'Type' }).selectOption('element')
+  await expect(page.locator('.search-page .search-result')).toHaveCount(1)
+  await expect(status(page)).toContainText('1 result with the filters')
+  await expect.poll(() => [params(page).get('sf'), params(page).get('st')]).toEqual(['chemistry', 'element'])
+  await page.reload()
+  await expect(page.getByRole('group', { name: 'Filter by subject' }).getByRole('button', { name: 'Chemistry' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.search-page .search-result')).toHaveCount(1)
+  // Filtered-out results are counted and can be brought back.
+  await page.getByRole('group', { name: 'Filter by subject' }).getByRole('button', { name: 'Physics' }).click()
+  await expect(page.locator('.search-page .empty-state')).toContainText('Nothing of type “Elements” in Physics matches “oxygen”')
+  await page.getByRole('button', { name: /Clear filters and show/ }).click()
+  await expect(page.locator('.search-page .search-result').first()).toBeVisible()
+  // No match at all.
+  await page.getByRole('searchbox').fill('quasar')
+  await expect(page.locator('.search-page .empty-state')).toContainText('Nothing matches “quasar”')
+})
+
+test('Home search links to the full, filterable results', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('searchbox', { name: 'Search everything you can explore' }).fill('energy')
+  await page.getByRole('link', { name: /See all \d+ results/ }).click()
+  await expect(page.getByRole('heading', { name: 'Search', level: 1 })).toBeVisible()
+  await expect(page.getByRole('searchbox')).toHaveValue('energy')
+})
+
+test('related topics: same mathematics both ways, and an analogy with its limits', async ({ page }) => {
+  await page.goto('/?experiment=wave#/physics')
+  await page.locator('.guide-toggle').click()
+  const related = page.locator('.related-topics')
+  await expect(related).toContainText('Same mathematics')
+  await expect(related).toContainText('y(x, t) = A sin(kx − ωt)')
+  await related.getByRole('link', { name: 'Sine function' }).click()
+  await expect(page.locator('#fn-stage-heading')).toHaveText('f(x) = A·sin(k·x)')
+  await page.locator('.guide-toggle').click()
+  await expect(page.locator('.related-topics').getByRole('link', { name: 'Wave lab' })).toBeVisible()
+  await page.goto('/?experiment=circuit#/physics')
+  await page.locator('.guide-toggle').click()
+  await expect(page.locator('.related-topics')).toContainText('Analogy only')
+  await expect(page.locator('.related-topics')).toContainText('Where the analogy breaks down: Only an analogy. Blood is not an electric current.')
+  // A view with no curated link says so instead of inventing one.
+  await page.goto('/?molecule=benzene#/chemistry')
+  await page.locator('.guide-toggle').click()
+  await expect(page.locator('.guide-body')).toContainText('No curated cross-subject link for this view')
+})
+
+test('presentation mode hides secondary UI, exports a captioned PNG, and exits with Esc', async ({ page }) => {
+  await page.goto('/?msec=functions&fn=cosine#/mathematics')
+  await page.getByRole('button', { name: 'Present' }).click()
+  const bar = page.getByRole('toolbar', { name: 'Presentation' })
+  await expect(bar).toContainText('Cosine function · calculus tools · Mathematics')
+  await expect(bar).toContainText('Computed from exact formulas')
+  await expect(bar.getByRole('button', { name: /Exit presentation/ })).toBeFocused()
+  await expect(page.locator('.topnav')).toBeHidden()
+  await expect(page.locator('.chem-side').first()).toBeHidden()
+  await expect(page.locator('.fn-svg')).toBeVisible()
+  const [download] = await Promise.all([page.waitForEvent('download'), bar.getByRole('button', { name: 'Export PNG' }).click()])
+  expect(download.suggestedFilename()).toMatch(/^stem-explorer-mathematics-\d{4}-\d{2}-\d{2}\.png$/)
+  const bytes = await readFile((await download.path())!)
+  expect([...bytes.subarray(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47])
+  await expect(bar).toContainText('PNG exported')
+  await page.keyboard.press('Escape')
+  await expect(bar).toBeHidden()
+  await expect(page.locator('.topnav')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Present' })).toBeFocused()
+  // The state is unchanged by presenting.
+  expect(params(page).get('fn')).toBe('cosine')
+})
+
+test('presentation of a 3D view exports the WebGL picture; leaving the page ends presentation', async ({ page }) => {
+  await page.goto('/?molecule=water#/chemistry')
+  await waitForViewport(page)
+  await page.getByRole('button', { name: 'Present' }).click()
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export PNG' }).click()])
+  expect(download.suggestedFilename()).toMatch(/chemistry/)
+  await page.goBack()
+  await expect(page.getByRole('toolbar', { name: 'Presentation' })).toHaveCount(0)
+  await page.goForward()
+  await expect(page.getByRole('toolbar', { name: 'Presentation' })).toHaveCount(0)
+  await expect(page.locator('.topnav')).toBeVisible()
+})

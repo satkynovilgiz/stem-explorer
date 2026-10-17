@@ -75,7 +75,7 @@ export default function CellScene({
         dpr={[1, 2]}
         frameloop="demand"
         camera={{ fov: 35, near: 0.1, far: 200, position: [0, 0, 30] }}
-        gl={{ antialias: true, powerPreference: 'low-power' }}
+        gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}
         onPointerMissed={onBackgroundClick}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (e) => {

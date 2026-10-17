@@ -107,6 +107,10 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Anatomy and Physiology 2e — 13.4 The Peripheral Nervous System',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/13-4-the-peripheral-nervous-system',
   },
+  'ap-20-2': {
+    label: 'OpenStax Anatomy and Physiology 2e — 20.2 Blood Flow, Blood Pressure, and Resistance',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/20-2-blood-flow-blood-pressure-and-resistance',
+  },
   'ap-20-3': {
     label: 'OpenStax Anatomy and Physiology 2e — 20.3 Capillary Exchange',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/20-3-capillary-exchange',

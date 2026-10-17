@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { PresentationBar } from './components/PresentationBar'
 import { TopNav } from './components/TopNav'
-import { SUBJECTS } from './data/subjects'
+import { isSubjectId, SUBJECTS } from './data/subjects'
 import { AnatomyExplorer } from './features/anatomy/AnatomyExplorer'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
 import { ChemistryExplorer } from './features/chemistry/ChemistryExplorer'
@@ -11,15 +12,26 @@ import { useRoute } from './lib/hooks'
 
 // Pages reached from the top bar only; they load on first visit.
 const GlossaryPage = lazy(() => import('./features/glossary/GlossaryPage').then((m) => ({ default: m.GlossaryPage })))
+const SearchPage = lazy(() => import('./features/search/SearchPage').then((m) => ({ default: m.SearchPage })))
 const NotebookPage = lazy(() => import('./features/notebook/NotebookPage').then((m) => ({ default: m.NotebookPage })))
 const pageLoading = <p className="muted small panel">Loading…</p>
 
 export default function App() {
   const route = useRoute()
   const subjectName = SUBJECTS.find((s) => s.id === route)?.name
+  // Presentation mode belongs to one explorer visit: leaving the route ends it.
+  const [presenting, setPresenting] = useState<string | null>(null)
+  const exitPresentation = useCallback(() => {
+    setPresenting(null)
+    // Back on the Present button, which is visible again.
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('.present-toggle')?.focus())
+  }, [])
+  // Adjusting state while rendering (not in an effect) when the route changes.
+  if (presenting !== null && presenting !== route) setPresenting(null)
+  const isPresenting = presenting !== null && isSubjectId(route)
 
   useEffect(() => {
-    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : 'STEM Explorer'
+    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : route === 'search' ? 'Search · STEM Explorer' : 'STEM Explorer'
   }, [subjectName, route])
 
   return (
@@ -27,7 +39,8 @@ export default function App() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <TopNav active={route} />
+      <TopNav active={route} onPresent={isSubjectId(route) ? () => setPresenting(route) : undefined} />
+      {isPresenting && isSubjectId(route) && <PresentationBar subject={route} onExit={exitPresentation} />}
       <main id="main" className="main" tabIndex={-1}>
         {route === 'anatomy' ? (
           <>
@@ -57,6 +70,10 @@ export default function App() {
         ) : route === 'glossary' ? (
           <Suspense fallback={pageLoading}>
             <GlossaryPage />
+          </Suspense>
+        ) : route === 'search' ? (
+          <Suspense fallback={pageLoading}>
+            <SearchPage />
           </Suspense>
         ) : route === 'notebook' ? (
           <Suspense fallback={pageLoading}>

@@ -111,7 +111,7 @@ export default function SpringScene({ solution, clock, onReady, onContextLost }:
       dpr={[1, 2]}
       frameloop="demand"
       camera={{ position: [0, 0.4, 20], zoom: 60, near: 0.1, far: 100 }}
-      gl={{ antialias: true, powerPreference: 'low-power' }}
+      gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}
       onCreated={({ gl }) => {
         gl.domElement.addEventListener('webglcontextlost', (e) => {
           e.preventDefault()

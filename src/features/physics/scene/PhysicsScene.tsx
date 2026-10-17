@@ -360,7 +360,7 @@ export default function PhysicsScene(props: PhysicsSceneProps) {
         className="viewport-canvas"
         dpr={[1, 2]}
         frameloop="demand"
-        gl={{ antialias: true, powerPreference: 'low-power' }}
+        gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (e) => {
             e.preventDefault()

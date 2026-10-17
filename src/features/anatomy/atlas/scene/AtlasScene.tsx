@@ -405,7 +405,7 @@ export default function AtlasScene(props: AtlasSceneProps) {
         dpr={[1, 2]}
         frameloop="demand"
         camera={{ fov: 30, near: 0.1, far: 200, position: [0, 5, 30] }}
-        gl={{ antialias: true, powerPreference: 'low-power' }}
+        gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}
         onPointerMissed={onBackgroundClick}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (e) => {

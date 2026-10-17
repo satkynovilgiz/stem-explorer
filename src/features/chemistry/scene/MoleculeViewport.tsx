@@ -129,7 +129,7 @@ export default function MoleculeViewport({
         dpr={[1, 2]}
         frameloop={autoRotate ? 'always' : 'demand'}
         camera={{ fov: 35, near: 0.1, far: 200, position: [0, 0, 10] }}
-        gl={{ antialias: true, powerPreference: 'low-power' }}
+        gl={{ antialias: true, powerPreference: 'low-power', preserveDrawingBuffer: true }}
         onPointerMissed={onBackgroundClick}
         onCreated={({ gl }) => {
           gl.domElement.addEventListener('webglcontextlost', (e) => {

@@ -5,12 +5,21 @@ Users rotate, zoom, select and measure parts of 3D models and read concise, sour
 
 The app opens on a **Home page** (`#/home`) with search, the five subjects, featured explorations
 and the explorations you saved or visited recently. All five subjects are implemented:
-- **Anatomy Explorer:** a schematic whole-body atlas with eleven organ-system layers, and a
+- **Anatomy Explorer:** a schematic whole-body atlas with eleven organ-system layers, skeletal and
+  muscular detail with elbow and knee demonstrations, organ-system tours and close-ups, and a
   detailed heart module with a blood-flow tour.
-- **Chemistry Explorer:** molecules and measurements.
-- **Biology Explorer:** an interactive animal cell.
-- **Physics Explorer:** a projectile motion lab.
-- **Mathematics Explorer:** interactive 3D surfaces.
+- **Chemistry Explorer:** molecules and measurements, the periodic table, atomic structure with
+  isotopes, and bonding and geometry.
+- **Biology Explorer:** animal, plant and bacterial cells, DNA and RNA, cell division and energy
+  processes.
+- **Physics Explorer:** projectile, spring–mass, DC circuit and wave labs.
+- **Mathematics Explorer:** 2D functions with calculus tools, 3D surfaces, and vectors with 2×2
+  transformations.
+
+Across subjects there is a global **Search** page (`#/search`), curated **related topics** that
+say whether a link is the same mathematics, a real connection or only an analogy, and a
+**presentation mode** with PNG export. See *Search, related topics and presentation* and
+*Content inventory, attribution and limitations*.
 
 ## Requirements
 
@@ -1148,13 +1157,9 @@ Featured explorations are ordinary deep links that use only supported URL parame
 can't be stored in a URL (picking atoms for an angle, starting the blood-flow tour, saving a physics
 Run A, inspecting a point), the card says what to do next.
 
-**Search** runs locally over a fixed index built from the app's own data (no network):
-the five subjects, the six molecules (names, aliases and formulas, where `H2O` and `H₂O` both
-match), the ten cell structures, the 14 heart structures, the four surface presets and the
-projectile experiment. Each result shows its name, subject, a short description and a deep link.
-Ranking: exact name or formula, then name prefix, then name or formula contains, then other terms.
-The search box is a plain input followed by a list of links, so Tab moves into the results and
-Enter opens one.
+**Search** on Home shows the first 12 results of the global search (see *Search, related topics
+and presentation*) and links to the full, filterable results. The search box is a plain input
+followed by a list of links, so Tab moves into the results and Enter opens one.
 
 **Saved explorations.** Every explorer has **Save exploration** next to Copy link. It suggests a
 name (for example *Water · ball and stick* or *Aorta · whole heart*) that you can change. Saved
@@ -1538,7 +1543,9 @@ How the URL is kept up to date:
 | `src/lib/notesStore.test.ts` | Add, edit, delete and undo with the canonical snapshot; empty titles and invalid explorations refused; length caps and control characters; the note limit; unavailable, damaged and quota states leaving data unchanged; newer-version entries preserved. |
 | `src/lib/notebookBackup.test.ts` | Export/import round trip without IDs; the notebook and saved-exploration formats recognising each other; duplicates, invalid notes and the limit; text kept as text; nothing written when the plan changed or the write fails; 100 maximum-length notes of ASCII, Cyrillic, CJK, emoji and escaped text exported and imported into an empty notebook; emoji never split, lone surrogates replaced; a finite input limit. |
 | `src/lib/noteDrafts.test.ts` | Draft round trip with its exploration snapshot, never touching saved notes; scopes kept apart; older drafts without a snapshot; malformed drafts and unknown versions ignored; quota, refused and unavailable storage reported. |
-| `src/lib/searchIndex.test.ts` | Every subject, molecule, cell structure, heart structure and surface is indexed with a deep link that its subject's parser accepts; formula and subscript normalization; ranking; empty and unmatched queries. |
+| `src/lib/searchIndex.test.ts` | Every subject, atlas and heart structure, element, molecule, cell model and structure, process, lab, function, section and surface is indexed with a deep link that its subject's parser accepts; atlas links turn on the structure's layer and reproductive links carry their configuration; symbols, synonyms and plurals; subject and type filters; grouping in subject order; formula normalization; ranking; empty and unmatched queries. |
+| `src/data/related.test.ts` | Every cross-subject relation joins existing items in different subjects, cites registered sources and states its limits; the circulation–circuit link is an analogy with its failure stated; topics read from explorer URLs; both directions resolve; views without a link get none. |
+| `src/data/inventory.test.ts` | The README content inventory matches the counts in the data. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
 | `src/features/mathematics/sceneGeometry.test.ts` | Mesh vertices lie on the surface; vertex and triangle counts; uniform color for a constant surface; the wireframe lies on the surface; the axis frame. |
 
@@ -1660,6 +1667,14 @@ the production build:
   1 Ω minimum, a mixed link reopening paused with arrows then markers; the wave's derived speed,
   paused start, scrubbing to −A after half a period, both graph kinds, Play/Pause, nothing about
   time in the link; reduced motion; old links and dropping lab keys.
+- `search-present.e2e.ts`: the Search page from the top bar (focus in the box, synonyms, a femur
+  result opening the atlas, Back restoring the query, *Fe* opening iron in the periodic table);
+  subject and type filters in the link and after reload, the filtered-out empty state and Clear
+  filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
+  analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
+  download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `notebook.e2e.ts` also saves notes on the vectors, circuit, DNA and atomic-structure views and
+  reopens each snapshot with identical link values.
 - `math-sections.e2e.ts`: exact point and derivative for 2·sin x, the secant getting closer to f′ as h
   shrinks and h = 0 refused; a signed integral cancelling over a period while the total area does
   not, with solid and hatched parts; ln links at x ≤ 0 corrected and an interval reaching x ≤ 0
@@ -1699,12 +1714,17 @@ which may be serving an older build.
 ## Bundle and loading
 
 Measured on the production build (`npm run build`, Vite 8):
-- **Main chunk:** 479 kB, or 142 kB gzipped (React, the app shell, Home, search with the glossary
-  data, and all five explorers' panels and content).
+- **First load:** about 700 kB of JavaScript, or about 210 kB gzipped. That is the main chunk
+  (483 kB, or 144 kB gzipped) plus the chunks it preloads: atlas data (86 kB), cell structures,
+  elements, sources, heart and surfaces. It holds React, the app shell, Home, the search index
+  and the data that link validation needs. This grew with the atlas and the global search, and
+  it is the largest remaining size cost.
 - **Three.js and React Three Fiber:** 912 kB, or 242 kB gzipped, loaded only when a 3D view
   mounts. Home never loads it.
-- **Lazy-loaded on first use:** each subject's scene (3–25 kB), the periodic table (13 kB), the
-  spring–mass lab (15 kB), the Notebook page (12 kB) and the Glossary page (3 kB).
+- **Lazy-loaded on first use:** the atlas explorer (69 kB), the heart module (26 kB), each scene
+  (3–30 kB), the chemistry sections (8–14 kB each), the biology process views (4–7 kB), the
+  circuit, wave and spring labs (9–16 kB), the function and vector labs (9–10 kB), and the
+  Search (7 kB), Notebook (13 kB) and Glossary (3 kB) pages.
 
 From the local production preview in headless Chrome, Home was ready in about 0.2 s. An explorer
 became interactive at once, while its 3D view took about 3.5 s under software WebGL (SwiftShader).
@@ -1802,6 +1822,134 @@ Also fixed during the review:
   impact time.
 - On phones, the Anatomy colour legend could cover the *Inferior* orientation label. Labels under
   the legend are moved above it or hidden.
+
+## Search, related topics and presentation
+
+### Global search
+
+**Search** (top bar, `#/search`, or *See all results* on Home) runs locally over an index built
+from the app's own data (`src/lib/searchIndex.ts`); nothing is sent over the network.
+- **What is indexed:** subjects, atlas and heart structures, elements, molecules, cell models and
+  structures, biology processes, physics labs, functions, surfaces, vector and matrix tools, and
+  glossary terms. The page's empty state lists the counts, generated from the index.
+- **Matching** is case-insensitive. It covers names; formulas written with digits or subscripts;
+  element symbols; well-established synonyms stored with the content (for example *windpipe*
+  for the trachea); simple plurals; and whole words in descriptions, ranked last. Hyphenated
+  compounds such as *oxygen-rich* do not count as matches.
+- **Ranking:** explorer content comes before glossary terms. Then: exact name, formula or symbol;
+  name prefix; name contains; exact synonym; other terms; description words; then alphabetical.
+- **Results** are grouped by subject (in the app's order) and then by type, eight per group with
+  *Show all*.
+- **Filters:** a subject filter (toggle buttons) and a type filter (a select). The query and
+  filters are kept in the link as `?q=…&sf=<subject>&st=<type>#/search`, so reload and
+  Back/Forward restore them. Typing does not add history entries.
+- **Empty states** distinguish *nothing matches* from *nothing matches with these filters*. The
+  second shows how many results the filters hide and offers a *Clear filters* button.
+- **Every result opens a real state.** Each link goes through the same validation as saved
+  explorations (`canonicalize`), and building the index fails if any link is invalid. Atlas
+  results turn on the structure's layer. Reproductive structures open with their own
+  configuration (`repro`), never as a default.
+
+### Related topics
+
+`src/data/related.ts` holds a small, curated set of cross-subject links. Each link has a kind, a
+statement, its scope or limits, and sources:
+- **Same mathematics:** the same equation describes both, within the stated model. Examples: the
+  wave lab and the sine function, the spring lab and the cosine function, an ideal projectile and
+  the quadratic function, and projectile velocity and vectors.
+- **Real connection:** a physical or biological link. Examples: gas exchange in the lungs and O₂
+  and CO₂; the net equations of photosynthesis and respiration and their molecules.
+- **Analogy only:** a similarity in form, with where it breaks down. The one analogy is blood
+  flow = ΔP / resistance compared with I = V / R (A&P 20.2, UP2 9.4). It is never presented as an
+  equivalence.
+
+Related topics appear under *Related across subjects* in every explorer's **About this explorer**
+panel (read from the current view) and under matching search results. A view without a curated
+link says so; links are never generated automatically. Tests check that every link joins
+existing items in different subjects, cites registered sources and states its limits.
+
+### Presentation mode
+
+**Present** (top bar, in any explorer) hides the top bar, the side panels and the phone tabs, and
+lets the stage fill the window. A bar at the top shows the view's title and the kind of model.
+- **Exit presentation** or **Esc** leaves presentation mode, and focus returns to **Present**.
+  Leaving the page also ends it, and presenting never changes the explorer's state or link.
+- **Export PNG** saves the stage's main picture as a download (`stem-explorer-<subject>-<date>.png`).
+  The picture is the 3D canvas or, without one, the largest SVG. It is framed with the title, the
+  settings, a model label (for example *Schematic model … not to scale* or *Idealised model*) and
+  the link that reopens the view.
+  - 3D views keep their drawing buffer so the frame can be copied. SVGs are serialized with their
+    computed styles inlined.
+  - If there is nothing to capture (for example without WebGL), or the browser refuses, an error
+    message explains it.
+  - Text drawn as HTML over a 3D view (labels, badges) is not part of the canvas and is not in
+    the PNG.
+
+## Content inventory, attribution and limitations
+
+### Content inventory
+
+Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this table drifts.
+
+| Content | Count |
+| --- | --- |
+| Atlas structures | 208 |
+| Atlas systems | 11 |
+| Atlas tours | 5 |
+| Movement demonstrations | 2 |
+| Heart module structures | 14 |
+| Elements | 118 |
+| Molecules | 12 |
+| Isotopes in the library | 25 |
+| Cell structures (animal, plant, bacterial) | 23 |
+| Cell division stages | 7 |
+| Physics labs | 4 |
+| Function families | 7 |
+| Surfaces | 4 |
+| Matrix presets | 6 |
+| Glossary terms | 83 |
+| Cross-subject relations | 9 |
+| Registered sources | 113 |
+| Search index entries | 495 |
+
+The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
+how it is drawn (individual, group or container), with what is omitted.
+
+### Attribution
+
+- **Text** is written for this app. It paraphrases the cited sections and does not reproduce
+  their text or figures. Every claim links to the section it relies on, next to the content.
+- **Textbooks:** OpenStax *Anatomy and Physiology 2e*, *Biology 2e*, *Concepts of Biology*,
+  *Chemistry 2e*, *University Physics* Volumes 1 and 2, *Calculus* Volumes 1 and 3, and
+  *College Algebra 2e*. OpenStax books are published under CC BY 4.0. They are cited by section;
+  no text or images are copied.
+- **Data:** PubChem (NCBI) for electron configurations and electronegativities, NIST for
+  isotopic compositions and NIST CCCBDB for molecular geometry. Values are used with citation, and
+  where a source marks a value as predicted or calculated, the app says so.
+- **Models and pictures** are generated in code from simple shapes. No licensed anatomy models,
+  scans or third-party images are used.
+- **Software:** React, three.js, React Three Fiber and drei (MIT), and Lucide icons (ISC).
+
+### Limitations
+
+- **Schematic models.** Anatomy and cell models show position and relationships, not exact form
+  or size. Anatomy shows one typical arrangement; real bodies vary. The two reproductive
+  configurations are shown only on request, and neither is presented as universal.
+- **Idealised physics:** no air resistance, friction, internal battery resistance or damping, as
+  each lab states.
+- **Mathematics** is computed from fixed formula libraries, with no free formula entry. Graphs are
+  sampled at a finite resolution, and the total area is a labelled numerical estimate.
+- **Not stored in links:** tour progress, playback time, the 2D plot zoom, measurement picks, and
+  open panels. Where a link cannot restore something, the app says so.
+- **Search** has no fuzzy spelling correction, and synonyms cover only well-established names.
+- **Related topics** are a small curated set, not a complete map of connections.
+- **PNG export** leaves out HTML labels drawn over 3D views.
+- **Bundle:** the first load is about 700 kB of JavaScript (about 210 kB gzipped), because link
+  validation and search need the atlas, element and cell data. The heavier 3D code loads only
+  with a 3D view.
+- **Tested in Chromium only** (Chrome with SwiftShader in Playwright). Other engines are not
+  tested. Tests check behaviour and agreement with the cited values. They do not establish
+  scientific accuracy.
 
 ## Known issues
 

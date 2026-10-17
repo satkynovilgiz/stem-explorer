@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { BookA, House, NotebookPen } from 'lucide-react'
+import { BookA, House, NotebookPen, Presentation, Search } from 'lucide-react'
 import { SUBJECTS } from '../data/subjects'
 import type { Route } from '../lib/hooks'
 import { SubjectIcon } from './SubjectIcon'
 
-export function TopNav({ active }: { active: Route }) {
+export function TopNav({ active, onPresent }: { active: Route; onPresent?: () => void }) {
   const navRef = useRef<HTMLElement>(null)
 
   // On narrow screens the subject list scrolls horizontally; keep the active one visible.
@@ -80,6 +80,18 @@ export function TopNav({ active }: { active: Route }) {
           </li>
         </ul>
       </nav>
+      <div className="topnav-actions">
+        <a href="#/search" className={`subject-link${active === 'search' ? ' is-active' : ''}`} aria-current={active === 'search' ? 'page' : undefined}>
+          <Search size={16} aria-hidden="true" />
+          <span>Search</span>
+        </a>
+        {onPresent && (
+          <button type="button" className="tool-button bordered present-toggle" onClick={onPresent}>
+            <Presentation size={16} aria-hidden="true" />
+            <span>Present</span>
+          </button>
+        )}
+      </div>
     </header>
   )
 }
