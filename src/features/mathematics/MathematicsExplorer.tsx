@@ -1,9 +1,10 @@
 import { Box, Crosshair, Grid3x3, Maximize, RotateCcw } from 'lucide-react'
-import { lazy, useEffect, useMemo, useReducer, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
 import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
 import { useMediaQuery } from '../../lib/hooks'
+import { parseMathSection, withMathSection, type MathSection } from '../../lib/mathSections'
 import { mathParamEntries, parseMathParams, withMathParams } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { heightGradientCss } from '../../math/heightColor'
@@ -19,6 +20,41 @@ import { initialMathState, mathReducer } from './state'
 
 // Three.js loads on demand; formulas, inspection and the cross-section graph work without it.
 const SurfaceScene = lazy(() => import('./scene/SurfaceScene'))
+// The 2D sections are HTML/SVG and load when first opened.
+const FunctionsLab = lazy(() => import('./functions/FunctionsLab').then((m) => ({ default: m.FunctionsLab })))
+const VectorsLab = lazy(() => import('./vectors/VectorsLab').then((m) => ({ default: m.VectorsLab })))
+
+const SECTION_LABEL: Record<MathSection, string> = { functions: '2D functions', surfaces: '3D surfaces', vectors: 'Vectors and transformations' }
+
+/**
+ * Mathematics has three sections. Links without `msec` are surface links, so every older link
+ * opens as before.
+ */
+export function MathematicsExplorer() {
+  const [section, setSection] = useState<MathSection>(() => parseMathSection(window.location.search).section)
+  const choose = (next: MathSection) => {
+    if (next === section) return
+    // Leaving a 2D section drops its keys; the surface keys stay (the surfaces section owns them).
+    replaceUrlSearch(withMathSection(window.location.search, {}))
+    setSection(next)
+  }
+  const sectionSwitch = (
+    <div className="segmented section-switch section-switch--grid math-switch" role="group" aria-label="Mathematics section">
+      {(['functions', 'surfaces', 'vectors'] as const).map((s) => (
+        <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => choose(s)}>
+          {SECTION_LABEL[s]}
+        </button>
+      ))}
+    </div>
+  )
+  const guidePanel = <SubjectGuidePanel subject="mathematics" />
+  if (section === 'surfaces') return <SurfacesExplorer sectionSwitch={sectionSwitch} />
+  return (
+    <Suspense fallback={<p className="muted small panel">Loading {SECTION_LABEL[section].toLowerCase()}…</p>}>
+      {section === 'functions' ? <FunctionsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} /> : <VectorsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />}
+    </Suspense>
+  )
+}
 
 type SideTab = 'explore' | 'formula' | 'sources'
 type MobileTab = 'surface' | 'explore' | 'formula' | 'sources'
@@ -37,7 +73,7 @@ function initFromUrl() {
   return initialMathState(surfaceId, params, slice)
 }
 
-export function MathematicsExplorer() {
+function SurfacesExplorer({ sectionSwitch }: { sectionSwitch: ReactNode }) {
   const [state, dispatch] = useReducer(mathReducer, undefined, initFromUrl)
   const [view, setView] = useState<MathView>('perspective')
   const [showWireframe, setShowWireframe] = useState(true)
@@ -217,6 +253,7 @@ export function MathematicsExplorer() {
     return (
       <div className="chem chem--mobile mathematics">
         {announcer}
+        {sectionSwitch}
         <div className="chem-stage">{viewer}</div>
         {activityPanel}
         {guidePanel}
@@ -240,6 +277,7 @@ export function MathematicsExplorer() {
     <div className="chem mathematics">
       {announcer}
       <aside className="chem-side chem-side--left">
+        {sectionSwitch}
         <div className="panel math-left">
           {library}
           {parameters}

@@ -211,3 +211,11 @@ test('circuit and wave labs need no WebGL', async ({ page }) => {
   await page.goto('/?experiment=wave#/physics')
   await expect(page.locator('.wave-graph')).toHaveCount(2)
 })
+
+test('2D functions and vectors need no WebGL', async ({ page }) => {
+  await page.goto('/?msec=functions#/mathematics')
+  await expect(page.locator('.fn-svg')).toBeVisible()
+  await expect(page.locator('.fn-slope-value')).toContainText('(exact)')
+  await page.getByRole('group', { name: 'Mathematics section' }).getByRole('button', { name: 'Vectors and transformations' }).click()
+  await expect(page.locator('.vec-det-value')).toContainText('= 1')
+})

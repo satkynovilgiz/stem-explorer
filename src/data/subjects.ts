@@ -44,9 +44,9 @@ export const SUBJECTS: readonly Subject[] = [
     available: true,
     tagline: 'Graphs, vectors, geometric solids and surfaces.',
     planned: [
-      'Function graphs with sliders for each parameter',
-      'Vectors you can drag in 2D and 3D',
-      'Geometric solids and surfaces with cross-sections',
+      'Function graphs with tangent, secant and definite-integral tools',
+      'Vectors and 2×2 transformations with the meaning of the determinant',
+      '3D surfaces with tangent planes and cross-sections',
     ],
   },
   {

@@ -237,3 +237,11 @@ test('circuit and wave labs fit a phone', async ({ page }) => {
     await expectNoHorizontalOverflow(page)
   }
 })
+
+test('2D functions and vectors fit a phone', async ({ page }) => {
+  for (const sec of ['functions', 'vectors']) {
+    await page.goto(`/?msec=${sec}#/mathematics`)
+    await expect(page.locator('.circuit-stage')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  }
+})

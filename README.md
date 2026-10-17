@@ -896,11 +896,73 @@ An ideal travelling sinusoidal wave y(x, t) = A sin(kx − ωt) moving in +x (Vo
 - [OpenStax University Physics Volume 1 — 4.3 Projectile Motion](https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion)
 - [OpenStax University Physics Volume 1 — 3.5 Free Fall](https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall)
 
-## Mathematics Explorer — interactive 3D surfaces
+## Mathematics Explorer — functions, surfaces and vectors
+
+Three sections, switched with the **Mathematics section** buttons: **2D functions**, **3D
+surfaces** and **Vectors and transformations**. The section is stored as `msec` (`functions`,
+`vectors`); links without `msec` are surface links, so every older Mathematics link opens exactly
+as before. All formulas come from fixed preset libraries: there is no formula entry, no `eval`,
+and no computer algebra. The 2D sections are SVG and HTML only; they never mount WebGL.
+
+### 2D functions
+
+- Families: linear, quadratic, cubic, sine, cosine, exponential and logarithmic, each with a
+  stated domain and bounded parameters (`fn`, `f<param>`).
+- **Point and derivative.** The inspected point (`fx`) and f′(x) are computed from exact formulas
+  for each family, and the tangent line equation is shown.
+- **Secant.** A step h gives the secant through x and x + h with its slope and its difference from
+  f′(x); moving h toward 0 shows the secant approaching the tangent. h = 0 is refused, not
+  divided by.
+- **Definite integral** on [a, b] (`ia`, `ib`). The signed integral is F(b) − F(a) from the
+  antiderivative. The geometric (total) area ∫|f| is a Simpson’s-rule estimate and is labelled
+  "≈". Positive parts are solid and negative parts are hatched, so sign is never shown by colour alone.
+- **Domains and gaps.** ln(x) is only defined for x > 0: no point, curve or integral is drawn at
+  x ≤ 0, link values there are rejected and replaced, and an interval reaching x ≤ 0 shows an
+  error instead of a number. Curves are sampled into separate segments and never joined across
+  a gap or a jump out of view.
+- Zoom in, zoom out, reset the view, and centre on the point. The view itself is not stored in links.
+
+### Vectors and transformations
+
+- Two vectors u, v (`vu`, `vv`) and a scalar k (`vk`) show u + v by the parallelogram rule, k·u,
+  the dot product with its arithmetic, the angle, and the lengths.
+- A 2×2 matrix M (`vm`, row-major `a,b,c,d`) is drawn as the original grid, unit square and
+  vectors (dashed grey) beside their images (solid colour).
+- det M = ad − bc is read as the area scale factor; a negative determinant means reversed
+  orientation. When det M = 0 the plane collapses onto a line (or a point for the zero matrix)
+  and no inverse exists; otherwise the inverse is shown.
+- Presets: identity, rotate 90°, shear, scale, reflect, singular.
+
+### 2D sources
+
+- [OpenStax Calculus Volume 1](https://openstax.org/books/calculus-volume-1/pages/1-introduction):
+  - [1.2](https://openstax.org/books/calculus-volume-1/pages/1-2-basic-classes-of-functions),
+    [1.3](https://openstax.org/books/calculus-volume-1/pages/1-3-trigonometric-functions) and
+    [1.5](https://openstax.org/books/calculus-volume-1/pages/1-5-exponential-and-logarithmic-functions):
+    function families and domains;
+  - [3.1](https://openstax.org/books/calculus-volume-1/pages/3-1-defining-the-derivative): secants
+    approaching the tangent;
+  - [3.3](https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules),
+    [3.5](https://openstax.org/books/calculus-volume-1/pages/3-5-derivatives-of-trigonometric-functions) and
+    [3.9](https://openstax.org/books/calculus-volume-1/pages/3-9-derivatives-of-exponential-and-logarithmic-functions):
+    derivative rules;
+  - [5.2](https://openstax.org/books/calculus-volume-1/pages/5-2-the-definite-integral) and
+    [5.3](https://openstax.org/books/calculus-volume-1/pages/5-3-the-fundamental-theorem-of-calculus):
+    signed area, total area and the Fundamental Theorem.
+- OpenStax Calculus Volume 3:
+  [2.1 Vectors in the Plane](https://openstax.org/books/calculus-volume-3/pages/2-1-vectors-in-the-plane),
+  [2.3 The Dot Product](https://openstax.org/books/calculus-volume-3/pages/2-3-the-dot-product) and
+  [2.4 The Cross Product](https://openstax.org/books/calculus-volume-3/pages/2-4-the-cross-product)
+  (parallelogram area).
+- OpenStax College Algebra 2e:
+  [7.7 Solving Systems with Inverses](https://openstax.org/books/college-algebra-2e/pages/7-7-solving-systems-with-inverses) and
+  [7.8 Cramer’s Rule](https://openstax.org/books/college-algebra-2e/pages/7-8-solving-systems-with-cramers-rule)
+  (2×2 inverse and determinant).
+
+## Mathematics: 3D surfaces
 
 Choose a surface z = f(x, y), reshape it with parameters, read exact values at points, and cut it
-with vertical cross-sections. The formulas are a fixed preset library: there is no formula entry,
-no `eval`, and no computer algebra.
+with vertical cross-sections.
 
 ### Surface presets and parameter ranges
 
@@ -1463,6 +1525,7 @@ How the URL is kept up to date:
 | `src/features/anatomy/atlas/atlas.test.ts` | View descriptions checked against camera geometry; defaults; selecting a hidden structure shows its layer and says so; reproductive selection and switching; no reproductive layer without a configuration; isolation of structures and groups; region dimming and clearing; opacity clamping; shared-system drawing; link round trip and invalid or inconsistent links. |
 | `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). Vessel comparison: entering, filling and replacing slots, refusing non-vessels, clearing, leaving, views, the tour ending and blocking comparison, and the shared state. |
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
+| `src/math/functions.test.ts` | Exact derivatives against finite differences and antiderivatives against f; exact signed integrals for known cases versus total area when f changes sign; the logarithm's domain (no value, plot or integral at x ≤ 0); curves never joined across a gap; secant slopes approaching f′ and h = 0 refused; exponential with k = 0; vector addition, scaling, dot product and angle; determinant as signed area scale; inverse and singular collapse. |
 | `src/features/mathematics/state.test.ts` | Preset switching resets to defaults; foreign or invalid parameters are ignored; clamping and reset; point clamping with feedback; the point following parameter changes; slice enable, axis and position. |
 | `src/lib/backup.test.ts` | Export contents (saved only, no IDs, origins or history); round trip with fresh IDs; oversized, malformed, foreign and unsupported files; mixed new, duplicate and invalid entries, with existing titles kept and URL fields ignored; plain-text titles; the saved-item limit; a single write that leaves data unchanged on quota failure; refusing when the library changed since the preview, including when the count is unchanged but the entries differ; never overwriting a damaged list. |
 | `src/features/activities/activities.test.ts` | One activity per subject with goal, setup, 3–5 steps, conclusion and https sources; no setup completes a step; the change lists; detection rules for every detected step (including the wrong vertex, changed speed and other surfaces); the Anatomy tour snapshot; Physics replace never resuming; the Physics summary matching `solveTrajectory`. |
@@ -1597,6 +1660,11 @@ the production build:
   1 Ω minimum, a mixed link reopening paused with arrows then markers; the wave's derived speed,
   paused start, scrubbing to −A after half a period, both graph kinds, Play/Pause, nothing about
   time in the link; reduced motion; old links and dropping lab keys.
+- `math-sections.e2e.ts`: exact point and derivative for 2·sin x, the secant getting closer to f′ as h
+  shrinks and h = 0 refused; a signed integral cancelling over a period while the total area does
+  not, with solid and hatched parts; ln links at x ≤ 0 corrected and an interval reaching x ≤ 0
+  refused; the dot product, reflection (det −1) and singular matrix; old surface links, reload,
+  and saving and reopening a section.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

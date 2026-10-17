@@ -8,6 +8,8 @@ import { isSubjectId, SUBJECTS, type SubjectId } from '../data/subjects'
 import { getSurface } from '../math/surfaces'
 import { DEFAULT_PARAMS, isValidParam, normalizeParam, PARAM_KEYS } from '../physics/projectile'
 import { ARRANGEMENT_LABEL, type Arrangement } from '../physics/circuit'
+import { functionsEntries, parseFunctionsState, parseMathSection, parseVectorsState, vectorsEntries } from './mathSections'
+import { FUNCTIONS } from '../math/functions'
 import { circuitParamEntries, parseCircuitParams, parseWaveParams, waveParamEntries } from './labUrl'
 import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
@@ -94,6 +96,16 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
       return { subject, params: physicsParamEntries(p) }
     }
     case 'mathematics': {
+      const sec = parseMathSection(search)
+      if (sec.invalid.length) return null
+      if (sec.section === 'functions') {
+        const f = parseFunctionsState(search)
+        return f.invalid.length ? null : { subject, params: functionsEntries(f.state) }
+      }
+      if (sec.section === 'vectors') {
+        const v = parseVectorsState(search)
+        return v.invalid.length ? null : { subject, params: vectorsEntries(v.state) }
+      }
       const r = parseMathParams(search)
       return r.invalid.length ? null : { subject, params: mathParamEntries(r) }
     }
@@ -149,6 +161,8 @@ export function defaultTitle(state: ShareState): string {
       if (p.experiment === 'spring') return `Spring: m = ${p.mass} kg, k = ${p.k} N/m, x₀ = ${p.x0} m`
       return `Launch at ${p.speed} m/s, ${p.angle}°${Number(p.height) > 0 ? ` from ${p.height} m` : ''}${p.gravity !== '9.81' ? `, g = ${p.gravity} m/s²` : ''}`
     case 'mathematics': {
+      if (p.msec === 'functions') return `${FUNCTIONS.find((f) => f.id === p.fn)?.name ?? 'Function'} function · calculus tools`
+      if (p.msec === 'vectors') return 'Vectors and a 2×2 transformation'
       const name = getSurface(p.surface as never)?.name ?? 'Surface'
       return p.slice ? `${name} · slice ${p.slice} = ${p.at}` : name
     }

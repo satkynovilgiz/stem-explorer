@@ -5542,3 +5542,208 @@ button {
   border-radius: var(--radius-sm);
   background: var(--color-viewport);
 }
+
+/* ---------- Mathematics: 2D functions and vectors ---------- */
+
+.math-switch {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.fn-select {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.fn-svg {
+  display: block;
+  width: 100%;
+  max-width: 680px;
+  height: auto;
+  margin: var(--space-3) auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.fn-grid {
+  stroke: rgb(232 236 239 / 0.07);
+}
+
+.fn-axis {
+  stroke: var(--color-text-subtle);
+  stroke-width: 1.5;
+}
+
+.fn-tick {
+  fill: var(--color-text-subtle);
+  font-size: 10px;
+}
+
+.fn-curve {
+  fill: none;
+  stroke: var(--subject-mathematics);
+  stroke-width: 2.5;
+}
+
+.fn-tangent {
+  stroke: var(--color-accent-strong);
+  stroke-width: 2;
+}
+
+.fn-secant {
+  stroke: var(--subject-physics);
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+}
+
+.fn-secant-point {
+  fill: var(--subject-physics);
+}
+
+.fn-point {
+  fill: var(--color-bg);
+  stroke: var(--color-text);
+  stroke-width: 2.5;
+}
+
+.fn-area.is-positive {
+  fill: rgb(111 214 154 / 0.28);
+}
+
+.fn-area.is-negative {
+  stroke: rgb(240 122 114 / 0.6);
+}
+
+.fn-hatch {
+  stroke: rgb(240 122 114 / 0.7);
+  stroke-width: 2;
+}
+
+.fn-bound {
+  stroke: var(--color-text-muted);
+  stroke-dasharray: 3 3;
+}
+
+.vec-planes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-3);
+}
+
+.vec-figure {
+  margin: 0;
+}
+
+.vec-figure svg {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.vec-grid {
+  stroke: rgb(232 236 239 / 0.06);
+}
+
+.vec-axis {
+  stroke: var(--color-text-subtle);
+}
+
+.vec-figure line,
+.vec-figure path {
+  stroke-width: 2.5;
+}
+
+.vec-u line { stroke: var(--subject-anatomy); }
+.vec-u path { fill: var(--subject-anatomy); }
+.vec-v line { stroke: var(--subject-physics); }
+.vec-v path { fill: var(--subject-physics); }
+.vec-sum line { stroke: var(--subject-mathematics); }
+.vec-sum path { fill: var(--subject-mathematics); }
+.vec-scaled line { stroke: var(--subject-biology); }
+.vec-scaled path { fill: var(--subject-biology); }
+
+.vec-helper line {
+  stroke: var(--color-text-subtle);
+  stroke-dasharray: 4 4;
+}
+
+.vec-helper path {
+  fill: none;
+}
+
+.vec-figure .is-original line {
+  opacity: 0.55;
+  stroke-dasharray: 5 4;
+}
+
+.vec-figure .is-original path {
+  opacity: 0.55;
+}
+
+.vec-label {
+  fill: var(--color-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.vec-original-grid {
+  stroke: rgb(232 236 239 / 0.22);
+  stroke-dasharray: 3 4;
+  stroke-width: 1 !important;
+}
+
+.vec-image-grid {
+  stroke: rgb(111 224 220 / 0.45);
+  stroke-width: 1.2 !important;
+}
+
+.vec-square {
+  fill: none;
+  stroke: var(--color-text-subtle);
+  stroke-dasharray: 4 4;
+}
+
+.vec-square-image {
+  fill: rgb(111 224 220 / 0.18);
+  stroke: var(--color-accent-strong);
+  stroke-width: 2;
+}
+
+.vec-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vec-legend .legend-line {
+  display: inline-block;
+  width: 26px;
+  vertical-align: middle;
+  border-top: 2px solid var(--color-accent-strong);
+}
+
+.vec-legend .legend-line.is-dashed {
+  border-top: 2px dashed var(--color-text-subtle);
+}
+
+.matrix-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.preset-row .tool-button {
+  min-height: 32px;
+}

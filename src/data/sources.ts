@@ -227,6 +227,62 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax University Physics Volume 1 — 16.2 Mathematics of Waves',
     url: 'https://openstax.org/books/university-physics-volume-1/pages/16-2-mathematics-of-waves',
   },
+  'calc1-1-2': {
+    label: 'OpenStax Calculus Volume 1 — 1.2 Basic Classes of Functions',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/1-2-basic-classes-of-functions',
+  },
+  'calc1-1-3': {
+    label: 'OpenStax Calculus Volume 1 — 1.3 Trigonometric Functions',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/1-3-trigonometric-functions',
+  },
+  'calc1-1-5': {
+    label: 'OpenStax Calculus Volume 1 — 1.5 Exponential and Logarithmic Functions',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/1-5-exponential-and-logarithmic-functions',
+  },
+  'calc1-3-1': {
+    label: 'OpenStax Calculus Volume 1 — 3.1 Defining the Derivative',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/3-1-defining-the-derivative',
+  },
+  'calc1-3-3': {
+    label: 'OpenStax Calculus Volume 1 — 3.3 Differentiation Rules',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules',
+  },
+  'calc1-3-5': {
+    label: 'OpenStax Calculus Volume 1 — 3.5 Derivatives of Trigonometric Functions',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/3-5-derivatives-of-trigonometric-functions',
+  },
+  'calc1-3-9': {
+    label: 'OpenStax Calculus Volume 1 — 3.9 Derivatives of Exponential and Logarithmic Functions',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/3-9-derivatives-of-exponential-and-logarithmic-functions',
+  },
+  'calc1-5-2': {
+    label: 'OpenStax Calculus Volume 1 — 5.2 The Definite Integral',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/5-2-the-definite-integral',
+  },
+  'calc1-5-3': {
+    label: 'OpenStax Calculus Volume 1 — 5.3 The Fundamental Theorem of Calculus',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/5-3-the-fundamental-theorem-of-calculus',
+  },
+  'calc3-2-1': {
+    label: 'OpenStax Calculus Volume 3 — 2.1 Vectors in the Plane',
+    url: 'https://openstax.org/books/calculus-volume-3/pages/2-1-vectors-in-the-plane',
+  },
+  'calc3-2-3': {
+    label: 'OpenStax Calculus Volume 3 — 2.3 The Dot Product',
+    url: 'https://openstax.org/books/calculus-volume-3/pages/2-3-the-dot-product',
+  },
+  'calc3-2-4': {
+    label: 'OpenStax Calculus Volume 3 — 2.4 The Cross Product',
+    url: 'https://openstax.org/books/calculus-volume-3/pages/2-4-the-cross-product',
+  },
+  'ca-7-7': {
+    label: 'OpenStax College Algebra 2e — 7.7 Solving Systems with Inverses',
+    url: 'https://openstax.org/books/college-algebra-2e/pages/7-7-solving-systems-with-inverses',
+  },
+  'ca-7-8': {
+    label: 'OpenStax College Algebra 2e — 7.8 Solving Systems with Cramer’s Rule',
+    url: 'https://openstax.org/books/college-algebra-2e/pages/7-8-solving-systems-with-cramers-rule',
+  },
   'up-4-3': {
     label: 'OpenStax University Physics Volume 1 — 4.3 Projectile Motion',
     url: 'https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion',

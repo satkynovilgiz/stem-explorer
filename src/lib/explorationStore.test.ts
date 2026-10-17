@@ -35,6 +35,18 @@ function memoryStore(initial: Record<string, string> = {}): KeyValueStore & { da
 const water = { subject: 'chemistry' as const, params: { molecule: 'water', view: 'ball-and-stick' } }
 
 describe('canonicalize', () => {
+  it('validates mathematics sections and keeps old surface links as surfaces', () => {
+    const fn = canonicalize('mathematics', { msec: 'functions', fn: 'logarithmic', fA: '2', fx: '2' })
+    expect(fn?.params).toMatchObject({ msec: 'functions', fn: 'logarithmic', fA: '2', fx: '2' })
+    expect(defaultTitle(fn!)).toBe('Logarithmic function · calculus tools')
+    // ln is undefined at x ≤ 0: such a point is rejected, not moved.
+    expect(canonicalize('mathematics', { msec: 'functions', fn: 'logarithmic', fx: '-1' })).toBeNull()
+    expect(canonicalize('mathematics', { msec: 'functions', fn: 'tangent' })).toBeNull()
+    expect(canonicalize('mathematics', { msec: 'vectors', vm: '1,2,0.5,1' })?.params.vm).toBe('1,2,0.5,1')
+    expect(canonicalize('mathematics', { msec: 'vectors', vm: '9,0,0,1' })).toBeNull()
+    expect(canonicalize('mathematics', { msec: 'matrices' })).toBeNull()
+    expect(canonicalize('mathematics', { surface: 'saddle' })?.params.msec).toBeUndefined()
+  })
   it('validates through each subject’s URL rules and fills defaults', () => {
     expect(canonicalize('chemistry', { molecule: 'benzene' })).toEqual({ subject: 'chemistry', params: { molecule: 'benzene', view: 'ball-and-stick' } })
     expect(canonicalize('anatomy', { part: 'aorta' })).toEqual({ subject: 'anatomy', params: { part: 'aorta', heart: 'whole' } })
