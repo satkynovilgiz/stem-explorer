@@ -199,6 +199,34 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Anatomy and Physiology 2e — 27.2 Anatomy and Physiology of the Ovarian Reproductive System',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/27-2-anatomy-and-physiology-of-the-ovarian-reproductive-system',
   },
+  'up2-9-1': {
+    label: 'OpenStax University Physics Volume 2 — 9.1 Electrical Current',
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/9-1-electrical-current',
+  },
+  'up2-9-4': {
+    label: 'OpenStax University Physics Volume 2 — 9.4 Ohm’s Law',
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/9-4-ohms-law',
+  },
+  'up2-9-5': {
+    label: 'OpenStax University Physics Volume 2 — 9.5 Electrical Energy and Power',
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/9-5-electrical-energy-and-power',
+  },
+  'up2-10-1': {
+    label: 'OpenStax University Physics Volume 2 — 10.1 Electromotive Force',
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/10-1-electromotive-force',
+  },
+  'up2-10-2': {
+    label: 'OpenStax University Physics Volume 2 — 10.2 Resistors in Series and Parallel',
+    url: 'https://openstax.org/books/university-physics-volume-2/pages/10-2-resistors-in-series-and-parallel',
+  },
+  'up1-16-1': {
+    label: 'OpenStax University Physics Volume 1 — 16.1 Traveling Waves',
+    url: 'https://openstax.org/books/university-physics-volume-1/pages/16-1-traveling-waves',
+  },
+  'up1-16-2': {
+    label: 'OpenStax University Physics Volume 1 — 16.2 Mathematics of Waves',
+    url: 'https://openstax.org/books/university-physics-volume-1/pages/16-2-mathematics-of-waves',
+  },
   'up-4-3': {
     label: 'OpenStax University Physics Volume 1 — 4.3 Projectile Motion',
     url: 'https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion',

@@ -53,25 +53,35 @@ function initFromUrl() {
  */
 // The spring–mass lab (and its scene) load only when that experiment is opened.
 const SpringLab = lazy(() => import('./spring/SpringLab').then((m) => ({ default: m.SpringLab })))
+const CircuitLab = lazy(() => import('./circuit/CircuitLab').then((m) => ({ default: m.CircuitLab })))
+const WaveLab = lazy(() => import('./wave/WaveLab').then((m) => ({ default: m.WaveLab })))
+const EXPERIMENT_LABEL: Record<PhysicsExperiment, string> = { projectile: 'Projectile', spring: 'Spring–mass', circuit: 'DC circuit', wave: 'Wave' }
 
 export function PhysicsExplorer() {
   const [experiment, setExperiment] = useState<PhysicsExperiment>(() => parsePhysicsExperiment(window.location.search).experiment)
   const guidePanel = <SubjectGuidePanel subject="physics" />
   const choose = (next: PhysicsExperiment) => {
     if (next === experiment) return
-    // Switching to the projectile drops the spring keys so the link is a plain projectile link again.
-    if (next === 'projectile') replaceUrlSearch(withoutSpringParams(window.location.search))
+    // Each switch drops the other experiments' keys; a projectile link has none.
+    replaceUrlSearch(withoutSpringParams(window.location.search))
     setExperiment(next)
   }
   const experimentSwitch = (
-    <div className="segmented section-switch" role="group" aria-label="Experiment">
-      {(['projectile', 'spring'] as const).map((e) => (
+    <div className="segmented section-switch section-switch--grid" role="group" aria-label="Experiment">
+      {(['projectile', 'spring', 'circuit', 'wave'] as const).map((e) => (
         <button key={e} type="button" className="segmented-option" aria-pressed={experiment === e} onClick={() => choose(e)}>
-          {e === 'projectile' ? 'Projectile' : 'Spring–mass'}
+          {EXPERIMENT_LABEL[e]}
         </button>
       ))}
     </div>
   )
+  if (experiment === 'circuit' || experiment === 'wave') {
+    return (
+      <Suspense fallback={<p className="muted small panel">Loading the {EXPERIMENT_LABEL[experiment].toLowerCase()} lab…</p>}>
+        {experiment === 'circuit' ? <CircuitLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} /> : <WaveLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} />}
+      </Suspense>
+    )
+  }
   return experiment === 'spring' ? (
     <Suspense fallback={<p className="muted small panel">Loading the spring–mass lab…</p>}>
       <SpringLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} />

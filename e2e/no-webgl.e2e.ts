@@ -204,3 +204,10 @@ test('biology process sections need no WebGL', async ({ page }) => {
   await page.getByRole('group', { name: 'Biology section' }).getByRole('button', { name: 'Energy processes' }).click()
   await expect(page.locator('.process-view')).toContainText('Glycolysis')
 })
+
+test('circuit and wave labs need no WebGL', async ({ page }) => {
+  await page.goto('/?experiment=circuit#/physics')
+  await expect(page.locator('.circuit-table')).toContainText('40.0 mA')
+  await page.goto('/?experiment=wave#/physics')
+  await expect(page.locator('.wave-graph')).toHaveCount(2)
+})

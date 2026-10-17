@@ -200,16 +200,18 @@ export function parsePhysicsParams<T extends Record<PhysicsKey, number>>(
 }
 
 /** Which Physics experiment a link opens. Links without `experiment` are projectile links. */
-export type PhysicsExperiment = 'projectile' | 'spring'
+export type PhysicsExperiment = 'projectile' | 'spring' | 'circuit' | 'wave'
 
 export function parsePhysicsExperiment(search: string): { experiment: PhysicsExperiment; invalid: boolean } {
   const raw = new URLSearchParams(search).get('experiment')
   if (raw === null || raw === 'projectile') return { experiment: 'projectile', invalid: false }
-  if (raw === 'spring') return { experiment: 'spring', invalid: false }
+  if (raw === 'spring' || raw === 'circuit' || raw === 'wave') return { experiment: raw, invalid: false }
   return { experiment: 'projectile', invalid: true }
 }
 
 export const SPRING_URL_KEYS = { mass: 'mass', k: 'k', x0: 'x0' } as const
+/** Keys of the circuit and wave labs (see labUrl.ts); removed when going back to a projectile link. */
+export const LAB_URL_KEYS = ['arr', 'emf', 'r1', 'r2', 'r3', 'wamp', 'wfreq', 'wlen', 'wx'] as const
 type SpringUrlKey = keyof typeof SPRING_URL_KEYS
 
 /** Reads `?experiment=spring&mass=…&k=…&x0=…`; each invalid value falls back to its default on its own. */
@@ -245,7 +247,7 @@ export function withSpringParams(search: string, params: Record<SpringUrlKey, nu
 /** `search` without the spring experiment (back to a projectile link). */
 export function withoutSpringParams(search: string): string {
   const query = new URLSearchParams(search)
-  for (const key of ['experiment', ...Object.values(SPRING_URL_KEYS)]) query.delete(key)
+  for (const key of ['experiment', ...Object.values(SPRING_URL_KEYS), ...LAB_URL_KEYS]) query.delete(key)
   return `?${query.toString()}`
 }
 

@@ -705,7 +705,12 @@ All content is paraphrased from OpenStax textbooks (CC BY 4.0). Each structure l
 NCBI Bookshelf was considered but not cited: its pages returned a reCAPTCHA to automated checks, and
 only pages that were actually read are referenced.
 
-## Physics Explorer — projectile motion lab
+## Physics Explorer — projectile, spring, circuit and wave labs
+
+Four experiments (**Projectile**, **Spring–mass**, **DC circuit**, **Wave**). Links without
+`experiment` are projectile links; each switch removes the other experiments' keys.
+
+### Projectile motion lab
 
 Set the launch, predict the path, launch, pause, scrub through time, read synchronized values and
 graphs, and compare two launches.
@@ -845,6 +850,46 @@ state and URL keys. The spring lab and its scene load only when opened (~15 kB +
 - **Links:** `?experiment=spring&mass=…&k=…&x0=…`. Links without `experiment` are projectile links,
   exactly as before. Switching back to the projectile removes the spring keys. Shared links open
   paused at t = 0; off-step values are snapped and invalid ones fall back on their own.
+
+### DC circuit lab
+
+An ideal voltage source (no internal resistance, so the terminal voltage equals the emf), ideal
+wires and ohmic resistors of fixed resistance (OpenStax University Physics Vol. 2 §9.1, 9.4, 9.5,
+10.1, 10.2). There are five **preset arrangements** and no free-form builder: two or three
+resistors in series, two or three in parallel, and R₁ in series with R₂ parallel to R₃.
+- Inputs: source voltage 0.5–24 V (0.5 V steps) and resistances 1–1000 Ω (positive only, 1 Ω
+  steps).
+- **Readouts** per resistor: current, voltage drop and power; for the source: R_eq, current and
+  power supplied. Small values use mA and mW.
+- **Equations used**, substituted: R_eq (sum, reciprocal sum or the mixed form), I = ε/R_eq,
+  V = IR, and P = IV = I²R = V²/R. The text checks that the power dissipated equals the εI
+  supplied.
+- The schematic is SVG. By default, still arrows show the **conventional-current** direction (+
+  terminal → circuit → − terminal). **Show flow (conceptual)** starts markers that move at a fixed
+  pace; more markers per length means more current. Their speed means nothing and they are not
+  individual charges. The panel says that in metal wires electrons actually move the other way.
+  With reduced motion only the arrows are shown.
+- Links (`experiment=circuit&arr=…&emf=…&r1=…&r2=…[&r3=…]`) open with the markers paused.
+  `src/physics/circuit.ts` is independent of rendering; tests cover series, parallel and mixed
+  reference cases, power balance and boundary inputs.
+
+### Wave lab
+
+An ideal travelling sinusoidal wave y(x, t) = A sin(kx − ωt) moving in +x (Vol. 1 §16.1, 16.2).
+- **Dependency, stated in the UI:** you set amplitude A, frequency f and wavelength λ (plus the
+  inspected point x₀). The speed is derived, v = fλ, with no speed control, so v = fλ can't be
+  violated. Readouts also give T = 1/f, k = 2π/λ and ω = 2πf, plus y and the medium's transverse
+  velocity ∂y/∂t at x₀.
+- **Play/Pause** (real time, looping over two periods, paused in a hidden tab; not offered with
+  reduced motion) and a **time scrubber**. Links open paused at t = 0.
+- The medium is a row of 49 particles moving only up and down. The inspected particle stays at
+  x₀ with its vertical track drawn, while a marked crest travels at v. The text says the pattern
+  and energy move but the medium does not.
+- Two clearly titled graphs: **displacement vs position** at the current t (a snapshot), and
+  **displacement vs time** at x₀ (one particle's history, with a time marker).
+- Assumptions: one wave already filling the region, no damping, no reflections, and the speed is
+  set via f and λ rather than from medium properties. Tests cover v = fλ, reference values,
+  periodicity, the pattern's travel at v, the transverse velocity bound and input bounds.
 
 ### Physics sources
 
@@ -1402,6 +1447,7 @@ How the URL is kept up to date:
 | `src/data/chemistry/molecules.test.ts` | Atom counts against formulas, IDs, bonds and connectivity. Also cited sources, and that coordinates reproduce every reported bond length and angle. |
 | `src/data/chemistry/atomic.test.ts` | Every element's PubChem configuration expands to exactly Z electrons; shell counts for H, O, Na, Ca, Fe and Cr (a filling exception); predicted/calculated notes kept apart; PubChem electronegativities and missing values; N = A − Z; the isotope library has distinct, plausible entries. |
 | `src/data/biology/processes.test.ts` | A–T/G–C pairing with 2/3 hydrogen bonds and purine–pyrimidine pairs; duplex validation and mismatch reporting; RNA from the template equals the coding strand with U; mitosis stage kinds, consistent chromosome/chromatid counts in text and drawing, the no-gametes note; energy sources and structure links; balanced, mutually reverse net equations. |
+| `src/physics/labs.test.ts` | Circuits: series sums and equal currents, parallel equal voltages and adding currents (including 2∥3∥6 Ω = 1 Ω), the mixed arrangement, power balance P = εI = ΣI²R, invalid zero/negative resistance and out-of-range voltage, snapping. Waves: v = fλ and derived k, ω, T; y at quarter wavelength, after one period and half a period; travel at v; medium velocity bounded by Aω; bounds. |
 | `src/features/chemistry/state.test.ts` | Switching molecules mid-measurement, duplicate picks, announcements and clearing. |
 | `src/features/chemistry/scene/measurementGeometry.test.ts` | Angle arc and label placement, including straight and degenerate angles. |
 | `src/data/biology/organelles.test.ts` | Required structures with stable, URL-safe IDs; every content field present; known sources and related structures. Also that cytoplasm and cytosol are distinguished, and that the text never claims all proteins pass through the Golgi. |
@@ -1547,6 +1593,10 @@ the production build:
 - `biology-sections.e2e.ts`: the bacterial model, its comparison and reload; old plant links; DNA pair
   inspection, steps and building the RNA; mitosis stages, terms, cytokinesis and the gamete note;
   energy stages opening the mitochondrion; saving and reopening a section.
+- `circuits-waves.e2e.ts`: circuit readouts for series and parallel, equations, assumptions, the
+  1 Ω minimum, a mixed link reopening paused with arrows then markers; the wave's derived speed,
+  paused start, scrubbing to −A after half a period, both graph kinds, Play/Pause, nothing about
+  time in the link; reduced motion; old links and dropping lab keys.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

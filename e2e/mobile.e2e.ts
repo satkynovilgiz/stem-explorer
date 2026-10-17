@@ -229,3 +229,11 @@ test('Biology sections fit a phone', async ({ page }) => {
     await expectNoHorizontalOverflow(page)
   }
 })
+
+test('circuit and wave labs fit a phone', async ({ page }) => {
+  for (const exp of ['circuit', 'wave']) {
+    await page.goto(`/?experiment=${exp}#/physics`)
+    await expect(page.locator('.circuit-stage')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  }
+})

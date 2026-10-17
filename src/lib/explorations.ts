@@ -7,6 +7,8 @@ import { findElement } from '../data/chemistry/periodicTable'
 import { isSubjectId, SUBJECTS, type SubjectId } from '../data/subjects'
 import { getSurface } from '../math/surfaces'
 import { DEFAULT_PARAMS, isValidParam, normalizeParam, PARAM_KEYS } from '../physics/projectile'
+import { ARRANGEMENT_LABEL, type Arrangement } from '../physics/circuit'
+import { circuitParamEntries, parseCircuitParams, parseWaveParams, waveParamEntries } from './labUrl'
 import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
   anatomyModule,
@@ -70,6 +72,14 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
     case 'physics': {
       const exp = parsePhysicsExperiment(search)
       if (exp.invalid) return null
+      if (exp.experiment === 'circuit') {
+        const r = parseCircuitParams(search)
+        return r.invalid.length ? null : { subject, params: circuitParamEntries(r.params) }
+      }
+      if (exp.experiment === 'wave') {
+        const r = parseWaveParams(search)
+        return r.invalid.length ? null : { subject, params: waveParamEntries(r.params) }
+      }
       if (exp.experiment === 'spring') {
         const r = parseSpringParams(search, DEFAULT_SPRING, isValidSpringParam)
         if (r.invalid.length) return null
@@ -134,6 +144,8 @@ export function defaultTitle(state: ShareState): string {
         ? `${findOrganelle(p.structure)?.name ?? 'Cell structure'} in the ${p.type === 'plant' ? 'plant cell' : p.type === 'bacterium' ? 'bacterial cell' : 'animal cell'}`
         : `${p.type === 'plant' ? 'Plant cell' : p.type === 'bacterium' ? 'Bacterial cell' : 'Animal cell'} · ${p.cell === 'whole' ? 'whole' : 'cutaway'}`
     case 'physics':
+      if (p.experiment === 'circuit') return `Circuit: ${ARRANGEMENT_LABEL[p.arr as Arrangement] ?? 'resistors'}, ε = ${p.emf} V`
+      if (p.experiment === 'wave') return `Wave: f = ${p.wfreq} Hz, λ = ${p.wlen} m`
       if (p.experiment === 'spring') return `Spring: m = ${p.mass} kg, k = ${p.k} N/m, x₀ = ${p.x0} m`
       return `Launch at ${p.speed} m/s, ${p.angle}°${Number(p.height) > 0 ? ` from ${p.height} m` : ''}${p.gravity !== '9.81' ? `, g = ${p.gravity} m/s²` : ''}`
     case 'mathematics': {

@@ -5412,3 +5412,133 @@ button {
   font-size: var(--text-xs);
 }
 
+/* ---------- Physics: circuit and wave labs ---------- */
+
+.circuit-stage {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.circuit-svg,
+.wave-svg {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  margin: var(--space-3) auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.circuit-wire {
+  fill: none;
+  stroke: var(--color-text-subtle);
+  stroke-width: 2.5;
+}
+
+.circuit-plate {
+  stroke: var(--color-text);
+  stroke-width: 4;
+}
+
+.circuit-plate.is-short {
+  stroke-width: 6;
+}
+
+.circuit-resistor {
+  fill: var(--color-surface-raised);
+  stroke: var(--subject-physics);
+  stroke-width: 2;
+}
+
+.circuit-label {
+  fill: var(--color-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.circuit-value {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.circuit-marker {
+  fill: var(--color-measure);
+}
+
+.circuit-arrow {
+  fill: var(--color-measure);
+}
+
+.circuit-table td,
+.circuit-table th {
+  font-variant-numeric: tabular-nums;
+}
+
+.equation-list code {
+  white-space: normal;
+}
+
+.wave-axis {
+  stroke: var(--color-border-strong);
+  stroke-dasharray: 4 4;
+}
+
+.wave-curve {
+  fill: none;
+  stroke: var(--subject-physics);
+  stroke-width: 2;
+}
+
+.wave-particle {
+  fill: var(--color-text-muted);
+}
+
+.wave-probe {
+  fill: var(--color-measure);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.wave-probe-track {
+  stroke: var(--color-measure-border);
+  stroke-width: 2;
+}
+
+.wave-crest {
+  fill: var(--color-accent-strong);
+}
+
+.wave-label {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.wave-marker {
+  stroke: var(--color-measure);
+  stroke-width: 1.5;
+}
+
+.wave-time {
+  width: 100%;
+  accent-color: var(--color-accent);
+}
+
+.wave-graphs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.wave-graph {
+  margin: 0;
+}
+
+.wave-graph svg {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
