@@ -2,7 +2,8 @@ import { MousePointerClick } from 'lucide-react'
 import { lazy, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { Tabs } from '../../../components/Tabs'
 import { ViewportShell } from '../../../components/ViewportShell'
-import { findStructure, getSystem } from '../../../data/anatomy/atlas'
+import { boundsOf, findStructure, getSystem, type Vec3 } from '../../../data/anatomy/atlas'
+import { findTour } from '../../../data/anatomy/atlas/tours'
 import { demoPivot, findMovement } from '../../../data/anatomy/atlas/movements'
 import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
 import { useMediaQuery, usePrefersReducedMotion } from '../../../lib/hooks'
@@ -12,6 +13,8 @@ import { MODULE_GUIDES } from '../../../data/guides'
 import { SubjectGuidePanel } from '../../guide/SubjectGuidePanel'
 import { AtlasDetails, AtlasInventory, AtlasNavigator, AtlasToolbar, LayerPanel } from './AtlasPanels'
 import { LimbComparison, MovementPanel } from './MusculoskeletalPanels'
+import { AlveolusView, NephronView } from './SchematicViews'
+import { AtlasModules, AtlasTourBar, type CloseUp } from './TourPanels'
 import { atlasReducer, atlasShareState, initialAtlasState, VIEW_TEXT } from './atlasState'
 import { drawnStructures } from './visibility'
 
@@ -33,6 +36,12 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
   const reducedMotion = usePrefersReducedMotion()
   const isMobile = useMediaQuery('(max-width: 899px)')
   const [playing, setPlaying] = useState(false)
+  const [closeUp, setCloseUp] = useState<CloseUp | null>(null)
+  const rightPanel = useRef<HTMLElement>(null)
+  // Opening or closing a close-up replaces the right panel's content: start it at the top.
+  useEffect(() => {
+    rightPanel.current?.scrollTo({ top: 0 })
+  }, [closeUp])
   const playStart = useRef<{ time: number; t: number } | null>(null)
 
   // Play sweeps the demonstration out and back (4 s per cycle) until paused; never under reduced
@@ -105,6 +114,49 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
     />
   )
   const compare = <LimbComparison onSelect={select} />
+  const modules = (
+    <AtlasModules
+      onShowSystem={(system) => dispatch({ type: 'showSystem', system })}
+      onStartTour={(id) => {
+        setPlaying(false)
+        dispatch({ type: 'startTour', id })
+      }}
+      onCloseUp={setCloseUp}
+      onOpenHeart={onOpenHeart}
+    />
+  )
+
+  // Tour framing and marker for the current step.
+  const tour = state.tour ? findTour(state.tour.id)! : null
+  const tourStep = tour && state.tour ? tour.steps[state.tour.step] : null
+  const frame = useMemo(() => {
+    if (!tourStep || !state.tour) return null
+    const boxes = tourStep.focus.map((id) => boundsOf(id)).filter((b) => b !== null)
+    if (boxes.length === 0) return null
+    const min = [0, 1, 2].map((i) => Math.min(...boxes.map((b) => b!.min[i]))) as unknown as Vec3
+    const max = [0, 1, 2].map((i) => Math.max(...boxes.map((b) => b!.max[i]))) as unknown as Vec3
+    const center: Vec3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2]
+    return { key: `${state.tour.id}:${state.tour.step}`, center, size: Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) }
+  }, [tourStep, state.tour])
+  const marker =
+    tourStep?.path && state.tour && tourStep.kind !== 'process'
+      ? { key: `${state.tour.id}:${state.tour.step}`, points: tourStep.path, kind: tourStep.kind }
+      : null
+  const tourBar =
+    state.tour && tour ? (
+      <AtlasTourBar
+        tourId={tour.id}
+        step={state.tour.step}
+        reducedMotion={reducedMotion}
+        onPrevious={() => dispatch({ type: 'tourPrevious' })}
+        onNext={() => dispatch({ type: 'tourNext' })}
+        onGoTo={(index) => dispatch({ type: 'tourGoTo', index })}
+        onExit={() => dispatch({ type: 'exitTour' })}
+        onCloseUp={setCloseUp}
+        onOpenHeart={onOpenHeart}
+      />
+    ) : null
+  const closeUpPanel = closeUp === 'alveolus' ? <AlveolusView onClose={() => setCloseUp(null)} /> : closeUp === 'nephron' ? <NephronView onClose={() => setCloseUp(null)} /> : null
   const details = (
     <AtlasDetails
       state={state}
@@ -115,11 +167,13 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       extra={
         isMobile ? (
           <>
+            {modules}
             {compare}
             {inventory}
           </>
         ) : (
           <>
+            {modules}
             {movement}
             {layers}
             {compare}
@@ -141,6 +195,8 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
           drawn={drawn}
           selected={state.selected}
           demo={state.demo ? { id: state.demo.id, side: state.demo.side, pivot: demoPivot(findMovement(state.demo.id)!, state.demo.side) } : null}
+          frame={frame}
+          marker={marker}
           view={state.view}
           region={state.region}
           showLabels={showLabels}
@@ -162,7 +218,9 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
                 : `${state.view === 'front' ? 'anterior' : state.view === 'back' ? 'posterior' : 'left lateral'} view`}
             </span>
             <span className="viewport-badge-mode">
-              {state.demo
+              {tour
+                ? `Tour: ${tour.title} · conceptual route, not timed · `
+                : state.demo
                 ? `${findMovement(state.demo.id)!.name} (${state.demo.side}) · conceptual motion, not a measured range · `
                 : state.isolated && state.selected
                   ? `Isolated: ${findStructure(state.selected)!.name}${state.isolatePair ? ' and the other side' : ''} · `
@@ -206,7 +264,11 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
         {announcer}
         {layerNote}
         {moduleSwitch}
-        <div className="chem-stage">{viewer}</div>
+        <div className="chem-stage">
+          {viewer}
+          {tourBar}
+        </div>
+        {closeUpPanel}
         {guidePanel}
         <Tabs
           label="Body atlas panels"
@@ -232,10 +294,13 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
         {moduleSwitch}
         {navigator}
       </aside>
-      <div className="chem-stage physics-stage">{viewer}</div>
-      <aside className="chem-side chem-side--right">
+      <div className="chem-stage physics-stage">
+        {viewer}
+        {tourBar}
+      </div>
+      <aside ref={rightPanel} className="chem-side chem-side--right">
         {guidePanel}
-        {details}
+        {closeUpPanel ?? details}
       </aside>
     </div>
   )

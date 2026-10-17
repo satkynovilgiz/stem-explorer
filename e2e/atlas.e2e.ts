@@ -78,8 +78,12 @@ test('layers: show, hide and change opacity; regions filter the list and dim the
   const without = await stableCanvasShot(page, true)
   expect(without.equals(before)).toBe(false)
   await skeletal.check()
+  const opaque = await stableCanvasShot(page, true)
   const opacity = page.getByRole('slider', { name: 'Skeletal opacity' })
   await opacity.fill('30')
+  // Regression: lowering opacity from 100% must really make the layer translucent (three.js needs a
+  // new material when transparency switches on).
+  expect((await stableCanvasShot(page, true)).equals(opaque)).toBe(false)
   await expect(page.locator('.layer-row.is-on').filter({ hasText: 'Skeletal' })).toContainText('30%')
   // Opacity is a view preference, not part of the link.
   expect(params(page).get('opacity')).toBeNull()

@@ -150,6 +150,48 @@ muscles together** (one toggle for both layers), and joint links from bones and 
 groups, palm/mid-foot, digits, main hinge, ball-and-socket joint, and hinge flexors and extensors,
 with buttons that select each structure.
 
+**Organ systems and tours** (panel *Organ systems and tours*). Each module card has **Show this
+system** (that layer plus the skin for context), a tour, and a close-up where one exists:
+- **Respiratory**: nasal cavity, pharynx (shared with the digestive system), larynx, trachea, left
+  and right primary bronchi, lungs and diaphragm. Tour *Follow a breath of air* (8 steps: the
+  conducting zone in order, gas exchange, what moves the air, breathing out). Close-up: **Gas
+  exchange in an alveolus** (alveolus, capillary, respiratory membrane; O₂ in and CO₂ out by
+  diffusion from higher to lower partial pressure; no values shown).
+- **Digestive**: mouth, pharynx, esophagus, stomach, small intestine (duodenum around the head of
+  the pancreas, plus jejunum and ileum drawn together because they have no clear boundary), large
+  intestine; liver, gallbladder, bile ducts and pancreas. Tour *Follow food through the digestive
+  tract* (9 steps). Bile and pancreatic juice are separate **Contribution (not part of the route)**
+  steps, with a dashed badge, a different marker colour and the words; food never passes through
+  the accessory organs.
+- **Urinary**: kidneys, ureters, bladder, urethra. Tour *Follow urine from kidney to exit*.
+  Close-up: **A nephron**: blood arrives at the glomerulus, filtration into Bowman's capsule, then
+  modification along the tubule by reabsorption (about 99% of filtrate returned) and secretion
+  (urea, K⁺, ammonia, creatinine, some drugs), then the collecting duct. It is stated as the broad
+  sequence only.
+- **Nervous**: brain as four regions (cerebrum, diencephalon, brain stem, cerebellum), spinal cord,
+  cranial nerves (12 pairs, grouped), spinal nerves (31 pairs: 8 cervical, 12 thoracic, 5 lumbar, 5
+  sacral, 1 coccygeal, drawn as stubs), and limb nerves, organised under *Central nervous system*
+  and *Peripheral nervous system*. Tour *From a touch to a movement*: every step is labelled
+  central or peripheral (sensation → spinal nerves → spinal cord → integration → down → out to
+  muscles). It is labelled a conceptual sequence, not a real pathway.
+- **Cardiovascular**: tour *The systemic circuit through the body* (heart → aorta → carotids →
+  descending aorta and iliacs → femoral artery → capillaries (not drawn) → venae cavae → lungs).
+  Two steps link to the detailed heart module, whose blood-flow tour covers the pulmonary circuit.
+
+**Tours** (`src/data/anatomy/atlas/tours.ts`):
+- They start only from a button. **Previous**, **Next**, a numbered step for direct selection and
+  **Exit tour** / **Finish tour** are always available.
+- Each step says what it represents, its kind (*Route*, *Contribution*, *What happens here*) and
+  what is highlighted, with sources. Highlighted structures carry "Step n · name" labels.
+- A marker moves along the step's path (2.5 s, repeating). With reduced motion it is shown still,
+  with dots along the path, and the bar says so. The bar and the badge call the movement a
+  conceptual route that is not timed.
+- During a tour, selection and layer changes wait, and links, saves and notes use the view from
+  before the tour. Exit restores that view exactly (selection, view, layers, opacity, region,
+  configuration). Tours are never stored in links, and a reload ends one.
+- Every tour has *All steps as text*. Close-ups have the same Previous/Next/steps controls and are
+  plain SVG, so tours and close-ups work without WebGL.
+
 **Reproductive anatomy** is off by default. Turning it on requires choosing **Typical ovarian
 configuration** or **Typical testicular configuration** (OpenStax's terms; the chapter describes the
 typical anatomy of XX and XY individuals). The panel says neither is universal and that intersex
@@ -161,8 +203,8 @@ configuration can't appear in a link for the other.
 not the whole body. Invalid values are rejected by the same parser that validates saved entries.
 
 **Sources** (each read for this release): OpenStax Anatomy and Physiology 2e §1.2, 1.6, 5.1, 5.2,
-7.1–7.4, 8.1–8.4, 9.1, 9.5, 9.6, 11.3–11.6, 12.1, 17.1, 17.3, 17.4, 17.6, 19.1, 20.5, 21.1, 22.1, 22.2, 23.1, 23.3–23.6, 25.2,
-25.3, 27.1 and 27.2. Unit tests check sourced relative positions (the right kidney lower than the
+7.1–7.4, 8.1–8.4, 9.1, 9.5, 9.6, 11.3–11.6, 12.1, 13.2, 13.4, 17.1, 17.3, 17.4, 17.6, 19.1, 20.3, 20.5, 21.1, 22.1–22.4, 23.1, 23.3–23.6,
+25.2–25.6, 27.1 and 27.2. Unit tests check sourced relative positions (the right kidney lower than the
 left, adrenal glands on the kidneys, the right lung shorter and wider), and that every structure
 cites a registered source and states a limitation. Tests do not establish anatomical accuracy.
 
@@ -1241,6 +1283,7 @@ How the URL is kept up to date:
 | `src/data/anatomy/heart.test.ts` | All 14 structures, with URL-safe IDs, known sources and valid, reciprocal connections. Also oxygen-pathway colours by side, cusp counts, the exact 14-step blood-flow order with external lungs and body, and valve-after-chamber ordering. |
 | `src/data/anatomy/atlas/atlas.test.ts` | The eleven systems each with drawn structures and omissions; unique ids and resolvable parents, relations and pairs; descriptions, functions, regions, registered sources and limitations on every structure; groups explain their grouping; left structures on +x; sourced relative positions (right kidney lower, adrenals above kidneys, heart between the lungs, lungs above the diaphragm above the liver, right lung shorter and wider); reproductive structures always in a labelled variant and hidden by default; search; inventory completeness. |
 | `src/data/anatomy/atlas/movements.test.ts` | Rotation about the joint axis keeps the pivot and distances, turns "down" to forward (elbow) or back (knee), and reverses exactly; stretching moves only a muscle's distal end; every demo structure exists on both sides; pivots sit on the joint markers; elbow flexion moves the hand forward and up and knee flexion the heel back and up; progress is clamped and described without degrees. |
+| `src/data/anatomy/atlas/tours.test.ts` | Every tour step names real structures and registered sources; paths are finite and absent for process steps; the food tour keeps accessory contributions (liver, gallbladder, bile ducts, pancreas) out of the route and places them at the duodenum; the airflow tour follows the conducting zone in order; every nerve-tour step is labelled CNS or PNS; circulation descends the aorta and returns by the venae cavae, linking to the heart module. |
 | `src/features/anatomy/atlas/atlas.test.ts` | View descriptions checked against camera geometry; defaults; selecting a hidden structure shows its layer and says so; reproductive selection and switching; no reproductive layer without a configuration; isolation of structures and groups; region dimming and clearing; opacity clamping; shared-system drawing; link round trip and invalid or inconsistent links. |
 | `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). Vessel comparison: entering, filling and replacing slots, refusing non-vessels, clearing, leaving, views, the tour ending and blocking comparison, and the shared state. |
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
@@ -1366,6 +1409,11 @@ the production build:
   (sternocleidomastoid) and "Not listed" (deltoid); grouped hamstrings; elbow and knee
   demonstrations (labels, conceptual wording, slider words, sketch orientation per side, the canvas
   changing, Play/Pause, exit, nothing in the link); reduced motion without Play; the limb comparison.
+- `organ-tours.e2e.ts`: tours start only on request; Next, Previous and direct steps; the address
+  unchanged during a tour; the gas-exchange close-up from the tour; Exit restoring selection and
+  view; food-tour contributions labelled apart from the route; CNS/PNS labels; brain regions and
+  spinal nerves; the nephron close-up; circulation linking to the heart module; still markers with
+  reduced motion.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

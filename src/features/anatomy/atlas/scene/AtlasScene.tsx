@@ -1,7 +1,7 @@
 import { OrbitControls, useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { memo, useEffect, useEffectEvent, useMemo, useRef, useState, type RefObject } from 'react'
-import { CatmullRomCurve3, PerspectiveCamera, Quaternion, Vector3 } from 'three'
+import { CatmullRomCurve3, PerspectiveCamera, Quaternion, Vector3, type Mesh } from 'three'
 import { boundsOf, getRegion, getSystem, type AtlasStructure, type RegionId, type Shape, type Vec3 } from '../../../../data/anatomy/atlas'
 import type { AtlasView } from '../../../../lib/urlState'
 import { VIEW_DIRECTIONS } from '../atlasState'
@@ -12,6 +12,10 @@ export interface AtlasSceneProps {
   selected: string | null
   /** A movement demonstration in progress: the camera frames that joint from the side. */
   demo: { id: string; side: 'left' | 'right'; pivot: Vec3 } | null
+  /** Tour step framing (overrides the region framing while a tour runs). */
+  frame: { key: string; center: Vec3; size: number } | null
+  /** Conceptual marker moving along a path (tour steps). */
+  marker: { key: string; points: readonly Vec3[]; kind: 'route' | 'contribution' } | null
   view: AtlasView
   region: RegionId
   showLabels: boolean
@@ -107,6 +111,8 @@ const StructureMesh = memo(function StructureMesh({
       {shapes.map((shape, i) => (
         <ShapeMesh key={i} shape={shape}>
           <meshStandardMaterial
+            // three.js compiles transparency into the shader: switching it needs a new material.
+            key={transparent ? 'translucent' : 'opaque'}
             color={color}
             roughness={0.6}
             metalness={0.02}
@@ -133,6 +139,7 @@ function CameraRig({
   region,
   selected,
   demo,
+  frame,
   resetToken,
   focusToken,
   reducedMotion,
@@ -141,6 +148,7 @@ function CameraRig({
   region: RegionId
   selected: string | null
   demo: AtlasSceneProps['demo']
+  frame: AtlasSceneProps['frame']
   resetToken: number
   focusToken: number
   reducedMotion: boolean
@@ -182,15 +190,22 @@ function CameraRig({
       first.current = false
       return
     }
+    if (frame) {
+      const target = new Vector3(...frame.center)
+      fly(target, target.clone().addScaledVector(VIEW_DIRS[view], distanceFor(Math.max(2.4, frame.size * 1.3))), !first.current && !reducedMotion)
+      first.current = false
+      return
+    }
     const r = getRegion(region)
     const target = new Vector3(...r.center)
     fly(target, target.clone().addScaledVector(VIEW_DIRS[view], distanceFor(r.size)), !first.current && !reducedMotion)
     first.current = false
   })
   const demoKey = demo ? `${demo.id}:${demo.side}` : ''
+  const frameKey = frame?.key ?? ''
   useEffect(() => {
     if (controlsObject) frameRegion()
-  }, [controlsObject, resetToken, view, region, demoKey])
+  }, [controlsObject, resetToken, view, region, demoKey, frameKey])
 
   const focus = useEffectEvent(() => {
     const b = selected ? boundsOf(selected) : null
@@ -247,6 +262,7 @@ const ORIENTATION: Label[] = [
   { key: 'post', position: [0, 6.2, -1.9], text: 'Posterior', className: 'is-orientation', axis: [0, 0, 1] },
 ]
 
+const rank = (l: Label) => (l.axis ? 0 : l.className.includes('is-selected') ? 1 : 2)
 const tmp = new Vector3()
 const fwd = new Vector3()
 const axisV = new Vector3()
@@ -254,10 +270,13 @@ const axisV = new Vector3()
 function LabelProjector({ labels, elements }: { labels: readonly Label[]; elements: RefObject<Map<string, HTMLElement>> }) {
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => invalidate(), [invalidate, labels])
+  // Orientation first (they matter most), then primary labels, then the rest.
+  const ordered = useMemo(() => [...labels].sort((a, b) => rank(a) - rank(b)), [labels])
   useFrame(({ camera, size }) => {
     camera.updateMatrixWorld()
     camera.getWorldDirection(fwd)
-    for (const label of labels) {
+    const placed: { x: number; y: number; w: number; h: number }[] = []
+    for (const label of ordered) {
       const el = elements.current.get(label.key)
       if (!el) continue
       let hidden = false
@@ -275,8 +294,13 @@ function LabelProjector({ labels, elements }: { labels: readonly Label[]; elemen
         y = Math.min(size.height - hh - 28, Math.max(hh + 64, y))
       }
       const onScreen = tmp.z < 1
+      const rect = { x: x - el.offsetWidth / 2, y: y - el.offsetHeight / 2, w: el.offsetWidth, h: el.offsetHeight }
+      // A label that would overlap one already placed is hidden (the panel lists everything).
+      const clear = !placed.some((p) => rect.x < p.x + p.w + 2 && p.x < rect.x + rect.w + 2 && rect.y < p.y + p.h + 1 && p.y < rect.y + rect.h + 1)
+      const visible = onScreen && !hidden && clear
+      if (visible) placed.push(rect)
       el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`
-      el.style.visibility = onScreen && !hidden ? 'visible' : 'hidden'
+      el.style.visibility = visible ? 'visible' : 'hidden'
     }
   })
   return null
@@ -301,9 +325,54 @@ function LabelLayer({ labels, elements }: { labels: readonly Label[]; elements: 
   )
 }
 
+/* ---------- Tour marker ---------- */
+
+const MARKER_COLORS = { route: '#f5f7f8', contribution: '#f5c26b' } as const
+
+/**
+ * A small sphere travelling along the step's path (2.5 s, repeating), or — with reduced motion —
+ * still dots along the path with the sphere at its end. Conceptual: order and direction only.
+ */
+function TourMarker({ points, kind, reducedMotion }: { points: readonly Vec3[]; kind: 'route' | 'contribution'; reducedMotion: boolean }) {
+  const curve = useMemo(() => new CatmullRomCurve3(points.map((p) => new Vector3(...p)), false, 'centripetal'), [points])
+  const ref = useRef<Mesh>(null)
+  const invalidate = useThree((s) => s.invalidate)
+  const start = useRef<number | null>(null)
+  useFrame(({ clock }) => {
+    if (reducedMotion || !ref.current) return
+    if (start.current === null) start.current = clock.elapsedTime
+    const t = ((clock.elapsedTime - start.current) / 2.5) % 1
+    ref.current.position.copy(curve.getPointAt(t))
+    invalidate()
+  })
+  const color = MARKER_COLORS[kind]
+  const end = curve.getPointAt(1)
+  return (
+    <group raycast={() => null}>
+      <mesh>
+        <tubeGeometry args={[curve, Math.max(24, points.length * 12), 0.012, 6, false]} />
+        <meshBasicMaterial color={color} transparent opacity={0.55} depthTest={false} />
+      </mesh>
+      {reducedMotion &&
+        [0.25, 0.5, 0.75].map((t) => (
+          <mesh key={t} position={curve.getPointAt(t)}>
+            <sphereGeometry args={[0.035, 12, 8]} />
+            <meshBasicMaterial color={color} depthTest={false} />
+          </mesh>
+        ))}
+      <mesh ref={ref} position={reducedMotion ? end : curve.getPointAt(0)} renderOrder={10}>
+        <sphereGeometry args={[0.06, 16, 12]} />
+        <meshBasicMaterial color={color} depthTest={false} />
+      </mesh>
+    </group>
+  )
+}
+
 /** A representative point of a set of shapes (for labels). */
 function anchorOf(shapes: readonly Shape[]): Vec3 {
-  const pts = shapes.flatMap((s): Vec3[] => (s.kind === 'ellipsoid' || s.kind === 'box' ? [s.center] : s.kind === 'capsule' ? [s.from, s.to] : [s.points[Math.floor(s.points.length / 2)]]))
+  // Groups spread over the body (e.g. limb nerves) are labelled at their first part, not their average.
+  const first = shapes.slice(0, shapes.length > 3 ? 1 : shapes.length)
+  const pts = first.flatMap((s): Vec3[] => (s.kind === 'ellipsoid' || s.kind === 'box' ? [s.center] : s.kind === 'capsule' ? [s.from, s.to] : [s.points[Math.floor(s.points.length / 2)]]))
   const n = Math.max(1, pts.length)
   return [pts.reduce((a, p) => a + p[0], 0) / n, pts.reduce((a, p) => a + p[1], 0) / n, pts.reduce((a, p) => a + p[2], 0) / n]
 }
@@ -311,7 +380,7 @@ function anchorOf(shapes: readonly Shape[]): Vec3 {
 /* ---------- Root ---------- */
 
 export default function AtlasScene(props: AtlasSceneProps) {
-  const { drawn, selected, demo, view, region, showLabels, reducedMotion, resetToken, focusToken, onSelect, onBackgroundClick, onReady, onContextLost } = props
+  const { drawn, selected, demo, frame, marker, view, region, showLabels, reducedMotion, resetToken, focusToken, onSelect, onBackgroundClick, onReady, onContextLost } = props
   const [hovered, setHovered] = useState(false)
   useCursor(hovered)
   const labelElements = useRef<Map<string, HTMLElement>>(new Map())
@@ -321,11 +390,10 @@ export default function AtlasScene(props: AtlasSceneProps) {
     const b = selected ? boundsOf(selected) : null
     const sel = selected ? drawn.find((d) => d.structure.id === selected) : undefined
     if (b && sel && !demo) out.push({ key: 'selected', position: [b.center[0], b.max[1] + 0.12, b.center[2]], text: `● ${sel.structure.name}`, className: 'is-selected' })
-    // Demonstration roles are labelled in words, not only by highlight colour.
+    // Demonstration roles and tour steps are labelled in words, not only by highlight colour.
     for (const d of drawn) {
-      if (!d.role) continue
-      const name = d.structure.name.replace(/^(Left|Right) /, '')
-      out.push({ key: `role-${d.structure.id}`, position: anchorOf(d.shapes ?? d.structure.shapes), text: `${d.role === 'principal' ? 'Flexor' : 'Opposes'} · ${name}`, className: d.role === 'principal' ? 'is-selected' : 'is-external' })
+      if (!d.label) continue
+      out.push({ key: `label-${d.structure.id}`, position: anchorOf(d.shapes ?? d.structure.shapes), text: d.label, className: d.labelStyle === 'primary' ? 'is-selected' : 'is-external' })
     }
     return out
   }, [drawn, selected, showLabels, demo])
@@ -368,13 +436,14 @@ export default function AtlasScene(props: AtlasSceneProps) {
                 shapes={d.shapes ?? d.structure.shapes}
                 opacity={d.opacity}
                 pickable={!d.dimmed}
-                selected={d.structure.id === selected || d.role === 'principal'}
+                selected={d.structure.id === selected || !!d.highlight}
                 onSelect={onSelect}
               />
             ))}
         </group>
         <OrbitControls makeDefault enablePan={false} enableDamping={!reducedMotion} dampingFactor={0.12} minDistance={1.5} maxDistance={60} />
-        <CameraRig view={view} region={region} selected={selected} demo={demo} resetToken={resetToken} focusToken={focusToken} reducedMotion={reducedMotion} />
+        {marker && <TourMarker key={marker.key} points={marker.points} kind={marker.kind} reducedMotion={reducedMotion} />}
+        <CameraRig view={view} region={region} selected={selected} demo={demo} frame={frame} resetToken={resetToken} focusToken={focusToken} reducedMotion={reducedMotion} />
         <LabelProjector labels={labels} elements={labelElements} />
       </Canvas>
       <LabelLayer labels={labels} elements={labelElements} />

@@ -114,3 +114,37 @@ describe('atlas links', () => {
     expect(parseAtlasParams('?layers=', ATLAS_CONFIG)).toMatchObject({ layers: [], invalid: [] })
   })
 })
+
+describe('atlas tours (state)', () => {
+  it('start only on request, step within bounds, keep links on the pre-tour view, and restore it on exit', () => {
+    let s = atlasReducer(fresh('?atlas=liver&bview=back'), { type: 'setOpacity', system: 'skeletal', value: 0.5 })
+    const before = atlasShareState(s)
+    expect(s.tour).toBeNull()
+    s = atlasReducer(s, { type: 'startTour', id: 'food' })
+    expect(s.tour).toMatchObject({ id: 'food', step: 0 })
+    expect(s.announcement).toMatch(/Step 1 of 9: Mouth/)
+    expect(atlasShareState(s)).toEqual(before)
+    expect(atlasReducer(s, { type: 'tourPrevious' })).toBe(s)
+    s = atlasReducer(s, { type: 'tourGoTo', index: 8 })
+    expect(atlasReducer(s, { type: 'tourNext' })).toBe(s)
+    // Selection and layer changes wait until the tour ends.
+    expect(atlasReducer(s, { type: 'select', id: 'heart' }).selected).toBe('liver')
+    expect(atlasReducer(s, { type: 'toggleLayer', system: 'muscular' })).toBe(s)
+    const drawn = drawnStructures(s)
+    expect(drawn.find((d) => d.structure.id === 'large-intestine')).toMatchObject({ highlight: true, label: 'Step 9 · Large intestine' })
+    expect(drawn.find((d) => d.structure.id === 'liver')).toMatchObject({ dimmed: true })
+    s = atlasReducer(s, { type: 'exitTour' })
+    expect(s.tour).toBeNull()
+    expect(atlasShareState(s)).toEqual(before)
+    expect(s.opacity.skeletal).toBe(0.5)
+    expect(s.selected).toBe('liver')
+  })
+
+  it('starting a tour ends a movement demonstration; showing a system sets its layer with the skin for context', () => {
+    let s = atlasReducer(fresh(), { type: 'startDemo', id: 'elbow-flexion', side: 'left' })
+    s = atlasReducer(s, { type: 'startTour', id: 'airflow' })
+    expect(s.demo).toBeNull()
+    s = atlasReducer(atlasReducer(s, { type: 'exitTour' }), { type: 'showSystem', system: 'urinary' })
+    expect(s.layers).toEqual(['integumentary', 'urinary'])
+  })
+})

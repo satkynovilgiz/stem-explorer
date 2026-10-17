@@ -179,3 +179,14 @@ test('movement demonstrations and the limb comparison work without WebGL', async
   await page.getByText('Compare upper and lower limbs').click()
   await expect(page.locator('.limb-compare table')).toContainText('14 phalanges')
 })
+
+test('atlas tours and close-ups are fully usable as text without WebGL', async ({ page }) => {
+  await page.goto('/#/anatomy')
+  await page.locator('.atlas-modules').getByRole('button', { name: 'Tour: Follow urine from kidney to exit' }).click()
+  await expect(page.locator('.atlas-tour #atlas-tour-heading')).toHaveText('Kidneys: filtering the blood')
+  await page.locator('.atlas-tour').getByRole('button', { name: 'Next' }).click()
+  await expect(page.locator('.atlas-tour #atlas-tour-heading')).toHaveText('Ureters')
+  await page.locator('.atlas-tour').getByRole('button', { name: 'Exit tour' }).click()
+  await page.locator('.atlas-modules').getByRole('button', { name: 'Gas exchange in an alveolus' }).click()
+  await expect(page.locator('[data-view="alveolus"] .schematic-svg')).toBeVisible()
+})

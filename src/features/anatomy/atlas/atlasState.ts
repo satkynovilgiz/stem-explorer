@@ -1,6 +1,7 @@
 import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
 import { ATLAS_SYSTEMS, findStructure, getRegion, getSystem, type RegionId, type ReproductiveVariant, type SystemId } from '../../../data/anatomy/atlas'
 import { findMovement, type MovementId, type Side } from '../../../data/anatomy/atlas/movements'
+import { findTour, type AtlasTour } from '../../../data/anatomy/atlas/tours'
 import type { AtlasUrlState, AtlasView } from '../../../lib/urlState'
 
 export interface AtlasState {
@@ -17,8 +18,12 @@ export interface AtlasState {
   variant: ReproductiveVariant | null
   /** A movement demonstration in progress (never stored in links). t: 0 = reference posture, 1 = flexed. */
   demo: { id: MovementId; side: Side; t: number } | null
+  /** A guided tour in progress (never stored in links); `before` is restored on exit. */
+  tour: { id: AtlasTour['id']; step: number; before: AtlasSnapshot } | null
   announcement: string
 }
+
+export type AtlasSnapshot = Omit<AtlasState, 'tour' | 'announcement'>
 
 export type AtlasAction =
   | { type: 'select'; id: string }
@@ -31,6 +36,12 @@ export type AtlasAction =
   | { type: 'setDemoSide'; side: Side }
   | { type: 'setDemoT'; t: number }
   | { type: 'exitDemo' }
+  | { type: 'showSystem'; system: SystemId }
+  | { type: 'startTour'; id: AtlasTour['id'] }
+  | { type: 'tourNext' }
+  | { type: 'tourPrevious' }
+  | { type: 'tourGoTo'; index: number }
+  | { type: 'exitTour' }
   | { type: 'setView'; view: AtlasView }
   | { type: 'toggleLayer'; system: SystemId }
   | { type: 'setLayers'; layers: SystemId[] }
@@ -58,6 +69,7 @@ export function initialAtlasState(url: AtlasUrlState): AtlasState {
     region: url.region as RegionId,
     variant: url.variant,
     demo: null,
+    tour: null,
     announcement: '',
   }
   return url.structureId ? reveal(base, url.structureId) : base
@@ -98,7 +110,19 @@ function reveal(state: AtlasState, id: string): AtlasState {
   }
 }
 
+const tourStepText = (tourId: AtlasTour['id'], index: number) => {
+  const t = findTour(tourId)!
+  const step = t.steps[index]
+  return `Step ${index + 1} of ${t.steps.length}: ${step.title}. ${step.text}`
+}
+
+const snapshot = ({ tour: _t, announcement: _a, ...rest }: AtlasState): AtlasSnapshot => rest
+
 export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState {
+  // While a tour runs, only tour navigation and view-only changes apply; everything else waits.
+  if (state.tour && !['tourNext', 'tourPrevious', 'tourGoTo', 'exitTour', 'replace', 'setView', 'setOpacity'].includes(action.type)) {
+    return action.type === 'select' ? { ...state, announcement: 'Exit the tour to select structures.' } : state
+  }
   switch (action.type) {
     case 'replace':
       return { ...action.state, announcement: action.announcement }
@@ -131,6 +155,26 @@ export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState
       return state.demo ? { ...state, demo: { ...state.demo, t: Math.min(1, Math.max(0, action.t)) } } : state
     case 'exitDemo':
       return { ...state, demo: null, announcement: 'Demonstration closed.' }
+    case 'showSystem': {
+      const layers = ordered(action.system === 'integumentary' ? ['integumentary'] : ['integumentary', action.system])
+      return { ...state, layers, region: 'whole-body', isolated: false, isolatePair: false, demo: null, announcement: `Showing the ${getSystem(action.system).name} system.` }
+    }
+    case 'startTour': {
+      const t = findTour(action.id)
+      if (!t) return state
+      return { ...state, demo: null, isolated: false, isolatePair: false, tour: { id: t.id, step: 0, before: snapshot({ ...state, demo: null }) }, announcement: `${t.title}: tour started. ${tourStepText(t.id, 0)}` }
+    }
+    case 'tourNext':
+    case 'tourPrevious':
+    case 'tourGoTo': {
+      if (!state.tour) return state
+      const n = findTour(state.tour.id)!.steps.length
+      const index = action.type === 'tourGoTo' ? action.index : state.tour.step + (action.type === 'tourNext' ? 1 : -1)
+      if (index < 0 || index >= n || index === state.tour.step) return state
+      return { ...state, tour: { ...state.tour, step: index }, announcement: tourStepText(state.tour.id, index) }
+    }
+    case 'exitTour':
+      return state.tour ? { ...state.tour.before, tour: null, announcement: 'Tour ended; your previous view is back.' } : state
     case 'setView':
       return { ...state, view: action.view, announcement: `${action.view === 'front' ? 'Front (anterior)' : action.view === 'back' ? 'Back (posterior)' : 'Side (left lateral)'} view.` }
     case 'toggleLayer': {
@@ -173,8 +217,10 @@ export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState
   }
 }
 
+/** What links, saves and notes store: during a tour, the view the tour will restore. */
 export function atlasShareState(state: AtlasState): AtlasUrlState {
-  return { structureId: state.selected, view: state.view, layers: state.layers, region: state.region, variant: state.variant }
+  const s = state.tour ? state.tour.before : state
+  return { structureId: s.selected, view: s.view, layers: s.layers, region: s.region, variant: s.variant }
 }
 
 export const DEFAULT_LAYERS = ATLAS_CONFIG.defaultLayers as SystemId[]

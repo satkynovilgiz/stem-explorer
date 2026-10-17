@@ -99,6 +99,38 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Anatomy and Physiology 2e — 12.1 Basic Structure and Function of the Nervous System',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/12-1-basic-structure-and-function-of-the-nervous-system',
   },
+  'ap-13-2': {
+    label: 'OpenStax Anatomy and Physiology 2e — 13.2 The Central Nervous System',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/13-2-the-central-nervous-system',
+  },
+  'ap-13-4': {
+    label: 'OpenStax Anatomy and Physiology 2e — 13.4 The Peripheral Nervous System',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/13-4-the-peripheral-nervous-system',
+  },
+  'ap-20-3': {
+    label: 'OpenStax Anatomy and Physiology 2e — 20.3 Capillary Exchange',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/20-3-capillary-exchange',
+  },
+  'ap-22-3': {
+    label: 'OpenStax Anatomy and Physiology 2e — 22.3 The Process of Breathing',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/22-3-the-process-of-breathing',
+  },
+  'ap-22-4': {
+    label: 'OpenStax Anatomy and Physiology 2e — 22.4 Gas Exchange',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/22-4-gas-exchange',
+  },
+  'ap-25-4': {
+    label: 'OpenStax Anatomy and Physiology 2e — 25.4 Microscopic Anatomy of the Kidney',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/25-4-microscopic-anatomy-of-the-kidney',
+  },
+  'ap-25-5': {
+    label: 'OpenStax Anatomy and Physiology 2e — 25.5 Physiology of Urine Formation',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/25-5-physiology-of-urine-formation',
+  },
+  'ap-25-6': {
+    label: 'OpenStax Anatomy and Physiology 2e — 25.6 Tubular Reabsorption',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/25-6-tubular-reabsorption',
+  },
   'ap-17-1': {
     label: 'OpenStax Anatomy and Physiology 2e — 17.1 An Overview of the Endocrine System',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/17-1-an-overview-of-the-endocrine-system',

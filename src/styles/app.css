@@ -4938,3 +4938,142 @@ button {
 .limb-compare .compare-table {
   font-size: var(--text-sm);
 }
+
+/* Atlas: organ-system modules, tours and schematic close-ups */
+.module-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.module-card {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.module-card p {
+  margin: 0 0 var(--space-1);
+}
+
+.module-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+
+.atlas-modules > summary {
+  cursor: pointer;
+}
+
+.tour-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+}
+
+.tour-kind {
+  padding: 1px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+/* Contributions are told apart by a dashed outline and their label, not colour alone. */
+.tour-kind.is-contribution {
+  border-style: dashed;
+  border-color: var(--color-measure-border);
+  color: var(--color-measure);
+}
+
+.tour-kind.is-division {
+  border-color: var(--subject-mathematics);
+}
+
+.tour-dot.is-contribution {
+  border-style: dashed;
+}
+
+.atlas-tour .tour-text {
+  margin-bottom: var(--space-2);
+}
+
+.schematic-svg {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.schematic-svg .sv-label {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.sv-duct,
+.sv-tubule,
+.sv-vessel,
+.sv-capsule,
+.sv-membrane {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.sv-alveolus {
+  fill: rgb(143 198 232 / 0.12);
+  stroke: #8fc6e8;
+  stroke-width: 3;
+}
+
+.sv-capillary {
+  fill: rgb(224 96 90 / 0.18);
+  stroke: #e0605a;
+  stroke-width: 3;
+}
+
+.sv-glomerulus {
+  fill: rgb(224 96 90 / 0.25);
+  stroke: #e0605a;
+  stroke-width: 3;
+}
+
+.sv-band {
+  fill: rgb(224 96 90 / 0.15);
+  stroke: rgb(224 96 90 / 0.5);
+}
+
+.sv-arrow line {
+  stroke: var(--color-text-subtle);
+  stroke-width: 2.5;
+}
+
+.sv-arrow path {
+  fill: var(--color-text-subtle);
+}
+
+/* The active part of each step: thicker stroke in the accent colour (plus the step text names it). */
+.schematic-svg .is-active,
+.schematic-svg .is-active line {
+  stroke: var(--color-accent-strong);
+  stroke-width: 5;
+}
+
+.schematic-svg .is-active path {
+  fill: var(--color-accent-strong);
+}
+
+.schematic-svg g.is-active .sv-label {
+  fill: var(--color-accent-strong);
+  font-weight: 700;
+}

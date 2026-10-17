@@ -73,7 +73,7 @@ const inRegion = (s: AtlasStructure, region: RegionId) => region === 'whole-body
 
 /** Re-renders only when what it lists changes (not on every frame of a movement demonstration). */
 export const AtlasNavigator = memo(AtlasNavigatorImpl, (a, b) =>
-  a.state.selected === b.state.selected && a.state.region === b.state.region && a.state.variant === b.state.variant && a.state.layers === b.state.layers,
+  a.state.selected === b.state.selected && a.state.region === b.state.region && a.state.variant === b.state.variant && a.state.layers === b.state.layers && !a.state.tour === !b.state.tour,
 )
 
 function AtlasNavigatorImpl({ state, onSelect, onRegion }: { state: AtlasState; onSelect: (id: string) => void; onRegion: (r: RegionId) => void }) {
@@ -101,6 +101,7 @@ function AtlasNavigatorImpl({ state, onSelect, onRegion }: { state: AtlasState; 
       <p className="search-status" role="status">
         {trimmed ? `${results.length} match${results.length === 1 ? '' : 'es'}` : `${ATLAS_STRUCTURES.length} entries in ${ATLAS_SYSTEMS.length} systems`}
       </p>
+      {state.tour && <p className="muted small">Selection is paused during the tour. Exit the tour to explore freely.</p>}
       {trimmed ? (
         results.length ? (
           <ul className="structure-list" aria-label="Search results">
