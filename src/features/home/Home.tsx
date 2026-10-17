@@ -1,5 +1,5 @@
 import { ArrowRight, BookOpen, ChevronDown, Compass, ExternalLink, Link2, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SUBJECTS, type SubjectId } from '../../data/subjects'
 import { useExplorationLibrary } from '../../lib/useExplorationLibrary'
@@ -9,12 +9,21 @@ import { SUBJECT_CARDS } from './content'
 import { HomeSearch } from './HomeSearch'
 import { RecentStrip } from './RecentStrip'
 import { SavedPanel } from './SavedPanel'
+import { HeroIllustration } from './HeroIllustration'
 import { SubjectArt } from './SubjectArt'
 
 const ORDER: SubjectId[] = SUBJECTS.map((s) => s.id)
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
 
 /** Curated deep links using only supported URL parameters; next steps the URL cannot encode are spelled out. */
+const SPOTLIGHT = {
+  subject: 'mathematics' as SubjectId,
+  title: 'Find where a saddle is level',
+  href: '?surface=saddle&a=0.5&b=0.5#/mathematics',
+  text: 'The saddle z = a·x² − b·y² curves up along x and down along y. At one point its tangent plane is horizontal, yet that point is neither a maximum nor a minimum.',
+  next: 'Under Inspect a point, enter x = 0 and y = 0: Local slope shows ∇f = 0. Then try x = 1 and turn on the tangent plane.',
+}
+
 const FEATURED: { subject: SubjectId; title: string; href: string; next: string }[] = [
   {
     subject: 'chemistry',
@@ -112,42 +121,46 @@ export function Home() {
 
   return (
     <div className={`home${message ? ' has-toast' : ''}`}>
-      <section className="home-hero" aria-labelledby="home-title">
-        <p className="eyebrow">Interactive science models</p>
-        <h1 id="home-title" className="home-title">
-          Explore science. See how it works.
-        </h1>
-        <p className="home-lead">
-          Five hands-on explorers for anatomy, chemistry, biology, physics and mathematics. Rotate 3D models, run small
-          experiments and read short, sourced explanations of what you see.
-        </p>
-        <HomeSearch />
-        <div className="home-actions">
-          <button
-            type="button"
-            className="tool-button bordered"
-            onClick={() => {
-              subjectsRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
-              subjectsRef.current?.focus({ preventScroll: true })
-            }}
-          >
-            <span>Browse subjects</span>
-            <ArrowRight size={15} aria-hidden="true" />
-          </button>
-          {!firstVisit && (
+      <section className="home-hero enter" aria-labelledby="home-title">
+        <div className="home-hero-text">
+          <p className="eyebrow">Interactive science models</p>
+          <h1 id="home-title" className="home-title">
+            Explore science.
+            <span className="home-title-sub">See how it works.</span>
+          </h1>
+          <p className="home-lead">
+            Five hands-on explorers for anatomy, chemistry, biology, physics and mathematics. Rotate models, change the
+            numbers in small experiments and read short explanations that cite their sources.
+          </p>
+          <HomeSearch />
+          <div className="home-actions">
             <button
               type="button"
               className="tool-button bordered"
-              aria-expanded={guideOpen}
-              aria-controls="home-guide"
-              onClick={() => setGuideOpen((v) => !v)}
+              onClick={() => {
+                subjectsRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+                subjectsRef.current?.focus({ preventScroll: true })
+              }}
             >
-              <BookOpen size={15} aria-hidden="true" />
-              <span>How it works</span>
-              <ChevronDown size={14} aria-hidden="true" className={guideOpen ? 'is-flipped' : ''} />
+              <span>Browse subjects</span>
+              <ArrowRight size={15} aria-hidden="true" />
             </button>
-          )}
+            {!firstVisit && (
+              <button
+                type="button"
+                className="tool-button bordered"
+                aria-expanded={guideOpen}
+                aria-controls="home-guide"
+                onClick={() => setGuideOpen((v) => !v)}
+              >
+                <BookOpen size={15} aria-hidden="true" />
+                <span>How it works</span>
+                <ChevronDown size={14} aria-hidden="true" className={guideOpen ? 'is-flipped' : ''} />
+              </button>
+            )}
+          </div>
         </div>
+        <HeroIllustration />
       </section>
 
       {guideOpen && !firstVisit && (
@@ -161,15 +174,15 @@ export function Home() {
 
       {firstVisit ? <WelcomePanel /> : library.recent.length > 0 && <RecentStrip recent={library.recent} onMessage={setMessage} />}
 
-      <section ref={subjectsRef} className="home-section" aria-labelledby="subjects-heading" tabIndex={-1}>
+      <section ref={subjectsRef} className="home-section enter" aria-labelledby="subjects-heading" tabIndex={-1}>
         <h2 id="subjects-heading" className="home-h2">
-          Subjects
+          Explore subjects
         </h2>
         <ul className="subject-cards">
           {ORDER.map((id) => {
             const card = SUBJECT_CARDS[id]
             return (
-              <li key={id} className={`subject-card is-${id}`}>
+              <li key={id} className={`subject-card is-${id}`} style={{ '--i': ORDER.indexOf(id) } as CSSProperties}>
                 <SubjectArt subject={id} />
                 <p className="subject-card-name">{subjectName(id)}</p>
                 <h3 className="subject-card-title">{card.title}</h3>
@@ -190,12 +203,23 @@ export function Home() {
         <p className="muted small">Card illustrations are simplified previews, not the scientific models.</p>
       </section>
 
-      <ActivityEntries />
-
-      <section className="home-section" aria-labelledby="featured-heading">
+      <section className="home-section enter" aria-labelledby="featured-heading">
         <h2 id="featured-heading" className="home-h2">
-          Featured explorations
+          Featured exploration
         </h2>
+        <AppLink href={SPOTLIGHT.href} className={`spotlight is-${SPOTLIGHT.subject}`}>
+          <SubjectArt subject={SPOTLIGHT.subject} />
+          <span className="spotlight-text">
+            <span className={`subject-chip is-${SPOTLIGHT.subject}`}>{subjectName(SPOTLIGHT.subject)}</span>
+            <span className="spotlight-title">{SPOTLIGHT.title}</span>
+            <span className="spotlight-body">{SPOTLIGHT.text}</span>
+            <span className="featured-next">{SPOTLIGHT.next}</span>
+            <span className="spotlight-action">
+              Open the saddle <ArrowRight size={16} aria-hidden="true" />
+            </span>
+          </span>
+        </AppLink>
+        <h3 className="home-h3">More starting points</h3>
         <ul className="featured-list">
           {FEATURED.map((f) => (
             <li key={f.href}>
@@ -208,6 +232,8 @@ export function Home() {
           ))}
         </ul>
       </section>
+
+      <ActivityEntries />
 
       <SavedPanel saved={library.saved} savedError={library.savedError} onMessage={setMessage} />
 

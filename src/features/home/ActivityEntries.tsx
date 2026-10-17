@@ -17,9 +17,9 @@ const ACTIVITIES = [ANATOMY_ACTIVITY, CHEMISTRY_ACTIVITY, PHYSICS_ACTIVITY, MATH
  */
 export function ActivityEntries() {
   return (
-    <section className="home-section" aria-labelledby="activities-heading">
+    <section className="home-section enter" aria-labelledby="activities-heading">
       <h2 id="activities-heading" className="home-h2">
-        <Lightbulb size={20} aria-hidden="true" /> Try a guided activity
+        <Lightbulb size={20} aria-hidden="true" /> Guided activities
       </h2>
       <p className="muted small home-section-lead">
         Short, optional walkthroughs of three to five steps inside each explorer. Your current view comes back when you exit.

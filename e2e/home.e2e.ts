@@ -49,7 +49,7 @@ test.describe('Home page', () => {
     await expect(welcome).toContainText('How exploring works')
     await expect(page.getByRole('button', { name: 'How it works' })).toHaveCount(0)
     await page.getByRole('button', { name: 'Browse subjects' }).click()
-    await expect(page.getByRole('heading', { name: 'Subjects', exact: true })).toBeInViewport()
+    await expect(page.getByRole('heading', { name: 'Explore subjects', exact: true })).toBeInViewport()
 
     // A starting point opens the chemistry activity introduction.
     await welcome.getByRole('link', { name: /Measure the H–O–H angle/ }).click()
@@ -275,5 +275,86 @@ test('reduced motion: transitions are effectively off and Browse subjects jumps 
   expect(parseFloat(duration)).toBeLessThan(0.001)
   await page.getByRole('button', { name: 'Browse subjects' }).click()
   // No smooth scrolling: the subjects heading is in view straight away.
-  await expect(page.getByRole('heading', { name: 'Subjects', exact: true })).toBeInViewport({ timeout: 500 })
+  await expect(page.getByRole('heading', { name: 'Explore subjects', exact: true })).toBeInViewport({ timeout: 500 })
+})
+
+test.describe('Home motion and featured content', () => {
+  const art = (page: Page) => page.locator('.hero-art')
+
+  test('the decorative animation runs only while visible, can be paused, and stays paused after reload', async ({ page }) => {
+    await page.goto('/')
+    await expect(art(page)).toHaveAttribute('data-running', 'true')
+    await expect(art(page).locator('> svg')).toHaveAttribute('aria-hidden', 'true')
+    // Only transform-based keyframes are used.
+    const props = await page.evaluate(() =>
+      [...document.styleSheets].flatMap((s) => [...s.cssRules]).filter((r): r is CSSKeyframesRule => r instanceof CSSKeyframesRule && r.name.startsWith('hero-'))
+        .flatMap((r) => [...r.cssRules].flatMap((k) => [...(k as CSSKeyframeRule).style])),
+    )
+    expect([...new Set(props)]).toEqual(['transform'])
+
+    // Scrolled out of view: paused.
+    await page.getByRole('heading', { name: 'Saved explorations' }).scrollIntoViewIfNeeded()
+    await expect(art(page)).toHaveAttribute('data-running', 'false')
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await expect(art(page)).toHaveAttribute('data-running', 'true')
+
+    // Hidden tab: paused.
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    await expect(art(page)).toHaveAttribute('data-running', 'false')
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    await expect(art(page)).toHaveAttribute('data-running', 'true')
+
+    // A visible, keyboard-operable pause control.
+    const toggle = page.getByRole('button', { name: 'Pause decorative animation' })
+    await toggle.focus()
+    await page.keyboard.press('Enter')
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await expect(art(page)).toHaveAttribute('data-running', 'false')
+    expect(await page.locator('.hero-wave').evaluate((el) => getComputedStyle(el).animationPlayState)).toBe('paused')
+    await page.reload()
+    await expect(art(page)).toHaveAttribute('data-running', 'false')
+    await expect(page.getByRole('button', { name: 'Pause decorative animation' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('reduced motion: nothing animates and no pause control is needed', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/')
+    await expect(art(page)).toHaveAttribute('data-running', 'false')
+    await expect(page.getByRole('button', { name: 'Pause decorative animation' })).toHaveCount(0)
+    expect(await page.locator('.hero-wave').evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
+    expect(await page.locator('.subject-card').first().evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
+  })
+
+  test('search examples fill the search; the featured exploration opens real content; the search stays responsive', async ({ page }) => {
+    await page.goto('/')
+    const examples = page.locator('.search-examples')
+    await examples.getByRole('button', { name: 'saddle' }).click()
+    const input = page.getByRole('searchbox', { name: 'Search everything you can explore' })
+    await expect(input).toHaveValue('saddle')
+    await expect(input).toBeFocused()
+    await expect(page.locator('.search-results')).toContainText('Saddle')
+    await input.fill('benz')
+    await expect(page.locator('.search-results')).toContainText('Benzene')
+    await input.fill('')
+    await page.locator('.spotlight').click()
+    await expect(page.locator('#math-heading')).toContainText('saddle', { ignoreCase: true })
+    expect(new URL(page.url()).searchParams.get('surface')).toBe('saddle')
+  })
+
+  test('subject cards lift on hover and on keyboard focus without moving layout', async ({ page }) => {
+    await page.goto('/')
+    const card = page.locator('.subject-card').first()
+    await page.waitForTimeout(400) // let the entrance finish
+    const before = await card.boundingBox()
+    await card.locator('.subject-card-action').focus()
+    await expect.poll(() => card.evaluate((el) => getComputedStyle(el).transform)).not.toBe('none')
+    const next = await page.locator('.subject-card').nth(1).boundingBox()
+    expect(next!.x).toBeGreaterThan(before!.x)
+  })
 })

@@ -706,24 +706,43 @@ cross-section graph keep working, and the 3D-only toolbar is hidden.
 (`#/`, `#/nowhere`). The brand logo and the **Home** tab in the top bar lead back to it. Home does
 not mount a WebGL canvas and does not load the Three.js chunk.
 
-Home is laid out as a dashboard, top to bottom:
-- A short introduction with the global search as the main action, plus **Browse subjects**.
+Home is laid out top to bottom:
+- **Hero**: a two-line headline, a one-sentence explanation, the global search (the main action)
+  with example queries (*mitral valve*, *H₂O*, *Golgi*, *saddle*, *spring*; a unit test checks each
+  one has results), **Browse subjects**, and a small decorative SVG illustration (a cell outline, a
+  bent three-atom molecule and a travelling wave). The illustration is hidden from assistive
+  technology and from phones narrower than 520 px, where the search comes first.
 - A first-visit **welcome panel**, shown only while there is no history and nothing saved. It has
   two concrete starting points (a guided activity and the heart) and how exploring works. For
   returning visitors it is replaced by a compact **Continue exploring** strip of recent visits,
   and the guide moves behind **How it works**.
-- **Subject cards** in each subject's accent colour (tokens `--subject-*`), with a small SVG
-  illustration labelled as a simplified preview and the capabilities that exist today
-  (`src/features/home/content.ts`, kept in step with the explorers).
-- **Guided activities** with their learning goals, **Featured explorations**, and **Saved
-  explorations** with backup.
+- **Explore subjects**: cards in each subject's accent colour (tokens `--subject-*`), with a small
+  SVG illustration labelled as a simplified preview and the capabilities that exist today
+  (`src/features/home/content.ts`, kept in step with the explorers). The whole card is clickable
+  through its action link. On phones the illustration sits beside the title.
+- **Featured exploration**: one larger card for real, implemented content (the saddle's level
+  point), with **More starting points** below it.
+- **Guided activities** with their learning goals, then **Saved explorations** with backup.
 - Library messages (saved, renamed, removed, cleared, imported, errors) appear in one dismissible
   status region at the bottom of the screen, so a message stays visible even when its section
   disappears (for example after Clear history).
 
+**Motion** is restrained and never gates content:
+- Sections and cards fade up 8 px over 240 ms, staggered by at most about 200 ms. Everything is in
+  the DOM and focusable from the first frame.
+- Subject cards, featured cards and the spotlight lift 2–3 px on hover and on keyboard focus.
+  Transforms don't move layout.
+- The hero illustration's wave and molecule move with transform-only keyframes (a test checks
+  this). They run only while the illustration is on screen (IntersectionObserver) and the tab is
+  visible. A visible **Pause decorative animation** button (`aria-pressed`) stops them, and the
+  choice is remembered on this browser (`stem-explorer:hero-paused`, per-viewer convenience only).
+- With `prefers-reduced-motion: reduce`, nothing animates, cards don't lift, and the pause button
+  is not shown.
+- No scroll hijacking, intro, audio, particles or WebGL on Home.
+
 Featured explorations are ordinary deep links that use only supported URL parameters. When a step
 can't be stored in a URL (picking atoms for an angle, starting the blood-flow tour, saving a physics
-Run A), the card says what to do next.
+Run A, inspecting a point), the card says what to do next.
 
 **Search** runs locally over a fixed index built from the app's own data (no network):
 the five subjects, the six molecules (names, aliases and formulas, where `H2O` and `H₂O` both

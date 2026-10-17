@@ -56,3 +56,6 @@ export const SUBJECT_CARDS: Record<SubjectId, { title: string; summary: string; 
     action: 'Open surfaces',
   },
 }
+
+/** Example queries under the Home search; each one must have results (checked by a unit test). */
+export const SEARCH_EXAMPLES = ['mitral valve', 'H₂O', 'Golgi', 'saddle', 'spring']
