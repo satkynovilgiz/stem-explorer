@@ -1,4 +1,5 @@
-import { ATLAS_STRUCTURES, descendantsOf, shownWithVariant, type AtlasStructure } from '../../../data/anatomy/atlas'
+import { ATLAS_STRUCTURES, descendantsOf, findStructure, shownWithVariant, type AtlasStructure, type Shape } from '../../../data/anatomy/atlas'
+import { angleAt, demoMembers, demoPivot, findMovement, rotateShape, stretchShape } from '../../../data/anatomy/atlas/movements'
 import type { AtlasState } from './atlasState'
 
 export interface DrawnStructure {
@@ -6,6 +7,10 @@ export interface DrawnStructure {
   opacity: number
   /** Outside the chosen region: drawn faintly for context and not clickable. */
   dimmed: boolean
+  /** Posed shapes during a movement demonstration (otherwise the structure's own shapes). */
+  shapes?: readonly Shape[]
+  /** Role in a movement demonstration, shown as a text label. */
+  role?: 'principal' | 'opposing'
 }
 
 /** Opacity used for context outside the chosen region. */
@@ -15,9 +20,32 @@ export const DIMMED_OPACITY = 0.08
  * What the scene draws for a given state. Kept free of Three.js so it can be unit tested and so
  * the HTML list can say exactly what is visible.
  */
-export function drawnStructures(state: Pick<AtlasState, 'selected' | 'isolated' | 'layers' | 'opacity' | 'region' | 'variant'>): DrawnStructure[] {
+export function drawnStructures(state: Pick<AtlasState, 'selected' | 'isolated' | 'isolatePair' | 'layers' | 'opacity' | 'region' | 'variant' | 'demo'>): DrawnStructure[] {
+  if (state.demo) {
+    const m = findMovement(state.demo.id)!
+    const { moving, spanning, context } = demoMembers(m, state.demo.side)
+    const pivot = demoPivot(m, state.demo.side)
+    const angle = angleAt(m, state.demo.t)
+    const role = (id: string) => {
+      const base = id.replace(/-(left|right)$/, '')
+      return m.principal.some((p) => p.id === base) ? 'principal' : m.opposing.some((p) => p.id === base) ? 'opposing' : undefined
+    }
+    const out: DrawnStructure[] = []
+    for (const id of context) out.push({ structure: findStructure(id)!, opacity: 1, dimmed: false, role: role(id) })
+    for (const id of moving) {
+      const s = findStructure(id)!
+      out.push({ structure: s, opacity: 1, dimmed: false, shapes: s.shapes.map((sh) => rotateShape(sh, pivot, angle)), role: role(id) })
+    }
+    for (const id of spanning) {
+      const s = findStructure(id)!
+      out.push({ structure: s, opacity: 1, dimmed: false, shapes: s.shapes.map((sh) => stretchShape(sh, pivot, angle)), role: role(id) })
+    }
+    return out
+  }
   if (state.isolated && state.selected) {
-    const ids = new Set([state.selected, ...descendantsOf(state.selected).map((d) => d.id)])
+    const pairId = state.isolatePair ? findStructure(state.selected)?.pairId : undefined
+    const roots = pairId ? [state.selected, pairId] : [state.selected]
+    const ids = new Set(roots.flatMap((r) => [r, ...descendantsOf(r).map((d) => d.id)]))
     return ATLAS_STRUCTURES.filter((s) => ids.has(s.id) && s.shapes.length > 0).map((structure) => ({ structure, opacity: 1, dimmed: false }))
   }
   const out: DrawnStructure[] = []

@@ -1,10 +1,13 @@
 import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
 import { ATLAS_SYSTEMS, findStructure, getRegion, getSystem, type RegionId, type ReproductiveVariant, type SystemId } from '../../../data/anatomy/atlas'
+import { findMovement, type MovementId, type Side } from '../../../data/anatomy/atlas/movements'
 import type { AtlasUrlState, AtlasView } from '../../../lib/urlState'
 
 export interface AtlasState {
   selected: string | null
   isolated: boolean
+  /** With isolation: also draw the other side of a left/right pair. */
+  isolatePair: boolean
   view: AtlasView
   /** Visible systems, kept in the fixed system order. */
   layers: SystemId[]
@@ -12,6 +15,8 @@ export interface AtlasState {
   opacity: Record<SystemId, number>
   region: RegionId
   variant: ReproductiveVariant | null
+  /** A movement demonstration in progress (never stored in links). t: 0 = reference posture, 1 = flexed. */
+  demo: { id: MovementId; side: Side; t: number } | null
   announcement: string
 }
 
@@ -19,7 +24,13 @@ export type AtlasAction =
   | { type: 'select'; id: string }
   | { type: 'clearSelection' }
   | { type: 'isolate' }
+  | { type: 'isolatePair' }
   | { type: 'showAll' }
+  | { type: 'toggleMusculoskeletal' }
+  | { type: 'startDemo'; id: MovementId; side: Side }
+  | { type: 'setDemoSide'; side: Side }
+  | { type: 'setDemoT'; t: number }
+  | { type: 'exitDemo' }
   | { type: 'setView'; view: AtlasView }
   | { type: 'toggleLayer'; system: SystemId }
   | { type: 'setLayers'; layers: SystemId[] }
@@ -40,11 +51,13 @@ export function initialAtlasState(url: AtlasUrlState): AtlasState {
   const base: AtlasState = {
     selected: null,
     isolated: false,
+    isolatePair: false,
     view: url.view,
     layers: url.layers as SystemId[],
     opacity: { ...DEFAULT_OPACITY },
     region: url.region as RegionId,
     variant: url.variant,
+    demo: null,
     announcement: '',
   }
   return url.structureId ? reveal(base, url.structureId) : base
@@ -80,6 +93,7 @@ function reveal(state: AtlasState, id: string): AtlasState {
     region,
     selected: id,
     isolated: state.isolated && state.selected === id,
+    isolatePair: state.isolatePair && state.selected === id,
     announcement: `${s.name} selected.${notes.length ? ` ${notes.join('; ')}.` : ''}`,
   }
 }
@@ -89,13 +103,34 @@ export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState
     case 'replace':
       return { ...action.state, announcement: action.announcement }
     case 'select':
-      return findStructure(action.id) ? { ...reveal(state, action.id), isolated: false } : state
+      return findStructure(action.id) ? { ...reveal(state, action.id), isolated: false, isolatePair: false } : state
     case 'clearSelection':
-      return { ...state, selected: null, isolated: false, announcement: 'Selection cleared.' }
+      return { ...state, selected: null, isolated: false, isolatePair: false, announcement: 'Selection cleared.' }
     case 'isolate':
-      return state.selected ? { ...state, isolated: true, announcement: `Showing only ${findStructure(state.selected)!.name}.` } : state
+      return state.selected ? { ...state, isolated: true, isolatePair: false, demo: null, announcement: `Showing only ${findStructure(state.selected)!.name}.` } : state
+    case 'isolatePair': {
+      const s = state.selected ? findStructure(state.selected) : undefined
+      if (!s?.pairId) return state
+      return { ...state, isolated: true, isolatePair: true, demo: null, announcement: `Showing only ${s.name} and ${findStructure(s.pairId)!.name}.` }
+    }
     case 'showAll':
-      return { ...state, isolated: false, announcement: 'Showing all visible layers.' }
+      return { ...state, isolated: false, isolatePair: false, announcement: 'Showing all visible layers.' }
+    case 'toggleMusculoskeletal': {
+      const both = state.layers.includes('skeletal') && state.layers.includes('muscular')
+      const layers = both ? state.layers.filter((l) => l !== 'skeletal' && l !== 'muscular') : ordered([...state.layers, 'skeletal', 'muscular'])
+      return { ...state, layers, announcement: both ? 'Skeletal and muscular layers hidden.' : 'Skeletal and muscular layers shown.' }
+    }
+    case 'startDemo': {
+      const m = findMovement(action.id)
+      if (!m) return state
+      return { ...state, isolated: false, isolatePair: false, demo: { id: action.id, side: action.side, t: 0 }, announcement: `${m.name} demonstration, ${action.side} side, at the reference posture.` }
+    }
+    case 'setDemoSide':
+      return state.demo ? { ...state, demo: { ...state.demo, side: action.side }, announcement: `Showing the ${action.side} side.` } : state
+    case 'setDemoT':
+      return state.demo ? { ...state, demo: { ...state.demo, t: Math.min(1, Math.max(0, action.t)) } } : state
+    case 'exitDemo':
+      return { ...state, demo: null, announcement: 'Demonstration closed.' }
     case 'setView':
       return { ...state, view: action.view, announcement: `${action.view === 'front' ? 'Front (anterior)' : action.view === 'back' ? 'Back (posterior)' : 'Side (left lateral)'} view.` }
     case 'toggleLayer': {

@@ -60,8 +60,8 @@ describe('atlas state', () => {
     let s = atlasReducer(fresh(), { type: 'select', id: 'liver' })
     s = atlasReducer(s, { type: 'isolate' })
     expect(ids(s)).toEqual(['liver'])
-    s = atlasReducer(atlasReducer(s, { type: 'select', id: 'axial-skeleton' }), { type: 'isolate' })
-    expect(ids(s).sort()).toEqual(['skull', 'thoracic-cage', 'vertebral-column'])
+    s = atlasReducer(atlasReducer(s, { type: 'select', id: 'vertebral-column' }), { type: 'isolate' })
+    expect(ids(s).sort()).toEqual(['cervical-vertebrae', 'coccyx', 'lumbar-vertebrae', 'sacrum', 'thoracic-vertebrae'])
     expect(atlasReducer(s, { type: 'showAll' }).isolated).toBe(false)
   })
 
@@ -81,7 +81,7 @@ describe('atlas state', () => {
     let s = atlasReducer(fresh(), { type: 'setOpacity', system: 'skeletal', value: 0.01 })
     expect(s.opacity.skeletal).toBe(0.1)
     s = atlasReducer(s, { type: 'setOpacity', system: 'skeletal', value: 0.5 })
-    expect(drawnStructures(s).find((d) => d.structure.id === 'skull')!.opacity).toBe(0.5)
+    expect(drawnStructures(s).find((d) => d.structure.id === 'frontal-bone')!.opacity).toBe(0.5)
   })
 
   it('a structure in two systems is drawn when either layer is on', () => {

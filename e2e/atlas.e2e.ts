@@ -48,7 +48,7 @@ test('select from the list or search, read sourced details, and keep the state t
   expect(params(page).get('atlas')).toBe('kidney-left')
 
   // Paired structure and related links.
-  await page.getByRole('button', { name: 'Show the right side' }).click()
+  await page.getByRole('button', { name: 'Select the right side' }).click()
   await expect(heading(page)).toHaveText('Right kidney')
   await page.locator('.relation-list').getByRole('button', { name: 'Right adrenal gland' }).click()
   await expect(heading(page)).toHaveText('Right adrenal gland')

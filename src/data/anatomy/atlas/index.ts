@@ -1,4 +1,6 @@
 import { BODY_STRUCTURES } from './structures/body'
+import { MUSCLES } from './structures/muscles'
+import { SKELETON } from './structures/skeleton'
 import { ORGAN_STRUCTURES } from './structures/organs'
 import { REPRODUCTIVE } from './structures/reproductive'
 import { ATLAS_SYSTEMS, getSystem } from './systems'
@@ -7,7 +9,7 @@ import type { AtlasStructure, ReproductiveVariant, Shape, SystemId, Vec3 } from 
 export * from './types'
 export { ATLAS_REGIONS, ATLAS_SYSTEMS, getRegion, getSystem, REGION_IDS, SYSTEM_IDS } from './systems'
 
-export const ATLAS_STRUCTURES: readonly AtlasStructure[] = [...BODY_STRUCTURES, ...ORGAN_STRUCTURES, ...REPRODUCTIVE]
+export const ATLAS_STRUCTURES: readonly AtlasStructure[] = [...BODY_STRUCTURES, ...SKELETON, ...MUSCLES, ...ORGAN_STRUCTURES, ...REPRODUCTIVE]
 
 const BY_ID = new Map(ATLAS_STRUCTURES.map((s) => [s.id, s]))
 export const ATLAS_IDS = ATLAS_STRUCTURES.map((s) => s.id)

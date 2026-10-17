@@ -10,6 +10,8 @@ import type { DrawnStructure } from '../visibility'
 export interface AtlasSceneProps {
   drawn: readonly DrawnStructure[]
   selected: string | null
+  /** A movement demonstration in progress: the camera frames that joint from the side. */
+  demo: { id: string; side: 'left' | 'right'; pivot: Vec3 } | null
   view: AtlasView
   region: RegionId
   showLabels: boolean
@@ -72,12 +74,14 @@ function ShapeMesh({ shape, children }: { shape: Shape; children: React.ReactNod
 
 const StructureMesh = memo(function StructureMesh({
   structure,
+  shapes,
   opacity,
   pickable,
   selected,
   onSelect,
 }: {
   structure: AtlasStructure
+  shapes: readonly Shape[]
   opacity: number
   pickable: boolean
   selected: boolean
@@ -100,7 +104,7 @@ const StructureMesh = memo(function StructureMesh({
       // Faint context outside the chosen region does not take clicks.
       raycast={pickable ? undefined : () => null}
     >
-      {structure.shapes.map((shape, i) => (
+      {shapes.map((shape, i) => (
         <ShapeMesh key={i} shape={shape}>
           <meshStandardMaterial
             color={color}
@@ -124,7 +128,23 @@ const VIEW_DIRS = Object.fromEntries(
   Object.entries(VIEW_DIRECTIONS).map(([k, v]) => [k, new Vector3(...v).normalize()]),
 ) as Record<AtlasView, Vector3>
 
-function CameraRig({ view, region, selected, resetToken, focusToken, reducedMotion }: { view: AtlasView; region: RegionId; selected: string | null; resetToken: number; focusToken: number; reducedMotion: boolean }) {
+function CameraRig({
+  view,
+  region,
+  selected,
+  demo,
+  resetToken,
+  focusToken,
+  reducedMotion,
+}: {
+  view: AtlasView
+  region: RegionId
+  selected: string | null
+  demo: AtlasSceneProps['demo']
+  resetToken: number
+  focusToken: number
+  reducedMotion: boolean
+}) {
   const get = useThree((s) => s.get)
   const controlsObject = useThree((s) => s.controls)
   const flight = useRef<{ fromP: Vector3; toP: Vector3; fromT: Vector3; toT: Vector3; t: number } | null>(null)
@@ -153,14 +173,24 @@ function CameraRig({ view, region, selected, resetToken, focusToken, reducedMoti
   }
 
   const frameRegion = useEffectEvent(() => {
+    if (demo) {
+      // Side-on to the moving limb (from the body's left for the left limb, right for the right).
+      // Exactly side-on, so the 2D sketch in the panel matches this view.
+      const target = new Vector3(demo.pivot[0], demo.pivot[1] + (demo.id === 'knee-flexion' ? 0.1 : 0.15), demo.pivot[2])
+      const dir = new Vector3(demo.side === 'left' ? 1 : -1, 0.05, 0).normalize()
+      fly(target, target.clone().addScaledVector(dir, distanceFor(demo.id === 'knee-flexion' ? 5.4 : 4.6)), !first.current && !reducedMotion)
+      first.current = false
+      return
+    }
     const r = getRegion(region)
     const target = new Vector3(...r.center)
     fly(target, target.clone().addScaledVector(VIEW_DIRS[view], distanceFor(r.size)), !first.current && !reducedMotion)
     first.current = false
   })
+  const demoKey = demo ? `${demo.id}:${demo.side}` : ''
   useEffect(() => {
     if (controlsObject) frameRegion()
-  }, [controlsObject, resetToken, view, region])
+  }, [controlsObject, resetToken, view, region, demoKey])
 
   const focus = useEffectEvent(() => {
     const b = selected ? boundsOf(selected) : null
@@ -241,7 +271,8 @@ function LabelProjector({ labels, elements }: { labels: readonly Label[]; elemen
         const hw = el.offsetWidth / 2 + 6
         const hh = el.offsetHeight / 2 + 6
         x = Math.min(size.width - hw, Math.max(hw, x))
-        y = Math.min(size.height - hh, Math.max(hh, y))
+        // Leave the top band for the viewport badge.
+        y = Math.min(size.height - hh - 28, Math.max(hh + 64, y))
       }
       const onScreen = tmp.z < 1
       el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`
@@ -270,10 +301,17 @@ function LabelLayer({ labels, elements }: { labels: readonly Label[]; elements: 
   )
 }
 
+/** A representative point of a set of shapes (for labels). */
+function anchorOf(shapes: readonly Shape[]): Vec3 {
+  const pts = shapes.flatMap((s): Vec3[] => (s.kind === 'ellipsoid' || s.kind === 'box' ? [s.center] : s.kind === 'capsule' ? [s.from, s.to] : [s.points[Math.floor(s.points.length / 2)]]))
+  const n = Math.max(1, pts.length)
+  return [pts.reduce((a, p) => a + p[0], 0) / n, pts.reduce((a, p) => a + p[1], 0) / n, pts.reduce((a, p) => a + p[2], 0) / n]
+}
+
 /* ---------- Root ---------- */
 
 export default function AtlasScene(props: AtlasSceneProps) {
-  const { drawn, selected, view, region, showLabels, reducedMotion, resetToken, focusToken, onSelect, onBackgroundClick, onReady, onContextLost } = props
+  const { drawn, selected, demo, view, region, showLabels, reducedMotion, resetToken, focusToken, onSelect, onBackgroundClick, onReady, onContextLost } = props
   const [hovered, setHovered] = useState(false)
   useCursor(hovered)
   const labelElements = useRef<Map<string, HTMLElement>>(new Map())
@@ -282,9 +320,15 @@ export default function AtlasScene(props: AtlasSceneProps) {
     const out: Label[] = showLabels ? [...ORIENTATION] : ORIENTATION.filter((l) => l.key === 'left' || l.key === 'right')
     const b = selected ? boundsOf(selected) : null
     const sel = selected ? drawn.find((d) => d.structure.id === selected) : undefined
-    if (b && sel) out.push({ key: 'selected', position: [b.center[0], b.max[1] + 0.12, b.center[2]], text: `● ${sel.structure.name}`, className: 'is-selected' })
+    if (b && sel && !demo) out.push({ key: 'selected', position: [b.center[0], b.max[1] + 0.12, b.center[2]], text: `● ${sel.structure.name}`, className: 'is-selected' })
+    // Demonstration roles are labelled in words, not only by highlight colour.
+    for (const d of drawn) {
+      if (!d.role) continue
+      const name = d.structure.name.replace(/^(Left|Right) /, '')
+      out.push({ key: `role-${d.structure.id}`, position: anchorOf(d.shapes ?? d.structure.shapes), text: `${d.role === 'principal' ? 'Flexor' : 'Opposes'} · ${name}`, className: d.role === 'principal' ? 'is-selected' : 'is-external' })
+    }
     return out
-  }, [drawn, selected, showLabels])
+  }, [drawn, selected, showLabels, demo])
 
   return (
     <>
@@ -318,11 +362,19 @@ export default function AtlasScene(props: AtlasSceneProps) {
           {[...drawn]
             .sort((a, b) => b.opacity - a.opacity)
             .map((d) => (
-              <StructureMesh key={d.structure.id} structure={d.structure} opacity={d.opacity} pickable={!d.dimmed} selected={d.structure.id === selected} onSelect={onSelect} />
+              <StructureMesh
+                key={d.structure.id}
+                structure={d.structure}
+                shapes={d.shapes ?? d.structure.shapes}
+                opacity={d.opacity}
+                pickable={!d.dimmed}
+                selected={d.structure.id === selected || d.role === 'principal'}
+                onSelect={onSelect}
+              />
             ))}
         </group>
         <OrbitControls makeDefault enablePan={false} enableDamping={!reducedMotion} dampingFactor={0.12} minDistance={1.5} maxDistance={60} />
-        <CameraRig view={view} region={region} selected={selected} resetToken={resetToken} focusToken={focusToken} reducedMotion={reducedMotion} />
+        <CameraRig view={view} region={region} selected={selected} demo={demo} resetToken={resetToken} focusToken={focusToken} reducedMotion={reducedMotion} />
         <LabelProjector labels={labels} elements={labelElements} />
       </Canvas>
       <LabelLayer labels={labels} elements={labelElements} />

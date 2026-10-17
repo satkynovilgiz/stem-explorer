@@ -4856,3 +4856,85 @@ button {
   border-radius: 4px;
   color: var(--color-text-muted);
 }
+
+/* Atlas: movement demonstrations and limb comparison */
+.movement-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.movement-control input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--color-accent);
+}
+
+.movement-pose {
+  margin: var(--space-1) 0;
+  font-weight: 600;
+}
+
+.pose-sketch {
+  display: block;
+  width: 140px;
+  height: auto;
+  margin: var(--space-2) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.pose-upper,
+.pose-lower {
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+.pose-upper {
+  stroke: var(--color-text-muted);
+}
+
+.pose-lower {
+  stroke: var(--color-accent);
+}
+
+.pose-joint {
+  fill: var(--color-bg);
+  stroke: var(--color-text);
+  stroke-width: 2;
+}
+
+.pose-reference {
+  stroke: var(--color-border-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.pose-axis,
+.pose-label {
+  fill: var(--color-text-subtle);
+  font-size: 9px;
+}
+
+.inline-note p {
+  margin: 0 0 var(--space-1);
+}
+
+.limb-compare > summary {
+  cursor: pointer;
+}
+
+.limb-compare .compare-table td {
+  vertical-align: top;
+}
+
+.compare-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+}
+
+.limb-compare .compare-table {
+  font-size: var(--text-sm);
+}

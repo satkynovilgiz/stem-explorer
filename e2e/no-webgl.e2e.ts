@@ -168,3 +168,14 @@ test('the body atlas works from HTML without WebGL: list, search, layers, detail
   await expect(page.locator('.atlas-inventory')).toContainText('Not included')
   expect(new URL(page.url()).searchParams.get('atlas')).toBe('spleen')
 })
+
+test('movement demonstrations and the limb comparison work without WebGL', async ({ page }) => {
+  await page.goto('/#/anatomy')
+  const panel = page.locator('.movement-panel')
+  await panel.getByRole('button', { name: 'Knee flexion' }).click()
+  await panel.getByLabel('Flexion (conceptual)').fill('60')
+  await expect(panel.locator('.pose-sketch')).toBeVisible()
+  await expect(panel.locator('.movement-pose')).toHaveText('Mostly flexed')
+  await page.getByText('Compare upper and lower limbs').click()
+  await expect(page.locator('.limb-compare table')).toContainText('14 phalanges')
+})

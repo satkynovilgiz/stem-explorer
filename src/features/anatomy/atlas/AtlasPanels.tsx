@@ -1,5 +1,5 @@
 import { Check, ChevronRight, Focus, HeartPulse, RotateCcw, ScanSearch, Search, Tag, X } from 'lucide-react'
-import { useId, useState, type ReactNode } from 'react'
+import { memo, useId, useState, type ReactNode } from 'react'
 import { ShareActions } from '../../../components/ShareActions'
 import {
   ancestorsOf,
@@ -71,7 +71,12 @@ function Branch({ s, state, onSelect, depth }: { s: AtlasStructure; state: Atlas
 
 const inRegion = (s: AtlasStructure, region: RegionId) => region === 'whole-body' || s.region === region || s.region === 'whole-body'
 
-export function AtlasNavigator({ state, onSelect, onRegion }: { state: AtlasState; onSelect: (id: string) => void; onRegion: (r: RegionId) => void }) {
+/** Re-renders only when what it lists changes (not on every frame of a movement demonstration). */
+export const AtlasNavigator = memo(AtlasNavigatorImpl, (a, b) =>
+  a.state.selected === b.state.selected && a.state.region === b.state.region && a.state.variant === b.state.variant && a.state.layers === b.state.layers,
+)
+
+function AtlasNavigatorImpl({ state, onSelect, onRegion }: { state: AtlasState; onSelect: (id: string) => void; onRegion: (r: RegionId) => void }) {
   const id = useId()
   const [query, setQuery] = useState('')
   const results = searchAtlas(query, state.variant)
@@ -167,13 +172,16 @@ export function LayerPanel({
   onOpacity,
   onVariant,
   onPreset,
+  onMusculoskeletal,
 }: {
   state: AtlasState
   onToggle: (s: SystemId) => void
   onOpacity: (s: SystemId, v: number) => void
   onVariant: (v: ReproductiveVariant | null) => void
   onPreset: (layers: SystemId[]) => void
+  onMusculoskeletal: () => void
 }) {
+  const bothMsk = state.layers.includes('skeletal') && state.layers.includes('muscular')
   const id = useId()
   return (
     <section className="info-section atlas-layers" aria-labelledby={`${id}-h`}>
@@ -184,8 +192,8 @@ export function LayerPanel({
         <button type="button" className="tool-button bordered" onClick={() => onPreset(ATLAS_CONFIG.defaultLayers as SystemId[])}>
           Default layers
         </button>
-        <button type="button" className="tool-button bordered" onClick={() => onPreset(['skeletal', 'muscular'])}>
-          Skeleton + muscles
+        <button type="button" className="tool-button bordered" aria-pressed={bothMsk} onClick={onMusculoskeletal}>
+          Skeleton and muscles together
         </button>
         <button type="button" className="tool-button bordered" onClick={() => onPreset([])}>
           Hide all
@@ -326,12 +334,14 @@ export function AtlasDetails({
   state,
   onSelect,
   onClear,
+  onIsolatePair,
   onOpenHeart,
   extra,
 }: {
   state: AtlasState
   onSelect: (id: string) => void
   onClear: () => void
+  onIsolatePair: () => void
   onOpenHeart: () => void
   /** Panels shown below the details (layers, inventory). */
   extra?: ReactNode
@@ -406,9 +416,14 @@ export function AtlasDetails({
             <span>Clear selection</span>
           </button>
           {pair && (
-            <button type="button" className="tool-button bordered" onClick={() => onSelect(pair.id)}>
-              <span>Show the {pair.side} side</span>
-            </button>
+            <>
+              <button type="button" className="tool-button bordered" onClick={() => onSelect(pair.id)}>
+                <span>Select the {pair.side} side</span>
+              </button>
+              <button type="button" className="tool-button bordered" aria-pressed={state.isolated && state.isolatePair} onClick={onIsolatePair}>
+                <span>Isolate both sides</span>
+              </button>
+            </>
           )}
         </div>
       </header>
@@ -448,6 +463,34 @@ export function AtlasDetails({
           )}
         </dl>
         {s.grouping && <p className="inline-note">{s.grouping}</p>}
+        {s.system === 'muscular' && s.representation !== 'container' && (
+          <Section title="Attachments">
+            {s.attachments ? (
+              <dl className="readout atlas-facts">
+                {s.attachments.origin && (
+                  <div className="is-wide">
+                    <dt>Origin</dt>
+                    <dd>{s.attachments.origin}</dd>
+                  </div>
+                )}
+                {s.attachments.insertion && (
+                  <div className="is-wide">
+                    <dt>Insertion</dt>
+                    <dd>{s.attachments.insertion}</dd>
+                  </div>
+                )}
+              </dl>
+            ) : (
+              <p className="small muted">Not listed: the cited section does not state them in its text, so the atlas leaves them out.</p>
+            )}
+            {s.attachments && (
+              <p className="small muted">
+                As stated in the cited section.
+                <SourceLinks ids={[s.attachments.sourceId]} />
+              </p>
+            )}
+          </Section>
+        )}
         {(s.related?.length || kids.length) && (
           <Section title="Connections">
             <ul className="relation-list">

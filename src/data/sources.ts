@@ -39,6 +39,46 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Anatomy and Physiology 2e — 7.1 Divisions of the Skeletal System',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/7-1-divisions-of-the-skeletal-system',
   },
+  'ap-7-2': {
+    label: 'OpenStax Anatomy and Physiology 2e — 7.2 The Skull',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/7-2-the-skull',
+  },
+  'ap-7-3': {
+    label: 'OpenStax Anatomy and Physiology 2e — 7.3 The Vertebral Column',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/7-3-the-vertebral-column',
+  },
+  'ap-7-4': {
+    label: 'OpenStax Anatomy and Physiology 2e — 7.4 The Thoracic Cage',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/7-4-the-thoracic-cage',
+  },
+  'ap-8-1': {
+    label: 'OpenStax Anatomy and Physiology 2e — 8.1 The Pectoral Girdle',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/8-1-the-pectoral-girdle',
+  },
+  'ap-8-2': {
+    label: 'OpenStax Anatomy and Physiology 2e — 8.2 Bones of the Upper Limb',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/8-2-bones-of-the-upper-limb',
+  },
+  'ap-8-3': {
+    label: 'OpenStax Anatomy and Physiology 2e — 8.3 The Pelvic Girdle and Pelvis',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/8-3-the-pelvic-girdle-and-pelvis',
+  },
+  'ap-8-4': {
+    label: 'OpenStax Anatomy and Physiology 2e — 8.4 Bones of the Lower Limb',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/8-4-bones-of-the-lower-limb',
+  },
+  'ap-9-1': {
+    label: 'OpenStax Anatomy and Physiology 2e — 9.1 Classification of Joints',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/9-1-classification-of-joints',
+  },
+  'ap-9-5': {
+    label: 'OpenStax Anatomy and Physiology 2e — 9.5 Types of Body Movements',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/9-5-types-of-body-movements',
+  },
+  'ap-9-6': {
+    label: 'OpenStax Anatomy and Physiology 2e — 9.6 Anatomy of Selected Synovial Joints',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/9-6-anatomy-of-selected-synovial-joints',
+  },
   'ap-11-3': {
     label: 'OpenStax Anatomy and Physiology 2e — 11.3 Axial Muscles of the Head, Neck, and Back',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/11-3-axial-muscles-of-the-head-neck-and-back',

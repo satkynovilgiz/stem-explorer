@@ -1,8 +1,9 @@
 import { MousePointerClick } from 'lucide-react'
-import { lazy, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
+import { lazy, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { Tabs } from '../../../components/Tabs'
 import { ViewportShell } from '../../../components/ViewportShell'
 import { findStructure, getSystem } from '../../../data/anatomy/atlas'
+import { demoPivot, findMovement } from '../../../data/anatomy/atlas/movements'
 import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
 import { useMediaQuery, usePrefersReducedMotion } from '../../../lib/hooks'
 import { atlasParamEntries, parseAtlasParams, withAtlasParams } from '../../../lib/urlState'
@@ -10,13 +11,14 @@ import { useRecordVisit } from '../../../lib/useExplorationLibrary'
 import { MODULE_GUIDES } from '../../../data/guides'
 import { SubjectGuidePanel } from '../../guide/SubjectGuidePanel'
 import { AtlasDetails, AtlasInventory, AtlasNavigator, AtlasToolbar, LayerPanel } from './AtlasPanels'
+import { LimbComparison, MovementPanel } from './MusculoskeletalPanels'
 import { atlasReducer, atlasShareState, initialAtlasState, VIEW_TEXT } from './atlasState'
 import { drawnStructures } from './visibility'
 
 // Three.js loads on demand; the list, details, layers and inventory work without it.
 const AtlasScene = lazy(() => import('./scene/AtlasScene'))
 
-type MobileTab = 'details' | 'structures' | 'layers'
+type MobileTab = 'details' | 'structures' | 'layers' | 'movement'
 
 function initFromUrl() {
   return initialAtlasState(parseAtlasParams(window.location.search, ATLAS_CONFIG))
@@ -30,6 +32,29 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
   const [mobileTab, setMobileTab] = useState<MobileTab>('details')
   const reducedMotion = usePrefersReducedMotion()
   const isMobile = useMediaQuery('(max-width: 899px)')
+  const [playing, setPlaying] = useState(false)
+  const playStart = useRef<{ time: number; t: number } | null>(null)
+
+  // Play sweeps the demonstration out and back (4 s per cycle) until paused; never under reduced
+  // motion, and it pauses while the tab is hidden.
+  const demoActive = !!state.demo
+  useEffect(() => {
+    if (!playing || !demoActive || reducedMotion) return
+    let frame = 0
+    playStart.current = null
+    const tick = (now: number) => {
+      if (document.visibilityState === 'hidden') {
+        playStart.current = null
+      } else {
+        if (!playStart.current) playStart.current = { time: now, t: 0 }
+        const phase = ((now - playStart.current.time) / 4000) % 1
+        dispatch({ type: 'setDemoT', t: phase < 0.5 ? phase * 2 : 2 - phase * 2 })
+      }
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [playing, demoActive, reducedMotion])
 
   const share = atlasShareState(state)
   const entries = atlasParamEntries(share, ATLAS_CONFIG.defaultLayers)
@@ -56,21 +81,52 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       onOpacity={(system, value) => dispatch({ type: 'setOpacity', system, value })}
       onVariant={(variant) => dispatch({ type: 'setVariant', variant })}
       onPreset={(l) => dispatch({ type: 'setLayers', layers: l })}
+      onMusculoskeletal={() => dispatch({ type: 'toggleMusculoskeletal' })}
     />
   )
   const inventory = <AtlasInventory onSelect={select} />
+  const movement = (
+    <MovementPanel
+      state={state}
+      reducedMotion={reducedMotion}
+      playing={playing && !reducedMotion}
+      onStart={(id, side) => {
+        setPlaying(false)
+        dispatch({ type: 'startDemo', id, side })
+      }}
+      onSide={(side) => dispatch({ type: 'setDemoSide', side })}
+      onT={(t) => dispatch({ type: 'setDemoT', t })}
+      onPlay={setPlaying}
+      onExit={() => {
+        setPlaying(false)
+        dispatch({ type: 'exitDemo' })
+      }}
+      onSelect={select}
+    />
+  )
+  const compare = <LimbComparison onSelect={select} />
   const details = (
     <AtlasDetails
       state={state}
       onSelect={select}
       onClear={() => dispatch({ type: 'clearSelection' })}
+      onIsolatePair={() => dispatch({ type: 'isolatePair' })}
       onOpenHeart={onOpenHeart}
-      extra={isMobile ? inventory : (
-        <>
-          {layers}
-          {inventory}
-        </>
-      )}
+      extra={
+        isMobile ? (
+          <>
+            {compare}
+            {inventory}
+          </>
+        ) : (
+          <>
+            {movement}
+            {layers}
+            {compare}
+            {inventory}
+          </>
+        )
+      }
     />
   )
   const guidePanel = <SubjectGuidePanel subject="anatomy" guide={MODULE_GUIDES['anatomy-atlas']} />
@@ -84,6 +140,7 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
         <AtlasScene
           drawn={drawn}
           selected={state.selected}
+          demo={state.demo ? { id: state.demo.id, side: state.demo.side, pivot: demoPivot(findMovement(state.demo.id)!, state.demo.side) } : null}
           view={state.view}
           region={state.region}
           showLabels={showLabels}
@@ -98,9 +155,18 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       overlay={
         <>
           <div className="viewport-badge">
-            <span className="viewport-badge-name">Body atlas · {state.view === 'front' ? 'anterior' : state.view === 'back' ? 'posterior' : 'left lateral'} view</span>
+            <span className="viewport-badge-name">
+              Body atlas ·{' '}
+              {state.demo
+                ? `${state.demo.side} lateral view of the ${state.demo.id === 'knee-flexion' ? 'leg' : 'arm'}`
+                : `${state.view === 'front' ? 'anterior' : state.view === 'back' ? 'posterior' : 'left lateral'} view`}
+            </span>
             <span className="viewport-badge-mode">
-              {state.isolated && state.selected ? `Isolated: ${findStructure(state.selected)!.name} · ` : ''}
+              {state.demo
+                ? `${findMovement(state.demo.id)!.name} (${state.demo.side}) · conceptual motion, not a measured range · `
+                : state.isolated && state.selected
+                  ? `Isolated: ${findStructure(state.selected)!.name}${state.isolatePair ? ' and the other side' : ''} · `
+                  : ''}
               Schematic shapes, not to scale
             </span>
           </div>
@@ -151,6 +217,7 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
             { id: 'details', label: 'Details', content: details },
             { id: 'structures', label: 'Structures', content: navigator },
             { id: 'layers', label: 'Layers', content: <div className="panel">{layers}</div> },
+            { id: 'movement', label: 'Movement', content: <div className="panel">{movement}</div> },
           ]}
         />
       </div>

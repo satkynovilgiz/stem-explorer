@@ -96,6 +96,60 @@ a general limitation, explicit omissions and sources.
 - **What is included**: per system, the individual and grouped structures, what else belongs to it,
   what is not included, and its limitation, with sources.
 
+**Skeleton** (`structures/skeleton.ts`, OpenStax §7.1–7.4, 8.1–8.4, 9.1, 9.6). Divisions (axial,
+appendicular) and categories (skull, vertebral column, thoracic cage, pelvic girdle, each limb,
+each hand and foot) are list containers; the bones under them are drawn:
+- skull: frontal, parietal (L/R), temporal (L/R), occipital, sphenoid, ethmoid, zygomatic (L/R),
+  maxillae (grouped pair), nasal bones (grouped pair), mandible; the smaller facial bones
+  (lacrimal, palatine, vomer, inferior conchae) are named as not drawn;
+- vertebral regions: cervical (7 blocks), thoracic (12), lumbar (5), sacrum, coccyx;
+- ribs 1–12 per side (true 1–7, false 8–12, floating 11–12) and the sternum (manubrium, body,
+  xiphoid);
+- clavicle and scapula (pectoral girdle), hip bone (ilium, ischium and pubis fused);
+- humerus, ulna (medial), radius (lateral); femur, patella, tibia (medial, weight-bearing),
+  fibula (lateral);
+- hands and feet as three groups each, with the grouping explained: 8 carpals, 5 metacarpals, 14
+  phalanges; 7 tarsals, 5 metatarsals, 14 phalanges. Each digit is one rod standing for its
+  phalanges;
+- joints (shoulder, elbow, hip, knee, each side) as markers with their type and movements; bones
+  and muscles link to them ("Forms", "Flexes", "Extended by").
+
+**Muscles** (`structures/muscles.ts`, §11.3–11.6): occipitofrontalis, orbicularis oculi and oris,
+masseter, temporalis, sternocleidomastoid, trapezius; pectoralis major, serratus anterior, rectus
+abdominis, external oblique, latissimus dorsi, erector spinae; deltoid, biceps brachii, brachialis,
+brachioradialis, triceps brachii, forearm flexor and extensor compartments; gluteus maximus,
+quadriceps femoris, sartorius, adductors, hamstrings, gastrocnemius, soleus, tibialis anterior.
+Each is marked **Individual structure** or **Grouped representation** (with the members named).
+Actions are paraphrased from the text. **Attachments** appear only where the section's text or
+tables state them (masseter, temporalis, sternocleidomastoid, trapezius, serratus anterior, rectus
+abdominis, sartorius, quadriceps insertion); for every other muscle the panel says they are not
+listed. Lower-limb origins in OpenStax's tables are images, not text, so they were not used.
+
+**Interactions**: Isolate one structure, **Isolate both sides** of a left/right pair, **Skeleton and
+muscles together** (one toggle for both layers), and joint links from bones and muscles.
+
+**Movement demonstrations** (`movements.ts`): **Elbow flexion** and **Knee flexion**, left or right.
+- Each states its reference posture (the anatomical position), the movement's definition (§9.5:
+  flexion decreases the angle between the bones; knee flexion brings the foot toward the posterior
+  thigh), the joint and the principal structures: flexors (biceps brachii, brachialis,
+  brachioradialis; hamstrings, sartorius) and the opposing extensor (triceps brachii; quadriceps).
+  In the view they carry text labels ("Flexor · …", "Opposes · …"), not just a highlight.
+- The view frames the limb exactly side-on. A small 2D sketch shows the same pose with the same
+  anterior side, so the pose can be read without WebGL.
+- The slider runs from **Extended (reference posture)** to **Flexed (end of this demonstration)**,
+  described in words; no angles are shown, because no population-specific range of motion is
+  claimed. **Play** sweeps out and back (4 s), pauses in a hidden tab, and is not offered with
+  reduced motion.
+- The model: rigid segments rotate about one transverse axis through the joint
+  (`rotateAboutX`, unit tested). Muscles that cross the joint just stretch between their ends.
+  Muscle shortening, forces, joint surfaces, ligaments, knee rolling/gliding and rotation, and
+  patellar sliding are not modelled, and the panel says so. Demonstrations are never stored in
+  links.
+
+**Compare upper and lower limbs**: a table of girdle, proximal and distal segments, wrist/ankle
+groups, palm/mid-foot, digits, main hinge, ball-and-socket joint, and hinge flexors and extensors,
+with buttons that select each structure.
+
 **Reproductive anatomy** is off by default. Turning it on requires choosing **Typical ovarian
 configuration** or **Typical testicular configuration** (OpenStax's terms; the chapter describes the
 typical anatomy of XX and XY individuals). The panel says neither is universal and that intersex
@@ -107,7 +161,7 @@ configuration can't appear in a link for the other.
 not the whole body. Invalid values are rejected by the same parser that validates saved entries.
 
 **Sources** (each read for this release): OpenStax Anatomy and Physiology 2e §1.2, 1.6, 5.1, 5.2,
-7.1, 11.3–11.6, 12.1, 17.1, 17.3, 17.4, 17.6, 19.1, 20.5, 21.1, 22.1, 22.2, 23.1, 23.3–23.6, 25.2,
+7.1–7.4, 8.1–8.4, 9.1, 9.5, 9.6, 11.3–11.6, 12.1, 17.1, 17.3, 17.4, 17.6, 19.1, 20.5, 21.1, 22.1, 22.2, 23.1, 23.3–23.6, 25.2,
 25.3, 27.1 and 27.2. Unit tests check sourced relative positions (the right kidney lower than the
 left, adrenal glands on the kidneys, the right lung shorter and wider), and that every structure
 cites a registered source and states a limitation. Tests do not establish anatomical accuracy.
@@ -1186,6 +1240,7 @@ How the URL is kept up to date:
 | `src/features/physics/sceneMath.test.ts` | Equal axis scales, framing all compared runs, tick steps and labels, and separate vector scales. |
 | `src/data/anatomy/heart.test.ts` | All 14 structures, with URL-safe IDs, known sources and valid, reciprocal connections. Also oxygen-pathway colours by side, cusp counts, the exact 14-step blood-flow order with external lungs and body, and valve-after-chamber ordering. |
 | `src/data/anatomy/atlas/atlas.test.ts` | The eleven systems each with drawn structures and omissions; unique ids and resolvable parents, relations and pairs; descriptions, functions, regions, registered sources and limitations on every structure; groups explain their grouping; left structures on +x; sourced relative positions (right kidney lower, adrenals above kidneys, heart between the lungs, lungs above the diaphragm above the liver, right lung shorter and wider); reproductive structures always in a labelled variant and hidden by default; search; inventory completeness. |
+| `src/data/anatomy/atlas/movements.test.ts` | Rotation about the joint axis keeps the pivot and distances, turns "down" to forward (elbow) or back (knee), and reverses exactly; stretching moves only a muscle's distal end; every demo structure exists on both sides; pivots sit on the joint markers; elbow flexion moves the hand forward and up and knee flexion the heel back and up; progress is clamped and described without degrees. |
 | `src/features/anatomy/atlas/atlas.test.ts` | View descriptions checked against camera geometry; defaults; selecting a hidden structure shows its layer and says so; reproductive selection and switching; no reproductive layer without a configuration; isolation of structures and groups; region dimming and clearing; opacity clamping; shared-system drawing; link round trip and invalid or inconsistent links. |
 | `src/features/anatomy/state.test.ts` | Auto-cutaway for internal structures and unknown IDs. Isolation, Show all and clearing. View changes. Tour bounds and navigation, selection locked during the tour, and exit restoring the previous state. The share state during the tour is the pre-tour state (review finding B). Vessel comparison: entering, filling and replacing slots, refusing non-vessels, clearing, leaving, views, the tour ending and blocking comparison, and the shared state. |
 | `src/math/surfaces.test.ts` | Known values for every surface, and the coordinate mapping (round trip, right-handed). Slices: lines, constants, upward and downward parabolas, sinusoids, and zero amplitude, including very small non-zero amplitudes (review finding A). Parameter validation, domain clamping, sine sampling density, constant-height colors and formula formatting. |
@@ -1306,6 +1361,11 @@ the production build:
   shown with an announcement, view and reload; layer toggles, opacity and regions; the explicit
   reproductive choice; clicking the model, Isolate, Focus and Reset; orientation labels on the
   correct sides in front, back and side views; the inventory; saving and reopening an atlas state.
+- `musculoskeletal.e2e.ts`: grouped hand bones with the grouping explained; humerus → elbow joint
+  link; isolating both femurs; vertebral regions; the skeleton+muscle toggle; sourced attachments
+  (sternocleidomastoid) and "Not listed" (deltoid); grouped hamstrings; elbow and knee
+  demonstrations (labels, conceptual wording, slider words, sketch orientation per side, the canvas
+  changing, Play/Pause, exit, nothing in the link); reduced motion without Play; the limb comparison.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
 - `mobile.e2e.ts` (390 × 844):

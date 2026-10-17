@@ -57,7 +57,8 @@ describe('atlas schema', () => {
   })
 
   it('left structures are on the body’s left (+x) and right structures on the right', () => {
-    for (const s of ATLAS_STRUCTURES.filter((x) => x.side)) {
+    for (const s of ATLAS_STRUCTURES.filter((x) => x.side)) expect(s.name.startsWith(s.side === 'left' ? 'Left ' : 'Right '), s.id).toBe(true)
+    for (const s of ATLAS_STRUCTURES.filter((x) => x.side && x.shapes.length > 0)) {
       const xs = s.shapes.flatMap(allPoints).map((p) => p[0])
       const mean = xs.reduce((a, b) => a + b, 0) / xs.length
       if (s.side === 'left') expect(mean, s.id).toBeGreaterThan(0)

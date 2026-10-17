@@ -68,6 +68,8 @@ export interface AtlasStructure {
   shapes: readonly Shape[]
   /** What the drawn shape does not show. Falls back to the system's general limitation. */
   limitations?: string
+  /** Muscle attachments, only where the cited section states them. */
+  attachments?: { origin?: string; insertion?: string; sourceId: string }
   /** Source ids from the shared registry (src/data/sources.ts). */
   sources: readonly string[]
   /** Other names people search for (only well-established synonyms). */
