@@ -1,6 +1,5 @@
 import { HEART_PARTS } from '../data/anatomy/heart'
-import { ATLAS_STRUCTURES, getSystem, type SystemId } from '../data/anatomy/atlas'
-import { ATLAS_CONFIG } from '../data/anatomy/atlas/config'
+import { ATLAS_STRUCTURES, getSystem } from '../data/anatomy/atlas'
 import { ORGANELLES, structureParams } from '../data/biology/organelles'
 import { DIVISION_STAGES } from '../data/biology/mitosis'
 import { ENERGY_PROCESSES } from '../data/biology/energy'
@@ -12,7 +11,8 @@ import { FUNCTIONS } from '../math/functions'
 import { PRESETS } from '../math/linear'
 import { SURFACES } from '../math/surfaces'
 import { normalize } from './chemistry'
-import { canonicalize, hrefFor } from './explorations'
+import { hrefFor } from './explorations'
+import { atlasLink, linkTo } from './links'
 
 /** What kind of thing a result is; used for grouping and the type filter. */
 export type SearchKind =
@@ -65,24 +65,6 @@ const SUBJECT_BLURBS: Record<SubjectId, string> = {
   physics: 'Projectile, spring, DC circuit and wave labs with graphs and readouts.',
   mathematics: '2D functions with calculus tools, 3D surfaces, and vectors with 2×2 transformations.',
   biology: 'Animal, plant and bacterial cells, DNA and RNA, cell division and energy processes.',
-}
-
-/** A link through the same validation as saved explorations, so a result always opens a real state. */
-function linkTo(subject: SubjectId, params: Record<string, string>): string {
-  const state = canonicalize(subject, params)
-  if (!state) throw new Error(`Search index: invalid link ${subject} ${JSON.stringify(params)}`)
-  return hrefFor(state)
-}
-
-/** Atlas link that also shows the structure's layer (and its reproductive configuration, if any). */
-function atlasLink(id: string, system: SystemId, variant?: 'ovarian' | 'testicular'): string {
-  const layers = ATLAS_CONFIG.defaultLayers.includes(system) ? [...ATLAS_CONFIG.defaultLayers] : [...ATLAS_CONFIG.defaultLayers, system]
-  return linkTo('anatomy', {
-    atlas: id,
-    bview: 'front',
-    layers: ATLAS_CONFIG.systemIds.filter((s) => layers.includes(s)).join(','),
-    ...(variant ? { repro: variant } : {}),
-  })
 }
 
 const VARIANT_TEXT = { ovarian: 'ovarian', testicular: 'testicular' } as const

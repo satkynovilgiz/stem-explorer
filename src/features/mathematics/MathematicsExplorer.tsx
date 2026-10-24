@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useReducer, useState, type ReactNod
 import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
+import { pushHistoryEntry } from '../../lib/location'
 import { useMediaQuery } from '../../lib/hooks'
 import { parseMathSection, withMathSection, type MathSection } from '../../lib/mathSections'
 import { mathParamEntries, parseMathParams, withMathParams } from '../../lib/urlState'
@@ -35,16 +36,22 @@ export function MathematicsExplorer() {
   const choose = (next: MathSection) => {
     if (next === section) return
     // Leaving a 2D section drops its keys; the surface keys stay (the surfaces section owns them).
+    pushHistoryEntry()
     replaceUrlSearch(withMathSection(window.location.search, {}))
     setSection(next)
   }
   const sectionSwitch = (
-    <div className="segmented section-switch section-switch--grid math-switch" role="group" aria-label="Mathematics section">
-      {(['functions', 'surfaces', 'vectors'] as const).map((s) => (
-        <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => choose(s)}>
-          {SECTION_LABEL[s]}
-        </button>
-      ))}
+    <div className="module-switch">
+      <span className="module-switch-label" aria-hidden="true">
+        Module
+      </span>
+      <div className="segmented section-switch section-switch--grid math-switch" role="group" aria-label="Mathematics section">
+        {(['functions', 'surfaces', 'vectors'] as const).map((s) => (
+          <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => choose(s)}>
+            {SECTION_LABEL[s]}
+          </button>
+        ))}
+      </div>
     </div>
   )
   const guidePanel = <SubjectGuidePanel subject="mathematics" />

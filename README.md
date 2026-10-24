@@ -3,8 +3,9 @@
 An interactive science exploration workspace: **explore → interact → understand**.
 Users rotate, zoom, select and measure parts of 3D models and read concise, sourced explanations.
 
-The app opens on a **Home page** (`#/home`) with search, the five subjects, featured explorations
-and the explorations you saved or visited recently. All five subjects are implemented:
+The app opens on a **Home page** (`#/home`) with search, questions to explore, the five subjects
+and their modules, featured explorations and the explorations you saved or visited recently.
+Every explorer has breadcrumbs and a searchable **Topics** drawer. All five subjects are implemented:
 - **Anatomy Explorer:** a schematic whole-body atlas with eleven organ-system layers, skeletal and
   muscular detail with elbow and knee demonstrations, organ-system tours and close-ups, and a
   detailed heart module with a blood-flow tour.
@@ -1113,6 +1114,37 @@ cross-section graph keep working, and the 3D-only toolbar is hidden.
   - traces;
   - elliptic and hyperbolic paraboloids.
 
+## Navigation: breadcrumbs, topic drawer and module memory
+
+Every explorer has a **subject bar** under the top bar (`src/components/SubjectBar.tsx`):
+- **Breadcrumbs** (`nav` named *Breadcrumb*): *Home › subject › module › topic*, for example
+  *Home › Chemistry › Molecules › Water* or *Home › Anatomy › Body atlas › Left femur*. The last
+  item has `aria-current="page"`. The breadcrumb follows the page as you select things, because
+  `pushState`/`replaceState` are wrapped once to announce address changes
+  (`src/lib/location.ts`). Old links without a module key land in the module they always opened.
+  On phones *Home* is left out (it is in the top bar) and a long topic is truncated.
+- **Topics** opens a drawer (a modal `dialog`) listing every module of every subject, current
+  subject first, with its contents and curated topics. Typing filters modules and topics; with no
+  match it offers the global search. The current module says *You are here*. Esc, the close button
+  or the backdrop closes it, and focus returns to **Topics**. On phones it fills the screen width.
+- **Module memory.** The last valid state of each module in this browser session is kept in
+  `sessionStorage` (`stem-explorer.module-context`, re-validated before use). A module link in the
+  drawer reopens that state and says *Where you left it*; otherwise it opens the module's default.
+- **The topic map** (`src/data/topics.ts`) is the single list of modules and curated topics used by
+  Home, the breadcrumbs, the drawer and the questions. Every link in it goes through the same
+  validation as saved explorations, and a unit test checks that each link is canonical and opens
+  its own module.
+
+**Module navigation versus display controls.** Inside explorers, module switches (Chemistry
+section, Biology section, Physics experiment, Mathematics section, Anatomy module) are drawn as
+tabs under a *Module* caption; display options (views, labels, representations, tools) keep the
+pill toggles in the toolbars.
+
+**History.** Switching module inside an explorer now adds a history entry (as Anatomy already
+did), so Back returns to the previous module. Back, Forward and in-app links remount the explorer
+so it re-reads its state from the address; parameters a link does not store (camera, open panels)
+start fresh, as when opening a link.
+
 ## Home page, search and the exploration library
 
 **Home** is `#/home`. It is also what you see with no hash or with any hash that is not a subject
@@ -1129,10 +1161,17 @@ Home is laid out top to bottom:
   two concrete starting points (a guided activity and the heart) and how exploring works. For
   returning visitors it is replaced by a compact **Continue exploring** strip of recent visits,
   and the guide moves behind **How it works**.
-- **Explore subjects**: cards in each subject's accent colour (tokens `--subject-*`), with a small
-  SVG illustration labelled as a simplified preview and the capabilities that exist today
-  (`src/features/home/content.ts`, kept in step with the explorers). The whole card is clickable
-  through its action link. On phones the illustration sits beside the title.
+- **Explore by question**: short curated questions (*How does breathing work?*, *Why do molecules
+  have different shapes?*, *How does a lens form an image?*) that open the module answering them.
+  A question is listed only when its destination module exists in the topic map, so the lens
+  question stays hidden until the optics lab ships (a unit test checks this).
+- **Explore subjects**: one row per subject in its accent colour (tokens `--subject-*`), with a
+  small SVG illustration labelled as a simplified preview, a one-line summary and the subject's
+  **actual modules**, each a link with what it contains. The module list and its counts (for
+  example *All 118 elements*, *12 3D molecules*) come from the topic map
+  (`src/data/topics.ts`), not hand-written text. The row is clickable through its action link;
+  module links sit above it and are their own targets. On phones the modules show as names only,
+  two per row.
 - **Featured exploration**: one larger card for real, implemented content (the saddle's level
   point), with **More starting points** below it.
 - **Guided activities** with their learning goals, then **Saved explorations** with backup.
@@ -1143,8 +1182,8 @@ Home is laid out top to bottom:
 **Motion** is restrained and never gates content:
 - Sections and cards fade up 8 px over 240 ms, staggered by at most about 200 ms. Everything is in
   the DOM and focusable from the first frame.
-- Subject cards, featured cards and the spotlight lift 2–3 px on hover and on keyboard focus.
-  Transforms don't move layout.
+- Featured cards, question cards and the spotlight lift 2–3 px on hover and on keyboard focus;
+  the wide subject rows change their border instead. Transforms don't move layout.
 - The hero illustration's wave and molecule move with transform-only keyframes (a test checks
   this). They run only while the illustration is on screen (IntersectionObserver) and the tab is
   visible. A visible **Pause decorative animation** button (`aria-pressed`) stops them, and the
@@ -1510,6 +1549,7 @@ How the URL is kept up to date:
 
 | File | What it checks |
 | --- | --- |
+| `src/data/topics.test.ts` | Unique module ids and modules for every subject; every module and topic link canonical and claimed by exactly its own module; the breadcrumb naming each curated topic; old links without module keys; counts from data; questions listed only when their module exists, with canonical links. |
 | `src/lib/textWrap.test.ts` | Caption wrapping within the width; long URLs broken at delimiters or before `%`-escapes and rejoining exactly at four widths; strings with no delimiters; graphemes (subscripts, combining marks, ZWJ emoji, flags) never split; widths narrower than a character; long titles; empty text. PNG `iTXt` metadata: standard CRC-32, UTF-8 round trip with the image chunks intact, rejecting non-PNG data and bad keywords. |
 | `src/lib/measurement.test.ts` | Distance and angle maths against known geometry. Also the cosine clamp, zero-length arms, duplicate and restarting selections, and how results are labelled. |
 | `src/data/chemistry/molecules.test.ts` | Atom counts against formulas, IDs, bonds and connectivity. Also cited sources, and that coordinates reproduce every reported bond length and angle. |
@@ -1674,6 +1714,13 @@ the production build:
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
   analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `navigation.e2e.ts`: Home lists each subject's real modules and only questions whose destination
+  exists; a module link and a question open the right state with the breadcrumb; the breadcrumb
+  following a molecule change; a module switch with Back and Forward; the drawer (focus in the
+  filter, *You are here*, Esc returning focus, filtering, the empty state, keyboard opening a
+  module, *Where you left it* restoring Methane, Back afterwards); a curated topic (Iron); the bar
+  hidden in presentation. `mobile.e2e.ts` adds the breadcrumb and drawer at 390 px with no
+  horizontal overflow and Back.
 - `export.e2e.ts` decodes each exported PNG (`e2e/png.ts`) and reads its text metadata: a Chemistry
   angle export (the 104.5° value, numbered atom labels and badge in the image, the value's box
   matching the page within 1 px, pixels changed inside overlays and identical to the raw canvas
@@ -1756,9 +1803,11 @@ src/
   data/anatomy/vessels.ts       vessel comparison facts
   data/chemistry/periodicTable*.ts   element data (generated from PubChem) and layout
   data/guides.ts, data/glossary.ts, data/sources.ts   subject guide content, shared definitions, source registry
+  components/SubjectBar.tsx     breadcrumbs and the Topics drawer
   features/*/activity.ts        each subject's activity definition and setup
   data/
     subjects.ts                 subject list and planned features
+    topics.ts                   navigation map: subject → module → topic, and Home questions
     chemistry/                  typed element and molecule data (types.ts, elements.ts, molecules.ts)
     biology/                    typed organelle content and sources (types.ts, organelles.ts)
   lib/
@@ -1772,6 +1821,9 @@ src/
     backup.ts                   backup export, import validation/preview planning and merge
     storeMessages.ts            user-facing messages for failed library operations
     searchIndex.ts              local search index and ranking
+    location.ts                 address-change events, history entries for module switches, navigation count
+    moduleContext.ts            last state per module (sessionStorage) for the topic drawer
+    links.ts                    validated in-app links (canonicalize → href), atlas links with layers
     exportImage.ts              presentation PNG export: scene + overlay snapshot, caption, metadata
     textWrap.ts                 caption wrapping (URL-safe, grapheme-safe)
     pngText.ts                  PNG iTXt text metadata (write and read)

@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState, type 
 import { ShareActions } from '../../components/ShareActions'
 import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
+import { pushHistoryEntry } from '../../lib/location'
 import { useMediaQuery } from '../../lib/hooks'
 import { parsePhysicsExperiment, parsePhysicsParams, physicsParamEntries, withoutSpringParams, withPhysicsParams, type PhysicsExperiment } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
@@ -63,16 +64,22 @@ export function PhysicsExplorer() {
   const choose = (next: PhysicsExperiment) => {
     if (next === experiment) return
     // Each switch drops the other experiments' keys; a projectile link has none.
+    pushHistoryEntry()
     replaceUrlSearch(withoutSpringParams(window.location.search))
     setExperiment(next)
   }
   const experimentSwitch = (
-    <div className="segmented section-switch section-switch--grid" role="group" aria-label="Experiment">
-      {(['projectile', 'spring', 'circuit', 'wave'] as const).map((e) => (
-        <button key={e} type="button" className="segmented-option" aria-pressed={experiment === e} onClick={() => choose(e)}>
-          {EXPERIMENT_LABEL[e]}
-        </button>
-      ))}
+    <div className="module-switch">
+      <span className="module-switch-label" aria-hidden="true">
+        Module
+      </span>
+      <div className="segmented section-switch section-switch--grid" role="group" aria-label="Experiment">
+        {(['projectile', 'spring', 'circuit', 'wave'] as const).map((e) => (
+          <button key={e} type="button" className="segmented-option" aria-pressed={experiment === e} onClick={() => choose(e)}>
+            {EXPERIMENT_LABEL[e]}
+          </button>
+        ))}
+      </div>
     </div>
   )
   if (experiment === 'circuit' || experiment === 'wave') {

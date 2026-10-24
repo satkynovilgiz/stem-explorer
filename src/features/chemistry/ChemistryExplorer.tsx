@@ -4,6 +4,7 @@ import { DEFAULT_MOLECULE_ID, getMolecule, MOLECULES } from '../../data/chemistr
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { formatAngle, formatDistance, measure, measurementLabel } from '../../lib/measurement'
 import { useExportNotes } from '../../lib/presentation'
+import { pushHistoryEntry } from '../../lib/location'
 import { chemistrySectionEntries, parseChemistryParams, parseChemistrySection, withChemistryParams, withChemistrySection, type ChemistrySection } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { ActivityPanel } from '../activities/ActivityPanel'
@@ -87,20 +88,30 @@ export function ChemistryExplorer() {
   const activityPanel = <ActivityPanel activity={activity} state={state} />
   const guidePanel = <SubjectGuidePanel subject="chemistry" />
 
+  // Switching module adds a history entry, so Back returns to the previous module.
+  const goSection = (next: ChemistrySection) => {
+    if (next !== section) pushHistoryEntry()
+    setSection(next)
+  }
   const selectMolecule = (id: string) => {
-    setSection('molecules')
+    goSection('molecules')
     dispatch({ type: 'selectMolecule', moleculeId: id })
     if (isMobile) setMobileTab('details')
   }
   const pickAtom = (atomId: string) => dispatch({ type: 'pickAtom', atomId })
 
   const sectionSwitch = (
-    <div className="segmented section-switch section-switch--grid" role="group" aria-label="Chemistry section">
-      {(['periodic', 'atomic', 'molecules', 'bonding'] as const).map((s) => (
-        <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => setSection(s)}>
-          {SECTION_LABEL[s]}
-        </button>
-      ))}
+    <div className="module-switch">
+      <span className="module-switch-label" aria-hidden="true">
+        Module
+      </span>
+      <div className="segmented section-switch section-switch--grid" role="group" aria-label="Chemistry section">
+        {(['periodic', 'atomic', 'molecules', 'bonding'] as const).map((s) => (
+          <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => goSection(s)}>
+            {SECTION_LABEL[s]}
+          </button>
+        ))}
+      </div>
     </div>
   )
   const loading = <p className="muted small panel">Loading {SECTION_LABEL[section].toLowerCase()}…</p>
@@ -111,7 +122,7 @@ export function ChemistryExplorer() {
   )
   const elementPanel = (
     <Suspense fallback={loading}>
-      <ElementPanel z={elementZ} onOpenMolecule={selectMolecule} onOpenAtomic={() => setSection('atomic')} />
+      <ElementPanel z={elementZ} onOpenMolecule={selectMolecule} onOpenAtomic={() => goSection('atomic')} />
     </Suspense>
   )
   const atomicView = (
@@ -121,7 +132,7 @@ export function ChemistryExplorer() {
   )
   const atomPanel = (
     <Suspense fallback={loading}>
-      <AtomPanel z={elementZ} shareParams={shareParams} onOpenMolecule={selectMolecule} onShowInTable={() => setSection('periodic')} />
+      <AtomPanel z={elementZ} shareParams={shareParams} onOpenMolecule={selectMolecule} onShowInTable={() => goSection('periodic')} />
     </Suspense>
   )
   const bondingView = (

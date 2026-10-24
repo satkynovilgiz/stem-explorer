@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { PresentationBar } from './components/PresentationBar'
+import { SubjectBar } from './components/SubjectBar'
 import { TopNav } from './components/TopNav'
 import { isSubjectId, SUBJECTS } from './data/subjects'
 import { AnatomyExplorer } from './features/anatomy/AnatomyExplorer'
@@ -9,6 +10,7 @@ import { MathematicsExplorer } from './features/mathematics/MathematicsExplorer'
 import { Home } from './features/home/Home'
 import { PhysicsExplorer } from './features/physics/PhysicsExplorer'
 import { useRoute } from './lib/hooks'
+import { useNavigationGeneration } from './lib/location'
 
 // Pages reached from the top bar only; they load on first visit.
 const GlossaryPage = lazy(() => import('./features/glossary/GlossaryPage').then((m) => ({ default: m.GlossaryPage })))
@@ -29,19 +31,22 @@ export default function App() {
   // Adjusting state while rendering (not in an effect) when the route changes.
   if (presenting !== null && presenting !== route) setPresenting(null)
   const isPresenting = presenting !== null && isSubjectId(route)
+  // Back, Forward and in-app links remount the explorer so it re-reads its state from the URL.
+  const generation = useNavigationGeneration()
 
   useEffect(() => {
     document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : route === 'search' ? 'Search · STEM Explorer' : 'STEM Explorer'
   }, [subjectName, route])
 
   return (
-    <div className="app">
+    <div className={`app${isSubjectId(route) ? ' has-subject-bar' : ''}`}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
       <TopNav active={route} onPresent={isSubjectId(route) ? () => setPresenting(route) : undefined} />
       {isPresenting && isSubjectId(route) && <PresentationBar subject={route} onExit={exitPresentation} />}
-      <main id="main" className="main" tabIndex={-1}>
+      {isSubjectId(route) && <SubjectBar subject={route} />}
+      <main id="main" className="main" tabIndex={-1} key={isSubjectId(route) ? `${route}:${generation}` : route}>
         {route === 'anatomy' ? (
           <>
             <h1 className="visually-hidden">Anatomy Explorer: body atlas and heart</h1>

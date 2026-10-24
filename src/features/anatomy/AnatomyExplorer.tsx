@@ -44,13 +44,18 @@ export function AnatomyExplorer() {
   }
 
   const moduleSwitch = (
-    <div className="segmented section-switch" role="group" aria-label="Anatomy module">
-      <button type="button" className="segmented-option" aria-pressed={module === 'atlas'} onClick={() => open('atlas')}>
-        Body atlas
-      </button>
-      <button type="button" className="segmented-option" aria-pressed={module === 'heart'} onClick={() => open('heart')}>
-        Heart (detailed)
-      </button>
+    <div className="module-switch">
+      <span className="module-switch-label" aria-hidden="true">
+        Module
+      </span>
+      <div className="segmented section-switch" role="group" aria-label="Anatomy module">
+        <button type="button" className="segmented-option" aria-pressed={module === 'atlas'} onClick={() => open('atlas')}>
+          Body atlas
+        </button>
+        <button type="button" className="segmented-option" aria-pressed={module === 'heart'} onClick={() => open('heart')}>
+          Heart (detailed)
+        </button>
+      </div>
     </div>
   )
 

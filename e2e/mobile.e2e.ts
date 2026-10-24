@@ -113,7 +113,7 @@ test('Home fits a phone, searches and opens a subject', async ({ page }) => {
   await page.getByRole('list', { name: 'Search results' }).getByRole('link', { name: /Ribosome/ }).first().tap()
   await expect(page).toHaveURL(/#\/biology$/)
   await page.getByRole('link', { name: 'STEM Explorer home' }).tap()
-  await page.locator('.subject-card.is-physics').getByRole('link').tap()
+  await page.locator('.subject-card.is-physics .subject-card-action').tap()
   await expect(page.getByRole('heading', { level: 1, name: 'Physics Explorer: projectile motion lab' })).toBeAttached()
 })
 
@@ -287,4 +287,22 @@ test('a narrow export of a long Unicode title keeps every character', async ({ p
   expect(exp.text.Title).toBe('Hydrogen peroxide · space-filling · Chemistry')
   expect(exp.layout.header.slice(0, 2).join(' ')).toContain('Hydrogen peroxide · space-filling')
   expect(exp.layout.linkLines.join('')).toBe(exp.text.Source)
+})
+
+test('on a phone, the breadcrumb fits and the topic drawer navigates between modules', async ({ page }) => {
+  await page.goto('/?atlas=femur-left&bview=front#/anatomy')
+  const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' })
+  await expect(crumbs.locator('[aria-current="page"]')).toHaveText('Left femur')
+  await expectNoHorizontalOverflow(page)
+  await page.getByRole('button', { name: 'Topics' }).tap()
+  const drawer = page.getByRole('dialog', { name: 'Modules and topics' })
+  await expect(drawer).toBeVisible()
+  const box = (await drawer.boundingBox())!
+  expect(box.width).toBeLessThanOrEqual(390)
+  await drawer.getByRole('searchbox').fill('waves')
+  await drawer.getByRole('link', { name: 'Travelling waves' }).tap()
+  await expect(crumbs.locator('[aria-current="page"]')).toHaveText('Travelling waves')
+  await expectNoHorizontalOverflow(page)
+  await page.goBack()
+  await expect(crumbs.locator('[aria-current="page"]')).toHaveText('Left femur')
 })

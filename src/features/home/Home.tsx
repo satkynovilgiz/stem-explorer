@@ -1,7 +1,8 @@
-import { ArrowRight, BookOpen, ChevronDown, Compass, ExternalLink, Link2, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
+import { ArrowRight, BookOpen, ChevronDown, Compass, ExternalLink, HelpCircle, Link2, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SUBJECTS, type SubjectId } from '../../data/subjects'
+import { availableQuestions, modulesOf } from '../../data/topics'
 import { useExplorationLibrary } from '../../lib/useExplorationLibrary'
 import { requestActivity } from '../activities/requests'
 import { ActivityEntries } from './ActivityEntries'
@@ -107,6 +108,30 @@ function WelcomePanel() {
   )
 }
 
+/** Curated questions; only those whose destination module exists are listed (src/data/topics.ts). */
+function QuestionLinks() {
+  const questions = availableQuestions()
+  if (questions.length === 0) return null
+  return (
+    <section className="home-section enter" aria-labelledby="questions-heading">
+      <h2 id="questions-heading" className="home-h2">
+        <HelpCircle size={18} aria-hidden="true" /> Explore by question
+      </h2>
+      <ul className="question-list">
+        {questions.map((q) => (
+          <li key={q.question}>
+            <AppLink href={q.href} className={`question-link is-${q.subject}`}>
+              <span className="question-text">{q.question}</span>
+              <span className="question-answer">{q.answer}</span>
+              <span className={`subject-chip is-${q.subject}`}>{subjectName(q.subject)}</span>
+            </AppLink>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 export function Home() {
   const library = useExplorationLibrary()
   const firstVisit = library.recent.length === 0 && library.saved.length === 0 && library.savedError === null
@@ -174,6 +199,8 @@ export function Home() {
 
       {firstVisit ? <WelcomePanel /> : library.recent.length > 0 && <RecentStrip recent={library.recent} onMessage={setMessage} />}
 
+      <QuestionLinks />
+
       <section ref={subjectsRef} className="home-section enter" aria-labelledby="subjects-heading" tabIndex={-1}>
         <h2 id="subjects-heading" className="home-h2">
           Explore subjects
@@ -181,15 +208,24 @@ export function Home() {
         <ul className="subject-cards">
           {ORDER.map((id) => {
             const card = SUBJECT_CARDS[id]
+            const modules = modulesOf(id)
             return (
               <li key={id} className={`subject-card is-${id}`} style={{ '--i': ORDER.indexOf(id) } as CSSProperties}>
                 <SubjectArt subject={id} />
                 <p className="subject-card-name">{subjectName(id)}</p>
                 <h3 className="subject-card-title">{card.title}</h3>
                 <p className="subject-card-text">{card.summary}</p>
-                <ul className="subject-card-list">
-                  {card.capabilities.map((c) => (
-                    <li key={c}>{c}</li>
+                <p className="subject-card-count">
+                  {modules.length} module{modules.length === 1 ? '' : 's'}
+                </p>
+                <ul className="subject-card-modules" aria-label={`${subjectName(id)} modules`}>
+                  {modules.map((m) => (
+                    <li key={m.id}>
+                      <AppLink href={m.href} className="subject-module">
+                        <span className="subject-module-name">{m.name}</span>
+                        <span className="subject-module-summary">{m.summary}</span>
+                      </AppLink>
+                    </li>
                   ))}
                 </ul>
                 <a className="subject-card-action" href={`#/${id}`}>

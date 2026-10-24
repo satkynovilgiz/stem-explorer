@@ -33,7 +33,7 @@ test.describe('Home page', () => {
   test('opens every subject and returns Home with the logo and the Home tab', async ({ page }) => {
     await page.goto('/')
     for (const [id, heading] of Object.entries(SUBJECT_HEADINGS)) {
-      await page.locator(`.subject-card.is-${id}`).getByRole('link').click()
+      await page.locator(`.subject-card.is-${id} .subject-card-action`).click()
       await expect(page).toHaveURL(new RegExp(`#/${id}$`))
       await expect(page.getByRole('heading', { level: 1, name: heading })).toBeAttached()
       await waitForViewport(page)
@@ -67,11 +67,12 @@ test.describe('Home page', () => {
     await expect(page.locator('#home-guide')).toContainText('Share or save.')
   })
 
-  test('subject cards list real capabilities and keyboard users can reach every card link', async ({ page }) => {
+  test('subject cards list real modules and keyboard users can reach every card link', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('.subject-card.is-chemistry')).toContainText('Measure bond lengths and angles in ball-and-stick or space-filling models')
-    await expect(page.locator('.subject-card.is-physics')).toContainText('Oscillate a mass on a spring: period, forces and energy')
-    const link = page.locator('.subject-card.is-mathematics').getByRole('link')
+    await expect(page.locator('.subject-card.is-chemistry')).toContainText('12 3D molecules from experimental geometry, with distance and angle tools')
+    await expect(page.locator('.subject-card.is-physics')).toContainText('Period, forces and energy of an ideal spring')
+    await expect(page.locator('.subject-card.is-mathematics .subject-module')).toHaveCount(3)
+    const link = page.locator('.subject-card.is-mathematics .subject-card-action')
     await link.focus()
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/#\/mathematics$/)
@@ -347,14 +348,26 @@ test.describe('Home motion and featured content', () => {
     expect(new URL(page.url()).searchParams.get('surface')).toBe('saddle')
   })
 
-  test('subject cards lift on hover and on keyboard focus without moving layout', async ({ page }) => {
+  test('subject cards respond to hover and keyboard focus without moving layout', async ({ page }) => {
     await page.goto('/')
     const card = page.locator('.subject-card').first()
-    await page.waitForTimeout(400) // let the entrance finish
-    const before = await card.boundingBox()
+    // Let every finite entrance animation finish (the hero's looping art is excluded).
+    await page.waitForFunction(() => document.getAnimations().every((a) => a.effect?.getTiming().iterations === Infinity || a.playState === 'finished'))
+    const next = page.locator('.subject-card').nth(1)
+    // Document coordinates: focusing may scroll the page.
+    const docBox = () => next.evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      return { x: r.left + window.scrollX, y: r.top + window.scrollY, w: r.width, h: r.height }
+    })
+    const before = await docBox()
+    const border = await card.evaluate((el) => getComputedStyle(el).borderLeftColor)
     await card.locator('.subject-card-action').focus()
-    await expect.poll(() => card.evaluate((el) => getComputedStyle(el).transform)).not.toBe('none')
-    const next = await page.locator('.subject-card').nth(1).boundingBox()
-    expect(next!.x).toBeGreaterThan(before!.x)
+    await expect.poll(() => card.evaluate((el) => getComputedStyle(el).borderLeftColor)).not.toBe(border)
+    // Wide rows do not lift; nothing else on the page moves.
+    await expect.poll(() => card.evaluate((el) => Math.abs(new DOMMatrix(getComputedStyle(el).transform).f))).toBeLessThan(0.01)
+    expect(await docBox()).toEqual(before)
+    // A module link inside the card is its own target, above the card's stretched link.
+    await card.locator('.subject-module').first().click()
+    await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Body atlas')
   })
 })

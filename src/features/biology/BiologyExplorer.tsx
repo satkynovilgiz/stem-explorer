@@ -5,6 +5,7 @@ import { ViewportShell } from '../../components/ViewportShell'
 import { CELL_STRUCTURES, findOrganelle, isInternal } from '../../data/biology/organelles'
 import type { OrganelleId } from '../../data/biology/types'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
+import { pushHistoryEntry } from '../../lib/location'
 import { biologySectionEntries, parseBiologyParams, parseBiologySection, withBiologyParams, withBiologySection, type BiologySection } from '../../lib/urlState'
 import { ActivityPanel } from '../activities/ActivityPanel'
 import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
@@ -47,6 +48,11 @@ export function BiologyExplorer() {
   const [mobileTab, setMobileTab] = useState<MobileTab>('details')
   const [section, setSection] = useState<BiologySection>(() => parseBiologySection(window.location.search).section)
 
+  // Switching module adds a history entry, so Back returns to the previous module.
+  const goSection = (next: BiologySection) => {
+    if (next !== section) pushHistoryEntry()
+    setSection(next)
+  }
   const reducedMotion = usePrefersReducedMotion()
   const isMobile = useMediaQuery('(max-width: 899px)')
   const { cellType, view, selection, isolated } = state
@@ -97,16 +103,21 @@ export function BiologyExplorer() {
   }
 
   const sectionSwitch = (
-    <div className="segmented section-switch section-switch--grid" role="group" aria-label="Biology section">
-      {(['cells', 'dna', 'division', 'energy'] as const).map((s) => (
-        <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => setSection(s)}>
-          {SECTION_LABEL[s]}
-        </button>
-      ))}
+    <div className="module-switch">
+      <span className="module-switch-label" aria-hidden="true">
+        Module
+      </span>
+      <div className="segmented section-switch section-switch--grid" role="group" aria-label="Biology section">
+        {(['cells', 'dna', 'division', 'energy'] as const).map((s) => (
+          <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => goSection(s)}>
+            {SECTION_LABEL[s]}
+          </button>
+        ))}
+      </div>
     </div>
   )
   const openStructure = (t: typeof cellType, id: OrganelleId) => {
-    setSection('cells')
+    goSection('cells')
     if (t !== cellType) dispatch({ type: 'setCellType', cellType: t })
     dispatch({ type: 'setView', view: 'cutaway' })
     dispatch({ type: 'select', organelleId: id, instance: null })
