@@ -24,11 +24,12 @@ const SurfaceScene = lazy(() => import('./scene/SurfaceScene'))
 // The 2D sections are HTML/SVG and load when first opened.
 const FunctionsLab = lazy(() => import('./functions/FunctionsLab').then((m) => ({ default: m.FunctionsLab })))
 const VectorsLab = lazy(() => import('./vectors/VectorsLab').then((m) => ({ default: m.VectorsLab })))
+const StatisticsLab = lazy(() => import('./statistics/StatisticsLab').then((m) => ({ default: m.StatisticsLab })))
 
-const SECTION_LABEL: Record<MathSection, string> = { functions: '2D functions', surfaces: '3D surfaces', vectors: 'Vectors and transformations' }
+const SECTION_LABEL: Record<MathSection, string> = { functions: '2D functions', surfaces: '3D surfaces', vectors: 'Vectors and transformations', statistics: 'Statistics and probability' }
 
 /**
- * Mathematics has three sections. Links without `msec` are surface links, so every older link
+ * Mathematics has four sections. Links without `msec` are surface links, so every older link
  * opens as before.
  */
 export function MathematicsExplorer() {
@@ -46,7 +47,7 @@ export function MathematicsExplorer() {
         Module
       </span>
       <div className="segmented section-switch section-switch--grid math-switch" role="group" aria-label="Mathematics section">
-        {(['functions', 'surfaces', 'vectors'] as const).map((s) => (
+        {(['functions', 'surfaces', 'vectors', 'statistics'] as const).map((s) => (
           <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => choose(s)}>
             {SECTION_LABEL[s]}
           </button>
@@ -58,7 +59,13 @@ export function MathematicsExplorer() {
   if (section === 'surfaces') return <SurfacesExplorer sectionSwitch={sectionSwitch} />
   return (
     <Suspense fallback={<p className="muted small panel">Loading {SECTION_LABEL[section].toLowerCase()}…</p>}>
-      {section === 'functions' ? <FunctionsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} /> : <VectorsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />}
+      {section === 'functions' ? (
+        <FunctionsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />
+      ) : section === 'statistics' ? (
+        <StatisticsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />
+      ) : (
+        <VectorsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />
+      )}
     </Suspense>
   )
 }

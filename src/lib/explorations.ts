@@ -9,8 +9,9 @@ import { isSubjectId, SUBJECTS, type SubjectId } from '../data/subjects'
 import { getSurface } from '../math/surfaces'
 import { DEFAULT_PARAMS, isValidParam, normalizeParam, PARAM_KEYS } from '../physics/projectile'
 import { ARRANGEMENT_LABEL, type Arrangement } from '../physics/circuit'
-import { functionsEntries, parseFunctionsState, parseMathSection, parseVectorsState, vectorsEntries } from './mathSections'
+import { functionsEntries, parseFunctionsState, parseMathSection, parseStatsState, parseVectorsState, statsEntries, vectorsEntries } from './mathSections'
 import { FUNCTIONS } from '../math/functions'
+import { findDataset } from '../data/mathematics/datasets'
 import { circuitParamEntries, opticsParamEntries, parseCircuitParams, parseOpticsParams, parseWaveParams, waveParamEntries } from './labUrl'
 import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
@@ -107,6 +108,10 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
         const f = parseFunctionsState(search)
         return f.invalid.length ? null : { subject, params: functionsEntries(f.state) }
       }
+      if (sec.section === 'statistics') {
+        const st = parseStatsState(search)
+        return st.invalid.length ? null : { subject, params: statsEntries(st.state) }
+      }
       if (sec.section === 'vectors') {
         const v = parseVectorsState(search)
         return v.invalid.length ? null : { subject, params: vectorsEntries(v.state) }
@@ -173,6 +178,8 @@ export function defaultTitle(state: ShareState): string {
     case 'mathematics': {
       if (p.msec === 'functions') return `${FUNCTIONS.find((f) => f.id === p.fn)?.name ?? 'Function'} function · calculus tools`
       if (p.msec === 'vectors') return 'Vectors and a 2×2 transformation'
+      if (p.msec === 'statistics')
+        return p.sv === 'binomial' ? `Binomial distribution: n = ${p.bn}, p = ${p.bp}` : `Descriptive statistics · ${p.ds === 'custom' ? 'your values' : (findDataset(p.ds)?.name ?? 'data')}`
       const name = getSurface(p.surface as never)?.name ?? 'Surface'
       return p.slice ? `${name} · slice ${p.slice} = ${p.at}` : name
     }

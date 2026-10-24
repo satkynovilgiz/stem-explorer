@@ -286,6 +286,24 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
   },
 
   // Mathematics
+  {
+    id: 'section:descriptive-statistics',
+    name: 'Descriptive statistics',
+    subject: 'mathematics',
+    kind: 'section',
+    description: 'Enter or choose data: sorted values, mean, median, range, quartiles, population and sample variance and standard deviation, a histogram and a box plot.',
+    href: linkTo('mathematics', { msec: 'statistics', sv: 'describe' }),
+    terms: ['statistics', 'mean', 'median', 'range', 'quartile', 'interquartile range', 'variance', 'standard deviation', 'histogram', 'box plot', 'outlier', 'data'],
+  },
+  {
+    id: 'section:binomial',
+    name: 'Binomial probability',
+    subject: 'mathematics',
+    kind: 'section',
+    description: 'Bernoulli trials and the binomial distribution: exact probabilities, mean np and variance npq, and a seeded simulation compared with theory.',
+    href: linkTo('mathematics', { msec: 'statistics', sv: 'binomial' }),
+    terms: ['probability', 'binomial', 'binomial distribution', 'bernoulli', 'bernoulli trial', 'expected value', 'simulation', 'random', 'seed', 'success', 'trials'],
+  },
   ...FUNCTIONS.map((f) => ({
     id: `function:${f.id}`,
     name: `${f.name} function`,

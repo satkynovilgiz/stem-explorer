@@ -15,17 +15,19 @@ export function topicsForLocation(route: Route, search: string): string[] {
       const sec = q.get('msec')
       if (sec === 'functions') return [`function:${q.get('fn') ?? 'sine'}`]
       if (sec === 'vectors') return ['tool:vectors']
+      if (sec === 'statistics') return [q.get('sv') === 'binomial' ? 'section:binomial' : 'section:descriptive-statistics']
       return [`surface:${q.get('surface') ?? 'plane'}`]
     }
     case 'chemistry': {
       const sec = q.get('csec')
       if (sec === 'periodic' || sec === 'atomic') return [`section:${sec}`, ...(q.get('el') ? [`element:${q.get('el')}`] : [])]
-      if (sec === 'bonding') return ['section:bonding']
+      if (sec === 'bonding' || sec === 'reactions') return [`section:${sec}`]
       return [`molecule:${q.get('molecule') ?? 'water'}`]
     }
     case 'biology': {
       const sec = q.get('bsec')
       if (sec === 'dna' || sec === 'division') return [`process:${sec}`]
+      if (sec === 'meiosis' || sec === 'inheritance') return [`section:${sec}`]
       if (sec === 'energy') return ['process:photosynthesis', 'process:respiration']
       return [`cell:${q.get('type') ?? 'animal'}`, ...(q.get('structure') ? [`organelle:${q.get('structure')}`] : [])]
     }

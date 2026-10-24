@@ -391,6 +391,30 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax University Physics Volume 3 — 2.4 Thin Lenses',
     url: 'https://openstax.org/books/university-physics-volume-3/pages/2-4-thin-lenses',
   },
+  'stat-2-2': {
+    label: 'OpenStax Introductory Statistics 2e — 2.2 Histograms, Frequency Polygons, and Time Series Graphs',
+    url: 'https://openstax.org/books/introductory-statistics-2e/pages/2-2-histograms-frequency-polygons-and-time-series-graphs',
+  },
+  'stat-2-3': {
+    label: 'OpenStax Introductory Statistics 2e — 2.3 Measures of the Location of the Data',
+    url: 'https://openstax.org/books/introductory-statistics-2e/pages/2-3-measures-of-the-location-of-the-data',
+  },
+  'stat-2-4': {
+    label: 'OpenStax Introductory Statistics 2e — 2.4 Box Plots',
+    url: 'https://openstax.org/books/introductory-statistics-2e/pages/2-4-box-plots',
+  },
+  'stat-2-5': {
+    label: 'OpenStax Introductory Statistics 2e — 2.5 Measures of the Center of the Data',
+    url: 'https://openstax.org/books/introductory-statistics-2e/pages/2-5-measures-of-the-center-of-the-data',
+  },
+  'stat-2-7': {
+    label: 'OpenStax Introductory Statistics 2e — 2.7 Measures of the Spread of the Data',
+    url: 'https://openstax.org/books/introductory-statistics-2e/pages/2-7-measures-of-the-spread-of-the-data',
+  },
+  'stat-4-3': {
+    label: 'OpenStax Introductory Statistics 2e — 4.3 Binomial Distribution',
+    url: 'https://openstax.org/books/introductory-statistics-2e/pages/4-3-binomial-distribution',
+  },
   cccbdb: {
     label: 'NIST Computational Chemistry Comparison and Benchmark Database (CCCBDB) — experimental geometries',
     url: 'https://cccbdb.nist.gov/',

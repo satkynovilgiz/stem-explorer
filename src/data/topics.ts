@@ -292,6 +292,19 @@ export const MODULES: readonly TopicModule[] = [
     current: (s) => getSurface((q(s).get('surface') ?? 'paraboloid') as never)?.name ?? null,
   },
   {
+    id: 'mathematics.statistics',
+    subject: 'mathematics',
+    name: 'Statistics and probability',
+    summary: 'Descriptive statistics with histograms and box plots; the binomial distribution with a seeded simulation',
+    href: linkTo('mathematics', { msec: 'statistics' }),
+    topics: [
+      { label: 'Descriptive statistics', href: linkTo('mathematics', { msec: 'statistics', sv: 'describe' }) },
+      { label: 'Binomial probability', href: linkTo('mathematics', { msec: 'statistics', sv: 'binomial' }) },
+    ],
+    matches: (s) => parseMathSection(s).section === 'statistics',
+    current: (s) => (new URLSearchParams(s).get('sv') === 'binomial' ? 'Binomial probability' : 'Descriptive statistics'),
+  },
+  {
     id: 'mathematics.vectors',
     subject: 'mathematics',
     name: 'Vectors and transformations',

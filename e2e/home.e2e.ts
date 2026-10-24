@@ -71,7 +71,7 @@ test.describe('Home page', () => {
     await page.goto('/')
     await expect(page.locator('.subject-card.is-chemistry')).toContainText('12 3D molecules from experimental geometry, with distance and angle tools')
     await expect(page.locator('.subject-card.is-physics')).toContainText('Period, forces and energy of an ideal spring')
-    await expect(page.locator('.subject-card.is-mathematics .subject-module')).toHaveCount(3)
+    await expect(page.locator('.subject-card.is-mathematics .subject-module')).toHaveCount(4)
     const link = page.locator('.subject-card.is-mathematics .subject-card-action')
     await link.focus()
     await page.keyboard.press('Enter')

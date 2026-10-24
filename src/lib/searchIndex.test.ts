@@ -21,7 +21,7 @@ describe('search index', () => {
     expect(count('element:')).toBe(118)
     expect(count('process:')).toBe(4)
     expect(count('function:')).toBe(7)
-    expect(count('section:')).toBe(6)
+    expect(count('section:')).toBe(8)
     expect(count('reaction:')).toBe(10)
     expect(count('cell:')).toBe(3)
     expect(count('term:')).toBeGreaterThan(40)

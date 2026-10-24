@@ -1,5 +1,8 @@
 import { defaultFnParams, FUNCTION_IDS, getFunction, type FunctionId } from '../math/functions'
 import type { Mat2, Vec2 } from '../math/linear'
+import { DEFAULT_DATASET, findDataset } from '../data/mathematics/datasets'
+import { isValidProbability, isValidTrials, MAX_BINS, MAX_REPETITIONS, MAX_MAGNITUDE } from '../math/statistics'
+import { isValidSeed } from './random'
 
 /*
  * Mathematics sections. Links without `msec` are surface links, so every older link opens as before.
@@ -7,7 +10,7 @@ import type { Mat2, Vec2 } from '../math/linear'
  *   ?msec=vectors&vu=2,1&vv=-1,2&vk=1.5&vm=1,0,0,1
  */
 
-export type MathSection = 'surfaces' | 'functions' | 'vectors'
+export type MathSection = 'surfaces' | 'functions' | 'vectors' | 'statistics'
 
 export interface FunctionsState {
   fn: FunctionId
@@ -39,7 +42,7 @@ const round = (v: number, d = 2) => Number(v.toFixed(d))
 
 export function parseMathSection(search: string): { section: MathSection; invalid: string[] } {
   const raw = new URLSearchParams(search).get('msec')
-  const section: MathSection = raw === 'functions' || raw === 'vectors' ? raw : 'surfaces'
+  const section: MathSection = raw === 'functions' || raw === 'vectors' || raw === 'statistics' ? raw : 'surfaces'
   return { section, invalid: raw !== null && section !== raw ? ['msec'] : [] }
 }
 
@@ -120,7 +123,83 @@ export function parseVectorsState(search: string): { state: VectorsState; invali
 
 export const vectorsEntries = (s: VectorsState): Record<string, string> => ({ msec: 'vectors', vu: s.u.join(','), vv: s.v.join(','), vk: String(s.k), vm: s.m.join(',') })
 
-export const MATH_SECTION_KEYS = ['msec', 'fn', 'fx', 'ia', 'ib', 'vu', 'vv', 'vk', 'vm', 'fm', 'fb', 'fa', 'fc', 'fA', 'fk'] as const
+/*
+ * Statistics section:
+ *   ?msec=statistics&sv=describe&ds=heights[&bins=6]            (a sample dataset)
+ *   ?msec=statistics&sv=describe&ds=custom[&data=1,2,3]          (values only if the user opted in)
+ *   ?msec=statistics&sv=binomial&bn=20&bp=0.25&br=1000&seed=42
+ * Typed values are never put in a link unless the user ticks "Include my values"; then at most
+ * MAX_LINK_VALUES values are written.
+ */
+export interface StatsState {
+  view: 'describe' | 'binomial'
+  /** A sample dataset id, or 'custom' for typed values. */
+  dataset: string
+  /** Bin count, or null for the suggested number. */
+  bins: number | null
+  /** Typed values carried in the link (only when the user opted in). */
+  data: number[] | null
+  n: number
+  p: number
+  repetitions: number
+  seed: number
+}
+
+export const MAX_LINK_VALUES = 100
+export const DEFAULT_STATS: StatsState = { view: 'describe', dataset: DEFAULT_DATASET, bins: null, data: null, n: 20, p: 0.25, repetitions: 1000, seed: 2026 }
+
+export function parseStatsState(search: string): { state: StatsState; invalid: string[] } {
+  const q = new URLSearchParams(search)
+  const invalid: string[] = []
+  const state: StatsState = { ...DEFAULT_STATS }
+  const sv = q.get('sv')
+  if (sv !== null) {
+    if (sv === 'describe' || sv === 'binomial') state.view = sv
+    else invalid.push('sv')
+  }
+  const ds = q.get('ds')
+  if (ds !== null) {
+    if (ds === 'custom' || findDataset(ds)) state.dataset = ds
+    else invalid.push('ds')
+  }
+  const bins = q.get('bins')
+  if (bins !== null) {
+    const b = num(bins)
+    if (Number.isInteger(b) && b >= 1 && b <= MAX_BINS) state.bins = b
+    else invalid.push('bins')
+  }
+  const data = q.get('data')
+  if (data !== null) {
+    const values = data.split(',').map(num)
+    if (state.dataset === 'custom' && values.length >= 1 && values.length <= MAX_LINK_VALUES && values.every((v) => Number.isFinite(v) && Math.abs(v) <= MAX_MAGNITUDE)) state.data = values
+    else invalid.push('data')
+  }
+  const take = (key: string, ok: (v: number) => boolean, set: (v: number) => void) => {
+    const raw = q.get(key)
+    if (raw === null) return
+    const v = num(raw)
+    if (ok(v)) set(v)
+    else invalid.push(key)
+  }
+  take('bn', isValidTrials, (v) => (state.n = v))
+  take('bp', (v) => isValidProbability(v) && Math.abs(v * 100 - Math.round(v * 100)) < 1e-9, (v) => (state.p = round(v)))
+  take('br', (v) => Number.isInteger(v) && v >= 1 && v <= MAX_REPETITIONS, (v) => (state.repetitions = v))
+  take('seed', isValidSeed, (v) => (state.seed = v))
+  return { state, invalid }
+}
+
+export function statsEntries(s: StatsState): Record<string, string> {
+  if (s.view === 'binomial') return { msec: 'statistics', sv: 'binomial', bn: String(s.n), bp: String(s.p), br: String(s.repetitions), seed: String(s.seed) }
+  return {
+    msec: 'statistics',
+    sv: 'describe',
+    ds: s.dataset,
+    ...(s.bins !== null ? { bins: String(s.bins) } : {}),
+    ...(s.dataset === 'custom' && s.data && s.data.length <= MAX_LINK_VALUES ? { data: s.data.join(',') } : {}),
+  }
+}
+
+export const MATH_SECTION_KEYS = ['msec', 'fn', 'fx', 'ia', 'ib', 'vu', 'vv', 'vk', 'vm', 'fm', 'fb', 'fa', 'fc', 'fA', 'fk', 'sv', 'ds', 'bins', 'data', 'bn', 'bp', 'br', 'seed'] as const
 
 /** `search` with only this section's keys (surface keys are kept: the surfaces section owns them). */
 export function withMathSection(search: string, entries: Record<string, string>): string {

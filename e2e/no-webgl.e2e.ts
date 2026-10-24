@@ -260,3 +260,8 @@ test('the optics lab needs no WebGL', async ({ page }) => {
   await page.goto('/?experiment=optics&opt=lens&lens=converging&f=10&do=30#/physics')
   await expect(page.locator('.readout')).toContainText('15.0 cm')
 })
+
+test('statistics needs no WebGL', async ({ page }) => {
+  await page.goto('/?msec=statistics&sv=binomial&bn=10&bp=0.5#/mathematics')
+  await expect(page.locator('.readout')).toContainText('2.5')
+})

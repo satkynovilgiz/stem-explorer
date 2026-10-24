@@ -31,6 +31,15 @@ const NET_EQUATION_MOLECULES = ['molecule:carbon-dioxide', 'molecule:water', 'mo
 
 export const RELATIONS: readonly Relation[] = [
   {
+    id: 'inheritance-binomial',
+    kind: 'same-math',
+    between: [['section:inheritance'], ['section:binomial']],
+    text: 'In the one-gene model each offspring is like a Bernoulli trial: for Yy × Yy, “green seeds” has probability p = 1/4. The number of green-seeded offspring among n is then binomial with n trials and p = 1/4, so its expected value is n/4. Both labs draw their random counts the same way, from a seeded generator.',
+    limits:
+      'Holds only under the model’s assumptions: independent offspring, a fixed probability, one gene with complete dominance. Real crosses can depart from it, and many traits do not follow a one-gene model at all.',
+    sources: ['bio-12-1', 'stat-4-3'],
+  },
+  {
     id: 'wave-sine',
     kind: 'same-math',
     between: [['experiment:wave'], ['function:sine']],

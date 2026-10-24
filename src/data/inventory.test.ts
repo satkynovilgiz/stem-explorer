@@ -7,6 +7,7 @@ import { DIVISION_STAGES } from './biology/mitosis'
 import { meiosisStages } from './biology/meiosis'
 import { ISOTOPES } from './chemistry/atomic'
 import { GLOSSARY } from './glossary'
+import { SAMPLE_DATASETS } from './mathematics/datasets'
 import { RELATIONS } from './related'
 import { SOURCES } from './sources'
 import { SEARCH_INDEX } from '../lib/searchIndex'
@@ -37,6 +38,7 @@ describe('README content inventory', () => {
       'Function families': count('function:'),
       Surfaces: count('surface:'),
       'Matrix presets': count('matrix:'),
+      'Sample datasets': SAMPLE_DATASETS.length,
       'Glossary terms': GLOSSARY.length,
       'Cross-subject relations': RELATIONS.length,
       'Registered sources': Object.keys(SOURCES).length,

@@ -1,0 +1,113 @@
+import type { Page } from '@playwright/test'
+import { expect, test } from './fixtures.ts'
+
+const readout = (page: Page, name: string) => page.locator('.readout div', { has: page.locator('dt', { hasText: name }) }).locator('dd')
+const params = (page: Page) => new URL(page.url()).searchParams
+
+test('descriptive statistics: sample data, textbook quartiles, population vs sample, histogram bins and box plot', async ({ page }) => {
+  await page.goto('/?msec=statistics#/mathematics')
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).locator('[aria-current="page"]')).toHaveText('Descriptive statistics')
+  await expect(readout(page, 'Count n')).toHaveText('40')
+  await expect(readout(page, 'Median')).toHaveText('66')
+  await expect(readout(page, 'Q1 / Q3')).toHaveText('64.5 / 70')
+  await expect(readout(page, 'Population variance')).not.toHaveText(await readout(page, 'Sample variance').textContent() ?? '')
+  await expect(page.locator('.stat-stage')).toContainText('OpenStax Introductory Statistics 2e')
+  // Bins change the picture, not the data.
+  const bars = page.locator('.stat-svg').first().locator('.stat-bar')
+  await expect(bars).toHaveCount(6)
+  const bins = page.getByRole('textbox', { name: /^Histogram bins/ })
+  await bins.fill('12')
+  await bins.press('Enter')
+  await expect(bars).toHaveCount(12)
+  await expect.poll(() => params(page).get('bins')).toBe('12')
+  await expect(page.locator('.stat-stage')).toContainText('few wide bins hide detail')
+  await page.getByRole('button', { name: /Use the suggested number/ }).click()
+  await expect(bars).toHaveCount(6)
+  // A synthetic dataset is labelled, and its potential outlier is marked.
+  await page.getByRole('combobox', { name: 'Data' }).selectOption('synthetic-outlier')
+  await expect(page.locator('.stat-stage')).toContainText('synthetic data')
+  await expect(page.locator('.stat-outlier')).toHaveCount(1)
+  await expect(page.locator('.stat-stage')).toContainText('potential outliers (more than 1.5 × IQR beyond the box): 45')
+})
+
+test('your own values: validation, edge cases, and nothing in the link unless you opt in', async ({ page, baseURL }) => {
+  await page.goto('/?msec=statistics&sv=describe&ds=custom#/mathematics')
+  await expect(page.locator('.stat-stage')).toContainText('Enter at least one number')
+  const box = page.getByRole('textbox', { name: /Your values/ })
+  await box.fill('5, -3, 2.5, oops, 5, 1e12')
+  await expect(page.getByRole('alert')).toContainText('“oops” (item 4)')
+  await expect(page.getByRole('alert')).toContainText('“1e12” (item 6)')
+  await expect(readout(page, 'Count n')).toHaveText('4')
+  await expect(readout(page, 'Range')).toHaveText('8')
+  await expect(page.locator('.stat-sorted')).toHaveText('-3, 2.5, 5, 5')
+  // One value: no sample variance.
+  await box.fill('7')
+  await expect(readout(page, 'Sample variance')).toHaveText('undefined for one value')
+  await expect(readout(page, 'Population variance')).toHaveText('0')
+  // Repeated values.
+  await box.fill('4 4 4 4')
+  await expect(readout(page, 'IQR')).toHaveText('0')
+  // The typed numbers are not in the link or the copied link by default…
+  expect(params(page).get('data')).toBeNull()
+  await page.getByRole('button', { name: 'Copy link' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${baseURL}/?msec=statistics&sv=describe&ds=custom#/mathematics`)
+  // …only after opting in, and then they restore.
+  await page.getByLabel('Include my values in the link and in saved explorations').check()
+  await expect.poll(() => params(page).get('data')).toBe('4,4,4,4')
+  await page.reload()
+  await expect(page.getByRole('textbox', { name: /Your values/ })).toHaveValue('4, 4, 4, 4')
+  await expect(readout(page, 'Count n')).toHaveText('4')
+  await page.getByText('What links, saves and exports contain').first().click()
+  await expect(page.locator('.stat-privacy').first()).toContainText('Nothing you enter is uploaded')
+})
+
+test('binomial: exact distribution, moments, p = 0 and 1, and a reproducible seeded simulation', async ({ page }) => {
+  await page.goto('/?msec=statistics&sv=binomial&bn=20&bp=0.25&br=1000&seed=2026#/mathematics')
+  await expect(readout(page, 'Mean μ = np')).toHaveText('5')
+  await expect(readout(page, 'Variance σ² = npq')).toHaveText('3.75')
+  await expect(readout(page, 'Total of P')).toHaveText('1.000000')
+  const table = page.locator('.stat-binom-table')
+  await expect(table.getByRole('row', { name: /^5 / })).toContainText('0.2023')
+  const observed = await table.locator('tbody').textContent()
+  await page.reload()
+  expect(await table.locator('tbody').textContent()).toBe(observed)
+  // The exact column never depends on the seed.
+  await page.getByRole('button', { name: 'Run again (new seed)' }).click()
+  await expect.poll(() => params(page).get('seed')).not.toBe('2026')
+  await expect(table.getByRole('row', { name: /^5 / })).toContainText('0.2023')
+  const p = page.getByRole('textbox', { name: /^Probability of success/ })
+  await p.fill('0')
+  await p.press('Enter')
+  await expect(page.locator('.stat-stage')).toContainText('With p = 0, every trial fails')
+  await expect(table.locator('tbody tr')).toHaveCount(1)
+  await p.fill('1')
+  await p.press('Enter')
+  await expect(page.locator('.stat-stage')).toContainText('With p = 1, every trial succeeds')
+  // The largest supported n stays finite and sums to 1.
+  const n = page.getByRole('textbox', { name: /^Trials/ })
+  await p.fill('0.5')
+  await p.press('Enter')
+  await n.fill('500')
+  await n.press('Enter')
+  await expect(readout(page, 'Total of P')).toHaveText('1.000000')
+  await expect(readout(page, 'Mean μ = np')).toHaveText('250')
+  // Invalid links are corrected.
+  await page.goto('/?msec=statistics&sv=binomial&bn=900&bp=1.5#/mathematics')
+  await expect.poll(() => [params(page).get('bn'), params(page).get('bp')]).toEqual(['20', '0.25'])
+})
+
+test('the inheritance simulation links to the same model as a binomial distribution, with a curated related topic', async ({ page }) => {
+  await page.goto('/?bsec=inheritance&p1=Yy&p2=Yy#/biology')
+  await page.getByRole('textbox', { name: 'Seed' }).fill('31')
+  await page.getByRole('group', { name: 'Number of offspring' }).getByRole('button', { name: '100', exact: true }).click()
+  await page.getByRole('button', { name: 'Run with this seed' }).click()
+  await page.getByRole('link', { name: /See the same model as a binomial distribution \(n = 100, p = 1\/4\)/ }).click()
+  await expect(readout(page, 'Mean μ = np')).toHaveText('25')
+  expect(params(page).get('bp')).toBe('0.25')
+  await page.locator('.guide-toggle').click()
+  const related = page.locator('.related-topics')
+  await expect(related).toContainText('Same mathematics')
+  await expect(related).toContainText('Holds only under the model’s assumptions')
+  await related.getByRole('link', { name: 'Mendelian inheritance' }).click()
+  await expect(page.getByRole('heading', { name: 'One-gene inheritance' })).toBeVisible()
+})

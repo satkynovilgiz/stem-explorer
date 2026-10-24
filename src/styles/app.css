@@ -5549,7 +5549,7 @@ button {
 /* ---------- Mathematics: 2D functions and vectors ---------- */
 
 .math-switch {
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
 }
 
 .fn-select {
@@ -7369,4 +7369,98 @@ tr.is-sum td {
   min-height: 36px;
   white-space: normal;
   line-height: 1.2;
+}
+
+/* ---------- Mathematics: statistics and probability ---------- */
+
+.stat-stage {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  overflow-y: auto;
+}
+
+.stat-svg {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  border-radius: var(--radius-md);
+  background: var(--color-viewport);
+}
+
+.stat-axis {
+  stroke: var(--color-border-strong);
+}
+
+.stat-tick {
+  fill: var(--color-text-muted);
+  font: 500 11px var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-bar {
+  fill: var(--subject-mathematics);
+  opacity: 0.85;
+}
+
+.stat-observed {
+  stroke: var(--color-accent-strong);
+  stroke-width: 2.5;
+}
+
+.stat-box {
+  fill: rgb(245 194 107 / 0.18);
+  stroke: var(--subject-mathematics);
+  stroke-width: 2;
+}
+
+.stat-whisker {
+  stroke: var(--color-text-muted);
+  stroke-width: 2;
+}
+
+.stat-median {
+  stroke: var(--color-text);
+  stroke-width: 3;
+}
+
+.stat-outlier {
+  fill: none;
+  stroke: var(--color-warning);
+  stroke-width: 2;
+}
+
+.stat-textarea {
+  width: 100%;
+  min-height: 7rem;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+
+.stat-sorted {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-chip-bar {
+  background: var(--subject-mathematics);
+}
+
+.stat-chip-observed {
+  border-color: var(--color-accent-strong);
+}
+
+.stat-privacy summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.stat-readout dd {
+  overflow-wrap: anywhere;
 }

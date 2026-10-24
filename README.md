@@ -14,8 +14,8 @@ Every explorer has breadcrumbs and a searchable **Topics** drawer. All five subj
 - **Biology Explorer:** animal, plant and bacterial cells, DNA and RNA, mitosis, meiosis,
   one-gene inheritance and energy processes.
 - **Physics Explorer:** projectile, spring–mass, DC circuit, wave and geometric-optics labs.
-- **Mathematics Explorer:** 2D functions with calculus tools, 3D surfaces, and vectors with 2×2
-  transformations.
+- **Mathematics Explorer:** 2D functions with calculus tools, 3D surfaces, vectors with 2×2
+  transformations, and descriptive statistics with binomial probability.
 
 Across subjects there is a global **Search** page (`#/search`), curated **related topics** that
 say whether a link is the same mathematics, a real connection or only an analogy, and a
@@ -1135,7 +1135,7 @@ destination exists.
 - [OpenStax University Physics Volume 1 — 4.3 Projectile Motion](https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion)
 - [OpenStax University Physics Volume 1 — 3.5 Free Fall](https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall)
 
-## Mathematics Explorer — functions, surfaces and vectors
+## Mathematics Explorer — functions, surfaces, vectors and statistics
 
 Three sections, switched with the **Mathematics section** buttons: **2D functions**, **3D
 surfaces** and **Vectors and transformations**. The section is stored as `msec` (`functions`,
@@ -1171,6 +1171,64 @@ and no computer algebra. The 2D sections are SVG and HTML only; they never mount
   orientation. When det M = 0 the plane collapses onto a line (or a point for the zero matrix)
   and no inverse exists; otherwise the inverse is shown.
 - Presets: identity, rotate 90°, shear, scale, reflect, singular.
+
+### Statistics and probability
+
+**Statistics and probability** (`msec=statistics`) is a fourth Mathematics section with two parts.
+It is plain HTML and SVG and needs no WebGL. Calculations are in `src/math/statistics.ts`, sample
+data in `src/data/mathematics/datasets.ts`, and the UI in
+`src/features/mathematics/statistics/StatisticsLab.tsx`. Sources: OpenStax Introductory Statistics
+2e §2.2, 2.3, 2.4, 2.5, 2.7 and 4.3.
+
+**Descriptive statistics** (`sv=describe&ds=<dataset>[&bins=…]`):
+- **Data:** four sample datasets, each with its provenance: *Heights of 40 students* (textbook
+  example data, Example 2.23), *Fourteen values* (textbook example, §2.3), and two **synthetic**
+  sets labelled as such (negative and repeated values; one potential outlier). Or **your own
+  values**: up to 1000 numbers separated by commas, spaces, semicolons or new lines (negatives,
+  decimals and exponents accepted, magnitude up to 10⁹). Invalid and too-large entries are listed by
+  position and ignored; more than 1000 are cut off with a message.
+- **Results:** sorted data, count, mean, median, range, Q1 and Q3, IQR, and **population** variance
+  and standard deviation (σ², σ, divided by N) kept apart from **sample** variance and standard
+  deviation (s², s, divided by n − 1; *undefined for one value*), with a note on when to use each.
+  The mean uses compensated summation and the variance is computed from deviations about the mean
+  (two passes), so large offsets stay accurate.
+- **Quartile convention** (documented in the panel): Q1 and Q3 are the medians of the lower and upper
+  halves (§2.3); with an odd count the median is left out of both halves; with one value Q1 = Q3 =
+  that value. It reproduces the textbook values (Q1 = 64.5, median 66, Q3 = 70 for the heights; 2, 7
+  and 9 for the fourteen values). Other conventions can differ slightly, and the panel says so.
+- **Histogram** with 1–30 equal-width bins from the minimum (left edges included, the last bin
+  also includes the maximum; identical values give one bin of width 1), starting at a suggested
+  √n kept within 5–15. The caption explains how bin choice changes the picture but not the data.
+- **Box plot** (§2.4): whiskers to the minimum and maximum, the box from Q1 to Q3 and the median,
+  with **potential outliers** (beyond 1.5 × IQR, §2.3) circled and listed.
+- **Edge cases handled:** no data (a prompt), one value, repeated values (zero spread), negative
+  values.
+
+**Binomial probability** (`sv=binomial&bn=…&bp=…&br=…&seed=…`):
+- n from 1 to 500 trials and p from 0 to 1 (step 0.01). **Exact** P(X = k) = C(n, k) pᵏ qⁿ⁻ᵏ for every
+  k, computed in logarithms so the largest n neither overflows nor underflows; p = 0 and p = 1 are
+  exact (all mass at 0 or n) with a note. Readouts: μ = np, σ² = npq, σ and the total of the
+  probabilities. n = 1 is described as a Bernoulli trial.
+- **Simulation:** 1–10 000 repetitions of the experiment from a **visible seed** (the same seeded
+  generator as the inheritance lab). *Run again* picks a new seed. The same n, p, repetitions and
+  seed always give the same counts, so the configuration is shareable. The chart shows exact
+  probabilities as bars and observed shares as marks; the table lists exact probabilities,
+  expected counts, observed counts and shares for every k with P ≥ 0.0001 or observed at least
+  once. The exact values never depend on the simulation.
+
+**Privacy: what links, saves and exports contain** (also stated in the panel):
+- Nothing is uploaded; all calculations run in the browser.
+- Links, *Save exploration*, recent history and notebook notes store the section, the dataset's
+  name, the bin count, and n, p, the repetitions and the seed.
+- **Typed values are not stored** unless you tick *Include my values in the link and in saved
+  explorations* (at most 100 values, as `data=`); otherwise only "your own values" is recorded.
+  A PNG export shows the chart (which reflects the data) and the link, not the list of values.
+
+**Related topic:** a curated *Same mathematics* link joins this section with Biology's inheritance
+lab. Under the one-gene model each offspring is like a Bernoulli trial (green seeds with p = 1/4 for
+Yy × Yy), so the number of green-seeded offspring is binomial; its limits are stated (independent
+offspring, fixed probability, one gene with complete dominance; many traits do not follow it). The
+inheritance simulation also links to the binomial lab with the same n and p.
 
 ### 2D sources
 
@@ -1780,6 +1838,7 @@ How the URL is kept up to date:
 | --- | --- |
 | `src/data/anatomy/atlas/relationships.test.ts` | Every relationship names existing structures and a registered source with its quoted basis; explorations list existing structures and relationships; one-side statements apply to both sides except the right-kidney one; no position is stated for the triceps; the drawing does not contradict the stated directions. |
 | `src/features/anatomy/atlas/scene/orientation.test.ts` | The orientation indicator for front, back and left-lateral cameras (body's left to the screen's right in front, anterior to the left in the side view, end-on axes), for the atlas's own view directions. |
+| `src/math/statistics.test.ts` | Parsing (separators, negatives, exponents, invalid and too-large tokens with positions, the 1000-value cap, empty input); textbook quartiles for both cited datasets, odd counts, one and two values; population vs sample variance; one value and repeated values; negatives and the 1.5 × IQR outlier rule; accuracy with a 10⁸ offset; histogram edges, totals for any bin count, identical values and invalid bin counts; suggested bins; binomial hand values, totals of 1 up to n = 500 and p = 0.999, exact p = 0 and 1, mean np and variance npq, the Bernoulli case; the simulation repeating per seed, p = 0 and 1, closeness for 10 000 repetitions; dataset provenance. |
 | `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the critical-angle boundary within 0.005°; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
 | `src/data/biology/meiosis.test.ts` | Meiosis uses the mitosis module's 2n = 4; chromosome, chromatid and set counts at all nine stages for all four option combinations; the text states the computed counts; homologs separate in meiosis I and sisters in meiosis II; crossing over gives four distinct products (two without), with only nonsister chromatids exchanging; independent assortment; the comparison's sources and context. One-gene model: probabilities totalling 1 for all nine crosses, 1:2:1, 3:1 and 1:1. Simulation: repeatable per seed, counts adding up, different seeds differing, impossible genotypes never produced, large samples near ¼, zero offspring; the generator stays in [0, 1) and seeds are validated. |
 | `src/chem/stoichiometry.test.ts` | Formula parsing (parentheses, two-letter symbols, malformed input); element-by-element balance, lowest terms, invalid coefficients and charge; every library equation and ionic form balanced in lowest terms with a registered source; type coverage; balancing steps from all 1s to the source's coefficients; molar masses against hand sums; mole ratios; limiting reactant with leftovers, exact ratios (including floating-point residue), zero and invalid amounts; percent yield (zero theoretical yield, above 100 %); significant-figure rounding and charge text. |
@@ -1948,6 +2007,16 @@ the production build:
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
   analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `statistics.e2e.ts`: the heights dataset (40 values, median 66, Q1/Q3 64.5/70, population and
+  sample variance differing), bins 6 → 12 → suggested, the bin explanation, a synthetic dataset
+  labelled with its outlier circled; typed values with invalid and too-large entries reported by
+  position, negatives, one value (sample variance undefined), repeated values; the link and copied
+  link without the values by default, with them after opting in, and restoring after reload; the
+  privacy note; the binomial n = 20, p = 0.25 (μ 5, σ² 3.75, total 1.000000, P(5) = 0.2023), the same
+  observed table after reload, a new seed leaving the exact column unchanged, p = 0 and p = 1, n =
+  500 still summing to 1, invalid links corrected; the inheritance simulation's link to the
+  binomial lab (n = 100, p = 1/4) and the curated related topic both ways. Mobile and no-WebGL runs
+  cover the section.
 - `optics.e2e.ts`: Snell's law for air → water at 30° (22.04°, toward the normal, no critical
   angle), normal incidence, equal indices (no reflected ray), the link; no critical angle from
   lower to higher index at 89.99°, water → air with θc = 48.63°, total internal reflection at 60°
@@ -2072,6 +2141,8 @@ src/
   data/guides.ts, data/glossary.ts, data/sources.ts   subject guide content, shared definitions, source registry
   components/SubjectBar.tsx     breadcrumbs and the Topics drawer
   features/*/activity.ts        each subject's activity definition and setup
+  math/statistics.ts            parsing, summaries, quartiles, histogram, binomial distribution and simulation
+  data/mathematics/datasets.ts  sample datasets with provenance (textbook or synthetic)
   physics/optics.ts             Snell's law, critical angle, thin lens, principal rays
   data/biology/meiosis.ts       meiosis stages built from chromosome data, counts, mitosis comparison
   data/biology/inheritance.ts   one-gene Mendelian model, exact probabilities, seeded simulation
@@ -2194,7 +2265,8 @@ from the app's own data (`src/lib/searchIndex.ts`); nothing is sent over the net
 statement, its scope or limits, and sources:
 - **Same mathematics:** the same equation describes both, within the stated model. Examples: the
   wave lab and the sine function, the spring lab and the cosine function, an ideal projectile and
-  the quadratic function, and projectile velocity and vectors.
+  the quadratic function, projectile velocity and vectors, and the inheritance model and the
+  binomial distribution.
 - **Real connection:** a physical or biological link. Examples: gas exchange in the lungs and O₂
   and CO₂; the net equations of photosynthesis and respiration and their molecules.
 - **Analogy only:** a similarity in form, with where it breaks down. The one analogy is blood
@@ -2273,10 +2345,11 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Function families | 7 |
 | Surfaces | 4 |
 | Matrix presets | 6 |
+| Sample datasets | 4 |
 | Glossary terms | 83 |
-| Cross-subject relations | 9 |
-| Registered sources | 127 |
-| Search index entries | 509 |
+| Cross-subject relations | 10 |
+| Registered sources | 133 |
+| Search index entries | 511 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.
@@ -2306,8 +2379,13 @@ how it is drawn (individual, group or container), with what is omitted.
   each lab states.
 - **Mathematics** is computed from fixed formula libraries, with no free formula entry. Graphs are
   sampled at a finite resolution, and the total area is a labelled numerical estimate.
-- **Not stored in links:** tour progress, playback time, the 2D plot zoom, measurement picks, and
-  open panels. Where a link cannot restore something, the app says so.
+- **Not stored in links:** tour progress, playback time, the 2D plot zoom, measurement picks, open
+  panels, relationship explorations, reaction coefficients and calculator amounts, meiosis
+  toggles, the inheritance simulation, and typed statistics values (unless you opt in). Where a
+  link cannot restore something, the app says so.
+- **Coverage is selective:** each subject covers the listed modules and curated content only, not
+  a whole discipline. Anatomical relationships, reactions, datasets and related topics are small
+  curated sets.
 - **Search** has no fuzzy spelling correction, and synonyms cover only well-established names.
 - **Related topics** are a small curated set, not a complete map of connections.
 - **PNG export** copies overlays as positioned boxes and words: font fallbacks, emoji and effects

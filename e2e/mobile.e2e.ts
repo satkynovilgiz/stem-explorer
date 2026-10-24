@@ -343,3 +343,11 @@ test('the optics lab fits a phone', async ({ page }) => {
   await page.getByRole('tab', { name: 'Values' }).tap()
   await expect(page.locator('.readout')).toContainText('total internal reflection')
 })
+
+test('statistics fits a phone', async ({ page }) => {
+  for (const url of ['/?msec=statistics&sv=describe&ds=heights#/mathematics', '/?msec=statistics&sv=binomial#/mathematics']) {
+    await page.goto(url)
+    await expect(page.locator('.stat-svg').first()).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  }
+})

@@ -23,6 +23,8 @@ import {
 import { isValidSeed, MAX_SEED, newSeed } from '../../../lib/random'
 import type { Parents } from '../../../lib/urlState'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { AppLink } from '../../../components/AppLink'
+import { linkTo } from '../../../lib/links'
 
 const pct = (x: number) => `${(x * 100).toFixed(1)} %`
 
@@ -282,6 +284,13 @@ export function InheritanceView({ parents, onParents }: { parents: Parents; onPa
             Bars: observed share in this sample. Vertical marks: theoretical probability. Repeated samples differ by chance, and small samples can be far from the
             theoretical ratio; with larger samples the observed shares usually come closer.
             <SourceLinks ids={['bio-12-1']} />
+          </p>
+          <p className="small">
+            The number of green-seeded offspring is a binomial count under this model.{' '}
+            <AppLink href={linkTo('mathematics', { msec: 'statistics', sv: 'binomial', bn: String(Math.min(run.n, 500)), bp: String(fractionValue(ph.recessive)), br: '1000', seed: String(run.seed) })}>
+              See the same model as a binomial distribution (n = {Math.min(run.n, 500)}, p = {fractionText(ph.recessive)})
+            </AppLink>
+            {run.n > 500 ? ' (the probability lab goes up to 500 trials).' : '.'}
           </p>
         </div>
       )}
