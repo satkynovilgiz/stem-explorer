@@ -16,7 +16,7 @@ describe('search index', () => {
     expect(count('organelle:')).toBe(23) // 10 animal-model structures + 4 plant-only + 9 bacterial
     expect(count('heart:')).toBe(14)
     expect(count('surface:')).toBe(4)
-    expect(count('experiment:')).toBe(4)
+    expect(count('experiment:')).toBe(5)
     expect(count('structure:')).toBe(ATLAS_STRUCTURES.length)
     expect(count('element:')).toBe(118)
     expect(count('process:')).toBe(4)

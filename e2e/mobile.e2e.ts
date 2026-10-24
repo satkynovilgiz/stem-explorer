@@ -335,3 +335,11 @@ test('meiosis and inheritance fit a phone', async ({ page }) => {
     await expectNoHorizontalOverflow(page)
   }
 })
+
+test('the optics lab fits a phone', async ({ page }) => {
+  await page.goto('/?experiment=optics&opt=refraction&n1=1.333&n2=1.0003&inc=60#/physics')
+  await expect(page.locator('.optics-svg')).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+  await page.getByRole('tab', { name: 'Values' }).tap()
+  await expect(page.locator('.readout')).toContainText('total internal reflection')
+})

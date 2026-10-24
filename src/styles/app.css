@@ -7228,3 +7228,145 @@ tr.is-sum td {
 .process-view .section-title {
   margin-top: var(--space-3);
 }
+
+/* ---------- Physics: geometric optics ---------- */
+
+.optics-stage {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+}
+
+.optics-svg {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  border-radius: var(--radius-md);
+  background: var(--color-viewport);
+}
+
+.optics-svg.is-lens {
+  max-width: 820px;
+}
+
+.optics-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.opt-interface {
+  stroke: var(--color-text-muted);
+  stroke-width: 1.5;
+}
+
+.opt-normal {
+  stroke: var(--color-text-subtle);
+  stroke-dasharray: 5 5;
+}
+
+.opt-axis {
+  stroke: var(--color-border-strong);
+  stroke-dasharray: 3 4;
+}
+
+.opt-lens {
+  stroke: var(--color-accent-strong);
+  stroke-width: 2.5;
+}
+
+.opt-focal {
+  fill: var(--color-measure);
+}
+
+.opt-ray {
+  stroke-width: 2.5;
+}
+
+.opt-ray.is-incident {
+  stroke: #f5c26b;
+}
+
+.opt-ray.is-reflected {
+  stroke: #f5c26b;
+  stroke-width: 1.2;
+  stroke-dasharray: 6 4;
+  opacity: 0.8;
+}
+
+.opt-ray.is-reflected.is-total {
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+  opacity: 1;
+}
+
+.opt-ray.is-transmitted {
+  stroke: #8db4ff;
+}
+
+.opt-arrowhead {
+  fill: var(--color-text);
+}
+
+.opt-arc {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 1.2;
+}
+
+.opt-label {
+  fill: var(--color-text);
+  font: 600 12px var(--font-sans);
+}
+
+.opt-label.is-muted {
+  fill: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.opt-label.is-warning {
+  fill: var(--color-warning);
+}
+
+.opt-pray line {
+  stroke-width: 1.8;
+}
+
+.opt-pray.is-ray1 line { stroke: #e8837e; }
+.opt-pray.is-ray2 line { stroke: #6fd69a; }
+.opt-pray.is-ray3 line { stroke: #a99cf0; }
+
+.opt-pray line.is-extension {
+  stroke-dasharray: 5 4;
+  opacity: 0.75;
+}
+
+.opt-object,
+.opt-image {
+  stroke: var(--color-text);
+  stroke-width: 3;
+}
+
+.opt-image {
+  stroke: var(--color-accent-strong);
+}
+
+.opt-image.is-virtual {
+  stroke-dasharray: 5 3;
+}
+
+/* Module switches placed directly in a side panel get the panel's inner spacing. */
+.chem-side > .module-switch {
+  padding: var(--space-4) var(--space-5) 0;
+}
+
+.physics-inputs .segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.physics-inputs .segmented .segmented-option {
+  min-height: 36px;
+  white-space: normal;
+  line-height: 1.2;
+}

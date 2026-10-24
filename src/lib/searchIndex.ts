@@ -275,6 +275,15 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     href: linkTo('physics', { experiment: 'wave' }),
     terms: ['wave', 'traveling wave', 'wavelength', 'frequency', 'amplitude', 'wave speed', 'period', 'transverse'],
   },
+  {
+    id: 'experiment:optics',
+    name: 'Optics lab',
+    subject: 'physics',
+    kind: 'lab',
+    description: 'Reflection and refraction with Snell’s law, the critical angle and total internal reflection; thin converging and diverging lenses with principal rays.',
+    href: linkTo('physics', { experiment: 'optics' }),
+    terms: ['optics', 'light', 'ray', 'reflection', 'refraction', 'snell', 'snell’s law', 'index of refraction', 'critical angle', 'total internal reflection', 'lens', 'thin lens', 'focal length', 'magnification', 'real image', 'virtual image', 'converging', 'diverging'],
+  },
 
   // Mathematics
   ...FUNCTIONS.map((f) => ({

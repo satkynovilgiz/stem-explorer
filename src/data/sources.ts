@@ -367,6 +367,30 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'CIAAW — Abridged Standard Atomic Weights (2024 table, based on Atomic Weights 2021)',
     url: 'https://www.ciaaw.org/abridged-atomic-weights.htm',
   },
+  'up3-1-1': {
+    label: 'OpenStax University Physics Volume 3 — 1.1 The Propagation of Light (Table 1.1, indices of refraction)',
+    url: 'https://openstax.org/books/university-physics-volume-3/pages/1-1-the-propagation-of-light',
+  },
+  'up3-1-2': {
+    label: 'OpenStax University Physics Volume 3 — 1.2 The Law of Reflection',
+    url: 'https://openstax.org/books/university-physics-volume-3/pages/1-2-the-law-of-reflection',
+  },
+  'up3-1-3': {
+    label: 'OpenStax University Physics Volume 3 — 1.3 Refraction',
+    url: 'https://openstax.org/books/university-physics-volume-3/pages/1-3-refraction',
+  },
+  'up3-1-4': {
+    label: 'OpenStax University Physics Volume 3 — 1.4 Total Internal Reflection',
+    url: 'https://openstax.org/books/university-physics-volume-3/pages/1-4-total-internal-reflection',
+  },
+  'up3-2-2': {
+    label: 'OpenStax University Physics Volume 3 — 2.2 Spherical Mirrors (paraxial approximation)',
+    url: 'https://openstax.org/books/university-physics-volume-3/pages/2-2-spherical-mirrors',
+  },
+  'up3-2-4': {
+    label: 'OpenStax University Physics Volume 3 — 2.4 Thin Lenses',
+    url: 'https://openstax.org/books/university-physics-volume-3/pages/2-4-thin-lenses',
+  },
   cccbdb: {
     label: 'NIST Computational Chemistry Comparison and Benchmark Database (CCCBDB) — experimental geometries',
     url: 'https://cccbdb.nist.gov/',

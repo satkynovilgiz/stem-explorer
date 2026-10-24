@@ -13,7 +13,7 @@ Every explorer has breadcrumbs and a searchable **Topics** drawer. All five subj
   isotopes, bonding and geometry, and a reaction and stoichiometry lab.
 - **Biology Explorer:** animal, plant and bacterial cells, DNA and RNA, mitosis, meiosis,
   one-gene inheritance and energy processes.
-- **Physics Explorer:** projectile, spring–mass, DC circuit and wave labs.
+- **Physics Explorer:** projectile, spring–mass, DC circuit, wave and geometric-optics labs.
 - **Mathematics Explorer:** 2D functions with calculus tools, 3D surfaces, and vectors with 2×2
   transformations.
 
@@ -896,7 +896,7 @@ All content is paraphrased from OpenStax textbooks (CC BY 4.0). Each structure l
 NCBI Bookshelf was considered but not cited: its pages returned a reCAPTCHA to automated checks, and
 only pages that were actually read are referenced.
 
-## Physics Explorer — projectile, spring, circuit and wave labs
+## Physics Explorer — projectile, spring, circuit, wave and optics labs
 
 Four experiments (**Projectile**, **Spring–mass**, **DC circuit**, **Wave**). Links without
 `experiment` are projectile links; each switch removes the other experiments' keys.
@@ -1081,6 +1081,54 @@ An ideal travelling sinusoidal wave y(x, t) = A sin(kx − ωt) moving in +x (Vo
 - Assumptions: one wave already filling the region, no damping, no reflections, and the speed is
   set via f and λ rather than from medium properties. Tests cover v = fλ, reference values,
   periodicity, the pattern's travel at v, the transverse velocity bound and input bounds.
+
+### Optics lab
+
+**Optics** (`experiment=optics`) is a fifth physics lab with two connected parts. It is static
+(nothing animates), plain HTML and SVG, and needs no WebGL. Calculations are in
+`src/physics/optics.ts`, the UI in `src/features/physics/optics/OpticsLab.tsx`. Sources: OpenStax
+University Physics Volume 3 §1.1 (Table 1.1 indices at 589 nm), §1.2, §1.3, §1.4, §2.2 and §2.4.
+
+**Reflection and refraction** (`opt=refraction&n1=…&n2=…&inc=…`):
+- Inputs: n₁ and n₂ from 1.0000 to 2.5000 (positive indices only; 4 decimals so air can be 1.0003)
+  and the angle of incidence θ₁ from 0 to 89.99°, **measured from the normal**. Presets: air →
+  water, water → air, air → crown glass, crown glass → air, diamond → air, equal indices; plus *Set
+  θ₁ to the critical angle* and *Normal incidence*.
+- The diagram shows the incident ray, the normal (dashed), the reflected ray (thin and dashed,
+  because how much light reflects is not modelled; solid under total internal reflection) and the
+  transmitted ray, with angle arcs and media labels. Shading darkens with n, and the labels give
+  the values.
+- Readouts: θ₁, θr = θ₁, θ₂ from n₁ sin θ₁ = n₂ sin θ₂, and θc = arcsin(n₂/n₁). The equations are
+  shown with the numbers substituted.
+- **Edge cases:** normal incidence (no bending); equal indices (no bending and no reflected ray:
+  there is no boundary); a critical angle only when n₁ > n₂ (from lower to higher index there is
+  none, even at 89.99°); **total internal reflection only when θ₁ > θc**, with no transmitted ray
+  drawn; within 0.005° of θc (half the input step) the transmitted ray grazes along the boundary
+  at θ₂ = 90°.
+
+**Thin lens** (`opt=lens&lens=converging|diverging&f=…&do=…`):
+- Inputs: lens type, |f| from 2 to 20 cm, object distance dₒ from 1 to 60 cm (object height 2 cm).
+  Presets: beyond 2F, between F and 2F, at F, inside F, diverging.
+- Readouts: dᵢ from 1/dₒ + 1/dᵢ = 1/f, m = hᵢ/hₒ = −dᵢ/dₒ, the image height, real or virtual, upright
+  or inverted, with the equations substituted. **Sign convention** (§2.4): f > 0 converging,
+  f < 0 diverging; dᵢ > 0 on the side opposite the object (real), dᵢ < 0 on the object's side
+  (virtual); m > 0 upright, m < 0 inverted.
+- The diagram draws the three **principal rays** (1 parallel then through F, 2 through the centre,
+  3 through or toward a focal point then parallel), F and 2F on both sides, and the image: solid
+  for real, dashed for virtual with dashed backward extensions. The horizontal scale fits the scene
+  (±25 to ±65 cm) and the vertical scale is exaggerated, as the caption says.
+- **Edge cases:** with the object at the focal plane the image is at **infinity**: dᵢ = ∞, m
+  undefined, the rays leave parallel, ray 3 is omitted and **no image is drawn**. Approaching the
+  focal plane, dᵢ grows without bound (1010 cm at dₒ = 10.1 cm with f = 10 cm); an image beyond the
+  diagram is described in words, never drawn off-scale. A diverging lens always gives a virtual,
+  upright, smaller image.
+- **Assumptions** listed in the lab: rays only (no diffraction or interference), one wavelength
+  (no dispersion), no intensities, the thin-lens approximation and paraxial rays (no spherical
+  aberration).
+
+**Links** store every input of the chosen part; invalid values (for example f = 0 or a negative
+dₒ) fall back to defaults. Home's *How does a lens form an image?* now appears, because its
+destination exists.
 
 ### Physics sources
 
@@ -1732,6 +1780,7 @@ How the URL is kept up to date:
 | --- | --- |
 | `src/data/anatomy/atlas/relationships.test.ts` | Every relationship names existing structures and a registered source with its quoted basis; explorations list existing structures and relationships; one-side statements apply to both sides except the right-kidney one; no position is stated for the triceps; the drawing does not contradict the stated directions. |
 | `src/features/anatomy/atlas/scene/orientation.test.ts` | The orientation indicator for front, back and left-lateral cameras (body's left to the screen's right in front, anterior to the left in the side view, end-on axes), for the atlas's own view directions. |
+| `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the critical-angle boundary within 0.005°; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
 | `src/data/biology/meiosis.test.ts` | Meiosis uses the mitosis module's 2n = 4; chromosome, chromatid and set counts at all nine stages for all four option combinations; the text states the computed counts; homologs separate in meiosis I and sisters in meiosis II; crossing over gives four distinct products (two without), with only nonsister chromatids exchanging; independent assortment; the comparison's sources and context. One-gene model: probabilities totalling 1 for all nine crosses, 1:2:1, 3:1 and 1:1. Simulation: repeatable per seed, counts adding up, different seeds differing, impossible genotypes never produced, large samples near ¼, zero offspring; the generator stays in [0, 1) and seeds are validated. |
 | `src/chem/stoichiometry.test.ts` | Formula parsing (parentheses, two-letter symbols, malformed input); element-by-element balance, lowest terms, invalid coefficients and charge; every library equation and ionic form balanced in lowest terms with a registered source; type coverage; balancing steps from all 1s to the source's coefficients; molar masses against hand sums; mole ratios; limiting reactant with leftovers, exact ratios (including floating-point residue), zero and invalid amounts; percent yield (zero theoretical yield, above 100 %); significant-figure rounding and charge text. |
 | `src/data/topics.test.ts` | Unique module ids and modules for every subject; every module and topic link canonical and claimed by exactly its own module; the breadcrumb naming each curated topic; old links without module keys; counts from data; questions listed only when their module exists, with canonical links. |
@@ -1899,6 +1948,14 @@ the production build:
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
   analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `optics.e2e.ts`: Snell's law for air → water at 30° (22.04°, toward the normal, no critical
+  angle), normal incidence, equal indices (no reflected ray), the link; no critical angle from
+  lower to higher index at 89.99°, water → air with θc = 48.63°, total internal reflection at 60°
+  (no transmitted ray), the critical-angle button giving θ₂ = 90°, bending away at 45°; the thin
+  lens beyond 2F (15.0 cm, −0.500, real, inverted), inside F (−10.0 cm, virtual, three dashed
+  extensions), at F (∞, m undefined, no image, two rays), at 10.1 cm (1010 cm, described not drawn),
+  a diverging lens (−10 cm, virtual, upright), the sign convention, reload; the Home lens question
+  and invalid links. Mobile and no-WebGL runs cover the lab.
 - `meiosis-inheritance.e2e.ts`: meiosis counts in the table at prophase I, telophase I (two
   haploid cells of 2 chromosomes / 4 chromatids) and telophase II (four cells of 2 / 2), the 2² text,
   sisters staying together in anaphase I, flipping pair B changing which chromosomes travel
@@ -2015,6 +2072,7 @@ src/
   data/guides.ts, data/glossary.ts, data/sources.ts   subject guide content, shared definitions, source registry
   components/SubjectBar.tsx     breadcrumbs and the Topics drawer
   features/*/activity.ts        each subject's activity definition and setup
+  physics/optics.ts             Snell's law, critical angle, thin lens, principal rays
   data/biology/meiosis.ts       meiosis stages built from chromosome data, counts, mitosis comparison
   data/biology/inheritance.ts   one-gene Mendelian model, exact probabilities, seeded simulation
   lib/random.ts                 seeded random-number generator (mulberry32)
@@ -2211,14 +2269,14 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Cell structures (animal, plant, bacterial) | 23 |
 | Cell division stages | 7 |
 | Meiosis stages | 9 |
-| Physics labs | 4 |
+| Physics labs | 5 |
 | Function families | 7 |
 | Surfaces | 4 |
 | Matrix presets | 6 |
 | Glossary terms | 83 |
 | Cross-subject relations | 9 |
-| Registered sources | 121 |
-| Search index entries | 508 |
+| Registered sources | 127 |
+| Search index entries | 509 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.

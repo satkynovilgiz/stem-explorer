@@ -255,3 +255,8 @@ test('meiosis and inheritance need no WebGL', async ({ page }) => {
   await page.goto('/?bsec=inheritance#/biology')
   await expect(page.locator('table.punnett')).toBeVisible()
 })
+
+test('the optics lab needs no WebGL', async ({ page }) => {
+  await page.goto('/?experiment=optics&opt=lens&lens=converging&f=10&do=30#/physics')
+  await expect(page.locator('.readout')).toContainText('15.0 cm')
+})

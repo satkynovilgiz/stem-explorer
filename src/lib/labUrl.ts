@@ -1,5 +1,6 @@
 import { ARRANGEMENTS, CIRCUIT_KEYS, DEFAULT_CIRCUIT, isValidCircuitParam, normalizeCircuitParam, type Arrangement, type CircuitParams } from '../physics/circuit'
 import { DEFAULT_WAVE, isValidWaveParam, normalizeWaveParam, WAVE_KEYS, type WaveKey, type WaveParams } from '../physics/wave'
+import { DEFAULT_OPTICS, normalizeOpticsParam, type OpticsKey, type OpticsParams } from '../physics/optics'
 import { LAB_URL_KEYS, SPRING_URL_KEYS } from './urlState'
 
 /*
@@ -58,6 +59,43 @@ export function parseWaveParams(search: string): { params: WaveParams; invalid: 
 
 export function waveParamEntries(p: WaveParams): Record<string, string> {
   return { experiment: 'wave', ...Object.fromEntries(WAVE_KEYS.map((k) => [WAVE_URL[k], String(p[k])])) }
+}
+
+/*
+ *   ?experiment=optics&opt=refraction&n1=1.0003&n2=1.333&inc=40
+ *   ?experiment=optics&opt=lens&lens=converging&f=10&do=25
+ * Only the chosen part's keys are written.
+ */
+const OPTICS_URL: Record<OpticsKey, string> = { n1: 'n1', n2: 'n2', incidence: 'inc', focal: 'f', objectDistance: 'do' }
+
+export function parseOpticsParams(search: string): { params: OpticsParams; invalid: string[] } {
+  const q = new URLSearchParams(search)
+  const invalid: string[] = []
+  const params = { ...DEFAULT_OPTICS }
+  const opt = q.get('opt')
+  if (opt !== null) {
+    if (opt === 'refraction' || opt === 'lens') params.part = opt
+    else invalid.push('opt')
+  }
+  const lens = q.get('lens')
+  if (lens !== null) {
+    if (lens === 'converging' || lens === 'diverging') params.lens = lens
+    else invalid.push('lens')
+  }
+  for (const key of Object.keys(OPTICS_URL) as OpticsKey[]) {
+    const raw = q.get(OPTICS_URL[key])
+    if (raw === null) continue
+    const v = normalizeOpticsParam(key, num(raw))
+    if (v === null) invalid.push(OPTICS_URL[key])
+    else params[key] = v
+  }
+  return { params, invalid }
+}
+
+export function opticsParamEntries(p: OpticsParams): Record<string, string> {
+  return p.part === 'refraction'
+    ? { experiment: 'optics', opt: 'refraction', n1: String(p.n1), n2: String(p.n2), inc: String(p.incidence) }
+    : { experiment: 'optics', opt: 'lens', lens: p.lens, f: String(p.focal), do: String(p.objectDistance) }
 }
 
 /** `search` with only this lab's keys (other experiments' keys removed, other subjects' kept). */

@@ -56,7 +56,8 @@ function initFromUrl() {
 const SpringLab = lazy(() => import('./spring/SpringLab').then((m) => ({ default: m.SpringLab })))
 const CircuitLab = lazy(() => import('./circuit/CircuitLab').then((m) => ({ default: m.CircuitLab })))
 const WaveLab = lazy(() => import('./wave/WaveLab').then((m) => ({ default: m.WaveLab })))
-const EXPERIMENT_LABEL: Record<PhysicsExperiment, string> = { projectile: 'Projectile', spring: 'Spring–mass', circuit: 'DC circuit', wave: 'Wave' }
+const OpticsLab = lazy(() => import('./optics/OpticsLab').then((m) => ({ default: m.OpticsLab })))
+const EXPERIMENT_LABEL: Record<PhysicsExperiment, string> = { projectile: 'Projectile', spring: 'Spring–mass', circuit: 'DC circuit', wave: 'Wave', optics: 'Optics' }
 
 export function PhysicsExplorer() {
   const [experiment, setExperiment] = useState<PhysicsExperiment>(() => parsePhysicsExperiment(window.location.search).experiment)
@@ -74,7 +75,7 @@ export function PhysicsExplorer() {
         Module
       </span>
       <div className="segmented section-switch section-switch--grid" role="group" aria-label="Experiment">
-        {(['projectile', 'spring', 'circuit', 'wave'] as const).map((e) => (
+        {(['projectile', 'spring', 'circuit', 'wave', 'optics'] as const).map((e) => (
           <button key={e} type="button" className="segmented-option" aria-pressed={experiment === e} onClick={() => choose(e)}>
             {EXPERIMENT_LABEL[e]}
           </button>
@@ -82,10 +83,16 @@ export function PhysicsExplorer() {
       </div>
     </div>
   )
-  if (experiment === 'circuit' || experiment === 'wave') {
+  if (experiment === 'circuit' || experiment === 'wave' || experiment === 'optics') {
     return (
       <Suspense fallback={<p className="muted small panel">Loading the {EXPERIMENT_LABEL[experiment].toLowerCase()} lab…</p>}>
-        {experiment === 'circuit' ? <CircuitLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} /> : <WaveLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} />}
+        {experiment === 'circuit' ? (
+          <CircuitLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} />
+        ) : experiment === 'wave' ? (
+          <WaveLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} />
+        ) : (
+          <OpticsLab experimentSwitch={experimentSwitch} guidePanel={guidePanel} />
+        )}
       </Suspense>
     )
   }

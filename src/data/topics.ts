@@ -256,6 +256,19 @@ export const MODULES: readonly TopicModule[] = [
     current: () => null,
   },
   {
+    id: 'physics.optics',
+    subject: 'physics',
+    name: 'Geometric optics',
+    summary: 'Reflection, refraction and total internal reflection; thin lenses with principal rays',
+    href: linkTo('physics', { experiment: 'optics' }),
+    topics: [
+      { label: 'Reflection and refraction', href: linkTo('physics', { experiment: 'optics', opt: 'refraction', n1: '1.333', n2: '1.0003', inc: '48.63' }) },
+      { label: 'Thin lens', href: linkTo('physics', { experiment: 'optics', opt: 'lens', lens: 'converging', f: '10', do: '5' }) },
+    ],
+    matches: (s) => parsePhysicsExperiment(s).experiment === 'optics',
+    current: (s) => (new URLSearchParams(s).get('opt') === 'lens' ? 'Thin lens' : 'Reflection and refraction'),
+  },
+  {
     id: 'mathematics.functions',
     subject: 'mathematics',
     name: '2D functions',
@@ -335,7 +348,7 @@ const QUESTIONS: readonly Question[] = [
     question: 'How does a lens form an image?',
     answer: 'Principal rays through a thin lens, with real and virtual images.',
     moduleId: 'physics.optics',
-    href: () => linkTo('physics', { experiment: 'optics' }),
+    href: () => linkTo('physics', { experiment: 'optics', opt: 'lens', lens: 'converging', f: '10', do: '30' }),
   },
 ]
 
