@@ -43,7 +43,7 @@ test('select from the list or search, read sourced details, and keep the state t
   await pick(page, 'kidney', 'Left kidney')
   await expect(heading(page)).toHaveText('Left kidney')
   await expect(page.locator('.info')).toContainText('T12–L3')
-  await expect(page.locator('.info').getByRole('link', { name: /25\.3 Gross Anatomy of the Kidney/ })).toHaveAttribute('href', /openstax\.org/)
+  await expect(page.locator('.info').getByRole('link', { name: /25\.3 Gross Anatomy of the Kidney/ }).first()).toHaveAttribute('href', /openstax\.org/)
   await expect(page.locator('.info')).toContainText('Model limitations')
   expect(params(page).get('atlas')).toBe('kidney-left')
 
@@ -88,7 +88,7 @@ test('layers: show, hide and change opacity; regions filter the list and dim the
   // Opacity is a view preference, not part of the link.
   expect(params(page).get('opacity')).toBeNull()
 
-  await nav(page).getByLabel('Region').selectOption('thorax')
+  await nav(page).getByLabel('Region', { exact: true }).selectOption('thorax')
   expect(params(page).get('region')).toBe('thorax')
   // No urinary structure is in the thorax, so that system drops out of the list.
   await expect(nav(page).locator('summary', { hasText: 'Urinary' })).toHaveCount(0)

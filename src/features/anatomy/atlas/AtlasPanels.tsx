@@ -23,6 +23,7 @@ import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
 import { atlasParamEntries, type AtlasView } from '../../../lib/urlState'
 import { SourceLinks } from '../../guide/SourceLinks'
 import { atlasShareState, VIEW_TEXT, type AtlasState } from './atlasState'
+import { RegionPresets, WhereSection } from './WherePanels'
 
 const REPRESENTATION_LABEL = { individual: 'Individual structure', group: 'Grouped representation', container: 'Grouping in the list' } as const
 const VARIANT_LABEL: Record<ReproductiveVariant, string> = { ovarian: 'Typical ovarian configuration', testicular: 'Typical testicular configuration' }
@@ -73,7 +74,7 @@ const inRegion = (s: AtlasStructure, region: RegionId) => region === 'whole-body
 
 /** Re-renders only when what it lists changes (not on every frame of a movement demonstration). */
 export const AtlasNavigator = memo(AtlasNavigatorImpl, (a, b) =>
-  a.state.selected === b.state.selected && a.state.region === b.state.region && a.state.variant === b.state.variant && a.state.layers === b.state.layers && !a.state.tour === !b.state.tour,
+  a.state.selected === b.state.selected && a.state.region === b.state.region && a.state.variant === b.state.variant && a.state.layers === b.state.layers && !a.state.tour === !b.state.tour && !a.state.relation === !b.state.relation,
 )
 
 function AtlasNavigatorImpl({ state, onSelect, onRegion }: { state: AtlasState; onSelect: (id: string) => void; onRegion: (r: RegionId) => void }) {
@@ -119,6 +120,7 @@ function AtlasNavigatorImpl({ state, onSelect, onRegion }: { state: AtlasState; 
         )
       ) : (
         <>
+          <RegionPresets region={state.region} onRegion={onRegion} disabled={!!state.tour || !!state.relation} />
           <label className="param-label" htmlFor={`${id}-region`}>
             Region
           </label>
@@ -440,6 +442,9 @@ export function AtlasDetails({
             {s.function}
             <SourceLinks ids={s.sources} />
           </p>
+        </Section>
+        <Section title="Where is it?">
+          <WhereSection s={s} state={state} onSelect={onSelect} />
         </Section>
         <dl className="readout atlas-facts">
           <div>

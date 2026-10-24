@@ -6,6 +6,7 @@ import { boundsOf, getRegion, getSystem, type AtlasStructure, type RegionId, typ
 import type { AtlasView } from '../../../../lib/urlState'
 import { VIEW_DIRECTIONS } from '../atlasState'
 import type { DrawnStructure } from '../visibility'
+import { axisEnds, END_ON } from './orientation'
 
 export interface AtlasSceneProps {
   drawn: readonly DrawnStructure[]
@@ -42,7 +43,7 @@ function ShapeMesh({ shape, children }: { shape: Shape; children: React.ReactNod
     case 'ellipsoid':
       return (
         <mesh position={shape.center} scale={shape.radii} rotation={shape.rotation ?? [0, 0, 0]}>
-          <sphereGeometry args={[1, 24, 16]} />
+          <sphereGeometry args={shape.dome ? [1, 32, 10, 0, Math.PI * 2, 0, Math.PI / 2] : [1, 24, 16]} />
           {children}
         </mesh>
       )
@@ -325,6 +326,94 @@ function LabelLayer({ labels, elements }: { labels: readonly Label[]; elements: 
   )
 }
 
+/* ---------- Orientation indicator ---------- */
+
+type IndicatorElements = { lines: Map<string, SVGLineElement>; texts: Map<string, SVGTextElement> }
+const AXES = [
+  ['S', 'I'],
+  ['L', 'R'],
+  ['A', 'P'],
+] as const
+const C = 34
+const R = 20
+
+/** Moves the indicator's lines and letters to match this frame's camera (DOM writes only, no React state). */
+function OrientationProjector({ elements }: { elements: RefObject<IndicatorElements> }) {
+  useFrame(({ camera }) => {
+    const els = elements.current
+    if (!els) return
+    camera.updateMatrixWorld()
+    const m = camera.matrixWorldInverse.elements
+    const ends = new Map(axisEnds([m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10]]).map((e) => [e.label, e]))
+    for (const [pos, neg] of AXES) {
+      const p = ends.get(pos)!
+      const len = Math.hypot(p.x, p.y)
+      const line = els.lines.get(pos)
+      const endOn = len < END_ON
+      if (line) {
+        line.setAttribute('x1', String(C - p.x * R))
+        line.setAttribute('y1', String(C + p.y * R))
+        line.setAttribute('x2', String(C + p.x * R))
+        line.setAttribute('y2', String(C - p.y * R))
+        line.style.visibility = endOn ? 'hidden' : 'visible'
+      }
+      for (const label of [pos, neg]) {
+        const e = ends.get(label)!
+        const t = els.texts.get(label)
+        if (!t) continue
+        if (endOn) {
+          // Seen end-on: only the end facing the viewer is shown, beside the centre.
+          t.style.visibility = e.depth > 0 ? 'visible' : 'hidden'
+          t.setAttribute('x', String(C + 9))
+          t.setAttribute('y', String(C - 9))
+        } else {
+          t.style.visibility = 'visible'
+          t.setAttribute('x', String(C + (e.x / len) * (R + 8)))
+          t.setAttribute('y', String(C - (e.y / len) * (R + 8)))
+        }
+        t.setAttribute('opacity', e.depth < -0.5 ? '0.55' : '1')
+      }
+    }
+  })
+  return null
+}
+
+/** Compact orientation indicator: superior/inferior, the body's left/right, anterior/posterior. */
+function OrientationIndicator({ elements }: { elements: RefObject<IndicatorElements> }) {
+  return (
+    <div className="orientation-indicator" aria-hidden="true">
+      <svg viewBox="0 0 68 68" width="68" height="68">
+        <circle cx={C} cy={C} r={2.5} className="orientation-center" />
+        {AXES.map(([pos]) => (
+          <line
+            key={pos}
+            className={`orientation-axis is-${pos}`}
+            ref={(el) => {
+              if (el) elements.current.lines.set(pos, el)
+              else elements.current.lines.delete(pos)
+            }}
+          />
+        ))}
+        {AXES.flat().map((label) => (
+          <text
+            key={label}
+            className={`orientation-letter is-${label}`}
+            textAnchor="middle"
+            dominantBaseline="central"
+            ref={(el) => {
+              if (el) elements.current.texts.set(label, el)
+              else elements.current.texts.delete(label)
+            }}
+          >
+            {label}
+          </text>
+        ))}
+      </svg>
+      <span className="orientation-key">S/I superior/inferior · L/R body’s left/right · A/P anterior/posterior</span>
+    </div>
+  )
+}
+
 /* ---------- Tour marker ---------- */
 
 const MARKER_COLORS = { route: '#f5f7f8', contribution: '#f5c26b' } as const
@@ -384,6 +473,7 @@ export default function AtlasScene(props: AtlasSceneProps) {
   const [hovered, setHovered] = useState(false)
   useCursor(hovered)
   const labelElements = useRef<Map<string, HTMLElement>>(new Map())
+  const indicator = useRef<IndicatorElements>({ lines: new Map(), texts: new Map() })
 
   const labels = useMemo(() => {
     const out: Label[] = showLabels ? [...ORIENTATION] : ORIENTATION.filter((l) => l.key === 'left' || l.key === 'right')
@@ -445,8 +535,10 @@ export default function AtlasScene(props: AtlasSceneProps) {
         {marker && <TourMarker key={marker.key} points={marker.points} kind={marker.kind} reducedMotion={reducedMotion} />}
         <CameraRig view={view} region={region} selected={selected} demo={demo} frame={frame} resetToken={resetToken} focusToken={focusToken} reducedMotion={reducedMotion} />
         <LabelProjector labels={labels} elements={labelElements} />
+        <OrientationProjector elements={indicator} />
       </Canvas>
       <LabelLayer labels={labels} elements={labelElements} />
+      <OrientationIndicator elements={indicator} />
     </>
   )
 }

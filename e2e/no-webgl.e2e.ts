@@ -230,3 +230,15 @@ test('presentation export explains the failure when there is no picture', async 
   await page.keyboard.press('Escape')
   await expect(page.locator('.topnav')).toBeVisible()
 })
+
+test('Anatomy Where is it? and relationship explorations work as text without WebGL', async ({ page }) => {
+  await page.goto('/?bview=front#/anatomy')
+  await waitForViewport(page)
+  const where = page.getByRole('region', { name: 'Where is it?' })
+  await where.getByRole('searchbox').fill('radius')
+  await where.getByRole('button', { name: /^Left radius/ }).click()
+  await expect(page.locator('#atlas-structure-heading')).toHaveText('Left radius')
+  await expect(page.locator('.where-section')).toContainText('the lateral bone of the forearm')
+  await page.getByRole('button', { name: /Diaphragm, lungs and the thoracic cavity/ }).click()
+  await expect(page.locator('.relation-panel.is-active')).toContainText('The diaphragm forms the floor of the thoracic cavity')
+})

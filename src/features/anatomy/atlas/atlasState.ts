@@ -2,6 +2,7 @@ import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
 import { ATLAS_SYSTEMS, findStructure, getRegion, getSystem, type RegionId, type ReproductiveVariant, type SystemId } from '../../../data/anatomy/atlas'
 import { findMovement, type MovementId, type Side } from '../../../data/anatomy/atlas/movements'
 import { findTour, type AtlasTour } from '../../../data/anatomy/atlas/tours'
+import { findRelationExploration, type RelationExploration } from '../../../data/anatomy/atlas/relationships'
 import type { AtlasUrlState, AtlasView } from '../../../lib/urlState'
 
 export interface AtlasState {
@@ -20,13 +21,21 @@ export interface AtlasState {
   demo: { id: MovementId; side: Side; t: number } | null
   /** A guided tour in progress (never stored in links); `before` is restored on exit. */
   tour: { id: AtlasTour['id']; step: number; before: AtlasSnapshot } | null
+  /** A curated relationship exploration (never stored in links); `before` is restored on exit. */
+  relation: { id: RelationExploration['id']; before: AtlasSnapshot } | null
+  /** Why the last selection changed the view (a hidden layer shown, the region cleared), in words. */
+  revealNote: string | null
   announcement: string
 }
 
-export type AtlasSnapshot = Omit<AtlasState, 'tour' | 'announcement'>
+export type AtlasSnapshot = Omit<AtlasState, 'tour' | 'relation' | 'announcement'>
 
 export type AtlasAction =
   | { type: 'select'; id: string }
+  /** "Where is it?": select a structure and focus its body region. */
+  | { type: 'locate'; id: string }
+  | { type: 'startRelation'; id: RelationExploration['id'] }
+  | { type: 'exitRelation' }
   | { type: 'clearSelection' }
   | { type: 'isolate' }
   | { type: 'isolatePair' }
@@ -70,6 +79,8 @@ export function initialAtlasState(url: AtlasUrlState): AtlasState {
     variant: url.variant,
     demo: null,
     tour: null,
+    relation: null,
+    revealNote: null,
     announcement: '',
   }
   return url.structureId ? reveal(base, url.structureId) : base
@@ -84,17 +95,21 @@ function reveal(state: AtlasState, id: string): AtlasState {
   const s = findStructure(id)
   if (!s) return state
   const notes: string[] = []
+  const why: string[] = []
   let { layers, variant, region } = state
   const systems = [s.system, ...(s.alsoIn ?? [])]
   if (!systems.some((sys) => layers.includes(sys))) {
     layers = ordered([...layers, s.system])
     notes.push(`${getSystem(s.system).name} layer shown`)
+    why.push(`the ${getSystem(s.system).name.toLowerCase()} layer was hidden, so it has been turned on`)
   }
   if (s.variant && variant !== s.variant) {
     variant = s.variant
     notes.push(`reproductive layer showing the typical ${s.variant} configuration`)
+    why.push(`it belongs to the typical ${s.variant} configuration, which is now shown`)
   }
   if (region !== 'whole-body' && s.region !== region && s.region !== 'whole-body') {
+    why.push(`it lies outside the ${getRegion(region).name.toLowerCase()} region, so the region filter has been cleared`)
     region = 'whole-body'
     notes.push('region filter cleared')
   }
@@ -106,9 +121,13 @@ function reveal(state: AtlasState, id: string): AtlasState {
     selected: id,
     isolated: state.isolated && state.selected === id,
     isolatePair: state.isolatePair && state.selected === id,
+    revealNote: why.length ? `To show ${s.name}: ${why.join('; ')}.` : null,
     announcement: `${s.name} selected.${notes.length ? ` ${notes.join('; ')}.` : ''}`,
   }
 }
+
+/** Regions a structure can be focused in ("Where is it?"); structures spread over the body keep the whole body. */
+const FOCUSABLE: readonly RegionId[] = ['head-neck', 'thorax', 'abdomen', 'pelvis', 'back', 'upper-limb', 'lower-limb']
 
 const tourStepText = (tourId: AtlasTour['id'], index: number) => {
   const t = findTour(tourId)!
@@ -116,18 +135,52 @@ const tourStepText = (tourId: AtlasTour['id'], index: number) => {
   return `Step ${index + 1} of ${t.steps.length}: ${step.title}. ${step.text}`
 }
 
-const snapshot = ({ tour: _t, announcement: _a, ...rest }: AtlasState): AtlasSnapshot => rest
+const snapshot = ({ tour: _t, relation: _r, announcement: _a, ...rest }: AtlasState): AtlasSnapshot => rest
 
 export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState {
   // While a tour runs, only tour navigation and view-only changes apply; everything else waits.
   if (state.tour && !['tourNext', 'tourPrevious', 'tourGoTo', 'exitTour', 'replace', 'setView', 'setOpacity'].includes(action.type)) {
-    return action.type === 'select' ? { ...state, announcement: 'Exit the tour to select structures.' } : state
+    return action.type === 'select' || action.type === 'locate' ? { ...state, announcement: 'Exit the tour to select structures.' } : state
+  }
+  // A relationship exploration likewise keeps its view until it is closed.
+  if (state.relation && !['exitRelation', 'replace', 'setView', 'setOpacity'].includes(action.type)) {
+    return action.type === 'select' || action.type === 'locate' ? { ...state, announcement: 'Close the relationship exploration to select other structures.' } : state
   }
   switch (action.type) {
     case 'replace':
       return { ...action.state, announcement: action.announcement }
     case 'select':
       return findStructure(action.id) ? { ...reveal(state, action.id), isolated: false, isolatePair: false } : state
+    case 'locate': {
+      const s = findStructure(action.id)
+      if (!s) return state
+      const next = { ...reveal({ ...state, demo: null }, action.id), isolated: false, isolatePair: false }
+      const region = FOCUSABLE.includes(s.region) ? s.region : 'whole-body'
+      return {
+        ...next,
+        region,
+        announcement: `${next.announcement} ${region === 'whole-body' ? 'Shown in the whole body.' : `Focused on the ${getRegion(region).name.toLowerCase()}.`}`,
+      }
+    }
+    case 'startRelation': {
+      const e = findRelationExploration(action.id)
+      if (!e) return state
+      const before = snapshot({ ...state, demo: null })
+      const layers = ordered(['integumentary', ...e.systems])
+      return {
+        ...state,
+        demo: null,
+        isolated: false,
+        isolatePair: false,
+        layers,
+        region: e.region,
+        selected: e.focus[0],
+        relation: { id: e.id, before },
+        announcement: `${e.title}: ${e.focus.length} structures highlighted. ${e.question}`,
+      }
+    }
+    case 'exitRelation':
+      return state.relation ? { ...state.relation.before, tour: null, relation: null, announcement: 'Relationship exploration closed; your previous view is back.' } : state
     case 'clearSelection':
       return { ...state, selected: null, isolated: false, isolatePair: false, announcement: 'Selection cleared.' }
     case 'isolate':
@@ -174,7 +227,7 @@ export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState
       return { ...state, tour: { ...state.tour, step: index }, announcement: tourStepText(state.tour.id, index) }
     }
     case 'exitTour':
-      return state.tour ? { ...state.tour.before, tour: null, announcement: 'Tour ended; your previous view is back.' } : state
+      return state.tour ? { ...state.tour.before, tour: null, relation: null, announcement: 'Tour ended; your previous view is back.' } : state
     case 'setView':
       return { ...state, view: action.view, announcement: `${action.view === 'front' ? 'Front (anterior)' : action.view === 'back' ? 'Back (posterior)' : 'Side (left lateral)'} view.` }
     case 'toggleLayer': {
@@ -219,7 +272,7 @@ export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState
 
 /** What links, saves and notes store: during a tour, the view the tour will restore. */
 export function atlasShareState(state: AtlasState): AtlasUrlState {
-  const s = state.tour ? state.tour.before : state
+  const s = state.tour ? state.tour.before : state.relation ? state.relation.before : state
   return { structureId: s.selected, view: s.view, layers: s.layers, region: s.region, variant: s.variant }
 }
 

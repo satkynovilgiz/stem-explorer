@@ -109,6 +109,8 @@ type BorderSide = { width: number; color: string; style: string }
 type Paint =
   | { kind: 'box'; box: Box; opacity: number; fill: string | null; radius: number; borders: [BorderSide, BorderSide, BorderSide, BorderSide] }
   | { kind: 'text'; box: Box; opacity: number; text: string; font: string; color: string; letterSpacing: string }
+  /** An inline SVG overlay (an indicator drawn in SVG), serialized at capture time. */
+  | { kind: 'svg'; box: Box; opacity: number; markup: string; image?: HTMLImageElement }
 
 /** One overlay item (a label, a badge, a legend) as text with its box in picture coordinates. */
 export interface Annotation {
@@ -129,7 +131,22 @@ function relative(r: DOMRect, origin: DOMRect): Box {
 
 /** Collects box and text paints for an element and its descendants (HTML only; icons are skipped). */
 function collect(el: Element, origin: DOMRect, opacity: number, out: Paint[]) {
-  if (el instanceof SVGElement || el.matches(SKIP)) return
+  if (el.matches(SKIP)) return
+  if (el instanceof SVGSVGElement && !el.closest('button')) {
+    // Overlay graphics (an orientation indicator) are copied with their current geometry; icons
+    // inside text overlays are tiny and skipped below.
+    const box = relative(el.getBoundingClientRect(), origin)
+    const cs = getComputedStyle(el)
+    if (cs.display === 'none' || cs.visibility !== 'visible' || box.w < 24 || box.h < 24) return
+    const clone = el.cloneNode(true) as SVGSVGElement
+    inlineStyles(el, clone)
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    clone.setAttribute('width', String(box.w))
+    clone.setAttribute('height', String(box.h))
+    out.push({ kind: 'svg', box, opacity: opacity * (Number.parseFloat(cs.opacity) || 0), markup: new XMLSerializer().serializeToString(clone) })
+    return
+  }
+  if (el instanceof SVGElement) return
   const cs = getComputedStyle(el)
   if (cs.display === 'none') return
   const alpha = opacity * (Number.parseFloat(cs.opacity) || 0)
@@ -250,7 +267,9 @@ function drawPaints(ctx: CanvasRenderingContext2D, paints: readonly Paint[]) {
     ctx.save()
     ctx.globalAlpha = p.opacity
     const { x, y, w, h } = p.box
-    if (p.kind === 'box') {
+    if (p.kind === 'svg') {
+      if (p.image) ctx.drawImage(p.image, x, y, w, h)
+    } else if (p.kind === 'box') {
       if (p.fill) {
         ctx.fillStyle = p.fill
         ctx.beginPath()
@@ -326,6 +345,16 @@ const COLORS = { bg: '#0f1214', text: '#e8ecef', muted: '#a3adb5', link: '#6fe0d
 export async function exportPng(visual: HTMLCanvasElement | SVGSVGElement, caption: ExportCaption): Promise<{ blob: Blob; layout: ExportLayout }> {
   const snap = await snapshotStage(visual)
   const { width, height } = snap
+  // SVG overlays were serialized at capture time; decode them now (their content is already fixed).
+  for (const p of snap.paints) {
+    if (p.kind !== 'svg') continue
+    const url = URL.createObjectURL(new Blob([p.markup], { type: 'image/svg+xml' }))
+    try {
+      p.image = await loadImage(url)
+    } finally {
+      URL.revokeObjectURL(url)
+    }
+  }
   const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1))
 
   const out = document.createElement('canvas')

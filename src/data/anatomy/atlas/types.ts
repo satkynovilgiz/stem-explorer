@@ -29,7 +29,15 @@ export type RegionId = 'head-neck' | 'thorax' | 'abdomen' | 'pelvis' | 'back' | 
 export type ReproductiveVariant = 'ovarian' | 'testicular'
 
 export type Shape =
-  | { kind: 'ellipsoid'; center: Vec3; radii: Vec3; /** Euler angles in radians (XYZ). */ rotation?: Vec3 }
+  | {
+      kind: 'ellipsoid'
+      center: Vec3
+      radii: Vec3
+      /** Euler angles in radians (XYZ). */
+      rotation?: Vec3
+      /** Only the upper half (a dome whose base is centred on `center`), e.g. the diaphragm. */
+      dome?: boolean
+    }
   | { kind: 'capsule'; from: Vec3; to: Vec3; radius: number }
   | { kind: 'box'; center: Vec3; size: Vec3; rotation?: Vec3 }
   /** A smooth tube through the points (vessels, nerves, airways, ribs, the gut). */

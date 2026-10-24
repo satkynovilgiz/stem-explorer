@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ATLAS_STRUCTURES, ATLAS_SYSTEMS } from './anatomy/atlas'
 import { MOVEMENTS } from './anatomy/atlas/movements'
 import { TOURS } from './anatomy/atlas/tours'
+import { RELATION_EXPLORATIONS, RELATIONSHIPS } from './anatomy/atlas/relationships'
 import { DIVISION_STAGES } from './biology/mitosis'
 import { ISOTOPES } from './chemistry/atomic'
 import { GLOSSARY } from './glossary'
@@ -21,6 +22,8 @@ describe('README content inventory', () => {
       'Atlas systems': ATLAS_SYSTEMS.length,
       'Atlas tours': TOURS.length,
       'Movement demonstrations': MOVEMENTS.length,
+      'Sourced anatomical relationships': RELATIONSHIPS.length,
+      'Relationship explorations': RELATION_EXPLORATIONS.length,
       'Heart module structures': count('heart:'),
       Elements: count('element:'),
       Molecules: count('molecule:'),

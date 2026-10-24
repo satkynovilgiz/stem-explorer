@@ -1,6 +1,7 @@
 import { ATLAS_STRUCTURES, descendantsOf, findStructure, shownWithVariant, type AtlasStructure, type Shape } from '../../../data/anatomy/atlas'
 import { angleAt, demoMembers, demoPivot, findMovement, rotateShape, stretchShape } from '../../../data/anatomy/atlas/movements'
 import { findTour } from '../../../data/anatomy/atlas/tours'
+import { findRelationExploration } from '../../../data/anatomy/atlas/relationships'
 import type { AtlasState } from './atlasState'
 
 export interface DrawnStructure {
@@ -31,7 +32,25 @@ export const DIMMED_OPACITY = 0.08
  * What the scene draws for a given state. Kept free of Three.js so it can be unit tested and so
  * the HTML list can say exactly what is visible.
  */
-export function drawnStructures(state: Pick<AtlasState, 'selected' | 'isolated' | 'isolatePair' | 'layers' | 'opacity' | 'region' | 'variant' | 'demo' | 'tour'>): DrawnStructure[] {
+export function drawnStructures(state: Pick<AtlasState, 'selected' | 'isolated' | 'isolatePair' | 'layers' | 'opacity' | 'region' | 'variant' | 'demo' | 'tour'> & Partial<Pick<AtlasState, 'relation'>>): DrawnStructure[] {
+  if (state.relation) {
+    // A relationship exploration: its structures numbered in reading order, the rest of its systems faint.
+    const e = findRelationExploration(state.relation.id)!
+    const order = new Map(e.focus.map((id, i) => [id, i + 1]))
+    const out: DrawnStructure[] = []
+    for (const s of ATLAS_STRUCTURES) {
+      if (s.shapes.length === 0 || !shownWithVariant(s, state.variant)) continue
+      const n = order.get(s.id)
+      if (n) {
+        out.push({ structure: s, opacity: 1, dimmed: false, highlight: true, label: `${n} · ${s.name}`, labelStyle: 'primary' })
+      } else if ([s.system, ...(s.alsoIn ?? [])].some((sys) => e.systems.includes(sys))) {
+        out.push({ structure: s, opacity: TOUR_OTHER_OPACITY, dimmed: true })
+      } else if (s.system === 'integumentary') {
+        out.push({ structure: s, opacity: CONTEXT_OPACITY.integumentary, dimmed: true })
+      }
+    }
+    return out
+  }
   if (state.tour) {
     const tour = findTour(state.tour.id)!
     const step = tour.steps[state.tour.step]

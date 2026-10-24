@@ -389,8 +389,8 @@ export const RESPIRATORY: AtlasStructure[] = [
     description: 'A dome-shaped skeletal muscle separating the thoracic and abdominal cavities. Openings in it let the inferior vena cava, the esophagus, the aorta and other structures pass through.',
     function: 'Its alternate contraction and relaxation changes the volume of the thoracic cavity during breathing.',
     representation: 'individual',
-    shapes: [{ kind: 'ellipsoid', center: [0, 6.15, -0.02], radii: [1.0, 0.2, 0.6] }],
-    limitations: 'A flattened dome; its two domes, central tendon and openings are not drawn.',
+    shapes: [{ kind: 'ellipsoid', center: [0, 6.0, -0.02], radii: [1.0, 0.32, 0.6], dome: true }],
+    limitations: 'One smooth dome under the lungs and heart, with the liver beneath it; its right and left domes, central tendon and openings are not drawn, and it does not move.',
     sources: ['ap-11-4'],
     related: [
       { id: 'lung-left', relation: 'Below' },

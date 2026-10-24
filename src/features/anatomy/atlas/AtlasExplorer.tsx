@@ -2,7 +2,7 @@ import { MousePointerClick } from 'lucide-react'
 import { lazy, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { Tabs } from '../../../components/Tabs'
 import { ViewportShell } from '../../../components/ViewportShell'
-import { boundsOf, findStructure, getSystem, type Vec3 } from '../../../data/anatomy/atlas'
+import { boundsOf, findStructure, getSystem, type RegionId, type Vec3 } from '../../../data/anatomy/atlas'
 import { findTour } from '../../../data/anatomy/atlas/tours'
 import { demoPivot, findMovement } from '../../../data/anatomy/atlas/movements'
 import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
@@ -16,6 +16,9 @@ import { AtlasDetails, AtlasInventory, AtlasNavigator, AtlasToolbar, LayerPanel 
 import { LimbComparison, MovementPanel } from './MusculoskeletalPanels'
 import { AlveolusView, NephronView } from './SchematicViews'
 import { AtlasModules, AtlasTourBar, type CloseUp } from './TourPanels'
+import { BodyOverview } from './BodyOverview'
+import { RelationPanel, WhereIsIt } from './WherePanels'
+import { findRelationExploration } from '../../../data/anatomy/atlas/relationships'
 import { atlasReducer, atlasShareState, DEFAULT_OPACITY, initialAtlasState, VIEW_TEXT, type AtlasState } from './atlasState'
 import { drawnStructures } from './visibility'
 
@@ -84,7 +87,25 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
     if (isMobile) setMobileTab('details')
   }
 
-  const navigator = <AtlasNavigator state={state} onSelect={select} onRegion={(region) => dispatch({ type: 'setRegion', region })} />
+  const setRegion = (region: RegionId) => dispatch({ type: 'setRegion', region })
+  const navigator = <AtlasNavigator state={state} onSelect={select} onRegion={setRegion} />
+  const locate = (id: string) => {
+    dispatch({ type: 'locate', id })
+    setFocusToken((n) => n + 1)
+    if (isMobile) setMobileTab('details')
+  }
+  const where = <WhereIsIt state={state} onLocate={locate} />
+  const relations = (
+    <RelationPanel
+      state={state}
+      onStart={(id) => {
+        setPlaying(false)
+        dispatch({ type: 'startRelation', id })
+      }}
+      onExit={() => dispatch({ type: 'exitRelation' })}
+      onSelect={select}
+    />
+  )
   const layers = (
     <LayerPanel
       state={state}
@@ -131,15 +152,18 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
   // Tour framing and marker for the current step.
   const tour = state.tour ? findTour(state.tour.id)! : null
   const tourStep = tour && state.tour ? tour.steps[state.tour.step] : null
+  const relation = state.relation ? findRelationExploration(state.relation.id)! : null
   const frame = useMemo(() => {
-    if (!tourStep || !state.tour) return null
-    const boxes = tourStep.focus.map((id) => boundsOf(id)).filter((b) => b !== null)
+    const focusIds = relation ? relation.focus : tourStep && state.tour ? tourStep.focus : null
+    if (!focusIds) return null
+    const boxes = focusIds.map((id) => boundsOf(id)).filter((b) => b !== null)
     if (boxes.length === 0) return null
     const min = [0, 1, 2].map((i) => Math.min(...boxes.map((b) => b!.min[i]))) as unknown as Vec3
     const max = [0, 1, 2].map((i) => Math.max(...boxes.map((b) => b!.max[i]))) as unknown as Vec3
     const center: Vec3 = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2]
-    return { key: `${state.tour.id}:${state.tour.step}`, center, size: Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) }
-  }, [tourStep, state.tour])
+    const key = relation ? `relation:${relation.id}` : `${state.tour!.id}:${state.tour!.step}`
+    return { key, center, size: Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) }
+  }, [tourStep, state.tour, relation])
   const marker =
     tourStep?.path && state.tour && tourStep.kind !== 'process'
       ? { key: `${state.tour.id}:${state.tour.step}`, points: tourStep.path, kind: tourStep.kind }
@@ -169,12 +193,14 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       extra={
         isMobile ? (
           <>
+            {!state.relation && relations}
             {modules}
             {compare}
             {inventory}
           </>
         ) : (
           <>
+            {!state.relation && relations}
             {modules}
             {movement}
             {layers}
@@ -195,7 +221,7 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       renderScene={(callbacks) => (
         <AtlasScene
           drawn={drawn}
-          selected={state.selected}
+          selected={state.relation ? null : state.selected}
           demo={state.demo ? { id: state.demo.id, side: state.demo.side, pivot: demoPivot(findMovement(state.demo.id)!, state.demo.side) } : null}
           frame={frame}
           marker={marker}
@@ -222,6 +248,8 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
             <span className="viewport-badge-mode">
               {tour
                 ? `Tour: ${tour.title} · conceptual route, not timed · `
+                : relation
+                ? `${relation.title} · numbered structures · `
                 : state.demo
                 ? `${findMovement(state.demo.id)!.name} (${state.demo.side}) · conceptual motion, not a measured range · `
                 : state.isolated && state.selected
@@ -230,6 +258,7 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
               Schematic shapes, not to scale
             </span>
           </div>
+          <BodyOverview region={state.region} onRegion={setRegion} disabled={!!state.tour || !!state.relation} />
           <p className="viewport-hint">
             <MousePointerClick size={14} aria-hidden="true" />
             Drag to rotate · Scroll or pinch to zoom · Click a structure
@@ -271,6 +300,7 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
           {tourBar}
         </div>
         {closeUpPanel}
+        {state.relation && relations}
         {guidePanel}
         <Tabs
           label="Body atlas panels"
@@ -279,7 +309,16 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
           onChange={setMobileTab}
           tabs={[
             { id: 'details', label: 'Details', content: details },
-            { id: 'structures', label: 'Structures', content: navigator },
+            {
+              id: 'structures',
+              label: 'Structures',
+              content: (
+                <>
+                  {where}
+                  {navigator}
+                </>
+              ),
+            },
             { id: 'layers', label: 'Layers', content: <div className="panel">{layers}</div> },
             { id: 'movement', label: 'Movement', content: <div className="panel">{movement}</div> },
           ]}
@@ -294,6 +333,7 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       {layerNote}
       <aside className="chem-side chem-side--left">
         {moduleSwitch}
+        {where}
         {navigator}
       </aside>
       <div className="chem-stage physics-stage">
@@ -302,6 +342,7 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       </div>
       <aside ref={rightPanel} className="chem-side chem-side--right">
         {guidePanel}
+        {state.relation && relations}
         {closeUpPanel ?? details}
       </aside>
     </div>
@@ -319,6 +360,10 @@ function atlasExportNotes(state: AtlasState, showLabels: boolean): [string[], st
     const tour = findTour(state.tour.id)!
     annotations.push(`Tour “${tour.title}”, step ${state.tour.step + 1} of ${tour.steps.length}: ${tour.steps[state.tour.step].title} (conceptual route, not timed)`)
     notRestored.push('the tour (the link restores the view from before the tour)')
+  }
+  if (state.relation) {
+    annotations.push(`Relationship exploration: ${findRelationExploration(state.relation.id)!.title} (structures numbered in reading order)`)
+    notRestored.push('the relationship exploration (the link restores the view from before it)')
   }
   if (state.demo) {
     annotations.push(`${findMovement(state.demo.id)!.name} (${state.demo.side}), conceptual motion, not a measured range`)

@@ -202,6 +202,69 @@ system** (that layer plus the skin for context), a tour, and a close-up where on
 - Every tour has *All steps as text*. Close-ups have the same Previous/Next/steps controls and are
   plain SVG, so tours and close-ups work without WebGL.
 
+**Where is it?** (`src/features/anatomy/atlas/WherePanels.tsx`, data in
+`src/data/anatomy/atlas/relationships.ts`):
+- **Find a structure** in the *Where is it?* panel (left column; on phones, the *Structures* tab).
+  Choosing a result selects it, focuses its body region (head and neck, thorax, abdomen, pelvis,
+  back, upper or lower limbs; structures spread over the body keep the whole body) and frames
+  it with the camera.
+- **In words.** The details panel's *Where is it?* section says the region, the body side and
+  where that side appears in the current view (for example *on the body's left (on your right in
+  this front view)*), and the system. Everything spatial is also available as text, so it works
+  without WebGL.
+- **Stated relationships.** Directional statements (superior/inferior, anterior/posterior,
+  medial/lateral, proximal/distal, superficial/deep; the terms as defined in A&P 2e §1.6) are
+  given **only where a cited section states them in words**. Each item shows the term as a
+  labelled badge, the statement, a button to select the other structure, the source link and
+  *Where in the source* (the section and subsection it paraphrases; no source text is copied). The
+  one derived statement (the humerus is proximal to the radius and ulna) says how it follows from
+  the source and the §1.6 definition. Structures with no stated relationship say so; nothing is
+  read off the schematic geometry. Sources: §1.6, 8.2, 9.6, 11.5, 22.2, 22.3, 25.2, 25.3.
+- **Also in this region** lists other structures with the same region tag, explicitly *not*
+  measured distances.
+- **Hidden layers.** Selecting a structure whose layer is hidden still turns the layer on (as
+  before), and now the details panel says so in a highlighted note (*To show Left biceps
+  brachii: the muscular layer was hidden, so it has been turned on.*). The same note explains a
+  cleared region filter or a reproductive configuration being shown.
+
+**Coordinated views.**
+- **Region presets**: *Whole body, Head and neck, Thorax, Abdomen, Pelvis, Upper limbs, Lower
+  limbs* as pressed buttons above the full *Region* list (which also has the back). The region
+  stays in links (`region=`).
+- **Whole-body overview**: a small flat front-view silhouette in the viewport's lower-left corner
+  outlines the focused region, so a regional close-up keeps its place in the body. Clicking a
+  region on it does what the preset does. It is decorative for assistive technology (the presets
+  are the accessible equivalent) and hidden below 480 px.
+- **Orientation indicator**: a compact axis glyph (lower right) with S/I, L/R (body's left and
+  right) and A/P, recomputed from the camera every frame (`scene/orientation.ts`, unit tested
+  against the front, back and side views). An axis seen end-on shows only the end facing you. It
+  is drawn in SVG and included in PNG exports.
+- Selection stays synchronized between the model, the list and the details, as before.
+
+**Relationship explorations** (panel *Relationships*): *Diaphragm, lungs and the thoracic
+cavity*, *Kidney, ureter and bladder*, and *Biceps, triceps, elbow and forearm bones*. Each opens
+with a question, shows its systems with the skin for context, focuses the region, and numbers its
+structures in the view (*1 · Left kidney*) and in a list. Its relationships come from the same
+sourced list, with a *What the model can't show* note (for example: the pleurae and mediastinum
+are not drawn; the bladder is shown at one size although it distends). The triceps item says the
+cited text does not state its position in words, so none is given. While an exploration is open,
+other selections wait, links and saves keep the view from before it, and *Close and restore my
+view* brings that view back. Explorations are never stored in links (exports say so).
+
+**Model readability changes in this release.**
+- The diaphragm is now a dome (an upper half-ellipsoid, new `dome` option on ellipsoid shapes)
+  under the lungs and heart with the liver beneath it, instead of a flat disc that cut through
+  the lung bases. Its limitation text was updated.
+- Unit tests check that the drawing does not contradict the stated directions (lungs above the
+  diaphragm, kidneys beside the spine with the right one lower, adrenal glands above the
+  kidneys, the bladder and urethra below them, the ulna medial to the radius, the biceps in front
+  of the humerus and the brachialis behind the biceps). These checks don't make the shapes
+  accurate; they only catch contradictions.
+- Long button labels in side panels now wrap instead of widening the panel (the right panel was
+  12 px wider than its column).
+- **Assets:** no new assets. Every new shape, the overview silhouette and the indicator are drawn
+  from code in this repository, so there is nothing third-party to license or redistribute.
+
 **Reproductive anatomy** is off by default. Turning it on requires choosing **Typical ovarian
 configuration** or **Typical testicular configuration** (OpenStax's terms; the chapter describes the
 typical anatomy of XX and XY individuals). The panel says neither is universal and that intersex
@@ -1549,6 +1612,8 @@ How the URL is kept up to date:
 
 | File | What it checks |
 | --- | --- |
+| `src/data/anatomy/atlas/relationships.test.ts` | Every relationship names existing structures and a registered source with its quoted basis; explorations list existing structures and relationships; one-side statements apply to both sides except the right-kidney one; no position is stated for the triceps; the drawing does not contradict the stated directions. |
+| `src/features/anatomy/atlas/scene/orientation.test.ts` | The orientation indicator for front, back and left-lateral cameras (body's left to the screen's right in front, anterior to the left in the side view, end-on axes), for the atlas's own view directions. |
 | `src/data/topics.test.ts` | Unique module ids and modules for every subject; every module and topic link canonical and claimed by exactly its own module; the breadcrumb naming each curated topic; old links without module keys; counts from data; questions listed only when their module exists, with canonical links. |
 | `src/lib/textWrap.test.ts` | Caption wrapping within the width; long URLs broken at delimiters or before `%`-escapes and rejoining exactly at four widths; strings with no delimiters; graphemes (subscripts, combining marks, ZWJ emoji, flags) never split; widths narrower than a character; long titles; empty text. PNG `iTXt` metadata: standard CRC-32, UTF-8 round trip with the image chunks intact, rejecting non-PNG data and bad keywords. |
 | `src/lib/measurement.test.ts` | Distance and angle maths against known geometry. Also the cosine clamp, zero-length arms, duplicate and restarting selections, and how results are labelled. |
@@ -1721,6 +1786,15 @@ the production build:
   module, *Where you left it* restoring Methane, Back afterwards); a curated topic (Iron); the bar
   hidden in presentation. `mobile.e2e.ts` adds the breadcrumb and drawer at 390 px with no
   horizontal overflow and Back.
+- `atlas-where.e2e.ts`: *Where is it?* finding the left ureter (region preset pressed, `region=`
+  in the link, the sentence in words, a sourced relationship with its OpenStax link, the
+  region-tag note, selecting the bladder from a relationship, *Whole body* clearing the region);
+  the hidden-layer note for the biceps and the *no relationship recorded* message for the femur;
+  the three explorations (seven numbered structures, quoted statements, limits, the view label,
+  links unchanged while open, restoring the earlier view, the triceps note); the overview and the
+  orientation indicator flipping between front and back views, and in a PNG export.
+  `no-webgl.e2e.ts` runs *Where is it?* and an exploration without WebGL; `mobile.e2e.ts` runs it
+  from the Structures tab at 390 px.
 - `export.e2e.ts` decodes each exported PNG (`e2e/png.ts`) and reads its text metadata: a Chemistry
   angle export (the 104.5° value, numbered atom labels and badge in the image, the value's box
   matching the page within 1 px, pixels changed inside overlays and identical to the raw canvas
@@ -1949,7 +2023,8 @@ lets the stage fill the window. A bar at the top shows the view's title and the 
   canvas pixels and reads those overlays in the same synchronous step, so both come from one
   rendered frame (scene labels are moved in the frame that renders the scene) and the labels stay
   where the captured camera put them. Each overlay is then painted at its position with its own
-  colours, borders and fonts. Interaction hints (*Drag to rotate…*) and controls are left out. SVG
+  colours, borders and fonts; an overlay drawn in SVG (the atlas's orientation indicator and
+  whole-body overview) is serialized at capture time and drawn as an image. Interaction hints (*Drag to rotate…*) and controls are left out. SVG
   labs keep their labels because they are SVG text, serialized with computed styles inlined.
 - **A caption above and below the picture:**
   - the title and *Restored by the link:* the settings the link stores;
@@ -1985,6 +2060,8 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Atlas systems | 11 |
 | Atlas tours | 5 |
 | Movement demonstrations | 2 |
+| Sourced anatomical relationships | 19 |
+| Relationship explorations | 3 |
 | Heart module structures | 14 |
 | Elements | 118 |
 | Molecules | 12 |
@@ -2006,7 +2083,8 @@ how it is drawn (individual, group or container), with what is omitted.
 ### Attribution
 
 - **Text** is written for this app. It paraphrases the cited sections and does not reproduce
-  their text or figures. Every claim links to the section it relies on, next to the content.
+  their text or figures. The atlas's anatomical relationships also say *where in the source*
+  each statement comes from (section and subsection), in paraphrase. Every claim links to the section it relies on, next to the content.
 - **Textbooks:** OpenStax *Anatomy and Physiology 2e*, *Biology 2e*, *Concepts of Biology*,
   *Chemistry 2e*, *University Physics* Volumes 1 and 2, *Calculus* Volumes 1 and 3, and
   *College Algebra 2e*. OpenStax books are published under CC BY 4.0. They are cited by section;

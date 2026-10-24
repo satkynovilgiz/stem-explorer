@@ -47,9 +47,12 @@ function shapeExtents(s: Shape): Vec3[] {
     [c[0] + r[0], c[1] + r[1], c[2] + r[2]],
   ]
   switch (s.kind) {
-    case 'ellipsoid':
+    case 'ellipsoid': {
       // Rotation can only move points within the largest radius.
-      return s.rotation ? grow(s.center, Array(3).fill(Math.max(...s.radii)) as unknown as Vec3) : grow(s.center, s.radii)
+      const box = s.rotation ? grow(s.center, Array(3).fill(Math.max(...s.radii)) as unknown as Vec3) : grow(s.center, s.radii)
+      // A dome has no lower half.
+      return s.dome && !s.rotation ? [[box[0][0], s.center[1], box[0][2]], box[1]] : box
+    }
     case 'box': {
       const h = s.size.map((v) => v / 2) as unknown as Vec3
       return s.rotation ? grow(s.center, Array(3).fill(Math.hypot(...h)) as unknown as Vec3) : grow(s.center, h)

@@ -306,3 +306,15 @@ test('on a phone, the breadcrumb fits and the topic drawer navigates between mod
   await page.goBack()
   await expect(crumbs.locator('[aria-current="page"]')).toHaveText('Left femur')
 })
+
+test('on a phone, Where is it? sits in the Structures tab and opens the details', async ({ page }) => {
+  await page.goto('/?bview=front#/anatomy')
+  await waitForViewport(page)
+  await page.getByRole('tab', { name: 'Structures' }).tap()
+  const where = page.getByRole('region', { name: 'Where is it?' })
+  await where.getByRole('searchbox').fill('kidney')
+  await where.getByRole('button', { name: /^Right kidney/ }).tap()
+  await expect(page.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.locator('.where-section')).toContainText('The right kidney is slightly inferior')
+  await expectNoHorizontalOverflow(page)
+})

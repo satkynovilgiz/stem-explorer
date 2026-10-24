@@ -148,3 +148,41 @@ describe('atlas tours (state)', () => {
     expect(s.layers).toEqual(['integumentary', 'urinary'])
   })
 })
+
+describe('Where is it? and relationship explorations (state)', () => {
+  it('locate selects the structure, focuses its region, and explains a hidden layer it turned on', () => {
+    const s0 = fresh()
+    expect(s0.layers).not.toContain('muscular')
+    const s = atlasReducer(s0, { type: 'locate', id: 'biceps-brachii-left' })
+    expect(s.selected).toBe('biceps-brachii-left')
+    expect(s.region).toBe('upper-limb')
+    expect(s.layers).toContain('muscular')
+    expect(s.revealNote).toBe('To show Left biceps brachii: the muscular layer was hidden, so it has been turned on.')
+    expect(s.announcement).toContain('Focused on the upper limbs.')
+    // A structure spread over the body keeps the whole body.
+    expect(atlasReducer(s, { type: 'locate', id: 'skin' }).region).toBe('whole-body')
+    // Selecting outside a region filter says why the filter was cleared.
+    const t = atlasReducer(atlasReducer(fresh(), { type: 'setRegion', region: 'thorax' }), { type: 'select', id: 'femur-left' })
+    expect(t.revealNote).toContain('outside the thorax (chest) region, so the region filter has been cleared')
+    expect(atlasReducer(t, { type: 'select', id: 'femur-right' }).revealNote).toBeNull()
+  })
+
+  it('a relationship exploration numbers its structures, keeps links on the earlier view and restores it', () => {
+    const start = atlasReducer(fresh('?atlas=liver&bview=back'), { type: 'setOpacity', system: 'skeletal', value: 0.4 })
+    const before = atlasShareState(start)
+    let s = atlasReducer(start, { type: 'startRelation', id: 'urinary' })
+    expect(s.relation?.id).toBe('urinary')
+    expect(s.region).toBe('abdomen')
+    expect(atlasShareState(s)).toEqual(before)
+    const drawn = drawnStructures(s)
+    expect(drawn.find((d) => d.structure.id === 'kidney-left')).toMatchObject({ highlight: true, label: '1 · Left kidney' })
+    expect(drawn.find((d) => d.structure.id === 'urethra')).toMatchObject({ label: '7 · Urethra' })
+    // Other selections wait until it is closed; starting a tour is blocked too.
+    expect(atlasReducer(s, { type: 'select', id: 'heart' }).selected).toBe(s.selected)
+    expect(atlasReducer(s, { type: 'startTour', id: 'food' }).tour).toBeNull()
+    s = atlasReducer(s, { type: 'exitRelation' })
+    expect(s.relation).toBeNull()
+    expect(atlasShareState(s)).toEqual(before)
+    expect(s.opacity.skeletal).toBe(0.4)
+  })
+})
