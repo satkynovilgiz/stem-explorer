@@ -222,9 +222,11 @@ test('2D functions and vectors need no WebGL', async ({ page }) => {
 
 test('presentation export explains the failure when there is no picture', async ({ page }) => {
   await page.goto('/?molecule=water#/chemistry')
+  await waitForViewport(page)
   await page.getByRole('button', { name: 'Present' }).click()
   await page.getByRole('button', { name: 'Export PNG' }).click()
-  await expect(page.locator('.present-message[role="alert"]')).toContainText('Export failed: There is no picture to export in this view')
+  await expect(page.locator('.present-message[role="alert"]')).toContainText('Export failed: The 3D view is not available in this browser, so there is no picture to export')
+  expect(new URL(page.url()).searchParams.get('molecule')).toBe('water')
   await page.keyboard.press('Escape')
   await expect(page.locator('.topnav')).toBeVisible()
 })

@@ -2,6 +2,8 @@ import { lazy, Suspense, useEffect, useReducer, useState } from 'react'
 import { Tabs } from '../../components/Tabs'
 import { DEFAULT_MOLECULE_ID, getMolecule, MOLECULES } from '../../data/chemistry/molecules'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
+import { formatAngle, formatDistance, measure, measurementLabel } from '../../lib/measurement'
+import { useExportNotes } from '../../lib/presentation'
 import { chemistrySectionEntries, parseChemistryParams, parseChemistrySection, withChemistryParams, withChemistrySection, type ChemistrySection } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { ActivityPanel } from '../activities/ActivityPanel'
@@ -69,6 +71,7 @@ export function ChemistryExplorer() {
   }, [state.moleculeId, representation, section, elementZ])
 
   const shareParams = { molecule: state.moleculeId, view: representation, ...chemistrySectionEntries(section, elementZ) }
+  useExportNotes('chemistry', ...chemistryExportNotes(section, molecule, state, showLabels, autoRotate))
   useRecordVisit({ subject: 'chemistry', params: shareParams })
 
   const activity = useActivity(CHEMISTRY_ACTIVITY, state, {
@@ -242,4 +245,37 @@ export function ChemistryExplorer() {
       </aside>
     </div>
   )
+}
+
+/** What a molecule export shows beyond its link: the measurement and selection are not stored in links. */
+function chemistryExportNotes(
+  section: ChemistrySection,
+  molecule: ReturnType<typeof getMolecule>,
+  state: ReturnType<typeof initialChemistryState>,
+  showLabels: boolean,
+  autoRotate: boolean,
+): [string[], string[]] {
+  if (section !== 'molecules') return [[], []]
+  const annotations: string[] = []
+  const notRestored: string[] = []
+  if (state.mode !== 'inspect') {
+    const result = measure(molecule, state.measureSelection, state.mode)
+    const atoms = state.measureSelection.join('–')
+    if (result) {
+      const value = result.kind === 'distance' ? formatDistance(result.value) : formatAngle(result.value)
+      const qualifier = result.kind === 'distance' ? (result.bonded ? '' : ' (not bonded)') : result.bondAngle ? '' : ' (not a bond angle: an arm is not a bond)'
+      annotations.push(`${measurementLabel(result)} ${atoms} = ${value}${qualifier}, from the model's source coordinates`)
+      notRestored.push(`the ${result.kind} measurement ${atoms}`)
+    } else if (state.measureSelection.length) {
+      annotations.push(`Incomplete ${state.mode} measurement: ${atoms} picked`)
+      notRestored.push('the incomplete measurement')
+    }
+  } else if (state.inspectedAtomId) {
+    const atom = molecule.atoms.find((a) => a.id === state.inspectedAtomId)
+    if (atom) annotations.push(`Selected atom ${atom.id} (${atom.element})`)
+    notRestored.push('the selected atom')
+  }
+  if (!showLabels) notRestored.push('atom labels turned off')
+  if (autoRotate && state.mode === 'inspect') notRestored.push('auto-rotate (the picture is one moment of the rotation)')
+  return [annotations, notRestored]
 }

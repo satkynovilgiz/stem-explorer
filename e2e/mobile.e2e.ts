@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test, waitForViewport } from './fixtures.ts'
+import { exportView, pixel } from './png.ts'
 
 async function expectNoHorizontalOverflow(page: Page) {
   const { scroll, width } = await page.evaluate(() => ({
@@ -255,4 +256,35 @@ test('search page and presentation mode fit a phone', async ({ page }) => {
   await expect(page.getByRole('toolbar', { name: 'Presentation' })).toBeVisible()
   await expect(page.locator('.mobile-tabs')).toBeHidden()
   await expectNoHorizontalOverflow(page)
+})
+
+test('a narrow export wraps a long link and long settings inside the margins without losing characters', async ({ page }) => {
+  await page.goto('/?atlas=femur-left&bview=side&layers=skeletal%2Cmuscular%2Cnervous%2Ccardiovascular%2Crespiratory%2Cdigestive%2Curinary&region=lower-limb#/anatomy')
+  await waitForViewport(page)
+  await page.getByRole('button', { name: 'Present' }).click()
+  await page.waitForTimeout(600)
+  const exp = await exportView(page)
+  const url = exp.text.Source
+  expect(url).toContain('region=lower-limb')
+  expect(exp.layout.linkLines.length).toBeGreaterThan(2)
+  expect(exp.layout.linkLines.join('')).toBe(url)
+  expect(exp.layout.header.join(' ')).toContain('layers =')
+  // Nothing is drawn in the right-hand margin of the caption (no clipped or overflowing text).
+  const { png, layout } = exp
+  const margin = Math.round(14 * layout.scale)
+  const bg = pixel(png, png.width - 2, 2)
+  const captionRows = [...Array(layout.picture.y).keys(), ...Array.from({ length: png.height - (layout.picture.y + layout.picture.h) }, (_, i) => layout.picture.y + layout.picture.h + i)]
+  for (const y of captionRows) for (let x = png.width - margin; x < png.width; x++) expect(pixel(png, x, y)).toEqual(bg)
+  // The view is unchanged by exporting.
+  expect(new URL(page.url()).searchParams.get('region')).toBe('lower-limb')
+})
+
+test('a narrow export of a long Unicode title keeps every character', async ({ page }) => {
+  await page.goto('/?molecule=hydrogen-peroxide&view=space-filling#/chemistry')
+  await waitForViewport(page)
+  await page.getByRole('button', { name: 'Present' }).click()
+  const exp = await exportView(page)
+  expect(exp.text.Title).toBe('Hydrogen peroxide · space-filling · Chemistry')
+  expect(exp.layout.header.slice(0, 2).join(' ')).toContain('Hydrogen peroxide · space-filling')
+  expect(exp.layout.linkLines.join('')).toBe(exp.text.Source)
 })

@@ -1,8 +1,8 @@
 import { Download, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { SubjectId } from '../data/subjects'
-import { describeView, modelLabel } from '../lib/presentation'
-import { downloadBlob, ExportError, exportPng, findStageVisual } from '../lib/exportImage'
+import { CAMERA_NOT_RESTORED, describeView, exportNotes, modelLabel } from '../lib/presentation'
+import { downloadBlob, ExportError, exportPng, findStageVisual, noVisualMessage } from '../lib/exportImage'
 
 /** Today's date in the viewer's time zone, as YYYY-MM-DD. */
 const localDate = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -39,11 +39,14 @@ export function PresentationBar({ subject, onExit }: { subject: SubjectId; onExi
     try {
       const stage = document.querySelector('.chem-stage')
       const visual = stage && findStageVisual(stage)
-      if (!visual) throw new ExportError('There is no picture to export in this view (for example, the 3D view is unavailable). The text panels still describe it.')
+      if (!visual) throw new ExportError(noVisualMessage(stage))
       const view = describeView(subject)
-      const blob = await exportPng(visual, { ...view, modelLabel: modelLabel(subject, window.location.search) })
+      const notes = exportNotes(subject)
+      const notRestored = visual instanceof HTMLCanvasElement ? [CAMERA_NOT_RESTORED, ...notes.notRestored] : notes.notRestored
+      const { blob, layout } = await exportPng(visual, { ...view, annotations: notes.annotations, notRestored, modelLabel: modelLabel(subject, window.location.search) })
       downloadBlob(blob, `stem-explorer-${subject}-${localDate()}.png`)
-      setMessage({ kind: 'ok', text: 'PNG exported. Check your downloads.' })
+      const overlays = visual instanceof HTMLCanvasElement ? layout.annotations.length : 0
+      setMessage({ kind: 'ok', text: `PNG exported${overlays ? `, including ${overlays} overlay${overlays === 1 ? '' : 's'} from the view (labels, values, legends)` : ''}. Check your downloads.` })
     } catch (e) {
       setMessage({ kind: 'error', text: `Export failed: ${e instanceof ExportError ? e.message : 'the browser could not create the image.'}` })
     } finally {

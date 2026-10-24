@@ -7,6 +7,7 @@ import { findTour } from '../../../data/anatomy/atlas/tours'
 import { demoPivot, findMovement } from '../../../data/anatomy/atlas/movements'
 import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
 import { useMediaQuery, usePrefersReducedMotion } from '../../../lib/hooks'
+import { useExportNotes } from '../../../lib/presentation'
 import { atlasParamEntries, parseAtlasParams, withAtlasParams } from '../../../lib/urlState'
 import { useRecordVisit } from '../../../lib/useExplorationLibrary'
 import { MODULE_GUIDES } from '../../../data/guides'
@@ -15,7 +16,7 @@ import { AtlasDetails, AtlasInventory, AtlasNavigator, AtlasToolbar, LayerPanel 
 import { LimbComparison, MovementPanel } from './MusculoskeletalPanels'
 import { AlveolusView, NephronView } from './SchematicViews'
 import { AtlasModules, AtlasTourBar, type CloseUp } from './TourPanels'
-import { atlasReducer, atlasShareState, initialAtlasState, VIEW_TEXT } from './atlasState'
+import { atlasReducer, atlasShareState, DEFAULT_OPACITY, initialAtlasState, VIEW_TEXT, type AtlasState } from './atlasState'
 import { drawnStructures } from './visibility'
 
 // Three.js loads on demand; the list, details, layers and inventory work without it.
@@ -73,6 +74,7 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
     if (search !== window.location.search) window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
   }, [entriesKey])
   useRecordVisit({ subject: 'anatomy', params: entries })
+  useExportNotes('anatomy', ...atlasExportNotes(state, showLabels))
 
   const drawn = useMemo(() => drawnStructures(state), [state])
   const selectedDrawn = !!state.selected && drawn.some((d) => d.structure.id === state.selected || findStructure(d.structure.id)?.parent === state.selected)
@@ -304,4 +306,26 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       </aside>
     </div>
   )
+}
+
+/** What an atlas export shows beyond its link: tours, demonstrations, isolation and opacity are never in links. */
+function atlasExportNotes(state: AtlasState, showLabels: boolean): [string[], string[]] {
+  const annotations: string[] = []
+  const notRestored: string[] = []
+  const selected = state.selected ? findStructure(state.selected) : undefined
+  if (selected) annotations.push(`Selected: ${selected.name} (id ${selected.id}, ${getSystem(selected.system).name.toLowerCase()} system)`)
+  if (!state.demo) annotations.push(VIEW_TEXT[state.view].replace(/\.$/, ''))
+  if (state.tour) {
+    const tour = findTour(state.tour.id)!
+    annotations.push(`Tour “${tour.title}”, step ${state.tour.step + 1} of ${tour.steps.length}: ${tour.steps[state.tour.step].title} (conceptual route, not timed)`)
+    notRestored.push('the tour (the link restores the view from before the tour)')
+  }
+  if (state.demo) {
+    annotations.push(`${findMovement(state.demo.id)!.name} (${state.demo.side}), conceptual motion, not a measured range`)
+    notRestored.push('the movement demonstration and its pose')
+  }
+  if (state.isolated) notRestored.push('isolation of the selected structure')
+  if (state.layers.some((l) => state.opacity[l] !== DEFAULT_OPACITY[l])) notRestored.push('layer opacity')
+  if (!showLabels) notRestored.push('structure labels turned off')
+  return [annotations, notRestored]
 }

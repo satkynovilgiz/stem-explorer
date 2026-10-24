@@ -105,6 +105,9 @@ test('editing an input returns to t = 0', async ({ page }) => {
 })
 
 test('playback speed changes how fast time passes, not the results', async ({ page }) => {
+  // runFor renders every frame of 5 simulated seconds with software WebGL (about 38 s alone),
+  // which can pass the default 60 s timeout when the suite runs in parallel.
+  test.slow()
   // A fake clock drives requestAnimationFrame and performance.now, so frame timing is deterministic.
   await page.clock.install()
   await page.goto('/#/physics')

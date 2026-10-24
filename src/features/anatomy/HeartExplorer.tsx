@@ -4,6 +4,7 @@ import { Tabs } from '../../components/Tabs'
 import { ViewportShell } from '../../components/ViewportShell'
 import { findHeartPart, HEART_PART_IDS, type HeartPartId } from '../../data/anatomy/heart'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
+import { useExportNotes } from '../../lib/presentation'
 import { anatomyParamEntries, parseAnatomyParams, withAnatomyParams } from '../../lib/urlState'
 import { useRecordVisit } from '../../lib/useExplorationLibrary'
 import { ActivityPanel } from '../activities/ActivityPanel'
@@ -49,6 +50,21 @@ export function HeartExplorer({ moduleSwitch }: { moduleSwitch?: ReactNode }) {
   }, [share.partId, share.heartView])
 
   useRecordVisit({ subject: 'anatomy', params: anatomyParamEntries(share) })
+  const compareNames = compare ? [compare.a, compare.b].map((id) => (id ? findHeartPart(id)?.name : undefined)) : []
+  useExportNotes(
+    'anatomy',
+    [
+      ...(part && !touring ? [`Selected: ${part.name} (id ${part.id})`] : []),
+      ...(compare ? [`Comparing vessels: A = ${compareNames[0] ?? 'empty'}, B = ${compareNames[1] ?? 'empty'}`] : []),
+      ...(touring ? [`Blood-flow tour step ${tourStep + 1} (conceptual pathway, not timed)`] : []),
+    ],
+    [
+      ...(touring ? ['the blood-flow tour (the link restores the view from before the tour)'] : []),
+      ...(compare ? ['the vessel comparison (the link keeps vessel A selected)'] : []),
+      ...(isolated ? ['isolation of the selected structure'] : []),
+      ...(!showLabels ? ['structure labels turned off'] : []),
+    ],
+  )
 
   const activity = useActivity(ANATOMY_ACTIVITY, state, {
     // A tour in progress is ended by the activity; Exit returns to the view from before that tour.

@@ -1510,6 +1510,7 @@ How the URL is kept up to date:
 
 | File | What it checks |
 | --- | --- |
+| `src/lib/textWrap.test.ts` | Caption wrapping within the width; long URLs broken at delimiters or before `%`-escapes and rejoining exactly at four widths; strings with no delimiters; graphemes (subscripts, combining marks, ZWJ emoji, flags) never split; widths narrower than a character; long titles; empty text. PNG `iTXt` metadata: standard CRC-32, UTF-8 round trip with the image chunks intact, rejecting non-PNG data and bad keywords. |
 | `src/lib/measurement.test.ts` | Distance and angle maths against known geometry. Also the cosine clamp, zero-length arms, duplicate and restarting selections, and how results are labelled. |
 | `src/data/chemistry/molecules.test.ts` | Atom counts against formulas, IDs, bonds and connectivity. Also cited sources, and that coordinates reproduce every reported bond length and angle. |
 | `src/data/chemistry/atomic.test.ts` | Every element's PubChem configuration expands to exactly Z electrons; shell counts for H, O, Na, Ca, Fe and Cr (a filling exception); predicted/calculated notes kept apart; PubChem electronegativities and missing values; N = A − Z; the isotope library has distinct, plausible entries. |
@@ -1673,6 +1674,15 @@ the production build:
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
   analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `export.e2e.ts` decodes each exported PNG (`e2e/png.ts`) and reads its text metadata: a Chemistry
+  angle export (the 104.5° value, numbered atom labels and badge in the image, the value's box
+  matching the page within 1 px, pixels changed inside overlays and identical to the raw canvas
+  where there is none, the caption's measurement and *not restored* text, the link lines joining
+  to the link, the measurement and URL unchanged afterwards); a Chemistry distance export marked
+  *not bonded*; an Anatomy export with the selected-structure, orientation and schematic labels;
+  the SVG circuit lab (not blank, no camera note); and a text-only view's message. `mobile.e2e.ts`
+  exports at 390 px with a long atlas link (several link lines, nothing in the right margin) and a
+  long Unicode title; `no-webgl.e2e.ts` checks the WebGL-unavailable message.
 - `notebook.e2e.ts` also saves notes on the vectors, circuit, DNA and atomic-structure views and
   reopens each snapshot with identical link values.
 - `math-sections.e2e.ts`: exact point and derivative for 2·sin x, the secant getting closer to f′ as h
@@ -1762,6 +1772,9 @@ src/
     backup.ts                   backup export, import validation/preview planning and merge
     storeMessages.ts            user-facing messages for failed library operations
     searchIndex.ts              local search index and ranking
+    exportImage.ts              presentation PNG export: scene + overlay snapshot, caption, metadata
+    textWrap.ts                 caption wrapping (URL-safe, grapheme-safe)
+    pngText.ts                  PNG iTXt text metadata (write and read)
   features/chemistry/
     state.ts                    explorer reducer (molecule, view, mode, selections, announcements)
     ChemistryExplorer.tsx       layout, URL sync, live region
@@ -1875,15 +1888,38 @@ lets the stage fill the window. A bar at the top shows the view's title and the 
 - **Exit presentation** or **Esc** leaves presentation mode, and focus returns to **Present**.
   Leaving the page also ends it, and presenting never changes the explorer's state or link.
 - **Export PNG** saves the stage's main picture as a download (`stem-explorer-<subject>-<date>.png`).
-  The picture is the 3D canvas or, without one, the largest SVG. It is framed with the title, the
-  settings, a model label (for example *Schematic model … not to scale* or *Idealised model*) and
-  the link that reopens the view.
-  - 3D views keep their drawing buffer so the frame can be copied. SVGs are serialized with their
-    computed styles inlined.
-  - If there is nothing to capture (for example without WebGL), or the browser refuses, an error
-    message explains it.
-  - Text drawn as HTML over a 3D view (labels, badges) is not part of the canvas and is not in
-    the PNG.
+  The picture is the 3D canvas or, without one, the largest SVG.
+
+**What an export contains** (`src/lib/exportImage.ts`):
+- **The picture with its annotations.** In 3D views, atom labels, measurement values, selected-
+  structure labels, orientation labels, the view badge (which carries *Schematic shapes, not to
+  scale* and similar labels) and legends are HTML drawn over the canvas. The export copies the
+  canvas pixels and reads those overlays in the same synchronous step, so both come from one
+  rendered frame (scene labels are moved in the frame that renders the scene) and the labels stay
+  where the captured camera put them. Each overlay is then painted at its position with its own
+  colours, borders and fonts. Interaction hints (*Drag to rotate…*) and controls are left out. SVG
+  labs keep their labels because they are SVG text, serialized with computed styles inlined.
+- **A caption above and below the picture:**
+  - the title and *Restored by the link:* the settings the link stores;
+  - *In this image:* the scientific content repeated as text, for example *Bond angle H1–O1–H2 =
+    104.5°, from the model's source coordinates*, or *Selected: Left femur (id femur-left,
+    skeletal system)* and the view orientation;
+  - *Not restored by the link:* what the picture shows that the link cannot recreate. Every 3D
+    export lists the camera angle and zoom; views add their own (a measurement and its atoms, the
+    selected atom, an atlas tour or movement demonstration, isolation, layer opacity, labels turned
+    off, a heart vessel comparison). The export never claims the link recreates these;
+  - the model label (for example *Schematic model … not to scale*) and the complete link.
+- **Wrapping.** Captions wrap at spaces. A string wider than a line, such as a URL, is broken
+  inside, preferably after a URL delimiter (`/ ? & = # , ; : . _ ~ + -`) or before a `%`-escape,
+  and never inside a grapheme (`src/lib/textWrap.ts`), so the whole link stays readable at phone
+  widths and its lines join back into the exact link.
+- **Text metadata.** The PNG carries UTF-8 `iTXt` chunks: `Title`, `Description` (the caption
+  text), `Source` (the link), `Software` and `STEM-Explorer-Layout` (JSON: every caption line,
+  the link lines, the picture box and each overlay's text and box in image pixels). Tests read
+  these and the decoded pixels.
+- **Unsupported views.** Without WebGL the message says the 3D view is unavailable; a view of text
+  and tables (for example *Bonding and geometry*) says it has no single picture and suggests Copy
+  link or Save. Exporting never changes the explorer's state, measurement or link.
 
 ## Content inventory, attribution and limitations
 
@@ -1943,7 +1979,9 @@ how it is drawn (individual, group or container), with what is omitted.
   open panels. Where a link cannot restore something, the app says so.
 - **Search** has no fuzzy spelling correction, and synonyms cover only well-established names.
 - **Related topics** are a small curated set, not a complete map of connections.
-- **PNG export** leaves out HTML labels drawn over 3D views.
+- **PNG export** copies overlays as positioned boxes and words: font fallbacks, emoji and effects
+  such as shadows may look slightly different from the page. Overlays outside the canvas (for
+  example side panels) are not part of the picture; their key content is repeated in the caption.
 - **Bundle:** the first load is about 700 kB of JavaScript (about 210 kB gzipped), because link
   validation and search need the atlas, element and cell data. The heavier 3D code loads only
   with a 3D view.
