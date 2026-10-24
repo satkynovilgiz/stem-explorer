@@ -40,16 +40,41 @@ test('total internal reflection only beyond the critical angle, with the boundar
   await expect(readout(page, 'Angle of refraction')).not.toContainText('none')
   await expect(page.getByRole('button', { name: 'Set θ₁ to the critical angle' })).toBeDisabled()
   await page.getByRole('button', { name: 'Water → air' }).click()
-  await expect(readout(page, 'Critical angle')).toHaveText('48.63°')
+  await expect(readout(page, 'Critical angle')).toHaveText('48.6261°')
   await setField(page, 'Angle of incidence', '60')
   await expect(readout(page, 'Angle of refraction')).toHaveText('none: total internal reflection')
   await expect(verdict(page)).toContainText('all of the light is reflected back into medium 1')
   await expect(page.locator('.opt-ray.is-transmitted')).toHaveCount(0)
   await page.getByRole('button', { name: 'Set θ₁ to the critical angle' }).click()
   await expect(readout(page, 'Angle of refraction')).toHaveText('90.00°')
-  await expect(verdict(page)).toContainText('equals the critical angle')
+  await expect(readout(page, 'Angle of incidence')).toHaveText('θc = 48.6261° (exact)')
+  await expect(verdict(page)).toContainText('the critical angle, kept at full precision')
+  await expect(page.locator('.opt-ray.is-transmitted')).toHaveCount(1)
+  // The exact mode survives a reload through the link.
+  await expect.poll(() => params(page).get('inc')).toBe('critical')
+  await page.reload()
+  await expect(readout(page, 'Angle of refraction')).toHaveText('90.00°')
+  await expect(page.locator('.optics-svg')).toContainText('At the critical angle')
   await setField(page, 'Angle of incidence', '45')
   await expect(verdict(page)).toContainText('bends away from the normal')
+})
+
+test('the reproduction 1.52 → 1 at 41.14° is total internal reflection, with the rounding explained', async ({ page }) => {
+  await page.goto('/?experiment=optics&opt=refraction&n1=1.52&n2=1&inc=41.14#/physics')
+  await expect(readout(page, 'Critical angle')).toHaveText('41.1395°')
+  await expect(readout(page, 'Angle of refraction')).toHaveText('none: total internal reflection')
+  await expect(verdict(page)).toContainText('Both θ₁ and θc show as 41.14° at two decimals; to four, θ₁ = 41.1400° and θc = 41.1395°, so θ₁ is just above the critical angle.')
+  // Diagram and explanation agree with the calculation.
+  await expect(page.locator('.opt-ray.is-transmitted')).toHaveCount(0)
+  await expect(page.locator('.opt-ray.is-reflected.is-total')).toHaveCount(1)
+  await expect(page.locator('.optics-svg')).toContainText('Total internal reflection: no transmitted ray')
+  // Just below: transmitted, also explained.
+  await setField(page, 'Angle of incidence', '41.13')
+  await expect(readout(page, 'Angle of refraction')).not.toContainText('none')
+  await expect(page.locator('.opt-ray.is-transmitted')).toHaveCount(1)
+  // A typed angle leaves critical mode; an invalid "critical" link (no critical angle) is corrected.
+  await page.goto('/?experiment=optics&opt=refraction&n1=1&n2=1.52&inc=critical#/physics')
+  await expect.poll(() => params(page).get('inc')).toBe('40')
 })
 
 test('thin lens: real and virtual images, sign convention, image at infinity, diverging lens', async ({ page }) => {

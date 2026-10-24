@@ -1,6 +1,6 @@
 import { ARRANGEMENTS, CIRCUIT_KEYS, DEFAULT_CIRCUIT, isValidCircuitParam, normalizeCircuitParam, type Arrangement, type CircuitParams } from '../physics/circuit'
 import { DEFAULT_WAVE, isValidWaveParam, normalizeWaveParam, WAVE_KEYS, type WaveKey, type WaveParams } from '../physics/wave'
-import { DEFAULT_OPTICS, normalizeOpticsParam, type OpticsKey, type OpticsParams } from '../physics/optics'
+import { criticalAngle, DEFAULT_OPTICS, normalizeOpticsParam, type OpticsKey, type OpticsParams } from '../physics/optics'
 import { LAB_URL_KEYS, SPRING_URL_KEYS } from './urlState'
 
 /*
@@ -85,16 +85,25 @@ export function parseOpticsParams(search: string): { params: OpticsParams; inval
   for (const key of Object.keys(OPTICS_URL) as OpticsKey[]) {
     const raw = q.get(OPTICS_URL[key])
     if (raw === null) continue
+    if (key === 'incidence' && raw === 'critical') {
+      params.atCritical = true
+      continue
+    }
     const v = normalizeOpticsParam(key, num(raw))
     if (v === null) invalid.push(OPTICS_URL[key])
     else params[key] = v
+  }
+  // "critical" only means something when a critical angle exists (n1 > n2).
+  if (params.atCritical && criticalAngle(params.n1, params.n2) === null) {
+    params.atCritical = false
+    invalid.push('inc')
   }
   return { params, invalid }
 }
 
 export function opticsParamEntries(p: OpticsParams): Record<string, string> {
   return p.part === 'refraction'
-    ? { experiment: 'optics', opt: 'refraction', n1: String(p.n1), n2: String(p.n2), inc: String(p.incidence) }
+    ? { experiment: 'optics', opt: 'refraction', n1: String(p.n1), n2: String(p.n2), inc: p.atCritical && criticalAngle(p.n1, p.n2) !== null ? 'critical' : String(p.incidence) }
     : { experiment: 'optics', opt: 'lens', lens: p.lens, f: String(p.focal), do: String(p.objectDistance) }
 }
 

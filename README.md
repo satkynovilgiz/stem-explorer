@@ -1103,8 +1103,18 @@ University Physics Volume 3 §1.1 (Table 1.1 indices at 589 nm), §1.2, §1.3, �
 - **Edge cases:** normal incidence (no bending); equal indices (no bending and no reflected ray:
   there is no boundary); a critical angle only when n₁ > n₂ (from lower to higher index there is
   none, even at 89.99°); **total internal reflection only when θ₁ > θc**, with no transmitted ray
-  drawn; within 0.005° of θc (half the input step) the transmitted ray grazes along the boundary
-  at θ₂ = 90°.
+  drawn.
+- **Classification comes from the calculation, not the display.** The lab computes
+  sin θ₂ = n₁ sin θ₁ / n₂ and calls it total internal reflection when that exceeds 1. The only
+  tolerance (10⁻¹², `SIN_TOLERANCE`) absorbs floating-point rounding, which is about 10⁻¹⁶ per
+  operation; it corresponds to roughly 10⁻¹⁰° and has nothing to do with the 0.01° slider step.
+  θc is shown to four decimals. When θ₁ and θc look the same at the two decimals of the angle
+  field (for example 41.14° and 41.1395° for n₁ = 1.52, n₂ = 1), the verdict says so and gives
+  both to four decimals, without changing the result.
+- **Set θ₁ to the critical angle** switches to an exact **critical mode**: θ₁ is θc at full
+  precision (shown as *θc = 41.1395° (exact)*, with a note), so θ₂ is exactly 90°. Links store it
+  as `inc=critical`; typing or sliding an angle leaves the mode, and `inc=critical` without a
+  critical angle (n₁ ≤ n₂) is corrected to the default.
 
 **Thin lens** (`opt=lens&lens=converging|diverging&f=…&do=…`):
 - Inputs: lens type, |f| from 2 to 20 cm, object distance dₒ from 1 to 60 cm (object height 2 cm).
@@ -1839,7 +1849,7 @@ How the URL is kept up to date:
 | `src/data/anatomy/atlas/relationships.test.ts` | Every relationship names existing structures and a registered source with its quoted basis; explorations list existing structures and relationships; one-side statements apply to both sides except the right-kidney one; no position is stated for the triceps; the drawing does not contradict the stated directions. |
 | `src/features/anatomy/atlas/scene/orientation.test.ts` | The orientation indicator for front, back and left-lateral cameras (body's left to the screen's right in front, anterior to the left in the side view, end-on axes), for the atlas's own view directions. |
 | `src/math/statistics.test.ts` | Parsing (separators, negatives, exponents, invalid and too-large tokens with positions, the 1000-value cap, empty input); textbook quartiles for both cited datasets, odd counts, one and two values; population vs sample variance; one value and repeated values; negatives and the 1.5 × IQR outlier rule; accuracy with a 10⁸ offset; histogram edges, totals for any bin count, identical values and invalid bin counts; suggested bins; binomial hand values, totals of 1 up to n = 500 and p = 0.999, exact p = 0 and 1, mean np and variance npq, the Bernoulli case; the simulation repeating per seed, p = 0 and 1, closeness for 10 000 repetitions; dataset provenance. |
-| `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the critical-angle boundary within 0.005°; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
+| `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the 1.52 → 1 at 41.14° reproduction (total internal reflection, θc ≈ 41.1395104°); below, at and above θc at full precision for four media pairs; the tolerance far below one slider step; critical mode only when θc exists; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
 | `src/data/biology/meiosis.test.ts` | Meiosis uses the mitosis module's 2n = 4; chromosome, chromatid and set counts at all nine stages for all four option combinations; the text states the computed counts; homologs separate in meiosis I and sisters in meiosis II; crossing over gives four distinct products (two without), with only nonsister chromatids exchanging; independent assortment; the comparison's sources and context. One-gene model: probabilities totalling 1 for all nine crosses, 1:2:1, 3:1 and 1:1. Simulation: repeatable per seed, counts adding up, different seeds differing, impossible genotypes never produced, large samples near ¼, zero offspring; the generator stays in [0, 1) and seeds are validated. |
 | `src/chem/stoichiometry.test.ts` | Formula parsing (parentheses, two-letter symbols, malformed input); element-by-element balance, lowest terms, invalid coefficients and charge; every library equation and ionic form balanced in lowest terms with a registered source; type coverage; balancing steps from all 1s to the source's coefficients; molar masses against hand sums; mole ratios; limiting reactant with leftovers, exact ratios (including floating-point residue), zero and invalid amounts; percent yield (zero theoretical yield, above 100 %); significant-figure rounding and charge text. |
 | `src/data/topics.test.ts` | Unique module ids and modules for every subject; every module and topic link canonical and claimed by exactly its own module; the breadcrumb naming each curated topic; old links without module keys; counts from data; questions listed only when their module exists, with canonical links. |
@@ -2007,6 +2017,12 @@ the production build:
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
   analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `statistics.e2e.ts` (reset): seed 31 then *Restore default settings* gives 2026 in the field, the
+  legend, the link and the same table; reset with invalid seed text clears the error; the reset
+  configuration reloads; typed values survive a reset with *Include my values* turned off and no
+  data in the link. `optics.e2e.ts` adds the 41.14° reproduction (θc 41.1395°, total internal
+  reflection, the rounding sentence, no transmitted ray, a solid reflected ray), just below θc,
+  critical mode through reload, and an invalid `inc=critical` link.
 - `statistics.e2e.ts`: the heights dataset (40 values, median 66, Q1/Q3 64.5/70, population and
   sample variance differing), bins 6 → 12 → suggested, the bin explanation, a synthetic dataset
   labelled with its outlier circled; typed values with invalid and too-large entries reported by
@@ -2211,6 +2227,22 @@ e2e/                            Playwright browser tests
 3. Add its reported values to the geometry table in `molecules.test.ts`.
 
 ## Fixed review findings
+
+Second review (this release):
+- **Optics critical angle.** With n₁ = 1.52, n₂ = 1 and θ₁ = 41.14° (θc ≈ 41.1395104°), the lab
+  suppressed total internal reflection inside a 0.005° window (half the slider step) and drew a
+  transmitted ray at 90°. Classification now uses sin θ₂ with a floating-point-only tolerance,
+  rounding coincidences are explained in words, and *Set θ₁ to the critical angle* keeps θc at full
+  precision (`inc=critical`) instead of a rounded 41.14°.
+- **Statistics reset.** *Restore defaults* changed the seed in the state but left the seed field
+  showing the old text, so the field, the legend and the link disagreed. *Restore default
+  settings* now resets the seed field with the state (also when the field held invalid text),
+  turns off *Include my values*, and says what it did. Values typed into *Your own values* are user
+  data, not settings: they are **kept** (the dataset choice returns to the default sample), and the
+  message says how to use them again. The seed field was the only other input string kept apart
+  from the state in this module; the range fields commit on blur, so they cannot go stale.
+
+First review:
 
 - **A. Small sine amplitudes shown as zero.** In Mathematics, a sine slice whose amplitude was tiny
   but not zero (for example `amp=0.05`, `k=0.05`, slice `x = 0.05`, amplitude ≈ 1.25 × 10⁻⁴) was

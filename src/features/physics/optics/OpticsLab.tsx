@@ -8,7 +8,9 @@ import { opticsParamEntries, parseOpticsParams, withLabParams } from '../../../l
 import { useRecordVisit } from '../../../lib/useExplorationLibrary'
 import { useExportNotes } from '../../../lib/presentation'
 import {
+  criticalAngle,
   DEFAULT_OPTICS,
+  effectiveIncidence,
   MEDIA,
   OBJECT_HEIGHT,
   OPTICS_SPECS,
@@ -195,13 +197,25 @@ function LensDiagram({ p, lens }: { p: OpticsParams; lens: LensResult }) {
 
 /* ---------- Readouts ---------- */
 
+const fmt4 = (a: number) => `${a.toFixed(4)}°`
+
+/**
+ * When θ1 and θc look the same at the two decimals shown but are not equal, say so: the
+ * classification comes from the full-precision calculation, not from the rounded display.
+ */
+function roundingNote(p: OpticsParams, r: RefractionResult): string | null {
+  if (r.critical === null || r.atCritical || fmtAngle(p.incidence) !== fmtAngle(r.critical)) return null
+  return ` Both θ₁ and θc show as ${fmtAngle(r.critical)} at two decimals; to four, θ₁ = ${fmt4(p.incidence)} and θc = ${fmt4(r.critical)}, so θ₁ is ${p.incidence > r.critical ? 'just above' : 'just below'} the critical angle.`
+}
+
 function RefractionReadout({ p, r }: { p: OpticsParams; r: RefractionResult }) {
+  const critMode = p.atCritical && r.critical !== null
   return (
     <div className="info-body">
       <dl className="readout">
         <div>
           <dt>Angle of incidence θ₁</dt>
-          <dd>{fmtAngle(p.incidence)}</dd>
+          <dd>{critMode ? `θc = ${fmt4(r.critical!)} (exact)` : fmtAngle(p.incidence)}</dd>
         </div>
         <div>
           <dt>Angle of reflection θr</dt>
@@ -213,21 +227,21 @@ function RefractionReadout({ p, r }: { p: OpticsParams; r: RefractionResult }) {
         </div>
         <div>
           <dt>Critical angle θc</dt>
-          <dd>{r.critical === null ? 'none (n₁ ≤ n₂)' : fmtAngle(r.critical)}</dd>
+          <dd>{r.critical === null ? 'none (n₁ ≤ n₂)' : fmt4(r.critical)}</dd>
         </div>
       </dl>
       <p className="rx-verdict" role="status">
         {r.totalInternalReflection
-          ? `θ₁ is larger than the critical angle (${fmtAngle(r.critical!)}), so all of the light is reflected back into medium 1.`
+          ? `θ₁ is larger than the critical angle (${fmt4(r.critical!)}), so all of the light is reflected back into medium 1.${roundingNote(p, r) ?? ''}`
           : r.atCritical
-            ? 'θ₁ equals the critical angle (to the 0.01° shown): the refracted ray travels along the boundary, at θ₂ = 90°.'
+            ? 'θ₁ is the critical angle, kept at full precision: sin θ₂ = 1, so the refracted ray travels along the boundary at θ₂ = 90°. Any larger angle gives total internal reflection.'
             : r.normal
               ? 'Normal incidence (θ₁ = 0): the ray crosses the boundary without bending.'
               : r.equalIndices
                 ? 'The indices are equal: the ray does not bend.'
                 : r.bend === 'toward'
                   ? 'Entering a higher index: the ray bends toward the normal (θ₂ < θ₁).'
-                  : `Entering a lower index: the ray bends away from the normal (θ₂ > θ₁). Beyond θc = ${fmtAngle(r.critical!)} there would be total internal reflection.`}
+                  : `Entering a lower index: the ray bends away from the normal (θ₂ > θ₁). Beyond θc = ${fmt4(r.critical!)} there would be total internal reflection.${roundingNote(p, r) ?? ''}`}
       </p>
       <section className="info-section">
         <h3 className="section-title">Equations used</h3>
@@ -238,13 +252,13 @@ function RefractionReadout({ p, r }: { p: OpticsParams; r: RefractionResult }) {
           </p>
           <p>
             <code>
-              n₁ sin θ₁ = n₂ sin θ₂ → {p.n1.toFixed(4)} × sin {p.incidence.toFixed(2)}° = {(p.n1 * Math.sin(p.incidence * DEG)).toFixed(4)}
-              {r.transmitted !== null ? ` = ${p.n2.toFixed(4)} × sin ${r.transmitted.toFixed(2)}°` : ` > n₂ = ${p.n2.toFixed(4)}, so no θ₂ exists`}
+              n₁ sin θ₁ = n₂ sin θ₂ → {p.n1.toFixed(4)} × sin {p.incidence.toFixed(critMode || roundingNote(p, r) ? 4 : 2)}° = {(p.n1 * Math.sin(p.incidence * DEG)).toFixed(6)}
+              {r.transmitted !== null ? ` = ${p.n2.toFixed(4)} × sin ${r.transmitted.toFixed(critMode ? 0 : 2)}°` : ` > n₂ = ${p.n2.toFixed(4)}, so sin θ₂ would exceed 1 and no θ₂ exists`}
             </code>
             <SourceLinks ids={['up3-1-3']} />
           </p>
           <p>
-            <code>{r.critical === null ? 'sin θc = n₂ / n₁ needs n₁ > n₂: no critical angle here' : `sin θc = n₂ / n₁ = ${(p.n2 / p.n1).toFixed(4)} → θc = ${fmtAngle(r.critical)}`}</code>
+            <code>{r.critical === null ? 'sin θc = n₂ / n₁ needs n₁ > n₂: no critical angle here' : `sin θc = n₂ / n₁ = ${(p.n2 / p.n1).toFixed(6)} → θc = ${fmt4(r.critical)}`}</code>
             <SourceLinks ids={['up3-1-4']} />
           </p>
         </div>
@@ -345,8 +359,14 @@ export function OpticsLab({ experimentSwitch, guidePanel }: { experimentSwitch: 
   useRecordVisit({ subject: 'physics', params: entries })
   useExportNotes('physics', [], [])
 
-  const set = (key: OpticsKey, v: number) => setParams((p) => ({ ...p, [key]: v }))
-  const r = refract(params.n1, params.n2, params.incidence)!
+  // Typing an angle leaves critical mode; changing an index keeps it only while a critical angle exists.
+  const set = (key: OpticsKey, v: number) =>
+    setParams((p) => {
+      const next = { ...p, [key]: v }
+      return { ...next, atCritical: key === 'incidence' ? false : p.atCritical && criticalAngle(next.n1, next.n2) !== null }
+    })
+  const incidence = effectiveIncidence(params)
+  const r = refract(params.n1, params.n2, incidence)!
   const lens = thinLens(signedFocal(params), params.objectDistance)!
   const isRefraction = params.part === 'refraction'
 
@@ -381,8 +401,14 @@ export function OpticsLab({ experimentSwitch, guidePanel }: { experimentSwitch: 
               </button>
             ))}
           </div>
+          {params.atCritical && r.critical !== null && (
+            <p className="inline-note small" role="status">
+              Critical mode: θ₁ is exactly θc = {r.critical.toFixed(7)}° (calculated, not the rounded value in the field). Typing or sliding an angle leaves this mode. Links store
+              it as “critical”.
+            </p>
+          )}
           <div className="share-row">
-            <button type="button" className="tool-button bordered" disabled={r.critical === null} onClick={() => set('incidence', Number(r.critical!.toFixed(2)))}>
+            <button type="button" className="tool-button bordered" disabled={r.critical === null} onClick={() => setParams((p) => ({ ...p, atCritical: true, incidence: Number(r.critical!.toFixed(2)) }))}>
               Set θ₁ to the critical angle
             </button>
             <button type="button" className="tool-button bordered" onClick={() => set('incidence', 0)}>
@@ -428,7 +454,7 @@ export function OpticsLab({ experimentSwitch, guidePanel }: { experimentSwitch: 
     </section>
   )
 
-  const values = <section className="panel info">{isRefraction ? <RefractionReadout p={params} r={r} /> : <LensReadout p={params} lens={lens} />}</section>
+  const values = <section className="panel info">{isRefraction ? <RefractionReadout p={{ ...params, incidence }} r={r} /> : <LensReadout p={params} lens={lens} />}</section>
 
   const about = (
     <section className="panel info">
@@ -458,7 +484,7 @@ export function OpticsLab({ experimentSwitch, guidePanel }: { experimentSwitch: 
       <h2 id="optics-stage-heading" className="panel-title">
         {isRefraction ? 'Reflection and refraction at a flat boundary' : `${params.lens === 'converging' ? 'Converging' : 'Diverging'} thin lens: principal rays`}
       </h2>
-      {isRefraction ? <RefractionDiagram p={params} r={r} /> : <LensDiagram p={params} lens={lens} />}
+      {isRefraction ? <RefractionDiagram p={{ ...params, incidence }} r={r} /> : <LensDiagram p={params} lens={lens} />}
       <p className="muted small">
         {isRefraction
           ? 'Static ray diagram, angles drawn true. Shading darkens with the index of refraction; the labels give the values.'

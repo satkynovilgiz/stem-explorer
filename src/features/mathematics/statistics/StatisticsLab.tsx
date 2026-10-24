@@ -157,6 +157,7 @@ export function StatisticsLab({ sectionSwitch, guidePanel }: { sectionSwitch: Re
   const [text, setText] = useState(() => (initial.data ? initial.data.join(', ') : ''))
   const [includeData, setIncludeData] = useState(() => initial.data !== null)
   const [seedText, setSeedText] = useState(String(initial.seed))
+  const [resetMessage, setResetMessage] = useState('')
   const [tab, setTab] = useState<'inputs' | 'results'>('inputs')
   const isMobile = useMediaQuery('(max-width: 899px)')
   const textId = useId()
@@ -181,7 +182,28 @@ export function StatisticsLab({ sectionSwitch, guidePanel }: { sectionSwitch: Re
   const pmf = useMemo(() => binomialPmf(state.n, state.p)!, [state.n, state.p])
   const observed = useMemo(() => simulateBinomial(state.n, state.p, state.repetitions, state.seed), [state.n, state.p, state.repetitions, state.seed])
   const moments = binomialMoments(state.n, state.p)
-  const set = (patch: Partial<StatsState>) => setState((s) => ({ ...s, ...patch }))
+  const set = (patch: Partial<StatsState>) => {
+    setResetMessage('')
+    setState((s) => ({ ...s, ...patch }))
+  }
+  /*
+   * Restores every setting of the current view, and every text field that mirrors a setting (the
+   * seed), so the inputs, simulation, legend and link agree. Values typed into "Your own values"
+   * are user data, not a setting: they are kept (never silently deleted) and simply stop being the
+   * selected dataset; "Include my values" is switched off so the link holds no data.
+   */
+  const restoreDefaults = () => {
+    setState({ ...DEFAULT_STATS, view: state.view })
+    setSeedText(String(DEFAULT_STATS.seed))
+    setIncludeData(false)
+    setResetMessage(
+      isBinomial
+        ? `Default settings restored: n = ${DEFAULT_STATS.n}, p = ${DEFAULT_STATS.p}, ${DEFAULT_STATS.repetitions} repetitions, seed ${DEFAULT_STATS.seed}.`
+        : text.trim()
+          ? 'Default settings restored. The values you typed are kept: choose “Your own values” to use them again.'
+          : 'Default settings restored.',
+    )
+  }
   const isBinomial = state.view === 'binomial'
   const seedValid = /^\d+$/.test(seedText) && isValidSeed(Number(seedText))
 
@@ -297,9 +319,14 @@ export function StatisticsLab({ sectionSwitch, guidePanel }: { sectionSwitch: Re
       </h2>
       {viewSwitch}
       {isBinomial ? binomialInputs : describeInputs}
-      <button type="button" className="tool-button bordered" onClick={() => setState({ ...DEFAULT_STATS, view: state.view })}>
-        Restore defaults
+      <button type="button" className="tool-button bordered" onClick={restoreDefaults}>
+        Restore default settings
       </button>
+      {resetMessage && (
+        <p className="small muted" role="status">
+          {resetMessage}
+        </p>
+      )}
       <ShareActions
         subject="mathematics"
         params={entries}

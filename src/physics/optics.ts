@@ -20,8 +20,10 @@ export interface OpticsParams {
   part: OpticsPart
   n1: number
   n2: number
-  /** Angle of incidence from the normal, degrees. */
+  /** Angle of incidence from the normal, degrees (used unless `atCritical`). */
   incidence: number
+  /** The incidence is exactly the critical angle θc = arcsin(n2/n1), kept at full precision (link: inc=critical). */
+  atCritical: boolean
   lens: LensKind
   /** Focal length magnitude, cm (the sign comes from the lens kind). */
   focal: number
@@ -42,7 +44,16 @@ export const OPTICS_SPECS: Record<OpticsKey, { label: string; symbol: string; un
 /** Object height used for the ray diagram (cm). */
 export const OBJECT_HEIGHT = 2
 
-export const DEFAULT_OPTICS: OpticsParams = { part: 'refraction', n1: 1.0003, n2: 1.333, incidence: 40, lens: 'converging', focal: 10, objectDistance: 25 }
+export const DEFAULT_OPTICS: OpticsParams = { part: 'refraction', n1: 1.0003, n2: 1.333, incidence: 40, atCritical: false, lens: 'converging', focal: 10, objectDistance: 25 }
+
+/** θc in degrees when n1 > n2, else null. */
+export const criticalAngle = (n1: number, n2: number) => (n1 > n2 ? Math.asin(n2 / n1) / DEG : null)
+
+/** The incidence actually used: the exact critical angle in critical mode (when it exists), else the entered angle. */
+export function effectiveIncidence(p: Pick<OpticsParams, 'n1' | 'n2' | 'incidence' | 'atCritical'>): number {
+  const c = p.atCritical ? criticalAngle(p.n1, p.n2) : null
+  return c ?? p.incidence
+}
 
 /** Representative indices for 589 nm light (University Physics Vol. 3, Table 1.1). */
 export const MEDIA = [
@@ -72,7 +83,10 @@ export interface RefractionResult {
   /** θc = arcsin(n2/n1), only when n1 > n2; otherwise null (no critical angle exists). */
   critical: number | null
   totalInternalReflection: boolean
-  /** Incidence within half the input step (0.005°) of the critical angle: the transmitted ray grazes at 90°. */
+  /**
+   * sin θ2 = n1 sin θ1 / n2 equals 1 to within floating-point rounding (SIN_TOLERANCE): the incidence
+   * is the critical angle and the transmitted ray grazes the boundary at 90°.
+   */
   atCritical: boolean
   equalIndices: boolean
   /** Normal incidence: θ1 = 0, so nothing bends. */
@@ -81,17 +95,23 @@ export interface RefractionResult {
   bend: 'toward' | 'away' | 'none' | null
 }
 
-export const CRITICAL_TOLERANCE = 0.005
+/**
+ * Tolerance on sin θ2 for "exactly at the critical angle". It only absorbs floating-point rounding:
+ * sin(arcsin(x)) and the products here carry relative errors of a few units in 1e-16, so 1e-12 is
+ * far above rounding and far below any physical significance (it corresponds to about 1e-10° near
+ * 41°). The input step of the angle slider plays no part in the classification.
+ */
+export const SIN_TOLERANCE = 1e-12
 
 export function refract(n1: number, n2: number, incidenceDeg: number): RefractionResult | null {
   if (![n1, n2, incidenceDeg].every(Number.isFinite) || n1 < 1 || n2 < 1 || incidenceDeg < 0 || incidenceDeg >= 90) return null
-  const critical = n1 > n2 ? Math.asin(n2 / n1) / DEG : null
+  const critical = criticalAngle(n1, n2)
   const equalIndices = n1 === n2
   const normal = incidenceDeg === 0
-  const atCritical = critical !== null && Math.abs(incidenceDeg - critical) <= CRITICAL_TOLERANCE
   const s = (n1 * Math.sin(incidenceDeg * DEG)) / n2
+  const atCritical = critical !== null && Math.abs(s - 1) <= SIN_TOLERANCE
   const tir = !atCritical && s > 1
-  const transmitted = tir ? null : atCritical ? 90 : Math.asin(Math.min(1, s)) / DEG
+  const transmitted = tir ? null : atCritical ? 90 : Math.asin(s) / DEG
   return {
     reflected: incidenceDeg,
     transmitted,

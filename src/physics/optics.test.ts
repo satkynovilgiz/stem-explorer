@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeOpticsParam, principalRays, refract, thinLens } from './optics'
+import { criticalAngle, effectiveIncidence, normalizeOpticsParam, principalRays, refract, SIN_TOLERANCE, thinLens } from './optics'
 
 const DEG = Math.PI / 180
 
@@ -34,12 +34,49 @@ describe('reflection and refraction', () => {
     expect(refract(1.000293, 1.333, 89.99)!.totalInternalReflection).toBe(false)
   })
 
-  it('treats the critical-angle boundary explicitly: within 0.005° the transmitted ray grazes at 90°', () => {
-    const c = Math.asin(1 / 1.52) / DEG
-    const at = refract(1.52, 1, Number(c.toFixed(2)))!
-    expect(at).toMatchObject({ atCritical: true, transmitted: 90, totalInternalReflection: false })
-    expect(refract(1.52, 1, Number(c.toFixed(2)) + 0.01)!.totalInternalReflection).toBe(true)
-    expect(refract(1.52, 1, Number(c.toFixed(2)) - 0.01)!.transmitted!).toBeLessThan(90)
+  it('classifies from the calculation, not from display rounding: the 41.14° reproduction is total internal reflection', () => {
+    const c = criticalAngle(1.52, 1)!
+    expect(c).toBeCloseTo(41.1395104, 6)
+    // 41.14° is 0.0005° above θc. Both show as 41.14° to two decimals, but sin θ2 would exceed 1.
+    const r = refract(1.52, 1, 41.14)!
+    expect(r).toMatchObject({ totalInternalReflection: true, transmitted: null, atCritical: false })
+    expect((1.52 * Math.sin(41.14 * DEG)) / 1).toBeGreaterThan(1)
+  })
+
+  it('below, at and above the critical angle', () => {
+    const c = criticalAngle(1.52, 1)!
+    const below = refract(1.52, 1, c - 1e-6)!
+    expect(below.totalInternalReflection).toBe(false)
+    expect(below.transmitted!).toBeLessThan(90)
+    expect(below.transmitted!).toBeGreaterThan(89)
+    // Exactly at θc (full precision) the transmitted ray grazes at 90°.
+    expect(refract(1.52, 1, c)).toMatchObject({ atCritical: true, transmitted: 90, totalInternalReflection: false })
+    expect(refract(1.52, 1, c + 1e-6)).toMatchObject({ totalInternalReflection: true, atCritical: false })
+    // The same holds for other media pairs.
+    for (const [n1, n2] of [
+      [1.333, 1.000293],
+      [2.419, 1.0003],
+      [1.66, 1.52],
+    ]) {
+      const k = criticalAngle(n1, n2)!
+      expect(refract(n1, n2, k)!.atCritical, `${n1}/${n2}`).toBe(true)
+      expect(refract(n1, n2, k + 1e-7)!.totalInternalReflection).toBe(true)
+      expect(refract(n1, n2, k - 1e-7)!.totalInternalReflection).toBe(false)
+    }
+  })
+
+  it('the tolerance is a floating-point allowance far smaller than the input step', () => {
+    expect(SIN_TOLERANCE).toBeLessThan(1e-9)
+    // 0.01° (one slider step) away from θc is never treated as "at" the critical angle.
+    const c = criticalAngle(1.52, 1)!
+    expect(refract(1.52, 1, c - 0.01)!.atCritical).toBe(false)
+    expect(refract(1.52, 1, c + 0.01)!.atCritical).toBe(false)
+  })
+
+  it('critical mode uses the exact critical angle, and only when one exists', () => {
+    expect(effectiveIncidence({ n1: 1.52, n2: 1, incidence: 30, atCritical: true })).toBe(criticalAngle(1.52, 1))
+    expect(effectiveIncidence({ n1: 1, n2: 1.52, incidence: 30, atCritical: true })).toBe(30)
+    expect(effectiveIncidence({ n1: 1.52, n2: 1, incidence: 30, atCritical: false })).toBe(30)
   })
 
   it('rejects invalid input', () => {
