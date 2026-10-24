@@ -56,6 +56,21 @@ export const BIOLOGY_SOURCES: Record<string, BiologySource> = {
     label: 'OpenStax Biology 2e — 11.1 The Process of Meiosis',
     url: 'https://openstax.org/books/biology-2e/pages/11-1-the-process-of-meiosis',
   },
+  'bio-11-2': {
+    id: 'bio-11-2',
+    label: 'OpenStax Biology 2e — 11.2 Sexual Reproduction',
+    url: 'https://openstax.org/books/biology-2e/pages/11-2-sexual-reproduction',
+  },
+  'bio-12-1': {
+    id: 'bio-12-1',
+    label: 'OpenStax Biology 2e — 12.1 Mendel’s Experiments and the Laws of Probability',
+    url: 'https://openstax.org/books/biology-2e/pages/12-1-mendels-experiments-and-the-laws-of-probability',
+  },
+  'bio-12-2': {
+    id: 'bio-12-2',
+    label: 'OpenStax Biology 2e — 12.2 Characteristics and Traits',
+    url: 'https://openstax.org/books/biology-2e/pages/12-2-characteristics-and-traits',
+  },
   'bio-14-2': {
     id: 'bio-14-2',
     label: 'OpenStax Biology 2e — 14.2 DNA Structure and Sequencing',

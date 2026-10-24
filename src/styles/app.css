@@ -7075,8 +7075,7 @@ tr.is-limiting td {
   min-width: 0;
 }
 
-.reaction-lab .data-table {
-  display: block;
+.table-scroll {
   max-width: 100%;
   overflow-x: auto;
 }
@@ -7097,4 +7096,135 @@ tr.is-limiting td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ---------- Biology: meiosis and inheritance ---------- */
+
+.meiosis-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.meiosis-label {
+  fill: var(--color-text);
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+
+.meiosis-cell-label {
+  fill: var(--color-text-muted);
+  font: 600 9px var(--font-sans);
+}
+
+.meiosis-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meiosis-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meiosis-counts td:last-child {
+  min-width: 14rem;
+}
+
+.inh-parents {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.inh-parent {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+.inh-cross {
+  color: var(--color-text-muted);
+  font-size: var(--text-xl);
+}
+
+.punnett td {
+  min-width: 7rem;
+}
+
+.punnett td strong {
+  display: block;
+  font-size: var(--text-lg);
+}
+
+.punnett td.is-recessive {
+  background: rgb(111 214 154 / 0.08);
+}
+
+.punnett td.is-dominant {
+  background: rgb(245 194 107 / 0.08);
+}
+
+tr.is-sum th,
+tr.is-sum td {
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.inh-sim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.inh-field {
+  display: grid;
+  gap: 4px;
+}
+
+.inh-results {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.inh-chart {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+
+.inh-chart-label {
+  fill: var(--color-text-muted);
+  font: 600 11px var(--font-sans);
+}
+
+.inh-chart-track {
+  fill: var(--color-surface-raised);
+}
+
+.inh-chart-bar {
+  fill: var(--color-accent);
+}
+
+.inh-chart-expected {
+  stroke: var(--color-measure);
+  stroke-width: 2.5;
+}
+
+.meiosis-counts th,
+.meiosis-counts td,
+.punnett th,
+.punnett td {
+  padding-right: var(--space-3);
+}
+
+.process-view .section-title {
+  margin-top: var(--space-3);
 }

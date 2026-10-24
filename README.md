@@ -11,8 +11,8 @@ Every explorer has breadcrumbs and a searchable **Topics** drawer. All five subj
   detailed heart module with a blood-flow tour.
 - **Chemistry Explorer:** molecules and measurements, the periodic table, atomic structure with
   isotopes, bonding and geometry, and a reaction and stoichiometry lab.
-- **Biology Explorer:** animal, plant and bacterial cells, DNA and RNA, cell division and energy
-  processes.
+- **Biology Explorer:** animal, plant and bacterial cells, DNA and RNA, mitosis, meiosis,
+  one-gene inheritance and energy processes.
 - **Physics Explorer:** projectile, spring–mass, DC circuit and wave labs.
 - **Mathematics Explorer:** 2D functions with calculus tools, 3D surfaces, and vectors with 2×2
   transformations.
@@ -667,9 +667,9 @@ table and its data load only when this view is opened (a separate ~13 kB chunk).
 
 ## Biology Explorer — cells, DNA, division and energy
 
-Biology has four sections (**Cells**, **DNA and RNA**, **Cell division**, **Energy processes**).
-Links without `bsec` are cell links, so older links and saves open as before; the other sections
-add `bsec=dna|division|energy`. Process sections are saved and shared as the section alone. They
+Biology has six sections (**Cells**, **DNA and RNA**, **Cell division**, **Meiosis**,
+**Inheritance**, **Energy processes**). Links without `bsec` are cell links, so older links and
+saves open as before; the other sections add `bsec=dna|division|meiosis|inheritance|energy`. Process sections are saved and shared as the section alone. They
 are plain HTML and SVG, load when first opened, and need no WebGL.
 
 ### Bacterial cell
@@ -713,6 +713,64 @@ divides the cytoplasm*).
 - A note says mitosis does not make gametes; gametes come from meiosis, which halves the
   chromosome number (§10.1, 10.2, 11.1).
 - A unit test checks that the drawing's chromatid count matches the text at every stage.
+
+### Meiosis
+
+**Meiosis** (`bsec=meiosis`) steps through nine stages with Previous/Next or direct steps:
+interphase (one round of DNA replication), prophase I, metaphase I, anaphase I, telophase I and
+cytokinesis, prophase II, metaphase II, anaphase II, telophase II and cytokinesis (OpenStax
+Biology 2e §11.1).
+- **Same cell as mitosis:** an illustrative animal cell with 2n = 4 (two homologous pairs, A
+  longer and B shorter), as in OpenStax's own figure and this app's mitosis module (a unit test
+  ties the two together). The text says human cells have 46.
+- **Chromosomes are data** (`src/data/biology/meiosis.ts`): every chromosome has a pair, a parent
+  of origin and one or two chromatids made of segments, and each stage is built from them. The
+  drawing and a **counts table** (chromosomes, chromatids, chromosome sets and the contents of each
+  cell, e.g. *AM (2 sister chromatids, carrying a crossed-over segment)*) are generated from the
+  same data, and unit tests check the counts at every stage for every option: 4 chromosomes / 8
+  chromatids (diploid) through anaphase I; 2 cells of 2 chromosomes / 4 chromatids (haploid) after
+  telophase I; 4 single-chromatid chromosomes per cell in anaphase II; 4 haploid cells of 2
+  single-chromatid chromosomes at the end.
+- **Homologous chromosomes vs sister chromatids:** colour *and* an M/P letter show maternal and
+  paternal origin; two bars joined at a centromere are one chromosome of two sister chromatids.
+  Homologs separate in anaphase I, sisters in anaphase II.
+- **Crossing over** (a checkbox): one exchange between nonsister chromatids of pair A in prophase
+  I. With it, all four products are genetically different; without it, products come in identical
+  pairs (tested).
+- **Independent assortment** (*Pair B like pair A / Pair B flipped*): changes which chromosomes
+  travel together from metaphase I; the text gives 2ⁿ (2² = 4 here, 2²³ for human gametes).
+- Labelled conceptual: sizes, positions and shapes are schematic, stages run into each other, and
+  no timing is shown.
+
+**Mitosis versus meiosis** (the side panel) compares DNA replication, number of divisions, what
+homologous chromosomes do, chromosome sets (2n → 2n vs 2n → n), products, and roles in animals,
+in the same 2n = 4 context. It notes that roles depend on the life cycle: many fungi and algae
+make spores by meiosis and plants alternate generations (§11.2).
+
+### Inheritance
+
+**Inheritance** (`bsec=inheritance&p1=…&p2=…`) is a one-gene Mendelian model using Mendel's pea
+seed colour: *Y* (yellow) dominant over *y* (green) (§12.2). Human traits are deliberately not
+used.
+- **Assumptions** are listed: one gene with two alleles; complete dominance; each diploid parent
+  passes on one of its alleles with probability ½; random combination of gametes; equal survival.
+  The panel says many traits do not follow this model (incomplete dominance, codominance,
+  multiple alleles, recessive lethals, sex linkage, and continuous traits such as height that many
+  genes affect; §12.1, 12.2).
+- **Parents** (YY, Yy or yy each) show their phenotype and their gametes with probabilities. The
+  **Punnett square** has four equally likely cells (¼ each); the **probability table** gives
+  exact fractions and percentages for each genotype and phenotype, explaining the sum rule.
+  Unit tests check that genotype and phenotype probabilities total 1 for all nine crosses, and the
+  1:2:1 / 3:1 / 1:1 results.
+- **Sampling simulation:** 4, 20, 100, 1000 or any whole number up to 10 000 offspring, each
+  getting one allele from each parent at random from a **seeded generator** (`src/lib/random.ts`,
+  mulberry32). The seed is shown and editable: *Run with this seed* repeats exactly; *Run again*
+  picks a new one. The table compares observed counts and shares with expected counts (n × p) and
+  theoretical probabilities, and a bar chart shows observed shares as bars and theory as marks.
+  The theoretical values are computed exactly and never depend on the simulation; the text says
+  observed outcomes vary, especially in small samples.
+- **Links** store the parent genotypes only (invalid values are corrected); simulation results,
+  sample size and seed are not stored.
 
 ### Energy processes
 
@@ -1674,6 +1732,7 @@ How the URL is kept up to date:
 | --- | --- |
 | `src/data/anatomy/atlas/relationships.test.ts` | Every relationship names existing structures and a registered source with its quoted basis; explorations list existing structures and relationships; one-side statements apply to both sides except the right-kidney one; no position is stated for the triceps; the drawing does not contradict the stated directions. |
 | `src/features/anatomy/atlas/scene/orientation.test.ts` | The orientation indicator for front, back and left-lateral cameras (body's left to the screen's right in front, anterior to the left in the side view, end-on axes), for the atlas's own view directions. |
+| `src/data/biology/meiosis.test.ts` | Meiosis uses the mitosis module's 2n = 4; chromosome, chromatid and set counts at all nine stages for all four option combinations; the text states the computed counts; homologs separate in meiosis I and sisters in meiosis II; crossing over gives four distinct products (two without), with only nonsister chromatids exchanging; independent assortment; the comparison's sources and context. One-gene model: probabilities totalling 1 for all nine crosses, 1:2:1, 3:1 and 1:1. Simulation: repeatable per seed, counts adding up, different seeds differing, impossible genotypes never produced, large samples near ¼, zero offspring; the generator stays in [0, 1) and seeds are validated. |
 | `src/chem/stoichiometry.test.ts` | Formula parsing (parentheses, two-letter symbols, malformed input); element-by-element balance, lowest terms, invalid coefficients and charge; every library equation and ionic form balanced in lowest terms with a registered source; type coverage; balancing steps from all 1s to the source's coefficients; molar masses against hand sums; mole ratios; limiting reactant with leftovers, exact ratios (including floating-point residue), zero and invalid amounts; percent yield (zero theoretical yield, above 100 %); significant-figure rounding and charge text. |
 | `src/data/topics.test.ts` | Unique module ids and modules for every subject; every module and topic link canonical and claimed by exactly its own module; the breadcrumb naming each curated topic; old links without module keys; counts from data; questions listed only when their module exists, with canonical links. |
 | `src/lib/textWrap.test.ts` | Caption wrapping within the width; long URLs broken at delimiters or before `%`-escapes and rejoining exactly at four widths; strings with no delimiters; graphemes (subscripts, combining marks, ZWJ emoji, flags) never split; widths narrower than a character; long titles; empty text. PNG `iTXt` metadata: standard CRC-32, UTF-8 round trip with the image chunks intact, rejecting non-PNG data and bad keywords. |
@@ -1840,6 +1899,13 @@ the production build:
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
   analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `meiosis-inheritance.e2e.ts`: meiosis counts in the table at prophase I, telophase I (two
+  haploid cells of 2 chromosomes / 4 chromatids) and telophase II (four cells of 2 / 2), the 2² text,
+  sisters staying together in anaphase I, flipping pair B changing which chromosomes travel
+  together, crossing over on and off, and the comparison panel; the Punnett square, exact
+  probabilities, changing a parent (link, breadcrumb, reload), assumptions and limits, invalid
+  genotypes corrected; the simulation repeating for a seed, counts adding up, theory unchanged, a
+  new seed, and invalid sample sizes and seeds. Mobile and no-WebGL runs cover both sections.
 - `reactions.e2e.ts`: balancing water from all 1s (counts, *Differs*, the minimum coefficient,
   0 ignored, the balanced verdict, doubling flagged as not lowest terms, the coefficient/subscript
   explanation); octane's steps; switching reactions resets the editor; net and complete ionic
@@ -1949,6 +2015,9 @@ src/
   data/guides.ts, data/glossary.ts, data/sources.ts   subject guide content, shared definitions, source registry
   components/SubjectBar.tsx     breadcrumbs and the Topics drawer
   features/*/activity.ts        each subject's activity definition and setup
+  data/biology/meiosis.ts       meiosis stages built from chromosome data, counts, mitosis comparison
+  data/biology/inheritance.ts   one-gene Mendelian model, exact probabilities, seeded simulation
+  lib/random.ts                 seeded random-number generator (mulberry32)
   chem/stoichiometry.ts         formula parsing, balance, molar mass, mole ratios, limiting reactant, yields
   data/chemistry/reactions.ts   curated reactions, CIAAW atomic weights, balancing steps
   data/
@@ -2141,14 +2210,15 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Isotopes in the library | 25 |
 | Cell structures (animal, plant, bacterial) | 23 |
 | Cell division stages | 7 |
+| Meiosis stages | 9 |
 | Physics labs | 4 |
 | Function families | 7 |
 | Surfaces | 4 |
 | Matrix presets | 6 |
 | Glossary terms | 83 |
 | Cross-subject relations | 9 |
-| Registered sources | 118 |
-| Search index entries | 506 |
+| Registered sources | 121 |
+| Search index entries | 508 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.

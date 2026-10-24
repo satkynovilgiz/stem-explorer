@@ -150,39 +150,41 @@ function BalanceTable({ equation, coefficients }: { equation: Equation; coeffici
   const ionic = [...equation.reactants, ...equation.products].some((s) => s.charge)
   return (
     <>
-      <table className="data-table rx-counts">
-        <caption className="visually-hidden">Atoms of each element on each side</caption>
-        <thead>
-          <tr>
-            <th scope="col">Element</th>
-            <th scope="col">Reactants</th>
-            <th scope="col">Products</th>
-            <th scope="col">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {report.elements.map((e) => (
-            <tr key={e.element} className={e.balanced ? 'is-ok' : 'is-off'}>
-              <th scope="row">{e.element}</th>
-              <td>{e.left}</td>
-              <td>{e.right}</td>
-              <td>
-                <StatusMark ok={e.balanced} />
-              </td>
+      <div className="table-scroll">
+        <table className="data-table rx-counts">
+          <caption className="visually-hidden">Atoms of each element on each side</caption>
+          <thead>
+            <tr>
+              <th scope="col">Element</th>
+              <th scope="col">Reactants</th>
+              <th scope="col">Products</th>
+              <th scope="col">Status</th>
             </tr>
-          ))}
-          {ionic && (
-            <tr className={report.charge.balanced ? 'is-ok' : 'is-off'}>
-              <th scope="row">Charge</th>
-              <td>{signed(report.charge.left)}</td>
-              <td>{signed(report.charge.right)}</td>
-              <td>
-                <StatusMark ok={report.charge.balanced} />
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {report.elements.map((e) => (
+              <tr key={e.element} className={e.balanced ? 'is-ok' : 'is-off'}>
+                <th scope="row">{e.element}</th>
+                <td>{e.left}</td>
+                <td>{e.right}</td>
+                <td>
+                  <StatusMark ok={e.balanced} />
+                </td>
+              </tr>
+            ))}
+            {ionic && (
+              <tr className={report.charge.balanced ? 'is-ok' : 'is-off'}>
+                <th scope="row">Charge</th>
+                <td>{signed(report.charge.left)}</td>
+                <td>{signed(report.charge.right)}</td>
+                <td>
+                  <StatusMark ok={report.charge.balanced} />
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       <p className={`rx-verdict ${report.balanced ? 'is-ok' : 'is-off'}`} role="status">
         {report.balanced
           ? report.lowestTerms
@@ -283,29 +285,31 @@ function MoleCalculator({ reaction }: { reaction: Reaction }) {
       </div>
       <AmountField id={`${id}-n`} label="Amount" value={amount} onChange={setAmount} unit="mol" />
       {value !== null && (
-        <table className="data-table">
-          <caption className="visually-hidden">Moles of every substance</caption>
-          <thead>
-            <tr>
-              <th scope="col">Substance</th>
-              <th scope="col">Ratio</th>
-              <th scope="col">Amount (mol)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {species.map((s, k) => (
-              <tr key={k}>
-                <th scope="row">
-                  <SpeciesText s={s} />
-                </th>
-                <td>
-                  {reaction.balanced[k]} : {reaction.balanced[from]}
-                </td>
-                <td>{formatSig(moleRatio(value, reaction.balanced[from], reaction.balanced[k]))}</td>
+        <div className="table-scroll">
+          <table className="data-table">
+            <caption className="visually-hidden">Moles of every substance</caption>
+            <thead>
+              <tr>
+                <th scope="col">Substance</th>
+                <th scope="col">Ratio</th>
+                <th scope="col">Amount (mol)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {species.map((s, k) => (
+                <tr key={k}>
+                  <th scope="row">
+                    <SpeciesText s={s} />
+                  </th>
+                  <td>
+                    {reaction.balanced[k]} : {reaction.balanced[from]}
+                  </td>
+                  <td>{formatSig(moleRatio(value, reaction.balanced[from], reaction.balanced[k]))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   )
@@ -379,31 +383,33 @@ function YieldCalculator({ reaction }: { reaction: Reaction }) {
       ) : (
         result && (
           <div className="rx-results">
-            <table className="data-table">
-              <caption className="visually-hidden">Amounts of reactants</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Reactant</th>
-                  <th scope="col">Moles</th>
-                  <th scope="col">Moles ÷ coefficient</th>
-                  <th scope="col">Left over</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reactants.map((s, i) => (
-                  <tr key={i} className={result.limiting.includes(i) ? 'is-limiting' : ''}>
-                    <th scope="row">
-                      <SpeciesText s={s} /> {result.limiting.includes(i) && <span className="rx-tag">Limiting</span>}
-                    </th>
-                    <td>{formatSig(moles[i]!)}</td>
-                    <td>{formatSig(moles[i]! / reaction.balanced[i])}</td>
-                    <td>
-                      {formatSig(result.leftover[i] * masses[i])} g ({formatSig(result.leftover[i])} mol)
-                    </td>
+            <div className="table-scroll">
+              <table className="data-table">
+                <caption className="visually-hidden">Amounts of reactants</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Reactant</th>
+                    <th scope="col">Moles</th>
+                    <th scope="col">Moles ÷ coefficient</th>
+                    <th scope="col">Left over</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {reactants.map((s, i) => (
+                    <tr key={i} className={result.limiting.includes(i) ? 'is-limiting' : ''}>
+                      <th scope="row">
+                        <SpeciesText s={s} /> {result.limiting.includes(i) && <span className="rx-tag">Limiting</span>}
+                      </th>
+                      <td>{formatSig(moles[i]!)}</td>
+                      <td>{formatSig(moles[i]! / reaction.balanced[i])}</td>
+                      <td>
+                        {formatSig(result.leftover[i] * masses[i])} g ({formatSig(result.leftover[i])} mol)
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <p className="rx-verdict" role="status">
               {result.extent === 0
                 ? 'A reactant amount is zero, so no product can form.'
@@ -583,25 +589,27 @@ function MolarMasses({ reaction }: { reaction: Reaction }) {
       <h3 id="rx-mm" className="section-title">
         Molar masses
       </h3>
-      <table className="data-table">
-        <caption className="visually-hidden">Molar mass of each substance</caption>
-        <thead>
-          <tr>
-            <th scope="col">Substance</th>
-            <th scope="col">Molar mass (g/mol)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {species.map((s, k) => (
-            <tr key={k}>
-              <th scope="row">
-                <SpeciesText s={s} /> <span className="small muted">{s.name}</span>
-              </th>
-              <td>{molarMass(s.formula, WEIGHTS).toFixed(2)}</td>
+      <div className="table-scroll">
+        <table className="data-table">
+          <caption className="visually-hidden">Molar mass of each substance</caption>
+          <thead>
+            <tr>
+              <th scope="col">Substance</th>
+              <th scope="col">Molar mass (g/mol)</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {species.map((s, k) => (
+              <tr key={k}>
+                <th scope="row">
+                  <SpeciesText s={s} /> <span className="small muted">{s.name}</span>
+                </th>
+                <td>{molarMass(s.formula, WEIGHTS).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <p className="small muted">
         Sums of CIAAW 2024 abridged standard atomic weights ({elements.map((el) => `${el} ${WEIGHT_TEXT[el]}`).join('; ')}), shown to 0.01 g/mol. Results below are
         rounded to three significant figures for display; calculations keep full precision.

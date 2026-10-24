@@ -4,6 +4,7 @@ import { MOVEMENTS } from './anatomy/atlas/movements'
 import { TOURS } from './anatomy/atlas/tours'
 import { RELATION_EXPLORATIONS, RELATIONSHIPS } from './anatomy/atlas/relationships'
 import { DIVISION_STAGES } from './biology/mitosis'
+import { meiosisStages } from './biology/meiosis'
 import { ISOTOPES } from './chemistry/atomic'
 import { GLOSSARY } from './glossary'
 import { RELATIONS } from './related'
@@ -31,6 +32,7 @@ describe('README content inventory', () => {
       'Isotopes in the library': ISOTOPES.length,
       'Cell structures (animal, plant, bacterial)': count('organelle:'),
       'Cell division stages': DIVISION_STAGES.length,
+      'Meiosis stages': meiosisStages({ crossover: true, orientation: 'same' }).length,
       'Physics labs': count('experiment:'),
       'Function families': count('function:'),
       Surfaces: count('surface:'),

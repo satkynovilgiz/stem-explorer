@@ -327,3 +327,11 @@ test('the reaction lab fits a phone', async ({ page }) => {
   await expect(page.locator('.reaction-lab .rx-verdict').first()).toContainText('Ag, N, O differ')
   await expectNoHorizontalOverflow(page)
 })
+
+test('meiosis and inheritance fit a phone', async ({ page }) => {
+  for (const url of ['/?bsec=meiosis#/biology', '/?bsec=inheritance&p1=Yy&p2=yy#/biology']) {
+    await page.goto(url)
+    await expect(page.locator('.process-view')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  }
+})

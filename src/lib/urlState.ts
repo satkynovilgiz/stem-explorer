@@ -93,17 +93,37 @@ export function withChemistrySection(search: string, section: ChemistrySection, 
 }
 
 /* Biology sections. Links without `bsec` are cell links, so older links open as before. */
-export type BiologySection = 'cells' | 'dna' | 'division' | 'energy'
-export function parseBiologySection(search: string): { section: BiologySection; invalid: string[] } {
-  const raw = new URLSearchParams(search).get('bsec')
-  const section: BiologySection = raw === 'dna' || raw === 'division' || raw === 'energy' ? raw : 'cells'
-  return { section, invalid: raw !== null && section !== raw ? ['bsec'] : [] }
+export type BiologySection = 'cells' | 'dna' | 'division' | 'meiosis' | 'inheritance' | 'energy'
+export const BIOLOGY_SECTIONS: readonly BiologySection[] = ['cells', 'dna', 'division', 'meiosis', 'inheritance', 'energy']
+export type ParentGenotype = 'YY' | 'Yy' | 'yy'
+export interface Parents {
+  p1: ParentGenotype
+  p2: ParentGenotype
 }
-export const biologySectionEntries = (section: BiologySection): Record<string, string> => (section === 'cells' ? {} : { bsec: section })
-export function withBiologySection(search: string, section: BiologySection): string {
+export const DEFAULT_PARENTS: Parents = { p1: 'Yy', p2: 'Yy' }
+const isGenotype = (v: string | null): v is ParentGenotype => v === 'YY' || v === 'Yy' || v === 'yy'
+
+/** Reads `?bsec=…`, plus `p1`/`p2` (parent genotypes) for the inheritance section. */
+export function parseBiologySection(search: string): { section: BiologySection; parents: Parents; invalid: string[] } {
   const q = new URLSearchParams(search)
-  q.delete('bsec')
-  if (section !== 'cells') q.set('bsec', section)
+  const raw = q.get('bsec')
+  const section: BiologySection = (BIOLOGY_SECTIONS as readonly string[]).includes(raw ?? '') && raw !== 'cells' ? (raw as BiologySection) : 'cells'
+  const invalid = raw !== null && section !== raw ? ['bsec'] : []
+  const parents = { ...DEFAULT_PARENTS }
+  for (const k of ['p1', 'p2'] as const) {
+    const v = q.get(k)
+    if (v === null) continue
+    if (isGenotype(v) && section === 'inheritance') parents[k] = v
+    else invalid.push(k)
+  }
+  return { section, parents, invalid }
+}
+export const biologySectionEntries = (section: BiologySection, parents: Parents = DEFAULT_PARENTS): Record<string, string> =>
+  section === 'cells' ? {} : section === 'inheritance' ? { bsec: section, p1: parents.p1, p2: parents.p2 } : { bsec: section }
+export function withBiologySection(search: string, section: BiologySection, parents?: Parents): string {
+  const q = new URLSearchParams(search)
+  for (const k of ['bsec', 'p1', 'p2']) q.delete(k)
+  for (const [k, v] of Object.entries(biologySectionEntries(section, parents))) q.set(k, v)
   return `?${q.toString()}`
 }
 

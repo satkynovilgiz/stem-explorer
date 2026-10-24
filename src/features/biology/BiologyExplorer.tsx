@@ -6,7 +6,7 @@ import { CELL_STRUCTURES, findOrganelle, isInternal } from '../../data/biology/o
 import type { OrganelleId } from '../../data/biology/types'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { pushHistoryEntry } from '../../lib/location'
-import { biologySectionEntries, parseBiologyParams, parseBiologySection, withBiologyParams, withBiologySection, type BiologySection } from '../../lib/urlState'
+import { biologySectionEntries, parseBiologyParams, parseBiologySection, withBiologyParams, withBiologySection, type BiologySection, type Parents } from '../../lib/urlState'
 import { ActivityPanel } from '../activities/ActivityPanel'
 import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
 import { ACTIVITY_ENDED, replaceUrlSearch, useActivity } from '../activities/useActivity'
@@ -26,8 +26,19 @@ const DivisionView = lazy(() => import('./processes/DivisionView').then((m) => (
 const DivisionPanel = lazy(() => import('./processes/DivisionView').then((m) => ({ default: m.DivisionPanel })))
 const EnergyView = lazy(() => import('./processes/EnergyView').then((m) => ({ default: m.EnergyView })))
 const EnergyPanel = lazy(() => import('./processes/EnergyView').then((m) => ({ default: m.EnergyPanel })))
+const MeiosisView = lazy(() => import('./processes/MeiosisView').then((m) => ({ default: m.MeiosisView })))
+const MeiosisPanel = lazy(() => import('./processes/MeiosisView').then((m) => ({ default: m.MeiosisPanel })))
+const InheritanceView = lazy(() => import('./processes/InheritanceView').then((m) => ({ default: m.InheritanceView })))
+const InheritancePanel = lazy(() => import('./processes/InheritanceView').then((m) => ({ default: m.InheritancePanel })))
 
-const SECTION_LABEL: Record<BiologySection, string> = { cells: 'Cells', dna: 'DNA and RNA', division: 'Cell division', energy: 'Energy processes' }
+const SECTION_LABEL: Record<BiologySection, string> = {
+  cells: 'Cells',
+  dna: 'DNA and RNA',
+  division: 'Cell division',
+  meiosis: 'Meiosis',
+  inheritance: 'Inheritance',
+  energy: 'Energy processes',
+}
 
 type MobileTab = 'details' | 'structures'
 
@@ -47,6 +58,7 @@ export function BiologyExplorer() {
   const [focusToken, setFocusToken] = useState(0)
   const [mobileTab, setMobileTab] = useState<MobileTab>('details')
   const [section, setSection] = useState<BiologySection>(() => parseBiologySection(window.location.search).section)
+  const [parents, setParents] = useState<Parents>(() => parseBiologySection(window.location.search).parents)
 
   // Switching module adds a history entry, so Back returns to the previous module.
   const goSection = (next: BiologySection) => {
@@ -69,14 +81,15 @@ export function BiologyExplorer() {
         cellType,
       }),
       section,
+      parents,
     )
     if (search !== window.location.search) {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
-  }, [selection?.organelleId, view, cellType, section])
+  }, [selection?.organelleId, view, cellType, section, parents])
 
   // Process sections are shared and saved as the section alone (see canonicalize).
-  const sectionParams = { cell: view, ...biologySectionEntries(section) }
+  const sectionParams = { cell: view, ...biologySectionEntries(section, parents) }
   useRecordVisit({
     subject: 'biology',
     params:
@@ -108,7 +121,7 @@ export function BiologyExplorer() {
         Module
       </span>
       <div className="segmented section-switch section-switch--grid" role="group" aria-label="Biology section">
-        {(['cells', 'dna', 'division', 'energy'] as const).map((s) => (
+        {(['cells', 'dna', 'division', 'meiosis', 'inheritance', 'energy'] as const).map((s) => (
           <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => goSection(s)}>
             {SECTION_LABEL[s]}
           </button>
@@ -124,12 +137,26 @@ export function BiologyExplorer() {
   }
   const loading = <p className="muted small panel">Loading {SECTION_LABEL[section].toLowerCase()}…</p>
   const processStage =
-    section === 'dna' ? <DnaView /> : section === 'division' ? <DivisionView /> : section === 'energy' ? <EnergyView onOpenStructure={openStructure} /> : null
+    section === 'dna' ? (
+      <DnaView />
+    ) : section === 'division' ? (
+      <DivisionView />
+    ) : section === 'meiosis' ? (
+      <MeiosisView />
+    ) : section === 'inheritance' ? (
+      <InheritanceView parents={parents} onParents={setParents} />
+    ) : section === 'energy' ? (
+      <EnergyView onOpenStructure={openStructure} />
+    ) : null
   const processPanel =
     section === 'dna' ? (
       <DnaPanel shareParams={sectionParams} />
     ) : section === 'division' ? (
       <DivisionPanel shareParams={sectionParams} />
+    ) : section === 'meiosis' ? (
+      <MeiosisPanel shareParams={sectionParams} />
+    ) : section === 'inheritance' ? (
+      <InheritancePanel shareParams={sectionParams} />
     ) : section === 'energy' ? (
       <EnergyPanel shareParams={sectionParams} />
     ) : null
@@ -270,6 +297,10 @@ export function BiologyExplorer() {
               ? 'A small schematic DNA segment and a transcription example.'
               : section === 'division'
                 ? 'A step-by-step mitosis sequence, with interphase and cytokinesis shown separately.'
+                : section === 'meiosis'
+                  ? 'Meiosis I and II in the same 2n = 4 cell, compared with mitosis.'
+                  : section === 'inheritance'
+                    ? 'One gene, two alleles: Punnett square, probabilities and a repeatable sampling simulation.'
                 : 'Photosynthesis and cellular respiration, linked to the chloroplast and mitochondrion.'}
           </p>
         )}

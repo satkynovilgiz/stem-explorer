@@ -248,3 +248,10 @@ test('the reaction lab needs no WebGL', async ({ page }) => {
   await page.getByRole('button', { name: 'Show the balanced equation' }).click()
   await expect(page.locator('.reaction-lab .rx-verdict').first()).toContainText('Balanced')
 })
+
+test('meiosis and inheritance need no WebGL', async ({ page }) => {
+  await page.goto('/?bsec=meiosis#/biology')
+  await expect(page.locator('.meiosis-counts')).toBeVisible()
+  await page.goto('/?bsec=inheritance#/biology')
+  await expect(page.locator('table.punnett')).toBeVisible()
+})

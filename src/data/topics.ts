@@ -180,6 +180,32 @@ export const MODULES: readonly TopicModule[] = [
     current: () => null,
   },
   {
+    id: 'biology.meiosis',
+    subject: 'biology',
+    name: 'Meiosis',
+    summary: 'Meiosis I and II in a 2n = 4 cell, crossing over, independent assortment, and a comparison with mitosis',
+    href: linkTo('biology', { bsec: 'meiosis' }),
+    topics: [],
+    matches: (s) => parseBiologySection(s).section === 'meiosis',
+    current: () => null,
+  },
+  {
+    id: 'biology.inheritance',
+    subject: 'biology',
+    name: 'Inheritance',
+    summary: 'One-gene Mendelian crosses: Punnett square, probabilities and a repeatable sampling simulation',
+    href: linkTo('biology', { bsec: 'inheritance' }),
+    topics: [
+      { label: 'Yy × Yy', href: linkTo('biology', { bsec: 'inheritance', p1: 'Yy', p2: 'Yy' }) },
+      { label: 'Yy × yy (test cross)', href: linkTo('biology', { bsec: 'inheritance', p1: 'Yy', p2: 'yy' }) },
+    ],
+    matches: (s) => parseBiologySection(s).section === 'inheritance',
+    current: (s) => {
+      const { p1, p2 } = parseBiologySection(s).parents
+      return p1 === 'Yy' && p2 === 'yy' ? 'Yy × yy (test cross)' : `${p1} × ${p2}`
+    },
+  },
+  {
     id: 'biology.energy',
     subject: 'biology',
     name: 'Energy processes',
