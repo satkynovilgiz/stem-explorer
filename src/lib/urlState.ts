@@ -1,3 +1,4 @@
+import { DEFAULT_REACTION, REACTION_IDS } from '../data/chemistry/reactions'
 import {
   DEFAULT_SURFACE,
   defaultParams,
@@ -50,36 +51,44 @@ export function withChemistryParams(search: string, state: ChemistryUrlState): s
 }
 
 /* Chemistry sections. Links without `csec` are molecule links, so every older link opens as before. */
-export type ChemistrySection = 'periodic' | 'atomic' | 'molecules' | 'bonding'
-export const CHEMISTRY_SECTIONS: readonly ChemistrySection[] = ['periodic', 'atomic', 'molecules', 'bonding']
+export type ChemistrySection = 'periodic' | 'atomic' | 'molecules' | 'bonding' | 'reactions'
+export const CHEMISTRY_SECTIONS: readonly ChemistrySection[] = ['periodic', 'atomic', 'molecules', 'bonding', 'reactions']
 export const DEFAULT_ELEMENT = 8
 
-/** Reads `?csec=periodic|atomic|bonding&el=<1–118>`; `el` belongs to the periodic and atomic sections. */
-export function parseChemistrySection(search: string): { section: ChemistrySection; element: number; invalid: string[] } {
+/**
+ * Reads `?csec=periodic|atomic|bonding|reactions&el=<1–118>&rx=<reaction>`; `el` belongs to the
+ * periodic and atomic sections and `rx` to the reactions section.
+ */
+export function parseChemistrySection(search: string): { section: ChemistrySection; element: number; reaction: string; invalid: string[] } {
   const q = new URLSearchParams(search)
   const invalid: string[] = []
   const raw = q.get('csec')
-  const section: ChemistrySection = raw === 'periodic' || raw === 'atomic' || raw === 'bonding' ? raw : 'molecules'
+  const section: ChemistrySection = raw === 'periodic' || raw === 'atomic' || raw === 'bonding' || raw === 'reactions' ? raw : 'molecules'
   if (raw !== null && section !== raw) invalid.push('csec')
   const el = q.get('el')
   const n = el !== null && /^\d{1,3}$/.test(el) ? Number(el) : NaN
   const element = Number.isInteger(n) && n >= 1 && n <= 118 ? n : DEFAULT_ELEMENT
   if (el !== null && (element !== n || (section !== 'periodic' && section !== 'atomic'))) invalid.push('el')
-  return { section, element, invalid }
+  const rx = q.get('rx')
+  const reaction = rx !== null && REACTION_IDS.includes(rx) ? rx : DEFAULT_REACTION
+  if (rx !== null && (reaction !== rx || section !== 'reactions')) invalid.push('rx')
+  return { section, element, reaction, invalid }
 }
 
-export function chemistrySectionEntries(section: ChemistrySection, element: number): Record<string, string> {
+export function chemistrySectionEntries(section: ChemistrySection, element: number, reaction: string = DEFAULT_REACTION): Record<string, string> {
   if (section === 'molecules') return {}
   if (section === 'bonding') return { csec: 'bonding' }
+  if (section === 'reactions') return { csec: 'reactions', rx: reaction }
   return { csec: section, el: String(element) }
 }
 
 /** Replaces the section keys in `search`, keeping everything else. */
-export function withChemistrySection(search: string, section: ChemistrySection, element: number): string {
+export function withChemistrySection(search: string, section: ChemistrySection, element: number, reaction?: string): string {
   const q = new URLSearchParams(search)
   q.delete('csec')
   q.delete('el')
-  for (const [k, v] of Object.entries(chemistrySectionEntries(section, element))) q.set(k, v)
+  q.delete('rx')
+  for (const [k, v] of Object.entries(chemistrySectionEntries(section, element, reaction))) q.set(k, v)
   return `?${q.toString()}`
 }
 

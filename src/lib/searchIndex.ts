@@ -6,6 +6,7 @@ import { ENERGY_PROCESSES } from '../data/biology/energy'
 import { GLOSSARY } from '../data/glossary'
 import { MOLECULES } from '../data/chemistry/molecules'
 import { ELEMENTS } from '../data/chemistry/periodicTable'
+import { REACTIONS, TYPE_LABEL } from '../data/chemistry/reactions'
 import { SUBJECTS, type SubjectId } from '../data/subjects'
 import { FUNCTIONS } from '../math/functions'
 import { PRESETS } from '../math/linear'
@@ -21,6 +22,7 @@ export type SearchKind =
   | 'cell'
   | 'element'
   | 'molecule'
+  | 'reaction'
   | 'section'
   | 'process'
   | 'lab'
@@ -35,6 +37,7 @@ export const KIND_LABELS: Record<SearchKind, string> = {
   cell: 'Cell models and structures',
   element: 'Elements',
   molecule: 'Molecules',
+  reaction: 'Reactions',
   section: 'Sections',
   process: 'Processes',
   lab: 'Labs',
@@ -129,6 +132,24 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     href: linkTo('chemistry', { csec: 'bonding' }),
     terms: ['bond', 'ionic', 'covalent', 'electronegativity', 'polarity', 'polar', 'geometry', 'vsepr'],
   },
+  {
+    id: 'section:reactions',
+    name: 'Reactions and stoichiometry',
+    subject: 'chemistry',
+    kind: 'section',
+    description: 'Balance curated reactions, compare molecular and net ionic equations, and work out mole ratios, limiting reactants and yields.',
+    href: linkTo('chemistry', { csec: 'reactions' }),
+    terms: ['reaction', 'balancing', 'balance', 'coefficient', 'stoichiometry', 'mole ratio', 'limiting reactant', 'limiting reagent', 'theoretical yield', 'percent yield', 'net ionic equation', 'molar mass'],
+  },
+  ...REACTIONS.map((r) => ({
+    id: `reaction:${r.id}`,
+    name: r.name,
+    subject: 'chemistry' as const,
+    kind: 'reaction' as const,
+    description: `${TYPE_LABEL[r.type]}. ${r.equation.reactants.map((x) => x.formula).join(' + ')} → ${r.equation.products.map((x) => x.formula).join(' + ')}`,
+    href: linkTo('chemistry', { csec: 'reactions', rx: r.id }),
+    terms: [TYPE_LABEL[r.type], ...[...r.equation.reactants, ...r.equation.products].flatMap((x) => [x.name, x.formula])],
+  })),
   ...ELEMENTS.map((e) => ({
     id: `element:${e.number}`,
     name: e.name,

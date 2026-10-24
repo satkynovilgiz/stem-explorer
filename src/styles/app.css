@@ -6787,3 +6787,314 @@ html.is-presenting .subject-bar {
   display: block;
   margin-top: 2px;
 }
+
+/* ---------- Chemistry: reaction and stoichiometry lab ---------- */
+
+.reaction-lab {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.reaction-lab .panel {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.chem--mobile .reaction-lab {
+  height: auto;
+  overflow: visible;
+}
+
+.rx-equation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  font-size: var(--text-lg);
+  line-height: 1.6;
+}
+
+.info-header .rx-equation {
+  font-size: var(--text-base);
+}
+
+.rx-term {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.rx-coef {
+  margin-right: 2px;
+  color: var(--color-measure);
+  font-weight: 700;
+}
+
+.rx-charge {
+  font-size: 0.7em;
+}
+
+.rx-state {
+  margin-left: 1px;
+  color: var(--color-text-muted);
+  font-size: 0.75em;
+}
+
+.rx-arrow,
+.rx-plus {
+  color: var(--color-text-muted);
+}
+
+.rx-type {
+  display: inline-block;
+  margin-right: var(--space-1);
+  padding: 0 8px;
+  border: 1px solid var(--color-accent-border);
+  border-radius: 999px;
+  color: var(--color-accent-strong);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.rx-editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+
+.rx-editor-item {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.rx-editor-item.is-first-product {
+  border-left: 3px solid var(--color-accent);
+}
+
+.rx-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-button.bordered {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border-strong);
+}
+
+.icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rx-coef-input,
+.rx-amount {
+  width: 64px;
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.rx-amount {
+  width: 120px;
+  text-align: right;
+}
+
+.rx-amount[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.rx-counts tr.is-off td,
+.rx-counts tr.is-off th {
+  color: var(--color-warning);
+}
+
+.rx-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.rx-mark.is-ok {
+  color: var(--color-success);
+}
+
+.rx-mark.is-off {
+  color: var(--color-warning);
+}
+
+.rx-verdict {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  font-size: var(--text-sm);
+}
+
+.rx-verdict.is-ok {
+  border-left-color: var(--color-success);
+}
+
+.rx-verdict.is-off {
+  border-left-color: var(--color-warning);
+}
+
+.rx-steps {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+}
+
+.rx-steps li.is-active {
+  color: var(--color-accent-strong);
+}
+
+.rx-particle-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.rx-particles {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.rx-atom-label {
+  fill: #101214;
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+
+.rx-particle-figure {
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.rx-calc {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.rx-field {
+  display: grid;
+  gap: 4px;
+}
+
+.rx-field-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rx-yield-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.rx-yield-input {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+}
+
+.rx-results {
+  display: grid;
+  gap: var(--space-2);
+}
+
+tr.is-limiting th,
+tr.is-limiting td {
+  background: var(--color-measure-soft);
+}
+
+.rx-tag {
+  margin-left: var(--space-1);
+  padding: 0 6px;
+  border: 1px solid var(--color-measure-border);
+  border-radius: 4px;
+  color: var(--color-measure);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.rx-explainer p {
+  margin: 0;
+}
+
+/* Narrow screens: the lab's column may shrink, and wide tables scroll inside themselves. */
+.reaction-lab {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.reaction-lab .panel {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rx-calc,
+.rx-results,
+.rx-field {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rx-field .select {
+  width: 100%;
+  min-width: 0;
+}
+
+.reaction-lab .data-table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Breadcrumb items shrink with an ellipsis instead of overlapping (the full trail is in the Topics drawer). */
+.crumbs li {
+  flex-shrink: 1;
+  overflow: hidden;
+}
+
+.crumbs li:first-child,
+.crumbs li:nth-child(2) {
+  flex-shrink: 0;
+}
+
+.crumb-module,
+.crumb-topic {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

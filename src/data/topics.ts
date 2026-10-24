@@ -11,6 +11,7 @@ import { CELL_STRUCTURES, findOrganelle } from './biology/organelles'
 import { DIVISION_STAGES } from './biology/mitosis'
 import { findMolecule, MOLECULES } from './chemistry/molecules'
 import { ELEMENTS, findElement } from './chemistry/periodicTable'
+import { findReaction, REACTIONS } from './chemistry/reactions'
 import type { SubjectId } from './subjects'
 import { FUNCTIONS } from '../math/functions'
 import { PRESETS } from '../math/linear'
@@ -127,6 +128,16 @@ export const MODULES: readonly TopicModule[] = [
     topics: [],
     matches: (s) => parseChemistrySection(s).section === 'bonding',
     current: () => null,
+  },
+  {
+    id: 'chemistry.reactions',
+    subject: 'chemistry',
+    name: 'Reactions and stoichiometry',
+    summary: `${REACTIONS.length} curated reactions to balance, with mole ratios, limiting reactants and yields`,
+    href: linkTo('chemistry', { csec: 'reactions' }),
+    topics: ['ammonia-synthesis', 'methane-combustion', 'silver-chloride-precipitation'].map((id) => ({ label: findReaction(id)!.name, href: linkTo('chemistry', { csec: 'reactions', rx: id }) })),
+    matches: (s) => parseChemistrySection(s).section === 'reactions',
+    current: (s) => findReaction(parseChemistrySection(s).reaction)?.name ?? null,
   },
   {
     id: 'biology.cells',

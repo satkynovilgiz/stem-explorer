@@ -298,7 +298,8 @@ test('on a phone, the breadcrumb fits and the topic drawer navigates between mod
   const drawer = page.getByRole('dialog', { name: 'Modules and topics' })
   await expect(drawer).toBeVisible()
   const box = (await drawer.boundingBox())!
-  expect(box.width).toBeLessThanOrEqual(390)
+  // Half a pixel of tolerance: the entrance animation can leave sub-pixel rounding.
+  expect(box.width).toBeLessThanOrEqual(390.5)
   await drawer.getByRole('searchbox').fill('waves')
   await drawer.getByRole('link', { name: 'Travelling waves' }).tap()
   await expect(crumbs.locator('[aria-current="page"]')).toHaveText('Travelling waves')
@@ -316,5 +317,13 @@ test('on a phone, Where is it? sits in the Structures tab and opens the details'
   await where.getByRole('button', { name: /^Right kidney/ }).tap()
   await expect(page.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true')
   await expect(page.locator('.where-section')).toContainText('The right kidney is slightly inferior')
+  await expectNoHorizontalOverflow(page)
+})
+
+test('the reaction lab fits a phone', async ({ page }) => {
+  await page.goto('/?csec=reactions&rx=silver-chloride-precipitation#/chemistry')
+  await expect(page.locator('.reaction-lab')).toBeVisible()
+  await page.getByRole('button', { name: 'Increase the coefficient of silver chloride' }).tap()
+  await expect(page.locator('.reaction-lab .rx-verdict').first()).toContainText('Ag, N, O differ')
   await expectNoHorizontalOverflow(page)
 })

@@ -10,7 +10,7 @@ Every explorer has breadcrumbs and a searchable **Topics** drawer. All five subj
   muscular detail with elbow and knee demonstrations, organ-system tours and close-ups, and a
   detailed heart module with a blood-flow tour.
 - **Chemistry Explorer:** molecules and measurements, the periodic table, atomic structure with
-  isotopes, and bonding and geometry.
+  isotopes, bonding and geometry, and a reaction and stoichiometry lab.
 - **Biology Explorer:** animal, plant and bacterial cells, DNA and RNA, cell division and energy
   processes.
 - **Physics Explorer:** projectile, spring–mass, DC circuit and wave labs.
@@ -447,8 +447,8 @@ Only the 3D view and its toolbar are replaced by a message.
 
 ## Chemistry Explorer
 
-Chemistry has four sections (**Periodic table**, **Atomic structure**, **Molecules**, **Bonding and
-geometry**), chosen with a 2 × 2 switch. Links without a section key are molecule links, so every
+Chemistry has five sections (**Periodic table**, **Atomic structure**, **Molecules**, **Bonding and
+geometry**, **Reactions and stoichiometry**), chosen with the module tabs. Links without a section key are molecule links, so every
 older link and saved exploration opens as before. Other sections add `csec=periodic|atomic|bonding`,
 plus `el=<1–118>` for the selected element. Invalid values are rejected by the same parser that
 validates saved entries.
@@ -574,6 +574,66 @@ electrons.
   nonmetal often ionic). The text quotes OpenStax's counter-examples: HF (ΔEN ≈ 1.9) and NH₃ (≈ 0.9)
   are both polar covalent, while NaCl (≈ 2.1) and MnI₂ (≈ 1.0) are both ionic. It notes that
   tables differ, and no bond type is assigned from ΔEN alone.
+
+### Reactions and stoichiometry
+
+**Reactions and stoichiometry** (`csec=reactions&rx=<id>`) is a fifth Chemistry section. It is
+plain HTML and SVG, loads when opened (a ~22 kB chunk) and needs no WebGL. Calculations live in
+`src/chem/stoichiometry.ts`, content in `src/data/chemistry/reactions.ts`, and the UI in
+`src/features/chemistry/reactions/ReactionLab.tsx`.
+
+**Library** (10 reactions, each with its source section of OpenStax Chemistry 2e):
+
+| Type | Reactions |
+| --- | --- |
+| Synthesis | N₂(g) + 3H₂(g) → 2NH₃(g) (§4.3); 2Na(s) + Cl₂(g) → 2NaCl(s) (§4.2); H₂(g) + Cl₂(g) → 2HCl(g) (§4.4) |
+| Decomposition | 2H₂O → 2H₂ + O₂ (§4.1); 2NaN₃(s) → 3N₂(g) + 2Na(s), initiated by an electric current (§4.3) |
+| Combustion | CH₄ + 2O₂ → CO₂ + 2H₂O (§4.1); 2C₈H₁₈ + 25O₂ → 16CO₂ + 18H₂O (§4.3) |
+| Precipitation | CaCl₂(aq) + 2AgNO₃(aq) → Ca(NO₃)₂(aq) + 2AgCl(s), with complete and net ionic Ag⁺(aq) + Cl⁻(aq) → AgCl(s) (§4.1) |
+| Acid–base | Mg(OH)₂(s) + 2HCl(aq) → MgCl₂(aq) + 2H₂O(l) (§4.2) |
+| Ionic equations | CO₂(aq) + 2NaOH(aq) → Na₂CO₃(aq) + H₂O(l), with complete and net ionic CO₂(aq) + 2OH⁻(aq) → CO₃²⁻(aq) + H₂O(l) (§4.1) |
+
+- Physical states and conditions appear only where the cited section gives them. Where it gives
+  none (water, methane, octane), the entry says so. Net ionic forms appear only where the section
+  derives them; the antacid entry says its net ionic form is not shown.
+- Every entry says that a balanced equation shows conservation of atoms (and charge), **not**
+  that a reaction happens, how fast, how completely or under which conditions.
+
+**Balancing.** Each reaction opens unbalanced (every coefficient 1). Coefficients are whole
+numbers from 1 to 30, changed with − / + or typed (invalid entries such as 0 or 1.5 are ignored).
+A table lists each element's atoms on both sides with *Equal* / *Differs* (and a check or cross
+icon), plus a **Charge** row for ionic equations; the verdict says which elements differ, or that
+the equation is balanced but not in smallest whole numbers. *Coefficient or subscript?* explains,
+with the reaction's own first substance, that a coefficient counts formula units while a
+subscript is part of the substance's identity. **Step by step** walks through balancing by
+inspection (for octane, the 12½ O₂ that forces doubling); each step can be applied to the editor.
+*Molecular / Complete ionic / Net ionic* switches the precipitation and CO₂ examples between
+forms, names the spectator ions and checks charge.
+
+**Particle picture.** A static SVG of the current coefficients: one group of circles per formula
+unit, each circle labelled with its element symbol and CPK-coloured. It is labelled conceptual:
+sizes, positions and spacing mean nothing, and it shows no mechanism, speed or conditions. It is
+shown for up to 24 neutral formula units.
+
+**Stoichiometry** (always uses the source's balanced equation, whatever the editor shows):
+- **Molar masses** are sums of the CIAAW 2024 abridged standard atomic weights (based on *Atomic
+  Weights 2021*), e.g. H 1.0080 ± 0.0002, O 15.999 ± 0.001, Cl 35.45 ± 0.01, shown to 0.01 g/mol.
+  The uncertainties are listed; they are not propagated.
+- **Mole-to-mole**: moles of every substance from a known amount, with the ratio used.
+- **Limiting reactant and theoretical yield** (reactions with two or more reactants): amounts in g
+  or mol per reactant; moles, moles ÷ coefficient, the limiting reactant(s) (all of them when the
+  amounts are exactly in ratio, within a relative 10⁻⁹), the theoretical yield in g and mol for the
+  chosen product, and what is left over. **Actual yield** (measured) gives the percent yield;
+  above 100 % is shown with a note about measurement problems rather than clipped. The text keeps
+  theoretical (calculated, complete reaction) and actual (measured, often lower) yield apart.
+- Input: a finite, non-negative number up to 1 000 000; empty, negative, non-numeric and larger
+  values show a message and are never coerced. A zero amount gives zero product with an
+  explanation. Results are rounded to three significant figures for display (integers keep all
+  their digits); calculations use full precision.
+
+**Links** store the reaction only (`rx`), never coefficients or amounts; an unknown `rx` is
+replaced by the default (methane combustion). Exports say that coefficients and amounts are not
+restored.
 
 ### Periodic table
 
@@ -1614,6 +1674,7 @@ How the URL is kept up to date:
 | --- | --- |
 | `src/data/anatomy/atlas/relationships.test.ts` | Every relationship names existing structures and a registered source with its quoted basis; explorations list existing structures and relationships; one-side statements apply to both sides except the right-kidney one; no position is stated for the triceps; the drawing does not contradict the stated directions. |
 | `src/features/anatomy/atlas/scene/orientation.test.ts` | The orientation indicator for front, back and left-lateral cameras (body's left to the screen's right in front, anterior to the left in the side view, end-on axes), for the atlas's own view directions. |
+| `src/chem/stoichiometry.test.ts` | Formula parsing (parentheses, two-letter symbols, malformed input); element-by-element balance, lowest terms, invalid coefficients and charge; every library equation and ionic form balanced in lowest terms with a registered source; type coverage; balancing steps from all 1s to the source's coefficients; molar masses against hand sums; mole ratios; limiting reactant with leftovers, exact ratios (including floating-point residue), zero and invalid amounts; percent yield (zero theoretical yield, above 100 %); significant-figure rounding and charge text. |
 | `src/data/topics.test.ts` | Unique module ids and modules for every subject; every module and topic link canonical and claimed by exactly its own module; the breadcrumb naming each curated topic; old links without module keys; counts from data; questions listed only when their module exists, with canonical links. |
 | `src/lib/textWrap.test.ts` | Caption wrapping within the width; long URLs broken at delimiters or before `%`-escapes and rejoining exactly at four widths; strings with no delimiters; graphemes (subscripts, combining marks, ZWJ emoji, flags) never split; widths narrower than a character; long titles; empty text. PNG `iTXt` metadata: standard CRC-32, UTF-8 round trip with the image chunks intact, rejecting non-PNG data and bad keywords. |
 | `src/lib/measurement.test.ts` | Distance and angle maths against known geometry. Also the cosine clamp, zero-length arms, duplicate and restarting selections, and how results are labelled. |
@@ -1779,6 +1840,15 @@ the production build:
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
   analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `reactions.e2e.ts`: balancing water from all 1s (counts, *Differs*, the minimum coefficient,
+  0 ignored, the balanced verdict, doubling flagged as not lowest terms, the coefficient/subscript
+  explanation); octane's steps; switching reactions resets the editor; net and complete ionic
+  forms with spectators and the charge row; mole-to-mole for ammonia; H₂ + Cl₂ with 3 and 2 mol
+  (Cl₂ limiting, 146 g = 4.00 mol HCl, 1.00 mol H₂ left, 68.6 % from 100 g, the >100 % note),
+  exactly stoichiometric amounts, zero, negative, non-numeric and too-large input; Copy link
+  storing only the reaction, reload resetting coefficients, the CIAAW note, 18.02 g/mol for water,
+  the "does not show whether a reaction happens" note and an invalid `rx`. `no-webgl.e2e.ts` and
+  `mobile.e2e.ts` (no horizontal overflow at 390 px) cover the lab too.
 - `navigation.e2e.ts`: Home lists each subject's real modules and only questions whose destination
   exists; a module link and a question open the right state with the breadcrumb; the breadcrumb
   following a molecule change; a module switch with Back and Forward; the drawer (focus in the
@@ -1879,6 +1949,8 @@ src/
   data/guides.ts, data/glossary.ts, data/sources.ts   subject guide content, shared definitions, source registry
   components/SubjectBar.tsx     breadcrumbs and the Topics drawer
   features/*/activity.ts        each subject's activity definition and setup
+  chem/stoichiometry.ts         formula parsing, balance, molar mass, mole ratios, limiting reactant, yields
+  data/chemistry/reactions.ts   curated reactions, CIAAW atomic weights, balancing steps
   data/
     subjects.ts                 subject list and planned features
     topics.ts                   navigation map: subject → module → topic, and Home questions
@@ -2065,6 +2137,7 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Heart module structures | 14 |
 | Elements | 118 |
 | Molecules | 12 |
+| Curated reactions | 10 |
 | Isotopes in the library | 25 |
 | Cell structures (animal, plant, bacterial) | 23 |
 | Cell division stages | 7 |
@@ -2074,8 +2147,8 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Matrix presets | 6 |
 | Glossary terms | 83 |
 | Cross-subject relations | 9 |
-| Registered sources | 113 |
-| Search index entries | 495 |
+| Registered sources | 118 |
+| Search index entries | 506 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.

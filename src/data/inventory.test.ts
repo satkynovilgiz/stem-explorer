@@ -27,6 +27,7 @@ describe('README content inventory', () => {
       'Heart module structures': count('heart:'),
       Elements: count('element:'),
       Molecules: count('molecule:'),
+      'Curated reactions': count('reaction:'),
       'Isotopes in the library': ISOTOPES.length,
       'Cell structures (animal, plant, bacterial)': count('organelle:'),
       'Cell division stages': DIVISION_STAGES.length,

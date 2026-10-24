@@ -347,6 +347,26 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Chemistry 2e — 7.6 Molecular Structure and Polarity',
     url: 'https://openstax.org/books/chemistry-2e/pages/7-6-molecular-structure-and-polarity',
   },
+  'chem-4-1': {
+    label: 'OpenStax Chemistry 2e — 4.1 Writing and Balancing Chemical Equations',
+    url: 'https://openstax.org/books/chemistry-2e/pages/4-1-writing-and-balancing-chemical-equations',
+  },
+  'chem-4-2': {
+    label: 'OpenStax Chemistry 2e — 4.2 Classifying Chemical Reactions',
+    url: 'https://openstax.org/books/chemistry-2e/pages/4-2-classifying-chemical-reactions',
+  },
+  'chem-4-3': {
+    label: 'OpenStax Chemistry 2e — 4.3 Reaction Stoichiometry',
+    url: 'https://openstax.org/books/chemistry-2e/pages/4-3-reaction-stoichiometry',
+  },
+  'chem-4-4': {
+    label: 'OpenStax Chemistry 2e — 4.4 Reaction Yields',
+    url: 'https://openstax.org/books/chemistry-2e/pages/4-4-reaction-yields',
+  },
+  'ciaaw-2024': {
+    label: 'CIAAW — Abridged Standard Atomic Weights (2024 table, based on Atomic Weights 2021)',
+    url: 'https://www.ciaaw.org/abridged-atomic-weights.htm',
+  },
   cccbdb: {
     label: 'NIST Computational Chemistry Comparison and Benchmark Database (CCCBDB) — experimental geometries',
     url: 'https://cccbdb.nist.gov/',

@@ -242,3 +242,9 @@ test('Anatomy Where is it? and relationship explorations work as text without We
   await page.getByRole('button', { name: /Diaphragm, lungs and the thoracic cavity/ }).click()
   await expect(page.locator('.relation-panel.is-active')).toContainText('The diaphragm forms the floor of the thoracic cavity')
 })
+
+test('the reaction lab needs no WebGL', async ({ page }) => {
+  await page.goto('/?csec=reactions&rx=ammonia-synthesis#/chemistry')
+  await page.getByRole('button', { name: 'Show the balanced equation' }).click()
+  await expect(page.locator('.reaction-lab .rx-verdict').first()).toContainText('Balanced')
+})

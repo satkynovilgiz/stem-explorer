@@ -27,12 +27,15 @@ const AtomicStructureView = lazy(() => import('./atomic/AtomicStructure').then((
 const AtomPanel = lazy(() => import('./atomic/AtomicStructure').then((m) => ({ default: m.AtomPanel })))
 const BondingView = lazy(() => import('./bonding/Bonding').then((m) => ({ default: m.BondingView })))
 const BondingPanel = lazy(() => import('./bonding/Bonding').then((m) => ({ default: m.BondingPanel })))
+const ReactionLab = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionLab })))
+const ReactionPanel = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionPanel })))
 
 const SECTION_LABEL: Record<ChemistrySection, string> = {
   periodic: 'Periodic table',
   atomic: 'Atomic structure',
   molecules: 'Molecules',
   bonding: 'Bonding and geometry',
+  reactions: 'Reactions and stoichiometry',
 }
 
 const URL_DEFAULTS = { moleculeId: DEFAULT_MOLECULE_ID, representation: 'ball-and-stick' } as const
@@ -55,6 +58,7 @@ export function ChemistryExplorer() {
   const [mobileTab, setMobileTab] = useState<MobileTab>('details')
   const [section, setSection] = useState<ChemistrySection>(() => parseChemistrySection(window.location.search).section)
   const [elementZ, setElementZ] = useState(() => parseChemistrySection(window.location.search).element)
+  const [reactionId, setReactionId] = useState(() => parseChemistrySection(window.location.search).reaction)
 
   const reducedMotion = usePrefersReducedMotion()
   const isMobile = useMediaQuery('(max-width: 899px)')
@@ -65,13 +69,13 @@ export function ChemistryExplorer() {
   // Keep the address shareable: ?molecule=…&view=… (also replaces invalid values with valid ones).
   // Sections other than Molecules add `csec` (and `el`); molecule links stay exactly as before.
   useEffect(() => {
-    const search = withChemistrySection(withChemistryParams(window.location.search, { moleculeId: state.moleculeId, representation }), section, elementZ)
+    const search = withChemistrySection(withChemistryParams(window.location.search, { moleculeId: state.moleculeId, representation }), section, elementZ, reactionId)
     if (search !== window.location.search) {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
-  }, [state.moleculeId, representation, section, elementZ])
+  }, [state.moleculeId, representation, section, elementZ, reactionId])
 
-  const shareParams = { molecule: state.moleculeId, view: representation, ...chemistrySectionEntries(section, elementZ) }
+  const shareParams = { molecule: state.moleculeId, view: representation, ...chemistrySectionEntries(section, elementZ, reactionId) }
   useExportNotes('chemistry', ...chemistryExportNotes(section, molecule, state, showLabels, autoRotate))
   useRecordVisit({ subject: 'chemistry', params: shareParams })
 
@@ -106,7 +110,7 @@ export function ChemistryExplorer() {
         Module
       </span>
       <div className="segmented section-switch section-switch--grid" role="group" aria-label="Chemistry section">
-        {(['periodic', 'atomic', 'molecules', 'bonding'] as const).map((s) => (
+        {(['periodic', 'atomic', 'molecules', 'bonding', 'reactions'] as const).map((s) => (
           <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => goSection(s)}>
             {SECTION_LABEL[s]}
           </button>
@@ -143,6 +147,17 @@ export function ChemistryExplorer() {
   const bondingPanel = (
     <Suspense fallback={loading}>
       <BondingPanel shareParams={shareParams} />
+    </Suspense>
+  )
+
+  const reactionView = (
+    <Suspense fallback={loading}>
+      <ReactionLab reactionId={reactionId} onReaction={setReactionId} />
+    </Suspense>
+  )
+  const reactionPanel = (
+    <Suspense fallback={loading}>
+      <ReactionPanel reactionId={reactionId} shareParams={shareParams} />
     </Suspense>
   )
 
@@ -209,8 +224,8 @@ export function ChemistryExplorer() {
     />
   )
 
-  const stage = section === 'periodic' ? elementsView : section === 'atomic' ? atomicView : section === 'bonding' ? bondingView : viewer
-  const details = section === 'periodic' ? elementPanel : section === 'atomic' ? atomPanel : section === 'bonding' ? bondingPanel : info
+  const stage = section === 'periodic' ? elementsView : section === 'atomic' ? atomicView : section === 'bonding' ? bondingView : section === 'reactions' ? reactionView : viewer
+  const details = section === 'periodic' ? elementPanel : section === 'atomic' ? atomPanel : section === 'bonding' ? bondingPanel : section === 'reactions' ? reactionPanel : info
 
   // One polite live region for meaningful changes only (never per animation frame).
   const announcer = (
@@ -233,7 +248,7 @@ export function ChemistryExplorer() {
           active={mobileTab}
           onChange={setMobileTab}
           tabs={[
-            { id: 'details', label: section === 'molecules' ? 'Details' : section === 'bonding' ? 'Summary' : 'Element', content: details },
+            { id: 'details', label: section === 'molecules' ? 'Details' : section === 'bonding' || section === 'reactions' ? 'Summary' : 'Element', content: details },
             { id: 'library', label: 'Molecule library', content: library },
           ]}
         />
@@ -266,6 +281,7 @@ function chemistryExportNotes(
   showLabels: boolean,
   autoRotate: boolean,
 ): [string[], string[]] {
+  if (section === 'reactions') return [[], ['the coefficients you entered and the calculator amounts (the link stores the reaction only)']]
   if (section !== 'molecules') return [[], []]
   const annotations: string[] = []
   const notRestored: string[] = []
