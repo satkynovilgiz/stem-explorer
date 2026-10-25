@@ -1,10 +1,11 @@
-import { ChevronRight, ListTree, Search, X } from 'lucide-react'
+import { ChevronRight, ListTree, Maximize2, Minimize2, PanelLeft, PanelRight, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { locate, MODULES, type TopicModule } from '../data/topics'
 import { SUBJECTS, type SubjectId } from '../data/subjects'
 import { normalize } from '../lib/chemistry'
 import { useLocationSearch } from '../lib/location'
 import { moduleHref, rememberModuleState } from '../lib/moduleContext'
+import { restoreLayout, toggleFocus, toggleSide, usePeek, useWorkspace } from '../lib/workspace'
 import { AppLink } from './AppLink'
 import { SubjectIcon } from './SubjectIcon'
 
@@ -23,6 +24,17 @@ export function SubjectBar({ subject }: { subject: SubjectId }) {
   useEffect(() => {
     rememberModuleState(subject, search)
   }, [subject, search])
+  // The "t" shortcut opens the drawer.
+  useEffect(() => {
+    const onOpen = () => setOpen(true)
+    window.addEventListener('stem:open-topics', onOpen)
+    return () => window.removeEventListener('stem:open-topics', onOpen)
+  }, [])
+  const ws = useWorkspace()
+  const peek = usePeek()
+  const leftShown = ws.focus ? peek === 'left' : !ws.hideLeft
+  const rightShown = ws.focus ? peek === 'right' : !ws.hideRight
+  const changed = ws.focus || ws.hideLeft || ws.hideRight
 
   const close = () => {
     setOpen(false)
@@ -60,6 +72,25 @@ export function SubjectBar({ subject }: { subject: SubjectId }) {
           )}
         </ol>
       </nav>
+      <div className="workspace-controls" role="group" aria-label="Workspace layout">
+        <button type="button" className="tool-button bordered" data-ws-toggle="left" aria-pressed={leftShown} title="Left panel ( [ )" onClick={() => toggleSide('left')}>
+          <PanelLeft size={15} aria-hidden="true" />
+          <span>{ws.focus ? 'Controls' : 'Left panel'}</span>
+        </button>
+        <button type="button" className="tool-button bordered" data-ws-toggle="right" aria-pressed={rightShown} title="Right panel ( ] )" onClick={() => toggleSide('right')}>
+          <PanelRight size={15} aria-hidden="true" />
+          <span>{ws.focus ? 'Details' : 'Right panel'}</span>
+        </button>
+        <button type="button" className="tool-button bordered" aria-pressed={ws.focus} title="Focus mode ( f )" onClick={toggleFocus}>
+          {ws.focus ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />}
+          <span>Focus mode</span>
+        </button>
+        {changed && (
+          <button type="button" className="tool-button bordered workspace-restore" onClick={restoreLayout}>
+            <span>Show all panels</span>
+          </button>
+        )}
+      </div>
       <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <ListTree size={15} aria-hidden="true" />
         <span>Topics</span>

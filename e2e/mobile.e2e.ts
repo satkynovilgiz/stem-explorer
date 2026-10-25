@@ -351,3 +351,10 @@ test('statistics fits a phone', async ({ page }) => {
     await expectNoHorizontalOverflow(page)
   }
 })
+
+test('on a phone the layout controls are replaced by the stacked panels with tabs', async ({ page }) => {
+  await page.goto('/?experiment=optics#/physics')
+  await expect(page.getByRole('group', { name: 'Workspace layout' })).toBeHidden()
+  await expect(page.getByRole('tab', { name: 'Inputs' })).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+})

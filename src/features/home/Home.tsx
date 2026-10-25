@@ -11,6 +11,7 @@ import { HomeSearch } from './HomeSearch'
 import { RecentStrip } from './RecentStrip'
 import { SavedPanel } from './SavedPanel'
 import { HeroIllustration } from './HeroIllustration'
+import { AtlasGlance, InterestStarts } from './HomeSections'
 import { SubjectArt } from './SubjectArt'
 
 const ORDER: SubjectId[] = SUBJECTS.map((s) => s.id)
@@ -199,7 +200,11 @@ export function Home() {
 
       {firstVisit ? <WelcomePanel /> : library.recent.length > 0 && <RecentStrip recent={library.recent} onMessage={setMessage} />}
 
+      <AtlasGlance />
+
       <QuestionLinks />
+
+      <InterestStarts />
 
       <section ref={subjectsRef} className="home-section enter" aria-labelledby="subjects-heading" tabIndex={-1}>
         <h2 id="subjects-heading" className="home-h2">

@@ -123,7 +123,7 @@ test('Focus moves the camera only when pressed, and Reset view restores it', asy
   const initialLabels = await labelTransforms(page, LABELS)
 
   await structureButton(page, 'Golgi apparatus').click()
-  await page.getByRole('button', { name: 'Focus' }).click()
+  await page.getByRole('button', { name: 'Focus', exact: true }).click()
   await expect.poll(async () => (await canvasShot(page, true)).equals(initial)).toBe(false)
 
   // Clear the highlight so the comparison only reflects the camera.

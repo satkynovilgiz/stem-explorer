@@ -1411,6 +1411,36 @@ cross-section graph keep working, and the 3D-only toolbar is hidden.
   - traces;
   - elliptic and hyperbolic paraboloids.
 
+## Workspace layout and keyboard shortcuts
+
+**Layout controls** sit in the subject bar of every explorer (desktop widths, 900 px and up):
+- **Left panel / Right panel** hide or show the side panels (`aria-pressed` shows the state).
+- **Focus mode** hides both panels so the visual takes the width. Controls stay reachable: in Focus mode
+  the two buttons read **Controls** and **Details** and open that panel *over* the stage; Esc or
+  the same button closes it. Scene toolbars, measurement panels, badges, legends, units and
+  warnings live in the stage, so they stay visible. SVG labs grow with the space (limited by the
+  window height).
+- **Show all panels** appears whenever the layout differs from the default and restores it.
+- **Preferences are not scientific settings:** they are stored per browser in `localStorage`
+  (`stem-explorer:workspace`), apply to every explorer, sync between tabs, and never enter links,
+  saves, notes or exports. If storage is blocked they last for the visit. An open overlay panel is
+  never stored and closes when you leave the explorer.
+- **Focus is kept:** if keyboard focus is inside a panel that disappears, it moves to that panel's
+  toggle.
+- Panels fade in over 160 ms when they reappear (no animation with reduced motion). Phones and
+  narrow windows (including 200% browser zoom on a 1440 px screen) use the stacked layout with
+  tabs, so the toggles are hidden there.
+
+**Keyboard shortcuts** (press **?** for the list, a modal dialog that returns focus when closed):
+`?` shortcuts, `/` Search, `t` Topics drawer, `f` Focus mode, `[` left panel, `]` right panel, `Esc`
+close a dialog, drawer or overlay panel (or leave presentation mode). Shortcuts never fire while
+typing in a text field, number field, text area, select or editable area, never with Ctrl, ⌘ or
+Alt held, and not while another dialog is open (`src/lib/workspace.ts`, `src/App.tsx`).
+
+**Loading impact:** the main bundle grew from 507.9 kB to 519.6 kB (152.5 → 156.0 kB gzipped) for
+the layout controls, shortcuts and Home sections; no animation library or other dependency was
+added.
+
 ## Navigation: breadcrumbs, topic drawer and module memory
 
 Every explorer has a **subject bar** under the top bar (`src/components/SubjectBar.tsx`):
@@ -1458,6 +1488,14 @@ Home is laid out top to bottom:
   two concrete starting points (a guided activity and the heart) and how exploring works. For
   returning visitors it is replaced by a compact **Continue exploring** strip of recent visits,
   and the guide moves behind **How it works**.
+- **At a glance**: one line per subject with every module as a link, read from the topic map, so
+  the whole atlas fits on one screen.
+- **Starting points by interest**: six small groups (the human body, how things move, light and
+  seeing, matter and reactions, living things and inheritance, patterns, data and chance), each
+  with two or three links to real views. They are grouped by topic, not by level, and say so; a
+  unit test checks that every link is canonical.
+- **Continue exploring** and **Saved explorations** now show each item's module (for example
+  *Biology · Inheritance*) and, for recent visits, a relative time (*just now*, *3 hours ago*).
 - **Explore by question**: short curated questions (*How does breathing work?*, *Why do molecules
   have different shapes?*, *How does a lens form an image?*) that open the module answering them.
   A question is listed only when its destination module exists in the topic map, so the lens
@@ -1852,6 +1890,7 @@ How the URL is kept up to date:
 | `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the 1.52 → 1 at 41.14° reproduction (total internal reflection, θc ≈ 41.1395104°); below, at and above θc at full precision for four media pairs; the tolerance far below one slider step; critical mode only when θc exists; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
 | `src/data/biology/meiosis.test.ts` | Meiosis uses the mitosis module's 2n = 4; chromosome, chromatid and set counts at all nine stages for all four option combinations; the text states the computed counts; homologs separate in meiosis I and sisters in meiosis II; crossing over gives four distinct products (two without), with only nonsister chromatids exchanging; independent assortment; the comparison's sources and context. One-gene model: probabilities totalling 1 for all nine crosses, 1:2:1, 3:1 and 1:1. Simulation: repeatable per seed, counts adding up, different seeds differing, impossible genotypes never produced, large samples near ¼, zero offspring; the generator stays in [0, 1) and seeds are validated. |
 | `src/chem/stoichiometry.test.ts` | Formula parsing (parentheses, two-letter symbols, malformed input); element-by-element balance, lowest terms, invalid coefficients and charge; every library equation and ionic form balanced in lowest terms with a registered source; type coverage; balancing steps from all 1s to the source's coefficients; molar masses against hand sums; mole ratios; limiting reactant with leftovers, exact ratios (including floating-point residue), zero and invalid amounts; percent yield (zero theoretical yield, above 100 %); significant-figure rounding and charge text. |
+| `src/features/home/sections.test.ts` | Every Home interest link is canonical; relative times (just now, minutes, hours, yesterday, invalid). |
 | `src/data/topics.test.ts` | Unique module ids and modules for every subject; every module and topic link canonical and claimed by exactly its own module; the breadcrumb naming each curated topic; old links without module keys; counts from data; questions listed only when their module exists, with canonical links. |
 | `src/lib/textWrap.test.ts` | Caption wrapping within the width; long URLs broken at delimiters or before `%`-escapes and rejoining exactly at four widths; strings with no delimiters; graphemes (subscripts, combining marks, ZWJ emoji, flags) never split; widths narrower than a character; long titles; empty text. PNG `iTXt` metadata: standard CRC-32, UTF-8 round trip with the image chunks intact, rejecting non-PNG data and bad keywords. |
 | `src/lib/measurement.test.ts` | Distance and angle maths against known geometry. Also the cosine clamp, zero-length arms, duplicate and restarting selections, and how results are labelled. |
@@ -2017,6 +2056,13 @@ the production build:
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
   analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
+- `workspace.e2e.ts`: hiding the left panel (link unchanged, kept after reload and in another
+  explorer, restored by *Show all panels*); Focus mode widening the stage by more than 400 px with
+  the measurement panel and badge still visible, the overlay *Controls* panel and Esc; the
+  shortcut list; "f" and "[" typed into a field doing nothing; focus moving to the toggle when "["
+  hides the panel that held it; "t" and "/"; 720 px (200% zoom) with no overflow; Home's overview,
+  interest links and a recent item showing *Biology · Inheritance · just now*. `mobile.e2e.ts`
+  checks that phones show tabs instead of the toggles.
 - `statistics.e2e.ts` (reset): seed 31 then *Restore default settings* gives 2026 in the field, the
   legend, the link and the same table; reset with invalid seed text clears the error; the reset
   configuration reloads; typed values survive a reset with *Include my values* turned off and no

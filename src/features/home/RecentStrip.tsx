@@ -1,5 +1,7 @@
 import { Clock } from 'lucide-react'
 import { AppLink } from '../../components/AppLink'
+import { locate } from '../../data/topics'
+import { relativeTime } from './time'
 import { hrefFor, subjectName } from '../../lib/explorations'
 import { browserStorage, clearRecent, type Exploration } from '../../lib/explorationStore'
 import { storeFailureText } from '../../lib/storeMessages'
@@ -30,8 +32,11 @@ export function RecentStrip({ recent, onMessage }: { recent: Exploration[]; onMe
         {recent.map((e) => (
           <li key={e.id}>
             <AppLink href={hrefFor(e)} className={`recent-item is-${e.subject}`}>
-              <span className="recent-subject">{subjectName(e.subject)}</span>
+              <span className="recent-subject">
+                {subjectName(e.subject)} · {locate(e.subject, hrefFor(e).split('#')[0]).module.name}
+              </span>
               <span className="recent-title">{e.title}</span>
+              <span className="recent-time">{relativeTime(e.updatedAt)}</span>
             </AppLink>
           </li>
         ))}

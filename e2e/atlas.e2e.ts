@@ -127,7 +127,7 @@ test('clicking the model selects a structure; Isolate, Focus and Reset work', as
   const name = await heading(page).textContent()
   await page.getByRole('button', { name: 'Isolate' }).click()
   await expect(page.locator('.viewport-badge')).toContainText(`Isolated: ${name}`)
-  await page.getByRole('button', { name: 'Focus' }).click()
+  await page.getByRole('button', { name: 'Focus', exact: true }).click()
   await page.getByRole('button', { name: 'Show all' }).click()
   await page.getByRole('button', { name: 'Reset camera' }).click()
   await expect(page.locator('.viewport-badge')).not.toContainText('Isolated')

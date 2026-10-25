@@ -7464,3 +7464,259 @@ tr.is-sum td {
 .stat-readout dd {
   overflow-wrap: anywhere;
 }
+
+/* ---------- Workspace layout: hidden panels, Focus mode, peeking panels ---------- */
+
+.workspace-controls {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.workspace-controls .tool-button {
+  min-height: 34px;
+}
+
+@media (max-width: 1199px) {
+  .workspace-controls .tool-button span {
+    display: none;
+  }
+
+  .workspace-controls .workspace-restore span {
+    display: inline;
+  }
+}
+
+@media (max-width: 899px) {
+  /* Phones use the stacked layout with tabs; panel toggles do not apply. */
+  .workspace-controls {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  html.ws-hide-left .chem:not(.chem--mobile) {
+    grid-template-columns: minmax(0, 1fr) var(--panel-right);
+  }
+
+  html.ws-hide-right .chem:not(.chem--mobile) {
+    grid-template-columns: var(--panel-left) minmax(0, 1fr);
+  }
+
+  html.ws-hide-left.ws-hide-right .chem:not(.chem--mobile),
+  html.ws-focus .chem:not(.chem--mobile) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html.ws-hide-left .chem:not(.chem--mobile) > .chem-side--left,
+  html.ws-hide-right .chem:not(.chem--mobile) > .chem-side--right,
+  html.ws-focus .chem:not(.chem--mobile) > .chem-side {
+    display: none;
+  }
+
+  /* In Focus mode a panel can be opened over the stage; Esc or its toggle closes it. */
+  html.ws-focus.ws-peek-left .chem:not(.chem--mobile) > .chem-side--left,
+  html.ws-focus.ws-peek-right .chem:not(.chem--mobile) > .chem-side--right {
+    position: fixed;
+    top: calc(var(--nav-height) + var(--subject-bar-height) + var(--space-3));
+    bottom: var(--space-3);
+    z-index: 25;
+    display: block;
+    width: min(var(--panel-right), 92vw);
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.5);
+  }
+
+  html.ws-focus.ws-peek-left .chem:not(.chem--mobile) > .chem-side--left {
+    left: var(--space-3);
+  }
+
+  html.ws-focus.ws-peek-right .chem:not(.chem--mobile) > .chem-side--right {
+    right: var(--space-3);
+  }
+
+  .chem:not(.chem--mobile) > .chem-side {
+    animation: panel-in 160ms var(--ease);
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+html.is-presenting .workspace-controls {
+  display: none;
+}
+
+.keyboard-help {
+  width: min(520px, 92vw);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.keyboard-help::backdrop {
+  background: rgb(5 7 9 / 0.6);
+}
+
+.keyboard-help h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.keyboard-help kbd,
+.present-kbd {
+  display: inline-block;
+  min-width: 1.8em;
+  padding: 1px 6px;
+  border: 1px solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font: 600 var(--text-sm) var(--font-mono);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chem:not(.chem--mobile) > .chem-side,
+  .topic-drawer[open] {
+    animation: none;
+  }
+}
+
+/* ---------- Home: at a glance, interests, recent items ---------- */
+
+.glance-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.glance-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-left: 3px solid var(--chip);
+  background: var(--color-surface);
+}
+
+.glance-subject {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--chip);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.glance-subject:hover {
+  text-decoration: underline;
+}
+
+.glance-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.glance-modules a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: border-color var(--duration) var(--ease), background-color var(--duration) var(--ease);
+}
+
+.glance-modules a:hover,
+.glance-modules a:focus-visible {
+  border-color: var(--chip);
+  background: var(--color-surface-raised);
+}
+
+@media (max-width: 640px) {
+  .glance-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+}
+
+.interest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interest-card {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--chip);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.interest-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-base);
+}
+
+.interest-links {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.interest-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.interest-links a:hover,
+.interest-links a:focus-visible {
+  color: var(--chip);
+  text-decoration: underline;
+}
+
+.recent-time {
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+}
+
+.home-section + .home-section {
+  margin-top: var(--space-2);
+}
+
+/* Focus mode gives SVG labs the extra width, limited by the window height. */
+html.ws-focus .chem-stage :is(.optics-svg, .stat-svg, .division-svg, .inh-chart) {
+  max-width: min(100%, 1100px);
+  max-height: calc(100dvh - var(--nav-height) - var(--subject-bar-height) - 140px);
+}

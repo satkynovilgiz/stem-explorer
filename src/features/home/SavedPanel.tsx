@@ -1,6 +1,7 @@
 import { Bookmark, Check, Pencil, Trash2, X } from 'lucide-react'
 import { useId, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
+import { locate } from '../../data/topics'
 import { hrefFor, subjectName } from '../../lib/explorations'
 import { browserStorage, MAX_SAVED, MAX_TITLE_LENGTH, removeExploration, renameExploration, type Exploration } from '../../lib/explorationStore'
 import { BackupControls } from './BackupControls'
@@ -51,7 +52,7 @@ function SavedItem({ entry, onMessage }: { entry: Exploration; onMessage: (text:
           <AppLink href={hrefFor(entry)} className="library-link">
             <span className="library-title">{entry.title}</span>
             <span className="library-meta">
-              <span className={`subject-chip is-${entry.subject}`}>{subjectName(entry.subject)}</span> Saved {formatDate(entry.createdAt)}
+              <span className={`subject-chip is-${entry.subject}`}>{subjectName(entry.subject)}</span> {locate(entry.subject, hrefFor(entry).split('#')[0]).module.name} · saved {formatDate(entry.createdAt)}
             </span>
           </AppLink>
           <div className="library-actions">

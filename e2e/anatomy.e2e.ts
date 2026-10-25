@@ -60,7 +60,7 @@ test('whole and cutaway views show or hide the internal structures', async ({ pa
   await expect(page.locator('.heart-label.is-selected')).toContainText('Mitral valve')
   await page.getByRole('button', { name: 'Whole' }).click()
   await expect(page.locator('.inline-note')).toContainText('switch to Cutaway')
-  await expect(page.getByRole('button', { name: 'Focus' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Focus', exact: true })).toBeDisabled()
   await expect.poll(async () => (await visibleLabels(page, '.heart-label.is-selected')).texts).toEqual([])
 })
 
@@ -74,7 +74,7 @@ test('Isolate, Show all, Focus and Reset camera', async ({ page }) => {
   await page.getByRole('button', { name: 'Show all' }).click()
   await expect(page.locator('.viewport-badge-mode')).toContainText('Whole heart')
 
-  await page.getByRole('button', { name: 'Focus' }).click()
+  await page.getByRole('button', { name: 'Focus', exact: true }).click()
   await expect.poll(async () => (await canvasShot(page, true)).equals(initial)).toBe(false)
   await page.locator('.header-actions').getByRole('button', { name: 'Clear selection' }).click()
   await page.getByRole('button', { name: 'Reset camera' }).click()
