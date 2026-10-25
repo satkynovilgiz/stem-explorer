@@ -8,7 +8,7 @@ const params = (page: Page) => new URL(page.url()).searchParams
 test('Home lists real modules per subject and only questions whose destination exists', async ({ page }) => {
   await page.goto('/')
   const physics = page.locator('.subject-card.is-physics')
-  await expect(physics.getByRole('list', { name: 'Physics modules' }).getByRole('link')).toHaveText([/Projectile motion/, /Spring–mass oscillator/, /DC circuits/, /Travelling waves/, /Geometric optics/])
+  await expect(physics.getByRole('list', { name: 'Physics modules' }).getByRole('link')).toHaveText([/Projectile motion/, /Spring–mass oscillator/, /DC circuits/, /Travelling waves/, /Geometric optics/, /Gas pressure and volume/])
   await expect(page.locator('.subject-card.is-chemistry')).toContainText('All 118 elements')
   const questions = page.getByRole('region', { name: 'Explore by question' }).getByRole('link')
   // All three curated questions now have implemented destinations (the optics lab shipped in Task 6).

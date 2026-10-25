@@ -229,18 +229,18 @@ export function parsePhysicsParams<T extends Record<PhysicsKey, number>>(
 }
 
 /** Which Physics experiment a link opens. Links without `experiment` are projectile links. */
-export type PhysicsExperiment = 'projectile' | 'spring' | 'circuit' | 'wave' | 'optics'
+export type PhysicsExperiment = 'projectile' | 'spring' | 'circuit' | 'wave' | 'optics' | 'gas'
 
 export function parsePhysicsExperiment(search: string): { experiment: PhysicsExperiment; invalid: boolean } {
   const raw = new URLSearchParams(search).get('experiment')
   if (raw === null || raw === 'projectile') return { experiment: 'projectile', invalid: false }
-  if (raw === 'spring' || raw === 'circuit' || raw === 'wave' || raw === 'optics') return { experiment: raw, invalid: false }
+  if (raw === 'spring' || raw === 'circuit' || raw === 'wave' || raw === 'optics' || raw === 'gas') return { experiment: raw, invalid: false }
   return { experiment: 'projectile', invalid: true }
 }
 
 export const SPRING_URL_KEYS = { mass: 'mass', k: 'k', x0: 'x0' } as const
 /** Keys of the circuit, wave and optics labs (see labUrl.ts); removed when going back to a projectile link. */
-export const LAB_URL_KEYS = ['arr', 'emf', 'r1', 'r2', 'r3', 'wamp', 'wfreq', 'wlen', 'wx', 'opt', 'n1', 'n2', 'inc', 'lens', 'f', 'do'] as const
+export const LAB_URL_KEYS = ['arr', 'emf', 'r1', 'r2', 'r3', 'wamp', 'wfreq', 'wlen', 'wx', 'opt', 'n1', 'n2', 'inc', 'lens', 'f', 'do', 'gp', 'gv1', 'gv2'] as const
 type SpringUrlKey = keyof typeof SPRING_URL_KEYS
 
 /** Reads `?experiment=spring&mass=…&k=…&x0=…`; each invalid value falls back to its default on its own. */
@@ -437,9 +437,45 @@ export interface AtlasUrlConfig {
  * explorer, so every link made before the atlas existed opens exactly as before; anything else
  * opens the whole-body atlas.
  */
-export function anatomyModule(search: string): 'atlas' | 'heart' {
+export function anatomyModule(search: string): 'atlas' | 'heart' | 'breathing' {
   const q = new URLSearchParams(search)
+  if (BREATHING_URL_KEYS.some((k) => q.has(k))) return 'breathing'
   return HEART_URL_KEYS.some((k) => q.has(k)) ? 'heart' : 'atlas'
+}
+
+/*
+ * Breathing mechanics: `?breath=inspiration|expiration&bpos=0–100&bshow=airflow|exchange`.
+ * `bpos` is how far through the chosen phase the schematic is (a percentage, not a time).
+ */
+export const BREATHING_URL_KEYS = ['breath', 'bpos', 'bshow'] as const
+export type BreathPhase = 'inspiration' | 'expiration'
+export interface BreathingUrlState {
+  phase: BreathPhase
+  position: number
+  show: 'airflow' | 'exchange'
+}
+export const DEFAULT_BREATHING: BreathingUrlState = { phase: 'inspiration', position: 0, show: 'airflow' }
+
+export function parseBreathingParams(search: string): BreathingUrlState & { invalid: string[] } {
+  const q = new URLSearchParams(search)
+  const invalid: string[] = []
+  const state = { ...DEFAULT_BREATHING }
+  const b = q.get('breath')
+  if (b === 'inspiration' || b === 'expiration') state.phase = b
+  else if (b !== null) invalid.push('breath')
+  const pos = q.get('bpos')
+  if (pos !== null) {
+    if (/^\d{1,3}$/.test(pos) && Number(pos) <= 100) state.position = Number(pos)
+    else invalid.push('bpos')
+  }
+  const show = q.get('bshow')
+  if (show === 'airflow' || show === 'exchange') state.show = show
+  else if (show !== null) invalid.push('bshow')
+  return { ...state, invalid }
+}
+
+export function breathingParamEntries(s: BreathingUrlState): Record<string, string> {
+  return { breath: s.phase, bpos: String(s.position), bshow: s.show }
 }
 
 /**
@@ -500,14 +536,19 @@ export function atlasParamEntries(state: AtlasUrlState, defaultLayers: readonly 
 /** Replaces the atlas keys (and drops heart keys, so the link opens the atlas). */
 export function withAtlasParams(search: string, entries: Record<string, string>): string {
   const q = new URLSearchParams(search)
-  for (const k of [...ATLAS_URL_KEYS, ...HEART_URL_KEYS]) q.delete(k)
+  for (const k of [...ATLAS_URL_KEYS, ...HEART_URL_KEYS, ...BREATHING_URL_KEYS]) q.delete(k)
   for (const [k, v] of Object.entries(entries)) q.set(k, v)
   return `?${q.toString()}`
+}
+
+/** `search` with only the breathing view's keys among the anatomy keys. */
+export function withBreathingParams(search: string, state: BreathingUrlState): string {
+  return withAtlasParams(search, breathingParamEntries(state))
 }
 
 /** Drops the atlas keys (used when opening the heart module). */
 export function withoutAtlasParams(search: string): string {
   const q = new URLSearchParams(search)
-  for (const k of ATLAS_URL_KEYS) q.delete(k)
+  for (const k of [...ATLAS_URL_KEYS, ...BREATHING_URL_KEYS]) q.delete(k)
   return `?${q.toString()}`
 }

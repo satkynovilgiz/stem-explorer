@@ -1,6 +1,7 @@
 import { ARRANGEMENTS, CIRCUIT_KEYS, DEFAULT_CIRCUIT, isValidCircuitParam, normalizeCircuitParam, type Arrangement, type CircuitParams } from '../physics/circuit'
 import { DEFAULT_WAVE, isValidWaveParam, normalizeWaveParam, WAVE_KEYS, type WaveKey, type WaveParams } from '../physics/wave'
 import { criticalAngle, DEFAULT_OPTICS, normalizeOpticsParam, type OpticsKey, type OpticsParams } from '../physics/optics'
+import { GAS_KEYS, normalizeGasParam, DEFAULT_GAS, type GasKey, type GasParams } from '../physics/gas'
 import { LAB_URL_KEYS, SPRING_URL_KEYS } from './urlState'
 
 /*
@@ -105,6 +106,29 @@ export function opticsParamEntries(p: OpticsParams): Record<string, string> {
   return p.part === 'refraction'
     ? { experiment: 'optics', opt: 'refraction', n1: String(p.n1), n2: String(p.n2), inc: p.atCritical && criticalAngle(p.n1, p.n2) !== null ? 'critical' : String(p.incidence) }
     : { experiment: 'optics', opt: 'lens', lens: p.lens, f: String(p.focal), do: String(p.objectDistance) }
+}
+
+/*
+ *   ?experiment=gas&gp=101.3&gv1=2&gv2=1   (absolute pressure in kPa, volumes in L)
+ */
+const GAS_URL: Record<GasKey, string> = { p1: 'gp', v1: 'gv1', v2: 'gv2' }
+
+export function parseGasParams(search: string): { params: GasParams; invalid: string[] } {
+  const q = new URLSearchParams(search)
+  const invalid: string[] = []
+  const params = { ...DEFAULT_GAS }
+  for (const key of GAS_KEYS) {
+    const raw = q.get(GAS_URL[key])
+    if (raw === null) continue
+    const v = normalizeGasParam(key, num(raw))
+    if (v === null) invalid.push(GAS_URL[key])
+    else params[key] = v
+  }
+  return { params, invalid }
+}
+
+export function gasParamEntries(p: GasParams): Record<string, string> {
+  return { experiment: 'gas', ...Object.fromEntries(GAS_KEYS.map((k) => [GAS_URL[k], String(p[k])])) }
 }
 
 /** `search` with only this lab's keys (other experiments' keys removed, other subjects' kept). */

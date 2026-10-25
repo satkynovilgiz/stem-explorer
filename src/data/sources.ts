@@ -347,6 +347,18 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Chemistry 2e — 7.6 Molecular Structure and Polarity',
     url: 'https://openstax.org/books/chemistry-2e/pages/7-6-molecular-structure-and-polarity',
   },
+  'chem-9-1': {
+    label: 'OpenStax Chemistry 2e — 9.1 Gas Pressure',
+    url: 'https://openstax.org/books/chemistry-2e/pages/9-1-gas-pressure',
+  },
+  'chem-9-2': {
+    label: 'OpenStax Chemistry 2e — 9.2 Relating Pressure, Volume, Amount, and Temperature: The Ideal Gas Law',
+    url: 'https://openstax.org/books/chemistry-2e/pages/9-2-relating-pressure-volume-amount-and-temperature-the-ideal-gas-law',
+  },
+  'up-14-2': {
+    label: 'OpenStax University Physics Volume 1 — 14.2 Measuring Pressure',
+    url: 'https://openstax.org/books/university-physics-volume-1/pages/14-2-measuring-pressure',
+  },
   'chem-4-1': {
     label: 'OpenStax Chemistry 2e — 4.1 Writing and Balancing Chemical Equations',
     url: 'https://openstax.org/books/chemistry-2e/pages/4-1-writing-and-balancing-chemical-equations',

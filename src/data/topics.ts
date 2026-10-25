@@ -73,6 +73,23 @@ export const MODULES: readonly TopicModule[] = [
     },
   },
   {
+    id: 'anatomy.breathing',
+    subject: 'anatomy',
+    name: 'Breathing mechanics',
+    summary: 'Inspiration and expiration step by step: diaphragm, ribs, lungs, airflow and gas exchange',
+    href: linkTo('anatomy', { breath: 'inspiration', bpos: '0', bshow: 'airflow' }),
+    topics: [
+      { label: 'Inspiration', href: linkTo('anatomy', { breath: 'inspiration', bpos: '50', bshow: 'airflow' }) },
+      { label: 'Expiration', href: linkTo('anatomy', { breath: 'expiration', bpos: '50', bshow: 'airflow' }) },
+      { label: 'Airflow and gas exchange', href: linkTo('anatomy', { breath: 'inspiration', bpos: '50', bshow: 'exchange' }) },
+    ],
+    matches: (s) => anatomyModule(s) === 'breathing',
+    current: (s) => {
+      const q = new URLSearchParams(s)
+      return q.get('bshow') === 'exchange' ? 'Airflow and gas exchange' : q.get('breath') === 'expiration' ? 'Expiration' : 'Inspiration'
+    },
+  },
+  {
     id: 'anatomy.heart',
     subject: 'anatomy',
     name: 'Heart (detailed)',
@@ -267,6 +284,23 @@ export const MODULES: readonly TopicModule[] = [
     ],
     matches: (s) => parsePhysicsExperiment(s).experiment === 'optics',
     current: (s) => (new URLSearchParams(s).get('opt') === 'lens' ? 'Thin lens' : 'Reflection and refraction'),
+  },
+  {
+    id: 'physics.gas',
+    subject: 'physics',
+    name: 'Gas pressure and volume',
+    summary: 'Boyle’s law for a fixed amount of gas at constant temperature, with a P–V graph',
+    href: linkTo('physics', { experiment: 'gas' }),
+    topics: [
+      { label: 'Halve the volume', href: linkTo('physics', { experiment: 'gas', gp: '101.3', gv1: '2', gv2: '1' }) },
+      { label: 'Double the volume', href: linkTo('physics', { experiment: 'gas', gp: '101.3', gv1: '2', gv2: '4' }) },
+    ],
+    matches: (s) => parsePhysicsExperiment(s).experiment === 'gas',
+    current: (s) => {
+      const q = new URLSearchParams(s)
+      const ratio = Number(q.get('gv2')) / Number(q.get('gv1'))
+      return ratio === 0.5 ? 'Halve the volume' : ratio === 2 ? 'Double the volume' : null
+    },
   },
   {
     id: 'mathematics.functions',

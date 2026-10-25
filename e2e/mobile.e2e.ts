@@ -358,3 +358,19 @@ test('on a phone the layout controls are replaced by the stacked panels with tab
   await expect(page.getByRole('tab', { name: 'Inputs' })).toBeVisible()
   await expectNoHorizontalOverflow(page)
 })
+
+test('Boyle’s law lab and breathing mechanics on a phone: tabs and no overflow', async ({ page }) => {
+  await page.goto('/?experiment=gas&gp=101.3&gv1=2&gv2=4#/physics')
+  await expect(page.locator('.gas-svg')).toBeVisible()
+  await page.getByRole('tab', { name: 'Values' }).click()
+  await expect(page.locator('.gas-p2')).toHaveText('50.65 kPa')
+  await page.getByRole('tab', { name: 'Graph' }).click()
+  await expect(page.locator('.gas-point')).toHaveAttribute('data-v', '4')
+  await expectNoHorizontalOverflow(page)
+
+  await page.goto('/?breath=expiration&bpos=40&bshow=airflow#/anatomy')
+  await expect(page.locator('.breath-flow-label')).toHaveText('Air out ↑')
+  await page.getByRole('tab', { name: 'Explanation' }).click()
+  await expect(page.locator('.breath-now')).toContainText('passive')
+  await expectNoHorizontalOverflow(page)
+})

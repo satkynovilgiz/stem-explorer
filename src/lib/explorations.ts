@@ -12,10 +12,12 @@ import { ARRANGEMENT_LABEL, type Arrangement } from '../physics/circuit'
 import { functionsEntries, parseFunctionsState, parseMathSection, parseStatsState, parseVectorsState, statsEntries, vectorsEntries } from './mathSections'
 import { FUNCTIONS } from '../math/functions'
 import { findDataset } from '../data/mathematics/datasets'
-import { circuitParamEntries, opticsParamEntries, parseCircuitParams, parseOpticsParams, parseWaveParams, waveParamEntries } from './labUrl'
+import { circuitParamEntries, gasParamEntries, opticsParamEntries, parseCircuitParams, parseGasParams, parseOpticsParams, parseWaveParams, waveParamEntries } from './labUrl'
 import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
   anatomyModule,
+  breathingParamEntries,
+  parseBreathingParams,
   biologySectionEntries,
   parseBiologySection,
   chemistrySectionEntries,
@@ -84,6 +86,10 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
         const r = parseOpticsParams(search)
         return r.invalid.length ? null : { subject, params: opticsParamEntries(r.params) }
       }
+      if (exp.experiment === 'gas') {
+        const r = parseGasParams(search)
+        return r.invalid.length ? null : { subject, params: gasParamEntries(r.params) }
+      }
       if (exp.experiment === 'wave') {
         const r = parseWaveParams(search)
         return r.invalid.length ? null : { subject, params: waveParamEntries(r.params) }
@@ -120,6 +126,10 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
       return r.invalid.length ? null : { subject, params: mathParamEntries(r) }
     }
     case 'anatomy': {
+      if (anatomyModule(search) === 'breathing') {
+        const r = parseBreathingParams(search)
+        return r.invalid.length ? null : { subject, params: breathingParamEntries(r) }
+      }
       if (anatomyModule(search) === 'atlas') {
         const r = parseAtlasParams(search, ATLAS_CONFIG)
         return r.invalid.length ? null : { subject, params: atlasParamEntries(r, ATLAS_CONFIG.defaultLayers) }
@@ -173,6 +183,7 @@ export function defaultTitle(state: ShareState): string {
       if (p.experiment === 'wave') return `Wave: f = ${p.wfreq} Hz, λ = ${p.wlen} m`
       if (p.experiment === 'optics')
         return p.opt === 'lens' ? `Thin lens: ${p.lens}, |f| = ${p.f} cm, dₒ = ${p.do} cm` : `Refraction: n₁ = ${p.n1}, n₂ = ${p.n2}, θ₁ = ${p.inc}°`
+      if (p.experiment === 'gas') return `Boyle’s law: ${p.gp} kPa, ${p.gv1} L → ${p.gv2} L`
       if (p.experiment === 'spring') return `Spring: m = ${p.mass} kg, k = ${p.k} N/m, x₀ = ${p.x0} m`
       return `Launch at ${p.speed} m/s, ${p.angle}°${Number(p.height) > 0 ? ` from ${p.height} m` : ''}${p.gravity !== '9.81' ? `, g = ${p.gravity} m/s²` : ''}`
     case 'mathematics': {
@@ -184,6 +195,7 @@ export function defaultTitle(state: ShareState): string {
       return p.slice ? `${name} · slice ${p.slice} = ${p.at}` : name
     }
     case 'anatomy':
+      if (p.breath) return `Breathing mechanics · ${p.breath} ${p.bpos}%${p.bshow === 'exchange' ? ' · gas exchange' : ''}`
       if (p.bview) {
         const views: Record<string, string> = { front: 'front', back: 'back', side: 'side' }
         const s = p.atlas ? findStructure(p.atlas) : undefined

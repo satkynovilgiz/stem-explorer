@@ -69,7 +69,7 @@ test('build a collection from an explorer and a pasted link, reorder, and the or
 test('every starter destination opens its real view, unchanged', async ({ page }) => {
   await page.goto('/#/collections')
   const links = starter(page).locator('.collection-item-title')
-  await expect(links).toHaveCount(20)
+  await expect(links).toHaveCount(21)
   const hrefs = await links.evaluateAll((as) => as.map((a) => a.getAttribute('href')!))
   for (const href of hrefs) {
     await page.goto(`/${href}`)

@@ -94,7 +94,7 @@ test('at 200% browser zoom (720 px wide) the workspace switches to the stacked l
 test('Home: overview of real modules, interest starting points, and recent items with their module', async ({ page }) => {
   await page.goto('/')
   const glance = page.getByRole('region', { name: 'At a glance' })
-  await expect(glance.getByRole('list', { name: 'Physics modules' }).getByRole('link')).toHaveCount(5)
+  await expect(glance.getByRole('list', { name: 'Physics modules' }).getByRole('link')).toHaveCount(6)
   await glance.getByRole('link', { name: 'Reactions and stoichiometry' }).click()
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Reactions and stoichiometry')
   await page.goBack()

@@ -104,6 +104,15 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     href: atlasLink(s.id, s.system, s.variant),
     terms: [...(s.aliases ?? []), getSystem(s.system).name, ...(s.alsoIn ?? []).map((x) => getSystem(x).name)],
   })),
+  {
+    id: 'section:breathing',
+    name: 'Breathing mechanics',
+    subject: 'anatomy',
+    kind: 'section',
+    description: 'Inspiration and expiration step by step: the diaphragm, ribs and lungs, why air flows in and out, and how airflow differs from gas exchange.',
+    href: linkTo('anatomy', { breath: 'inspiration', bpos: '0', bshow: 'airflow' }),
+    terms: ['breathing', 'inspiration', 'inhalation', 'expiration', 'exhalation', 'ventilation', 'pulmonary ventilation', 'diaphragm', 'intercostal', 'alveolar pressure', 'gas exchange', 'respiration'],
+  },
   // Chemistry
   {
     id: 'section:periodic',
@@ -283,6 +292,15 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     description: 'Reflection and refraction with Snell’s law, the critical angle and total internal reflection; thin converging and diverging lenses with principal rays.',
     href: linkTo('physics', { experiment: 'optics' }),
     terms: ['optics', 'light', 'ray', 'reflection', 'refraction', 'snell', 'snell’s law', 'index of refraction', 'critical angle', 'total internal reflection', 'lens', 'thin lens', 'focal length', 'magnification', 'real image', 'virtual image', 'converging', 'diverging'],
+  },
+  {
+    id: 'experiment:gas',
+    name: 'Boyle’s law lab',
+    subject: 'physics',
+    kind: 'lab',
+    description: 'A fixed amount of gas at constant temperature: change the volume and see the absolute pressure follow P₁V₁ = P₂V₂, with a P–V graph.',
+    href: linkTo('physics', { experiment: 'gas' }),
+    terms: ['gas', 'gas law', 'boyle', 'boyle’s law', 'boyles law', 'pressure', 'volume', 'p-v graph', 'isotherm', 'absolute pressure', 'gauge pressure', 'kpa', 'atm', 'torr', 'piston'],
   },
 
   // Mathematics

@@ -32,6 +32,7 @@ export function topicsForLocation(route: Route, search: string): string[] {
       return [`cell:${q.get('type') ?? 'animal'}`, ...(q.get('structure') ? [`organelle:${q.get('structure')}`] : [])]
     }
     case 'anatomy': {
+      if (q.has('breath')) return ['section:breathing']
       if (q.has('part') || q.has('heart')) return ['structure:heart', 'subject:anatomy']
       const atlas = q.get('atlas')
       return atlas ? [`structure:${atlas}`] : ['subject:anatomy']

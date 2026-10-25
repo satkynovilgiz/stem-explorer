@@ -265,3 +265,12 @@ test('statistics needs no WebGL', async ({ page }) => {
   await page.goto('/?msec=statistics&sv=binomial&bn=10&bp=0.5#/mathematics')
   await expect(page.locator('.readout')).toContainText('2.5')
 })
+
+test('The Boyle’s law lab and breathing mechanics need no WebGL', async ({ page }) => {
+  await page.goto('/?experiment=gas&gp=101.3&gv1=2&gv2=1#/physics')
+  await expect(page.locator('.gas-p2')).toHaveText('202.6 kPa')
+  await expect(page.locator('.gas-svg')).toBeVisible()
+  await page.goto('/?breath=inspiration&bpos=50&bshow=exchange#/anatomy')
+  await expect(page.locator('.breath-flow-label')).toHaveText('Air in ↓')
+  await expect(page.locator('.breath-inset')).toBeVisible()
+})

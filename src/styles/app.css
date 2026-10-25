@@ -7854,3 +7854,171 @@ html.ws-focus .chem-stage :is(.optics-svg, .stat-svg, .division-svg, .inh-chart)
 .collections .select {
   max-width: 100%;
 }
+
+/* ---------- Boyle's law lab ---------- */
+
+.gas-stage {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.gas-graphs {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.gas-svg {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.gas-cylinder {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+}
+
+.gas-gas {
+  fill: color-mix(in srgb, var(--subject-physics) 14%, transparent);
+}
+
+.gas-dot {
+  fill: var(--subject-physics);
+}
+
+.gas-piston {
+  fill: var(--color-text-muted);
+}
+
+.gas-rod {
+  stroke: var(--color-text-muted);
+  stroke-width: 4;
+}
+
+.gas-start-line {
+  stroke: var(--color-measure);
+  stroke-dasharray: 5 4;
+}
+
+.gas-point {
+  fill: var(--color-measure);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.gas-point-start {
+  fill: var(--color-viewport);
+  stroke: var(--color-measure);
+  stroke-width: 2;
+}
+
+.gas-table .is-current td {
+  font-weight: 700;
+}
+
+@media (max-width: 899px) {
+  .gas-stage {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Breathing mechanics ---------- */
+
+.breath-svg {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin: var(--space-3) auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-viewport);
+}
+
+.breath-wall {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 3;
+}
+
+.breath-rib {
+  fill: none;
+  stroke: var(--color-text-subtle);
+  stroke-width: 2;
+}
+
+.breath-lung {
+  fill: color-mix(in srgb, var(--subject-anatomy) 28%, transparent);
+  stroke: var(--subject-anatomy);
+  stroke-width: 2;
+}
+
+.breath-airway {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.breath-diaphragm {
+  fill: none;
+  stroke: var(--color-measure);
+  stroke-width: 4;
+}
+
+.breath-arrow {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.breath-label,
+.breath-inset-label {
+  fill: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.breath-inset-label {
+  font-size: 10px;
+}
+
+.muted-label {
+  fill: var(--color-text-subtle);
+}
+
+.breath-flow-label {
+  fill: var(--color-accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.breath-inset-box {
+  fill: var(--color-surface);
+  stroke: var(--color-border-strong);
+}
+
+.breath-alveolus {
+  fill: none;
+  stroke: var(--subject-anatomy);
+  stroke-width: 2;
+}
+
+.breath-capillary {
+  fill: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  stroke: var(--color-danger);
+}
+
+.breath-now p {
+  margin: 0 0 var(--space-1);
+}

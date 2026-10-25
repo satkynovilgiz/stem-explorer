@@ -72,6 +72,15 @@ export const RELATIONS: readonly Relation[] = [
     sources: ['up-4-3', 'calc3-2-1'],
   },
   {
+    id: 'breathing-boyle',
+    kind: 'connection',
+    between: [['section:breathing'], ['experiment:gas']],
+    text: 'Boyle’s law links the two: enlarging the thoracic cavity lowers the pressure in the alveoli below atmospheric, so air flows in; reducing it raises the pressure, so air flows out. The gas lab shows the same inverse pressure–volume relationship in a sealed cylinder.',
+    limits:
+      'The lungs are not a sealed, rigid container. They are open to the air, so the amount of gas inside changes with each breath, and they are elastic and follow the chest wall. The lab holds the amount of gas and the temperature fixed.',
+    sources: ['ap-22-3', 'chem-9-2'],
+  },
+  {
     id: 'circuit-blood-flow',
     kind: 'analogy',
     between: [['experiment:circuit'], ['structure:heart', 'subject:anatomy']],

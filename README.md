@@ -281,6 +281,34 @@ not the whole body. Invalid values are rejected by the same parser that validate
 left, adrenal glands on the kidneys, the right lung shorter and wider), and that every structure
 cites a registered source and states a limitation. Tests do not establish anatomical accuracy.
 
+## Anatomy: breathing mechanics
+
+`?breath=inspiration|expiration&bpos=0–100&bshow=airflow|exchange` (the *Breathing* module). A
+flat, schematic front view of the thoracic wall and ribs, the lungs, the trachea and main
+bronchi, and the diaphragm.
+
+- **Controls:** choose a phase and how far through it the view is (a percentage, not a time).
+  Use *Previous step* / *Next step* or the slider. Play runs at an arbitrary slow pace that is not
+  a breathing rate. The view always opens paused, and with reduced motion there is no Play.
+- **What it shows:**
+  - During inspiration the diaphragm moves down and the ribs move up and out. The thorax enlarges,
+    the lungs follow it, alveolar pressure falls below atmospheric and air flows in.
+  - Quiet expiration is passive elastic recoil: alveolar pressure rises above atmospheric and air
+    flows out.
+  - At the end of each phase the pressures are equal and air does not flow.
+  - Direction and pressure are written as text (*Air in ↓*, *Alveolar pressure < atmospheric*),
+    not shown by colour or arrows alone. A live text summary describes each state.
+- **Airflow + gas exchange:** an inset shows O₂ and CO₂ diffusing between an alveolus and a
+  capillary. The text separates ventilation (bulk airflow through conducting airways) from gas
+  exchange (diffusion in the respiratory zone).
+- **Simplified:**
+  - No lobes, pleura, vessels or heart, and movements are exaggerated.
+  - The lungs are not drawn as sealed containers.
+  - No volumes, rates or timings are shown, and nothing describes or predicts anyone's breathing.
+- **Links:** to the Boyle's law lab, and to the diaphragm and lungs in the atlas. *How breathing
+  works* (Collections) includes this view.
+- **Sources:** OpenStax Anatomy and Physiology 2e §22.1, 22.3 and 22.4 (read for this release).
+
 ## Anatomy: detailed heart module
 
 > This is a simplified educational diagram in 3D. Shapes, proportions, vessel positions, and
@@ -1140,6 +1168,33 @@ University Physics Volume 3 §1.1 (Table 1.1 indices at 589 nm), §1.2, §1.3, �
 dₒ) fall back to defaults. Home's *How does a lens form an image?* now appears, because its
 destination exists.
 
+### Boyle's law lab (gas pressure and volume)
+
+`?experiment=gas&gp=<P₁ kPa>&gv1=<V₁ L>&gv2=<V₂ L>`: a fixed amount of an ideal gas in a sealed
+cylinder at a constant 293.15 K.
+
+- **Inputs and output:** you set the starting absolute pressure P₁ (10–500 kPa), the starting
+  volume V₁ (0.5–10 L) and a new volume V₂ (0.25–20 L). The one dependent variable is
+  P₂ = P₁V₁ / V₂ (`src/physics/gas.ts`, unit tested).
+- **Readouts:** P₂ in kPa, atm and torr (1 atm = 101.325 kPa = 760 torr); P₁V₁ in kPa·L; the
+  volume and pressure ratios; and the amount n = PV/RT with R = 8.314 kPa·L/(mol·K). The
+  substituted equation is shown.
+- **Graph and table:** the P–V isotherm P = k/V is drawn with the start and current points. A
+  table lists the same values as the graph.
+- **Typed input:** a value that is zero, negative or out of range is refused with a physical
+  explanation, and nothing changes. For example, absolute pressure can't be zero or negative,
+  and a negative gauge reading means below atmospheric. Invalid links fall back to defaults.
+- **Absolute pressure:** the lab explains why Boyle's law needs absolute pressure. A gauge reads
+  relative to the atmosphere and can be zero or negative.
+- **Playback:** opens paused. Play slowly moves the piston between half and twice V₁. Pause holds
+  it and Reset restores the defaults. With reduced motion, Play is not offered.
+- **Why it is not a lung model:** lungs are open to the air, so the amount of gas inside changes
+  with each breath. They are elastic and follow the chest wall. The lab links to
+  *Breathing mechanics*.
+- **Sources:** OpenStax Chemistry 2e §9.1 and 9.2 (Boyle's law, units, R, the textbook example
+  reproduced in the tests), University Physics Vol. 1 §14.2 (gauge and absolute pressure), and
+  Anatomy and Physiology 2e §22.3.
+
 ### Physics sources
 
 - [OpenStax University Physics Volume 1 — 4.3 Projectile Motion](https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion)
@@ -1932,6 +1987,8 @@ How the URL is kept up to date:
 | `src/data/anatomy/atlas/relationships.test.ts` | Every relationship names existing structures and a registered source with its quoted basis; explorations list existing structures and relationships; one-side statements apply to both sides except the right-kidney one; no position is stated for the triceps; the drawing does not contradict the stated directions. |
 | `src/features/anatomy/atlas/scene/orientation.test.ts` | The orientation indicator for front, back and left-lateral cameras (body's left to the screen's right in front, anterior to the left in the side view, end-on axes), for the atlas's own view directions. |
 | `src/math/statistics.test.ts` | Parsing (separators, negatives, exponents, invalid and too-large tokens with positions, the 1000-value cap, empty input); textbook quartiles for both cited datasets, odd counts, one and two values; population vs sample variance; one value and repeated values; negatives and the 1.5 × IQR outlier rule; accuracy with a 10⁸ offset; histogram edges, totals for any bin count, identical values and invalid bin counts; suggested bins; binomial hand values, totals of 1 up to n = 500 and p = 0.999, exact p = 0 and 1, mean np and variance npq, the Bernoulli case; the simulation repeating per seed, p = 0 and 1, closeness for 10 000 repetitions; dataset provenance. |
+| `src/physics/gas.test.ts` | Halving and doubling the volume (inverse cases) and equal volumes; the OpenStax Example 9.8 numbers and its check exercise; P·V constant along the drawn isotherm and the graph through the readout point; n = PV/RT; zero, negative and non-finite input rejected; plain-language reasons for invalid typed values; kPa ↔ atm ↔ torr. |
+| `src/data/anatomy/breathing.test.ts` | Expansion through both phases; airflow in only while alveolar pressure is below atmospheric, out while above, none at either end; quiet expiration described as passive; no timings, volumes or medical wording; breathing links parsed and canonicalized, invalid values rejected. |
 | `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the 1.52 → 1 at 41.14° reproduction (total internal reflection, θc ≈ 41.1395104°); below, at and above θc at full precision for four media pairs; the tolerance far below one slider step; critical mode only when θc exists; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
 | `src/data/biology/meiosis.test.ts` | Meiosis uses the mitosis module's 2n = 4; chromosome, chromatid and set counts at all nine stages for all four option combinations; the text states the computed counts; homologs separate in meiosis I and sisters in meiosis II; crossing over gives four distinct products (two without), with only nonsister chromatids exchanging; independent assortment; the comparison's sources and context. One-gene model: probabilities totalling 1 for all nine crosses, 1:2:1, 3:1 and 1:1. Simulation: repeatable per seed, counts adding up, different seeds differing, impossible genotypes never produced, large samples near ¼, zero offspring; the generator stays in [0, 1) and seeds are validated. |
 | `src/chem/stoichiometry.test.ts` | Formula parsing (parentheses, two-letter symbols, malformed input); element-by-element balance, lowest terms, invalid coefficients and charge; every library equation and ionic form balanced in lowest terms with a registered source; type coverage; balancing steps from all 1s to the source's coefficients; molar masses against hand sums; mole ratios; limiting reactant with leftovers, exact ratios (including floating-point residue), zero and invalid amounts; percent yield (zero theoretical yield, above 100 %); significant-figure rounding and charge text. |
@@ -2115,7 +2172,7 @@ the production build:
   - reordering, then checking that the order and notes survive a reload; duplicate, remove, and a
     note saved explicitly;
   - opening an item in its module;
-  - all 20 starter destinations opening with their parameters unchanged;
+  - all 21 starter destinations opening with their parameters unchanged;
   - copy a starter collection, export, then re-import: the duplicate is flagged and blocked until
     chosen, imported copies keep order and notes, and import into an empty browser works; other
     file formats are refused;
@@ -2138,6 +2195,16 @@ the production build:
   500 still summing to 1, invalid links corrected; the inheritance simulation's link to the
   binomial lab (n = 100, p = 1/4) and the curated related topic both ways. Mobile and no-WebGL runs
   cover the section.
+- `gas-breathing.e2e.ts`:
+  - Boyle's law lab: opens paused, and the readout, substituted equation, graph point and table
+    agree; doubling and keeping the volume (inverse cases); zero, negative and out-of-range input
+    refused, with nothing changed; an invalid link falls back; Play, Pause and Reset; reduced
+    motion hides Play; the links to breathing and back.
+  - Breathing: a shared link opens paused at its phase, with direction and pressure as text; a full
+    cycle by steps, with no airflow at the ends; the gas-exchange inset saved in the link; Play and
+    Pause, and reduced motion; the module switch adding a history entry, with Back returning to
+    the atlas.
+  - `no-webgl.e2e.ts` and `mobile.e2e.ts` cover both views without WebGL and at 390 px.
 - `optics.e2e.ts`: Snell's law for air → water at 30° (22.04°, toward the normal, no critical
   angle), normal incidence, equal indices (no reflected ray), the link; no critical angle from
   lower to higher index at 89.99°, water → air with θc = 48.63°, total internal reflection at 60°
@@ -2254,6 +2321,8 @@ src/
   features/activities/          guided-activity types, hook (state, detection, snapshot/restore) and panel
   features/guide/, features/glossary/   About this explorer panel, term buttons, source links; glossary page
   features/notebook/            Notebook page, note editor (unsaved-draft handling), notebook backup
+  physics/gas.ts, features/physics/gas/   Boyle's law model and lab
+  data/anatomy/breathing.ts, features/anatomy/breathing/   breathing-mechanics model and view
   features/collections/, components/AddToCollection.tsx   Collections page; Add to collection in explorers
   lib/collectionsStore.ts, lib/useCollections.ts, data/collections.ts   collections storage, files, sync hook; starter collections
   lib/notesStore.ts, lib/notebookBackup.ts, lib/useNotebook.ts   notes storage, backup format, sync hook
@@ -2480,16 +2549,16 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Cell structures (animal, plant, bacterial) | 23 |
 | Cell division stages | 7 |
 | Meiosis stages | 9 |
-| Physics labs | 5 |
+| Physics labs | 6 |
 | Function families | 7 |
 | Surfaces | 4 |
 | Matrix presets | 6 |
 | Sample datasets | 4 |
 | Glossary terms | 83 |
-| Cross-subject relations | 10 |
+| Cross-subject relations | 11 |
 | Starter collections | 4 |
-| Registered sources | 133 |
-| Search index entries | 511 |
+| Registered sources | 136 |
+| Search index entries | 513 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.
