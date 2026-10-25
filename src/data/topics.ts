@@ -157,6 +157,19 @@ export const MODULES: readonly TopicModule[] = [
     current: (s) => findReaction(parseChemistrySection(s).reaction)?.name ?? null,
   },
   {
+    id: 'chemistry.solutions',
+    subject: 'chemistry',
+    name: 'Solutions and dilution',
+    summary: 'Molarity from amount and volume of solution, unit conversions and C₁V₁ = C₂V₂, with worked steps',
+    href: linkTo('chemistry', { csec: 'solutions' }),
+    topics: [
+      { label: 'Molarity', href: linkTo('chemistry', { csec: 'solutions', st: 'molarity' }) },
+      { label: 'Dilution', href: linkTo('chemistry', { csec: 'solutions', st: 'dilution' }) },
+    ],
+    matches: (s) => parseChemistrySection(s).section === 'solutions',
+    current: (s) => (new URLSearchParams(s).get('st') === 'dilution' ? 'Dilution' : 'Molarity'),
+  },
+  {
     id: 'biology.cells',
     subject: 'biology',
     name: 'Cells',
@@ -231,6 +244,19 @@ export const MODULES: readonly TopicModule[] = [
     topics: [],
     matches: (s) => parseBiologySection(s).section === 'energy',
     current: () => null,
+  },
+  {
+    id: 'biology.diffusion',
+    subject: 'biology',
+    name: 'Diffusion',
+    summary: 'Random particle motion between two compartments: net movement, dynamic equilibrium and a selective membrane',
+    href: linkTo('biology', { bsec: 'diffusion' }),
+    topics: [
+      { label: 'Wall with an opening', href: linkTo('biology', { bsec: 'diffusion', dfm: 'gap' }) },
+      { label: 'Selective membrane', href: linkTo('biology', { bsec: 'diffusion', dfm: 'membrane', dfb: '60' }) },
+    ],
+    matches: (s) => parseBiologySection(s).section === 'diffusion',
+    current: (s) => (new URLSearchParams(s).get('dfm') === 'membrane' ? 'Selective membrane' : 'Wall with an opening'),
   },
   {
     id: 'physics.projectile',

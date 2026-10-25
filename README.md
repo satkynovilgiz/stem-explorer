@@ -663,6 +663,30 @@ shown for up to 24 neutral formula units.
 replaced by the default (methane combustion). Exports say that coefficients and amounts are not
 restored.
 
+### Solutions and dilution
+
+`?csec=solutions&st=molarity|dilution&…`, with calculations in `src/chem/solutions.ts`
+(unit tested) kept separate from the UI. Only the chosen tool's inputs go in the link, never the
+quantity being solved for.
+
+- **Molarity:** solve M = n / V for the molarity, the amount (mol or mmol) or the volume of
+  solution (L, mL, dm³ or cm³). Volumes are converted to litres with the conversion shown, then
+  the substituted equation is shown.
+- **Solution versus solvent:** the volume asked for is always the final volume of *solution*, and
+  the calculator never treats the volume of solvent added as if it were the solution volume.
+- **Dilution:** C₁V₁ = C₂V₂, solving for any one of the four. The steps show the volumes in
+  litres, the substituted equation and the unchanged amount n. The stated assumption is that only
+  solvent is added. The result says how much stock to take and what total volume to make up to.
+- **Refused requests:** a final concentration above the stock, a final volume below the volume
+  taken, zero, negative, or values outside the calculator limits (20 M, 100 L) are refused with a
+  reason, and the result box shows *Can't calculate* with a dashed border.
+- **Worked examples:** OpenStax Chemistry 2e §3.3 Examples 3.14, 3.19, 3.20 and 3.21 load with
+  one click, next to the textbook's answers. The unit tests reproduce those numbers and the check
+  exercises.
+- **Sources:** Chemistry 2e §3.3 (molarity and dilution) and §1.4 (1 L = 1 dm³; 1 mL = 1 cm³).
+  The app does not claim that liquid volumes are non-additive; the sources read for this release
+  don't state it.
+
 ### Periodic table
 
 **Molecules / Periodic table** at the top of the Chemistry library switches the centre view. The
@@ -812,6 +836,32 @@ from its **pathway stages**:
 Each stage has a short explanation, *Go deeper* and sources, and opens the chloroplast or
 mitochondrion in the cell model where relevant. No ATP yields are given. A test checks that both
 equations balance and are reverses of each other.
+
+### Diffusion
+
+`?bsec=diffusion&dfn=<A>&dfl=<A starting left>&dfb=<B>&dfm=gap|membrane&dfs=<seed>`: a conceptual
+two-compartment model in `src/data/biology/diffusion.ts`, unit tested.
+
+- **Particles:** round particles (A) and optional square particles (B) take random steps on a
+  grid. The barrier is either a wall with an opening (both kinds pass, only through the opening)
+  or a membrane with a defined rule: A crosses anywhere and B never crosses.
+- **Random and reproducible:** the motion is random but seeded (mulberry32), so the same settings
+  and seed give the same run, step for step. Particle totals are conserved at every step.
+- **Exact numbers:** counts and concentrations (particles per 100 cells) are exact for the run
+  shown. There is a table of counts, the crossings in each direction over the last 50 steps, and
+  a graph of counts by step (solid line for left, dashed for right).
+- **Time convention:** time is counted in steps, where each particle tries one move per step.
+  Steps are not seconds and the grid is not a real size.
+- **Playback:**
+  - The view opens paused at step 0, and the step is never stored in the link.
+  - Controls: Play / Pause, 1 step, +100 steps and Reset. The run stops at step 3000.
+  - Changing a setting starts a new run.
+  - With reduced motion, Play is not offered.
+- **Explanations:** random motion versus net movement; dynamic equilibrium (crossings continue,
+  net about zero); which particles cross; and why this is not osmosis, since no water is modelled.
+  There are no physiological time or molecular-scale claims.
+- **Links:** to breathing mechanics, through a sourced relation: gas exchange is diffusion.
+- **Sources:** OpenStax Biology 2e §5.2, and Anatomy and Physiology 2e §22.4 for the relation.
 
 ## Biology: animal cell model
 
@@ -1987,6 +2037,8 @@ How the URL is kept up to date:
 | `src/data/anatomy/atlas/relationships.test.ts` | Every relationship names existing structures and a registered source with its quoted basis; explorations list existing structures and relationships; one-side statements apply to both sides except the right-kidney one; no position is stated for the triceps; the drawing does not contradict the stated directions. |
 | `src/features/anatomy/atlas/scene/orientation.test.ts` | The orientation indicator for front, back and left-lateral cameras (body's left to the screen's right in front, anterior to the left in the side view, end-on axes), for the atlas's own view directions. |
 | `src/math/statistics.test.ts` | Parsing (separators, negatives, exponents, invalid and too-large tokens with positions, the 1000-value cap, empty input); textbook quartiles for both cited datasets, odd counts, one and two values; population vs sample variance; one value and repeated values; negatives and the 1.5 × IQR outlier rule; accuracy with a 10⁸ offset; histogram edges, totals for any bin count, identical values and invalid bin counts; suggested bins; binomial hand values, totals of 1 up to n = 500 and p = 0.999, exact p = 0 and 1, mean np and variance npq, the Bernoulli case; the simulation repeating per seed, p = 0 and 1, closeness for 10 000 repetitions; dataset provenance. |
+| `src/chem/solutions.test.ts` | L, mL, dm³, cm³ and mmol conversions; OpenStax Examples 3.14, 3.19, 3.20, 3.21 and their check exercises; solving for amount and volume; C₁V₁ = C₂V₂ for every solve-for choice; no-dilution case; zero, negative, over-limit and impossible dilutions refused with reasons. |
+| `src/data/biology/diffusion.test.ts` | Particle totals conserved at every step; the same seed reproduces the run (also stepping one at a time); a different seed differs; the starting split; particles stay in the box; net movement then counts near half with crossings both ways; membrane never passes B, gap rows only; the step limit; parameter validation; concentration units. |
 | `src/physics/gas.test.ts` | Halving and doubling the volume (inverse cases) and equal volumes; the OpenStax Example 9.8 numbers and its check exercise; P·V constant along the drawn isotherm and the graph through the readout point; n = PV/RT; zero, negative and non-finite input rejected; plain-language reasons for invalid typed values; kPa ↔ atm ↔ torr. |
 | `src/data/anatomy/breathing.test.ts` | Expansion through both phases; airflow in only while alveolar pressure is below atmospheric, out while above, none at either end; quiet expiration described as passive; no timings, volumes or medical wording; breathing links parsed and canonicalized, invalid values rejected. |
 | `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the 1.52 → 1 at 41.14° reproduction (total internal reflection, θc ≈ 41.1395104°); below, at and above θc at full precision for four media pairs; the tolerance far below one slider step; critical mode only when θc exists; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
@@ -2195,6 +2247,15 @@ the production build:
   500 still summing to 1, invalid links corrected; the inheritance simulation's link to the
   binomial lab (n = 100, p = 1/4) and the curated related topic both ways. Mobile and no-WebGL runs
   cover the section.
+- `solutions-diffusion.e2e.ts`:
+  - Solutions: molarity with the mL → L step and the same answer in litres; solving for the
+    volume; zero and negative input refused; dilution examples 3.19, 3.20 and 3.21; an impossible
+    dilution refused; a shared link restoring its inputs.
+  - Diffusion: a shared link opening paused at step 0; Play, Pause and Reset; the same seed
+    reproducing counts, with totals conserved and a new seed differing; the membrane never passing
+    B; reduced motion offering steps instead of Play; an invalid link falling back.
+  - Phone (390 px, the page width checked directly) and no-WebGL checks are in `mobile.e2e.ts`
+    and `no-webgl.e2e.ts`.
 - `gas-breathing.e2e.ts`:
   - Boyle's law lab: opens paused, and the readout, substituted equation, graph point and table
     agree; doubling and keeping the volume (inverse cases); zero, negative and out-of-range input
@@ -2322,6 +2383,8 @@ src/
   features/guide/, features/glossary/   About this explorer panel, term buttons, source links; glossary page
   features/notebook/            Notebook page, note editor (unsaved-draft handling), notebook backup
   physics/gas.ts, features/physics/gas/   Boyle's law model and lab
+  chem/solutions.ts, lib/solutionsUrl.ts, features/chemistry/solutions/   molarity and dilution calculator
+  data/biology/diffusion.ts, features/biology/processes/DiffusionView.tsx   seeded diffusion model and view
   data/anatomy/breathing.ts, features/anatomy/breathing/   breathing-mechanics model and view
   features/collections/, components/AddToCollection.tsx   Collections page; Add to collection in explorers
   lib/collectionsStore.ts, lib/useCollections.ts, data/collections.ts   collections storage, files, sync hook; starter collections
@@ -2555,10 +2618,10 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Matrix presets | 6 |
 | Sample datasets | 4 |
 | Glossary terms | 83 |
-| Cross-subject relations | 11 |
+| Cross-subject relations | 12 |
 | Starter collections | 4 |
-| Registered sources | 136 |
-| Search index entries | 513 |
+| Registered sources | 139 |
+| Search index entries | 515 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.
@@ -2620,3 +2683,9 @@ how it is drawn (individual, group or container), with what is omitted.
   about half a second (camera damping). With `prefers-reduced-motion` it stops immediately.
 - **Saved explorations are per browser.** They are stored in `localStorage` and are not synced; see
   *Home page, search and the exploration library* for limits.
+- **Phone overflow helper.** Under Playwright's mobile emulation, `window.innerWidth` grows with
+  wide content, so the older `expectNoHorizontalOverflow` helper in `mobile.e2e.ts` can miss
+  overflow. The newer tests compare the page width with 390 px directly. Moving the older tests to
+  the same check is still to do.
+- **Collections are per browser.** Like saved explorations, they live in `localStorage`. Export a
+  collection file to keep or move them.

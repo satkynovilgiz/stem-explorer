@@ -81,6 +81,15 @@ export const RELATIONS: readonly Relation[] = [
     sources: ['ap-22-3', 'chem-9-2'],
   },
   {
+    id: 'diffusion-gas-exchange',
+    kind: 'connection',
+    between: [['section:diffusion'], ['section:breathing']],
+    text: 'Gas exchange in the lungs is diffusion: oxygen and carbon dioxide each move from where their partial pressure is higher to where it is lower, across the respiratory membrane, with no energy needed. The diffusion model shows the same idea with abstract particles.',
+    limits:
+      'The model is conceptual: it has no gases, partial pressures, blood flow or membrane thickness, and its steps are not a time scale. Airflow into the lungs is a separate process, driven by pressure differences.',
+    sources: ['bio-5-2', 'ap-22-4'],
+  },
+  {
     id: 'circuit-blood-flow',
     kind: 'analogy',
     between: [['experiment:circuit'], ['structure:heart', 'subject:anatomy']],

@@ -1,3 +1,5 @@
+import { SOLUTIONS_URL_KEYS } from './solutionsUrl'
+import { DEFAULT_DIFFUSION, validDiffusionParams, type DiffusionParams } from '../data/biology/diffusion'
 import { DEFAULT_REACTION, REACTION_IDS } from '../data/chemistry/reactions'
 import {
   DEFAULT_SURFACE,
@@ -51,8 +53,8 @@ export function withChemistryParams(search: string, state: ChemistryUrlState): s
 }
 
 /* Chemistry sections. Links without `csec` are molecule links, so every older link opens as before. */
-export type ChemistrySection = 'periodic' | 'atomic' | 'molecules' | 'bonding' | 'reactions'
-export const CHEMISTRY_SECTIONS: readonly ChemistrySection[] = ['periodic', 'atomic', 'molecules', 'bonding', 'reactions']
+export type ChemistrySection = 'periodic' | 'atomic' | 'molecules' | 'bonding' | 'reactions' | 'solutions'
+export const CHEMISTRY_SECTIONS: readonly ChemistrySection[] = ['periodic', 'atomic', 'molecules', 'bonding', 'reactions', 'solutions']
 export const DEFAULT_ELEMENT = 8
 
 /**
@@ -63,7 +65,7 @@ export function parseChemistrySection(search: string): { section: ChemistrySecti
   const q = new URLSearchParams(search)
   const invalid: string[] = []
   const raw = q.get('csec')
-  const section: ChemistrySection = raw === 'periodic' || raw === 'atomic' || raw === 'bonding' || raw === 'reactions' ? raw : 'molecules'
+  const section: ChemistrySection = raw === 'periodic' || raw === 'atomic' || raw === 'bonding' || raw === 'reactions' || raw === 'solutions' ? raw : 'molecules'
   if (raw !== null && section !== raw) invalid.push('csec')
   const el = q.get('el')
   const n = el !== null && /^\d{1,3}$/.test(el) ? Number(el) : NaN
@@ -77,7 +79,7 @@ export function parseChemistrySection(search: string): { section: ChemistrySecti
 
 export function chemistrySectionEntries(section: ChemistrySection, element: number, reaction: string = DEFAULT_REACTION): Record<string, string> {
   if (section === 'molecules') return {}
-  if (section === 'bonding') return { csec: 'bonding' }
+  if (section === 'bonding' || section === 'solutions') return { csec: section }
   if (section === 'reactions') return { csec: 'reactions', rx: reaction }
   return { csec: section, el: String(element) }
 }
@@ -88,13 +90,15 @@ export function withChemistrySection(search: string, section: ChemistrySection, 
   q.delete('csec')
   q.delete('el')
   q.delete('rx')
+  // The solutions calculator writes its own keys; other sections drop them.
+  if (section !== 'solutions') for (const k of SOLUTIONS_URL_KEYS) q.delete(k)
   for (const [k, v] of Object.entries(chemistrySectionEntries(section, element, reaction))) q.set(k, v)
   return `?${q.toString()}`
 }
 
 /* Biology sections. Links without `bsec` are cell links, so older links open as before. */
-export type BiologySection = 'cells' | 'dna' | 'division' | 'meiosis' | 'inheritance' | 'energy'
-export const BIOLOGY_SECTIONS: readonly BiologySection[] = ['cells', 'dna', 'division', 'meiosis', 'inheritance', 'energy']
+export type BiologySection = 'cells' | 'dna' | 'division' | 'meiosis' | 'inheritance' | 'energy' | 'diffusion'
+export const BIOLOGY_SECTIONS: readonly BiologySection[] = ['cells', 'dna', 'division', 'meiosis', 'inheritance', 'energy', 'diffusion']
 export type ParentGenotype = 'YY' | 'Yy' | 'yy'
 export interface Parents {
   p1: ParentGenotype
@@ -103,8 +107,42 @@ export interface Parents {
 export const DEFAULT_PARENTS: Parents = { p1: 'Yy', p2: 'Yy' }
 const isGenotype = (v: string | null): v is ParentGenotype => v === 'YY' || v === 'Yy' || v === 'yy'
 
-/** Reads `?bsec=…`, plus `p1`/`p2` (parent genotypes) for the inheritance section. */
-export function parseBiologySection(search: string): { section: BiologySection; parents: Parents; invalid: string[] } {
+/*
+ * Diffusion: `?bsec=diffusion&dfn=<A particles>&dfl=<A starting left>&dfb=<B particles>&dfm=gap|membrane&dfs=<seed>`.
+ * The step count is never stored: a shared run always opens paused at step 0.
+ */
+export const DIFFUSION_URL_KEYS = ['dfn', 'dfl', 'dfb', 'dfm', 'dfs'] as const
+
+function parseDiffusion(q: URLSearchParams, inSection: boolean, invalid: string[]): DiffusionParams {
+  const p = { ...DEFAULT_DIFFUSION }
+  const int = (key: string, set: (v: number) => void) => {
+    const raw = q.get(key)
+    if (raw === null) return
+    if (inSection && /^\d{1,10}$/.test(raw)) set(Number(raw))
+    else invalid.push(key)
+  }
+  int('dfn', (v) => (p.count = v))
+  // Without dfl, every A particle starts on the left.
+  p.startLeft = p.count
+  int('dfl', (v) => (p.startLeft = v))
+  int('dfb', (v) => (p.blocked = v))
+  int('dfs', (v) => (p.seed = v))
+  const m = q.get('dfm')
+  if (m !== null) {
+    if (inSection && (m === 'gap' || m === 'membrane')) p.mode = m
+    else invalid.push('dfm')
+  }
+  if (inSection && !validDiffusionParams(p)) {
+    invalid.push('dfn')
+    return { ...DEFAULT_DIFFUSION }
+  }
+  return p
+}
+
+export const diffusionEntries = (p: DiffusionParams): Record<string, string> => ({ dfn: String(p.count), dfl: String(p.startLeft), dfb: String(p.blocked), dfm: p.mode, dfs: String(p.seed) })
+
+/** Reads `?bsec=…`, plus `p1`/`p2` (parent genotypes) for the inheritance section and the diffusion keys. */
+export function parseBiologySection(search: string): { section: BiologySection; parents: Parents; diffusion: DiffusionParams; invalid: string[] } {
   const q = new URLSearchParams(search)
   const raw = q.get('bsec')
   const section: BiologySection = (BIOLOGY_SECTIONS as readonly string[]).includes(raw ?? '') && raw !== 'cells' ? (raw as BiologySection) : 'cells'
@@ -116,14 +154,21 @@ export function parseBiologySection(search: string): { section: BiologySection; 
     if (isGenotype(v) && section === 'inheritance') parents[k] = v
     else invalid.push(k)
   }
-  return { section, parents, invalid }
+  const diffusion = parseDiffusion(q, section === 'diffusion', invalid)
+  return { section, parents, diffusion, invalid }
 }
-export const biologySectionEntries = (section: BiologySection, parents: Parents = DEFAULT_PARENTS): Record<string, string> =>
-  section === 'cells' ? {} : section === 'inheritance' ? { bsec: section, p1: parents.p1, p2: parents.p2 } : { bsec: section }
-export function withBiologySection(search: string, section: BiologySection, parents?: Parents): string {
+export const biologySectionEntries = (section: BiologySection, parents: Parents = DEFAULT_PARENTS, diffusion: DiffusionParams = DEFAULT_DIFFUSION): Record<string, string> =>
+  section === 'cells'
+    ? {}
+    : section === 'inheritance'
+      ? { bsec: section, p1: parents.p1, p2: parents.p2 }
+      : section === 'diffusion'
+        ? { bsec: section, ...diffusionEntries(diffusion) }
+        : { bsec: section }
+export function withBiologySection(search: string, section: BiologySection, parents?: Parents, diffusion?: DiffusionParams): string {
   const q = new URLSearchParams(search)
-  for (const k of ['bsec', 'p1', 'p2']) q.delete(k)
-  for (const [k, v] of Object.entries(biologySectionEntries(section, parents))) q.set(k, v)
+  for (const k of ['bsec', 'p1', 'p2', ...DIFFUSION_URL_KEYS]) q.delete(k)
+  for (const [k, v] of Object.entries(biologySectionEntries(section, parents, diffusion))) q.set(k, v)
   return `?${q.toString()}`
 }
 

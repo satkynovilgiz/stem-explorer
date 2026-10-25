@@ -21,13 +21,13 @@ export function topicsForLocation(route: Route, search: string): string[] {
     case 'chemistry': {
       const sec = q.get('csec')
       if (sec === 'periodic' || sec === 'atomic') return [`section:${sec}`, ...(q.get('el') ? [`element:${q.get('el')}`] : [])]
-      if (sec === 'bonding' || sec === 'reactions') return [`section:${sec}`]
+      if (sec === 'bonding' || sec === 'reactions' || sec === 'solutions') return [`section:${sec}`]
       return [`molecule:${q.get('molecule') ?? 'water'}`]
     }
     case 'biology': {
       const sec = q.get('bsec')
       if (sec === 'dna' || sec === 'division') return [`process:${sec}`]
-      if (sec === 'meiosis' || sec === 'inheritance') return [`section:${sec}`]
+      if (sec === 'meiosis' || sec === 'inheritance' || sec === 'diffusion') return [`section:${sec}`]
       if (sec === 'energy') return ['process:photosynthesis', 'process:respiration']
       return [`cell:${q.get('type') ?? 'animal'}`, ...(q.get('structure') ? [`organelle:${q.get('structure')}`] : [])]
     }

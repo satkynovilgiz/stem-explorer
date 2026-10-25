@@ -366,11 +366,21 @@ test('Boyle’s law lab and breathing mechanics on a phone: tabs and no overflow
   await expect(page.locator('.gas-p2')).toHaveText('50.65 kPa')
   await page.getByRole('tab', { name: 'Graph' }).click()
   await expect(page.locator('.gas-point')).toHaveAttribute('data-v', '4')
-  await expectNoHorizontalOverflow(page)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 
   await page.goto('/?breath=expiration&bpos=40&bshow=airflow#/anatomy')
   await expect(page.locator('.breath-flow-label')).toHaveText('Air out ↑')
   await page.getByRole('tab', { name: 'Explanation' }).click()
   await expect(page.locator('.breath-now')).toContainText('passive')
-  await expectNoHorizontalOverflow(page)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+})
+
+test('Solutions and diffusion on a phone: usable without overflow', async ({ page }) => {
+  await page.goto('/?csec=solutions&st=dilution#/chemistry')
+  await expect(page.locator('.sol-answer')).toHaveText('C₂ = 2.36 M')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  await page.goto('/?bsec=diffusion#/biology')
+  await page.getByRole('button', { name: '+100 steps' }).click()
+  await expect(page.locator('.dif-lab .panel-title')).toHaveText(/step 100$/)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })

@@ -105,6 +105,15 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     terms: [...(s.aliases ?? []), getSystem(s.system).name, ...(s.alsoIn ?? []).map((x) => getSystem(x).name)],
   })),
   {
+    id: 'section:solutions',
+    name: 'Solutions and dilution',
+    subject: 'chemistry',
+    kind: 'section',
+    description: 'Molarity from moles of solute and litres of solution, volume unit conversions and dilution with C₁V₁ = C₂V₂, with substituted steps and textbook examples.',
+    href: linkTo('chemistry', { csec: 'solutions' }),
+    terms: ['molarity', 'concentration', 'solution', 'solute', 'solvent', 'dilution', 'dilute', 'stock solution', 'c1v1', 'mol/l', 'litre', 'liter', 'millilitre', 'cm3', 'dm3'],
+  },
+  {
     id: 'section:breathing',
     name: 'Breathing mechanics',
     subject: 'anatomy',
@@ -149,6 +158,15 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     description: 'Meiosis I and II step by step in a 2n = 4 cell: homologous chromosomes, sister chromatids, crossing over and independent assortment, compared with mitosis.',
     href: linkTo('biology', { bsec: 'meiosis' }),
     terms: ['meiosis', 'gamete', 'gametes', 'haploid', 'diploid', 'crossing over', 'independent assortment', 'homologous chromosomes', 'tetrad', 'synapsis'],
+  },
+  {
+    id: 'section:diffusion',
+    name: 'Diffusion',
+    subject: 'biology',
+    kind: 'section',
+    description: 'A seeded two-compartment particle model: random motion, net movement down a concentration gradient, dynamic equilibrium and a selective membrane.',
+    href: linkTo('biology', { bsec: 'diffusion' }),
+    terms: ['diffusion', 'concentration gradient', 'dynamic equilibrium', 'passive transport', 'random motion', 'brownian', 'selectively permeable', 'membrane', 'net movement'],
   },
   {
     id: 'section:inheritance',

@@ -274,3 +274,10 @@ test('The Boyle’s law lab and breathing mechanics need no WebGL', async ({ pag
   await expect(page.locator('.breath-flow-label')).toHaveText('Air in ↓')
   await expect(page.locator('.breath-inset')).toBeVisible()
 })
+
+test('The solutions calculator and the diffusion model need no WebGL', async ({ page }) => {
+  await page.goto('/?csec=solutions#/chemistry')
+  await expect(page.locator('.sol-answer')).toHaveText('Molarity = 0.375 M')
+  await page.goto('/?bsec=diffusion#/biology')
+  await expect(page.locator('.dif-svg')).toBeVisible()
+})

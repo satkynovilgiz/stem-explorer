@@ -29,6 +29,8 @@ const BondingView = lazy(() => import('./bonding/Bonding').then((m) => ({ defaul
 const BondingPanel = lazy(() => import('./bonding/Bonding').then((m) => ({ default: m.BondingPanel })))
 const ReactionLab = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionLab })))
 const ReactionPanel = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionPanel })))
+const SolutionsLab = lazy(() => import('./solutions/SolutionsLab').then((m) => ({ default: m.SolutionsLab })))
+const SolutionsPanel = lazy(() => import('./solutions/SolutionsLab').then((m) => ({ default: m.SolutionsPanel })))
 
 const SECTION_LABEL: Record<ChemistrySection, string> = {
   periodic: 'Periodic table',
@@ -36,6 +38,7 @@ const SECTION_LABEL: Record<ChemistrySection, string> = {
   molecules: 'Molecules',
   bonding: 'Bonding and geometry',
   reactions: 'Reactions and stoichiometry',
+  solutions: 'Solutions and dilution',
 }
 
 const URL_DEFAULTS = { moleculeId: DEFAULT_MOLECULE_ID, representation: 'ball-and-stick' } as const
@@ -110,7 +113,7 @@ export function ChemistryExplorer() {
         Module
       </span>
       <div className="segmented section-switch section-switch--grid" role="group" aria-label="Chemistry section">
-        {(['periodic', 'atomic', 'molecules', 'bonding', 'reactions'] as const).map((s) => (
+        {(['periodic', 'atomic', 'molecules', 'bonding', 'reactions', 'solutions'] as const).map((s) => (
           <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => goSection(s)}>
             {SECTION_LABEL[s]}
           </button>
@@ -158,6 +161,17 @@ export function ChemistryExplorer() {
   const reactionPanel = (
     <Suspense fallback={loading}>
       <ReactionPanel reactionId={reactionId} shareParams={shareParams} />
+    </Suspense>
+  )
+
+  const solutionsView = (
+    <Suspense fallback={loading}>
+      <SolutionsLab baseParams={shareParams} />
+    </Suspense>
+  )
+  const solutionsPanel = (
+    <Suspense fallback={loading}>
+      <SolutionsPanel />
     </Suspense>
   )
 
@@ -224,8 +238,8 @@ export function ChemistryExplorer() {
     />
   )
 
-  const stage = section === 'periodic' ? elementsView : section === 'atomic' ? atomicView : section === 'bonding' ? bondingView : section === 'reactions' ? reactionView : viewer
-  const details = section === 'periodic' ? elementPanel : section === 'atomic' ? atomPanel : section === 'bonding' ? bondingPanel : section === 'reactions' ? reactionPanel : info
+  const stage = section === 'periodic' ? elementsView : section === 'atomic' ? atomicView : section === 'bonding' ? bondingView : section === 'reactions' ? reactionView : section === 'solutions' ? solutionsView : viewer
+  const details = section === 'periodic' ? elementPanel : section === 'atomic' ? atomPanel : section === 'bonding' ? bondingPanel : section === 'reactions' ? reactionPanel : section === 'solutions' ? solutionsPanel : info
 
   // One polite live region for meaningful changes only (never per animation frame).
   const announcer = (
@@ -248,7 +262,7 @@ export function ChemistryExplorer() {
           active={mobileTab}
           onChange={setMobileTab}
           tabs={[
-            { id: 'details', label: section === 'molecules' ? 'Details' : section === 'bonding' || section === 'reactions' ? 'Summary' : 'Element', content: details },
+            { id: 'details', label: section === 'molecules' ? 'Details' : section === 'bonding' || section === 'reactions' || section === 'solutions' ? 'Summary' : 'Element', content: details },
             { id: 'library', label: 'Molecule library', content: library },
           ]}
         />

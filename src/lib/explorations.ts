@@ -12,6 +12,7 @@ import { ARRANGEMENT_LABEL, type Arrangement } from '../physics/circuit'
 import { functionsEntries, parseFunctionsState, parseMathSection, parseStatsState, parseVectorsState, statsEntries, vectorsEntries } from './mathSections'
 import { FUNCTIONS } from '../math/functions'
 import { findDataset } from '../data/mathematics/datasets'
+import { parseSolutionsState, solutionsEntries } from './solutionsUrl'
 import { circuitParamEntries, gasParamEntries, opticsParamEntries, parseCircuitParams, parseGasParams, parseOpticsParams, parseWaveParams, waveParamEntries } from './labUrl'
 import { DEFAULT_SPRING, isValidSpringParam, normalizeSpringParam, SPRING_KEYS } from '../physics/spring'
 import {
@@ -62,13 +63,17 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
       const r = parseChemistryParams(search, MOLECULES.map((m) => m.id), { moleculeId: 'water', representation: 'ball-and-stick' })
       const sec = parseChemistrySection(search)
       if (r.invalid.length || sec.invalid.length) return null
+      if (sec.section === 'solutions') {
+        const sol = parseSolutionsState(search)
+        return sol.invalid.length ? null : { subject, params: { molecule: r.moleculeId, view: r.representation, csec: 'solutions', ...solutionsEntries(sol.state) } }
+      }
       return { subject, params: { molecule: r.moleculeId, view: r.representation, ...chemistrySectionEntries(sec.section, sec.element, sec.reaction) } }
     }
     case 'biology': {
       const r = parseBiologyParams(search, (t) => CELL_STRUCTURES[t], { structureId: null, cellView: 'cutaway' })
       const sec = parseBiologySection(search)
       if (r.invalid.length || sec.invalid.length) return null
-      if (sec.section !== 'cells') return { subject, params: { cell: r.cellView, ...biologySectionEntries(sec.section, sec.parents) } }
+      if (sec.section !== 'cells') return { subject, params: { cell: r.cellView, ...biologySectionEntries(sec.section, sec.parents, sec.diffusion) } }
       // `type` only for the plant cell, so animal-cell states keep their original canonical form.
       return {
         subject,
@@ -165,6 +170,7 @@ export function defaultTitle(state: ShareState): string {
       if (p.csec === 'periodic') return `Periodic table · ${element ?? 'element'}`
       if (p.csec === 'atomic') return `Atomic structure · ${element ?? 'element'}`
       if (p.csec === 'bonding') return 'Bonding and geometry'
+      if (p.csec === 'solutions') return p.st === 'dilution' ? 'Solutions · dilution C₁V₁ = C₂V₂' : 'Solutions · molarity'
       if (p.csec === 'reactions') return `Reactions · ${findReaction(p.rx)?.name ?? 'reaction'}`
       const m = findMolecule(p.molecule)
       return `${m?.name ?? 'Molecule'} · ${p.view === 'space-filling' ? 'space-filling' : 'ball and stick'}`
@@ -175,6 +181,7 @@ export function defaultTitle(state: ShareState): string {
       if (p.bsec === 'meiosis') return 'Meiosis'
       if (p.bsec === 'inheritance') return `Inheritance: ${p.p1} × ${p.p2}`
       if (p.bsec === 'energy') return 'Energy processes'
+      if (p.bsec === 'diffusion') return `Diffusion: ${p.dfn} particles, ${p.dfm === 'membrane' ? 'membrane' : 'gap'}, seed ${p.dfs}`
       return p.structure
         ? `${findOrganelle(p.structure)?.name ?? 'Cell structure'} in the ${p.type === 'plant' ? 'plant cell' : p.type === 'bacterium' ? 'bacterial cell' : 'animal cell'}`
         : `${p.type === 'plant' ? 'Plant cell' : p.type === 'bacterium' ? 'Bacterial cell' : 'Animal cell'} · ${p.cell === 'whole' ? 'whole' : 'cutaway'}`

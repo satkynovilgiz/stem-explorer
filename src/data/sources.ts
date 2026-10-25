@@ -347,6 +347,18 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Chemistry 2e — 7.6 Molecular Structure and Polarity',
     url: 'https://openstax.org/books/chemistry-2e/pages/7-6-molecular-structure-and-polarity',
   },
+  'chem-1-4': {
+    label: 'OpenStax Chemistry 2e — 1.4 Measurements',
+    url: 'https://openstax.org/books/chemistry-2e/pages/1-4-measurements',
+  },
+  'chem-3-3': {
+    label: 'OpenStax Chemistry 2e — 3.3 Molarity',
+    url: 'https://openstax.org/books/chemistry-2e/pages/3-3-molarity',
+  },
+  'bio-5-2': {
+    label: 'OpenStax Biology 2e — 5.2 Passive Transport',
+    url: 'https://openstax.org/books/biology-2e/pages/5-2-passive-transport',
+  },
   'chem-9-1': {
     label: 'OpenStax Chemistry 2e — 9.1 Gas Pressure',
     url: 'https://openstax.org/books/chemistry-2e/pages/9-1-gas-pressure',
