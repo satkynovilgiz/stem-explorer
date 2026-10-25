@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { BookA, House, NotebookPen, Presentation, Search } from 'lucide-react'
+import { BookA, House, ListOrdered, NotebookPen, Presentation, Search } from 'lucide-react'
 import { SUBJECTS } from '../data/subjects'
 import type { Route } from '../lib/hooks'
 import { SubjectIcon } from './SubjectIcon'
@@ -76,6 +76,16 @@ export function TopNav({ active, onPresent }: { active: Route; onPresent?: () =>
             >
               <NotebookPen size={16} aria-hidden="true" />
               <span>Notebook</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#/collections"
+              className={`subject-link${active === 'collections' ? ' is-active' : ''}`}
+              aria-current={active === 'collections' ? 'page' : undefined}
+            >
+              <ListOrdered size={16} aria-hidden="true" />
+              <span>Collections</span>
             </a>
           </li>
         </ul>

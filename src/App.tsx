@@ -17,6 +17,7 @@ import { useNavigationGeneration } from './lib/location'
 // Pages reached from the top bar only; they load on first visit.
 const GlossaryPage = lazy(() => import('./features/glossary/GlossaryPage').then((m) => ({ default: m.GlossaryPage })))
 const SearchPage = lazy(() => import('./features/search/SearchPage').then((m) => ({ default: m.SearchPage })))
+const CollectionsPage = lazy(() => import('./features/collections/CollectionsPage').then((m) => ({ default: m.CollectionsPage })))
 const NotebookPage = lazy(() => import('./features/notebook/NotebookPage').then((m) => ({ default: m.NotebookPage })))
 const pageLoading = <p className="muted small panel">Loading…</p>
 
@@ -99,7 +100,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : route === 'search' ? 'Search · STEM Explorer' : 'STEM Explorer'
+    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : route === 'collections' ? 'Collections · STEM Explorer' : route === 'search' ? 'Search · STEM Explorer' : 'STEM Explorer'
   }, [subjectName, route])
 
   return (
@@ -144,6 +145,10 @@ export default function App() {
         ) : route === 'search' ? (
           <Suspense fallback={pageLoading}>
             <SearchPage />
+          </Suspense>
+        ) : route === 'collections' ? (
+          <Suspense fallback={pageLoading}>
+            <CollectionsPage />
           </Suspense>
         ) : route === 'notebook' ? (
           <Suspense fallback={pageLoading}>

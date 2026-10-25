@@ -1,4 +1,4 @@
-import { Bookmark, Check, NotebookPen } from 'lucide-react'
+import { Bookmark, Check, ListPlus, NotebookPen } from 'lucide-react'
 import { useId, useState } from 'react'
 import type { SubjectId } from '../data/subjects'
 import { canonicalize, defaultTitle, subjectName, type ShareState } from '../lib/explorations'
@@ -11,6 +11,7 @@ import { readDraft, sessionStore } from '../lib/noteDrafts'
 import { notifyNotesChange } from '../lib/useNotebook'
 import { NoteEditor, type DraftValues } from '../features/notebook/NoteEditor'
 import { AppLink } from './AppLink'
+import { AddToCollection } from './AddToCollection'
 import { CopyLinkButton } from './CopyLinkButton'
 
 interface Props {
@@ -27,6 +28,7 @@ type Message =
   | { kind: 'renamed'; title: string }
   | { kind: 'error'; text: string }
   | { kind: 'note'; title: string }
+  | { kind: 'collection'; title: string }
 
 
 /** Copy link + Save exploration, both built from one canonical share state. */
@@ -36,6 +38,7 @@ export function ShareActions({ subject, params, restores }: Props) {
   const [name, setName] = useState('')
   const [message, setMessage] = useState<Message | null>(null)
   const [noteOpen, setNoteOpen] = useState(false)
+  const [collectOpen, setCollectOpen] = useState(false)
   const state = canonicalize(subject, params)
   const suggested = state ? defaultTitle(state) : ''
   const draftScope = `new:${subject}`
@@ -92,6 +95,7 @@ export function ShareActions({ subject, params, restores }: Props) {
           onClick={() => {
             setNoteOpen((o) => !o)
             setOpen(false)
+            setCollectOpen(false)
             setMessage(null)
           }}
         >
@@ -106,6 +110,7 @@ export function ShareActions({ subject, params, restores }: Props) {
           onClick={() => {
             setOpen((o) => !o)
             setNoteOpen(false)
+            setCollectOpen(false)
             setName(suggested)
             setMessage(null)
           }}
@@ -113,7 +118,33 @@ export function ShareActions({ subject, params, restores }: Props) {
           <Bookmark size={16} aria-hidden="true" />
           <span>Save exploration</span>
         </button>
+        <button
+          type="button"
+          className="tool-button bordered"
+          aria-expanded={collectOpen}
+          onClick={() => {
+            setCollectOpen((o) => !o)
+            setOpen(false)
+            setNoteOpen(false)
+            setMessage(null)
+          }}
+        >
+          <ListPlus size={16} aria-hidden="true" />
+          <span>Add to collection</span>
+        </button>
       </div>
+      {collectOpen && state && (
+        <AddToCollection
+          state={state}
+          suggestedTitle={suggested}
+          onDone={(title) => {
+            setCollectOpen(false)
+            setMessage({ kind: 'collection', title })
+          }}
+          onError={(text) => setMessage({ kind: 'error', text })}
+          onCancel={() => setCollectOpen(false)}
+        />
+      )}
       {open && (
         <form
           id={`${id}-form`}
@@ -164,13 +195,18 @@ export function ShareActions({ subject, params, restores }: Props) {
           <strong>Add note</strong> to restore or discard it.
         </p>
       )}
-      <p className={`save-status${message?.kind === 'error' ? ' status-error' : message?.kind === 'saved' || message?.kind === 'renamed' || message?.kind === 'note' ? ' status-success' : ''}`} role="status">
+      <p className={`save-status${message?.kind === 'error' ? ' status-error' : message?.kind === 'saved' || message?.kind === 'renamed' || message?.kind === 'note' || message?.kind === 'collection' ? ' status-success' : ''}`} role="status">
         {message?.kind === 'saved' && <>Saved on this browser as “{message.title}”. Find it on the Home page.</>}
         {message?.kind === 'renamed' && <>Saved entry renamed to “{message.title}”.</>}
         {message?.kind === 'error' && message.text}
         {message?.kind === 'note' && (
           <>
             Note “{message.title}” saved. <AppLink href="#/notebook">Open the notebook</AppLink>
+          </>
+        )}
+        {message?.kind === 'collection' && (
+          <>
+            Added to “{message.title}”. <AppLink href="#/collections">Open collections</AppLink>
           </>
         )}
         {message?.kind === 'duplicate' && (

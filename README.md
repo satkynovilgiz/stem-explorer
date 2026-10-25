@@ -1682,6 +1682,51 @@ in this browser only and can be lost when site data is cleared.
   The two backup formats are kept apart. Each import recognizes the other's file and says where
   to import it, so existing saved-exploration backups keep working unchanged.
 
+## Exploration collections
+
+**Collections** (top navigation, `#/collections`) are ordered paths through explorer views. Each
+item is one saved explorer configuration plus a short observation or question.
+
+- **Make one:** create a collection with a title and an optional description. To add items, use
+  **Add to collection** next to Copy link in any explorer. You can also pick from your saved
+  explorations or recent views, or paste an exploration link. Items can be moved up or down,
+  duplicated, removed, and given a note. Every item opens in its real explorer.
+- **Starter collections** (`src/data/collections.ts`): *How breathing works*, *From DNA to
+  inheritance*, *Waves, sine functions, and probability* and *Reaction quantities and
+  conservation*. Each step comes with a question to try. Each collection explains how its steps
+  connect, cites the sources and says where the connection stops.
+  - The connection statements are reused, unchanged, from the source-checked cross-subject
+    relations (`src/data/related.ts`) and the atlas relationships. Two short new statements are
+    added: the deterministic-versus-random contrast and the reaction-conservation summary. Both
+    cite the sections they rest on (University Physics 15.1 and 16.2, Introductory Statistics 4.3,
+    and Chemistry 2e 2.3, 4.1, 4.3 and 4.4).
+  - Nothing is tracked or scored.
+  - **Copy to my collections** makes an editable copy, and the step questions become item notes.
+- **Storage:** `localStorage` key `stem-explorer:collections`, `{ version: 1, collections }`.
+  - Collections and items have stable ids. Each item copies the subject and its validated
+    parameters, so deleting a saved exploration never breaks a collection.
+  - Saved explorations, recent views and the notebook keep their own keys and are not touched.
+  - Limits: 20 collections, 30 items each, notes of up to 500 characters. Damaged stored data is
+    never overwritten.
+- **Multiple tabs:** each collection carries a revision number. A change based on an older
+  revision is refused with a message, and the newer version is shown, so one tab never silently
+  overwrites another tab's edits. Other tabs update through the `storage` event.
+- **Items that no longer validate:** an item may come from a newer or changed version. It is kept
+  unchanged, labelled "Can't be opened" with a dashed border, and offers a link to that explorer's
+  default view plus Remove.
+- **Collection files versus links:**
+  - **Export all collections** or **Export file** (one collection) downloads a
+    `stem-explorer.collections` v1 file. The file includes your notes, so share it deliberately.
+  - **Import** reads the file and shows a preview: item counts, items that can't be opened, and
+    duplicates (same id, or same title and items in order).
+  - Duplicates are skipped unless you tick "Also import … as separate copies"; copies get
+    "(imported)" in the title.
+  - Import always adds collections with new ids and never replaces existing ones. It re-checks for
+    changes made in another tab before writing, and reports a full storage quota without changing
+    anything.
+  - **Copy link** is different: it shares one explorer view, and its URL never contains collections
+    or notes.
+
 ## Subject guides and glossary
 
 **About this explorer.** Every explorer has the same collapsible panel, under the activity panel
@@ -1924,6 +1969,8 @@ How the URL is kept up to date:
 | `src/math/tangent.test.ts` | Hand-derived partials against known values and against finite differences for every surface; tangent planes through the point with first-order agreement; the plane surface as its own tangent plane; the saddle origin (zero gradient, z = 0); flat-plane and sine residue degenerate cases; gradient magnitude and direction; the substituted equation; display formatting that never shows small non-zero coefficients or offsets as 0 (A = k = 0.05 sine case, small negatives, scientific notation, ≈ marking). |
 | `src/data/anatomy/vessels.test.ts` | Vessel facts cover exactly the model's vessels, name them by direction (artery = away, vein = toward, including the reversed pulmonary pattern), agree with the heart entries' oxygenation and connections, and presets pair different vessels. |
 | `src/lib/notesStore.test.ts` | Add, edit, delete and undo with the canonical snapshot; empty titles and invalid explorations refused; length caps and control characters; the note limit; unavailable, damaged and quota states leaving data unchanged; newer-version entries preserved. |
+| `src/lib/collectionsStore.test.ts` | Create, add, reorder (refusing moves past either end), duplicate, note and remove, with the order surviving a reload; a write based on an older revision refused so the newer edit is kept; whole-collection duplicate with new ids; the collection limit; quota, refused, damaged and unavailable storage leaving data unchanged; items that no longer validate kept without a link; saved explorations untouched; export/import round trip preserving order and notes; duplicates skipped or added as "(imported)" copies, never replacing; wrong, newer, empty and oversized files refused; reading full and relative exploration links. |
+| `src/data/collections.test.ts` | The four starter collections; every step already canonical (opens unchanged); every connection states its limits and cites registered sources; no progress or score wording. |
 | `src/lib/notebookBackup.test.ts` | Export/import round trip without IDs; the notebook and saved-exploration formats recognising each other; duplicates, invalid notes and the limit; text kept as text; nothing written when the plan changed or the write fails; 100 maximum-length notes of ASCII, Cyrillic, CJK, emoji and escaped text exported and imported into an empty notebook; emoji never split, lone surrogates replaced; a finite input limit. |
 | `src/lib/noteDrafts.test.ts` | Draft round trip with its exploration snapshot, never touching saved notes; scopes kept apart; older drafts without a snapshot; malformed drafts and unknown versions ignored; quota, refused and unavailable storage reported. |
 | `src/lib/searchIndex.test.ts` | Every subject, atlas and heart structure, element, molecule, cell model and structure, process, lab, function, section and surface is indexed with a deep link that its subject's parser accepts; atlas links turn on the structure's layer and reproductive links carry their configuration; symbols, synonyms and plurals; subject and type filters; grouping in subject order; formula normalization; ranking; empty and unmatched queries. |
@@ -2063,6 +2110,18 @@ the production build:
   hides the panel that held it; "t" and "/"; 720 px (200% zoom) with no overflow; Home's overview,
   interest links and a recent item showing *Biology · Inheritance · just now*. `mobile.e2e.ts`
   checks that phones show tabs instead of the toggles.
+- `collections.e2e.ts`:
+  - building a collection from an explorer and from a pasted link, without changing the share URL;
+  - reordering, then checking that the order and notes survive a reload; duplicate, remove, and a
+    note saved explicitly;
+  - opening an item in its module;
+  - all 20 starter destinations opening with their parameters unchanged;
+  - copy a starter collection, export, then re-import: the duplicate is flagged and blocked until
+    chosen, imported copies keep order and notes, and import into an empty browser works; other
+    file formats are refused;
+  - an item that no longer validates is labelled, offers recovery and keeps its data;
+  - another tab's rename appears, and a stale delete is refused with the newer edit kept;
+  - a full quota is reported with nothing changed.
 - `statistics.e2e.ts` (reset): seed 31 then *Restore default settings* gives 2026 in the field, the
   legend, the link and the same table; reset with invalid seed text clears the error; the reset
   configuration reloads; typed values survive a reset with *Include my values* turned off and no
@@ -2195,6 +2254,8 @@ src/
   features/activities/          guided-activity types, hook (state, detection, snapshot/restore) and panel
   features/guide/, features/glossary/   About this explorer panel, term buttons, source links; glossary page
   features/notebook/            Notebook page, note editor (unsaved-draft handling), notebook backup
+  features/collections/, components/AddToCollection.tsx   Collections page; Add to collection in explorers
+  lib/collectionsStore.ts, lib/useCollections.ts, data/collections.ts   collections storage, files, sync hook; starter collections
   lib/notesStore.ts, lib/notebookBackup.ts, lib/useNotebook.ts   notes storage, backup format, sync hook
   physics/spring.ts, features/physics/spring/   spring–mass model, lab, panels and scene
   math/tangent.ts               analytic partial derivatives and tangent planes
@@ -2426,6 +2487,7 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Sample datasets | 4 |
 | Glossary terms | 83 |
 | Cross-subject relations | 10 |
+| Starter collections | 4 |
 | Registered sources | 133 |
 | Search index entries | 511 |
 

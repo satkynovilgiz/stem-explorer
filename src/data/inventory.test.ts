@@ -9,6 +9,7 @@ import { ISOTOPES } from './chemistry/atomic'
 import { GLOSSARY } from './glossary'
 import { SAMPLE_DATASETS } from './mathematics/datasets'
 import { RELATIONS } from './related'
+import { CURATED_COLLECTIONS } from './collections'
 import { SOURCES } from './sources'
 import { SEARCH_INDEX } from '../lib/searchIndex'
 import readme from '../../README.md?raw'
@@ -41,6 +42,7 @@ describe('README content inventory', () => {
       'Sample datasets': SAMPLE_DATASETS.length,
       'Glossary terms': GLOSSARY.length,
       'Cross-subject relations': RELATIONS.length,
+      'Starter collections': CURATED_COLLECTIONS.length,
       'Registered sources': Object.keys(SOURCES).length,
       'Search index entries': SEARCH_INDEX.length,
     })
