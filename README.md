@@ -1583,54 +1583,76 @@ start fresh, as when opening a link.
 (`#/`, `#/nowhere`). The brand logo and the **Home** tab in the top bar lead back to it. Home does
 not mount a WebGL canvas and does not load the Three.js chunk.
 
-Home is laid out top to bottom:
-- **Hero**: a two-line headline, a one-sentence explanation, the global search (the main action)
-  with example queries (*mitral valve*, *H₂O*, *Golgi*, *saddle*, *spring*; a unit test checks each
-  one has results), **Browse subjects**, and a small decorative SVG illustration (a cell outline, a
-  bent three-atom molecule and a travelling wave). The illustration is hidden from assistive
-  technology and from phones narrower than 520 px, where the search comes first.
-- A first-visit **welcome panel**, shown only while there is no history and nothing saved. It has
-  two concrete starting points (a guided activity and the heart) and how exploring works. For
-  returning visitors it is replaced by a compact **Continue exploring** strip of recent visits,
-  and the guide moves behind **How it works**.
-- **At a glance**: one line per subject with every module as a link, read from the topic map, so
-  the whole atlas fits on one screen.
-- **Starting points by interest**: six small groups (the human body, how things move, light and
-  seeing, matter and reactions, living things and inheritance, patterns, data and chance), each
-  with two or three links to real views. They are grouped by topic, not by level, and say so; a
-  unit test checks that every link is canonical.
-- **Continue exploring** and **Saved explorations** now show each item's module (for example
-  *Biology · Inheritance*) and, for recent visits, a relative time (*just now*, *3 hours ago*).
-- **Explore by question**: short curated questions (*How does breathing work?*, *Why do molecules
+Home is laid out top to bottom (redesigned in the homepage milestone; before-and-after
+screenshots at 390, 820 and 1440 px were compared for review, but they are not stored in the
+repository):
+- **Hero:** a two-line headline and a short explanation.
+  - **Start exploring** (the primary, filled button) moves focus to *Start an investigation*. It
+    jumps instead of gliding under reduced motion.
+  - **Browse subjects** moves focus to the subject cards. Returning visitors also get **How it
+    works**.
+  - A line of facts (*5 subjects · 26 modules · 5 guided activities · 4 starter paths*) is computed
+    from the topic map, the activity list and the starter collections. Nothing about visitors is
+    shown or counted.
+- **Hero illustration:** a small decorative SVG beside the text: a cell outline, a bent three-atom
+  molecule and a wave. It is hidden from assistive technology, and below 720 px it is left out so
+  the text and search come first.
+- **Search band:** the global search with example queries (*mitral valve*, *H₂O*, *Golgi*,
+  *saddle*, *spring*); a unit test checks each one has results.
+- **First visit or return:**
+  - With no history and nothing saved, a **welcome panel** offers three starting points (the
+    chemistry guided activity and its step count, the heart cutaway, and the first starter path,
+    with names and step counts read from the data) and how exploring works.
+  - Returning visitors get a compact **Continue exploring** strip of recent visits instead.
+- **Explore subjects:** five cards in a responsive grid (3 + 2 on a desktop, 2 columns on a
+  tablet, 1 on a phone). Each card has:
+  - an illustration band labelled as a simplified preview;
+  - the subject, its module count, a title and a one-line summary;
+  - every module as a link (each link's accessible name includes what the module contains);
+  - one action, **Open body atlas**, **Open periodic table**, **Open projectile motion**, **Open
+    2D functions** or **Open cells**, leading straight to the subject's first lab.
+  - Module names, links, summaries and counts come from the topic map (`src/data/topics.ts`). This
+    grid replaces the former *At a glance* list, which repeated the same module links.
+- **Start an investigation:**
+  - the featured saddle exploration;
+  - the five **guided activities** (subject, step count and goal from each activity's data);
+  - the four **starter paths** (step count and subjects from `src/data/collections.ts`, linking to
+    Collections);
+  - **More starting points**: curated deep links that say what to do next.
+- **Explore by question:** short curated questions (*How does breathing work?*, *Why do molecules
   have different shapes?*, *How does a lens form an image?*) that open the module answering them.
-  A question is listed only when its destination module exists in the topic map, so the lens
-  question stays hidden until the optics lab ships (a unit test checks this).
-- **Explore subjects**: one row per subject in its accent colour (tokens `--subject-*`), with a
-  small SVG illustration labelled as a simplified preview, a one-line summary and the subject's
-  **actual modules**, each a link with what it contains. The module list and its counts (for
-  example *All 118 elements*, *12 3D molecules*) come from the topic map
-  (`src/data/topics.ts`), not hand-written text. The row is clickable through its action link;
-  module links sit above it and are their own targets. On phones the modules show as names only,
-  two per row.
-- **Featured exploration**: one larger card for real, implemented content (the saddle's level
-  point), with **More starting points** below it.
-- **Guided activities** with their learning goals, then **Saved explorations** with backup.
-- Library messages (saved, renamed, removed, cleared, imported, errors) appear in one dismissible
-  status region at the bottom of the screen, so a message stays visible even when its section
-  disappears (for example after Clear history).
+  A question is listed only when its destination module exists in the topic map; a unit test
+  checks this.
+- **Starting points by interest:** six small topic groups, grouped by topic rather than level, and
+  they say so. A unit test checks that every link is canonical.
+- **Saved explorations**, with backup. Continue exploring and Saved explorations show each item's
+  module (for example *Biology · Inheritance*), and recent visits show a relative time.
+- **Messages:** library messages (saved, renamed, removed, cleared, imported, errors) appear in one
+  dismissible status region at the bottom of the screen. A message stays visible even when its
+  section disappears (for example after Clear history).
 
-**Motion** is restrained and never gates content:
-- Sections and cards fade up 8 px over 240 ms, staggered by at most about 200 ms. Everything is in
-  the DOM and focusable from the first frame.
-- Featured cards, question cards and the spotlight lift 2–3 px on hover and on keyboard focus;
-  the wide subject rows change their border instead. Transforms don't move layout.
-- The hero illustration's wave and molecule move with transform-only keyframes (a test checks
-  this). They run only while the illustration is on screen (IntersectionObserver) and the tab is
-  visible. A visible **Pause decorative animation** button (`aria-pressed`) stops them, and the
-  choice is remembered on this browser (`stem-explorer:hero-paused`, per-viewer convenience only).
-- With `prefers-reduced-motion: reduce`, nothing animates, cards don't lift, and the pause button
-  is not shown.
-- No scroll hijacking, intro, audio, particles or WebGL on Home.
+**Design tokens.** All home styles are in one block at the end of `src/styles/app.css`. The old
+rules, spread over several overriding layers, were removed. The block uses the shared tokens:
+- spacing `--space-*`, radii `--radius-md` and `--radius-lg`;
+- type `--text-*`, and subject colours through `--chip`;
+- one focus ring (2 px `--color-focus`) for every card-like link and the main action;
+- 44 px tall primary actions.
+
+**Motion** is restrained and never gates content. Nothing moves continuously:
+- **Entrance:** subject cards fade up 6 px once, staggered by 50 ms each.
+- **Hover and focus:** cards lift 2 px (transform only, so layout never moves) and their border
+  takes the subject colour. Arrows in actions nudge 3 px.
+- **Hero illustration:**
+  - The wave travels two wavelengths (8 s), the molecule settles once, and the cell fades in, then
+    everything rests. Only `transform` and `opacity` are animated, and no animation loops
+    forever; a test checks both.
+  - **Replay decorative animation** starts it again.
+  - It holds while the illustration is off screen (IntersectionObserver) or the tab is hidden.
+- **Reduced motion:** with `prefers-reduced-motion: reduce`, nothing animates, cards don't lift,
+  and the replay button is not shown.
+- No scroll hijacking, intro, audio, particles, automatically moving text or WebGL on Home. A test
+  checks that no 3D module script (scene, viewport, camera controls or explorer chunk) is requested
+  on Home.
 
 Featured explorations are ordinary deep links that use only supported URL parameters. When a step
 can't be stored in a URL (picking atoms for an angle, starting the blood-flow tour, saving a physics
@@ -2170,7 +2192,16 @@ the production build:
     surfaces, the projectile lab, empty results and Clear;
   - save, duplicate detection, refresh, restore, rename and remove; Anatomy saved during the tour;
   - malformed stored data; recent history (only after visits, deduped, Clear history);
-  - Back/Forward between Home and explorers, and direct deep links.
+  - Back/Forward between Home and explorers, and direct deep links;
+  - **Start exploring** moving focus to the investigations: five activities, the starter paths,
+    and an activity opening its introduction; the hero's module count equal to the subject cards'
+    module links;
+  - each card's action naming and opening its first lab, and a module link opening its module;
+  - no 3D module script requested on Home;
+  - the hero animation finite, transform/opacity-only, held off screen or in a hidden tab, and
+    replayable by keyboard; nothing animating under reduced motion;
+  - keyboard order from the main action and a visible focus ring; cards lifting without moving
+    layout.
 - `storage.e2e.ts`: two pages in one browser context (shared storage, real `storage` events):
   save, rename and remove propagating between tabs; idle tabs making no writes or events; unrelated
   keys not re-reading the library; full storage keeping entries readable and openable with accurate

@@ -87,13 +87,13 @@ test('at 200% browser zoom (720 px wide) the workspace switches to the stacked l
   await expect(page.locator('table.punnett')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
   await page.goto('/')
-  await expect(page.getByRole('region', { name: 'At a glance' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Explore subjects' })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
 })
 
 test('Home: overview of real modules, interest starting points, and recent items with their module', async ({ page }) => {
   await page.goto('/')
-  const glance = page.getByRole('region', { name: 'At a glance' })
+  const glance = page.getByRole('region', { name: 'Explore subjects' })
   await expect(glance.getByRole('list', { name: 'Physics modules' }).getByRole('link')).toHaveCount(6)
   await glance.getByRole('link', { name: 'Reactions and stoichiometry' }).click()
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Reactions and stoichiometry')

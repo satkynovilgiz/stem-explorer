@@ -1,37 +1,6 @@
-import { ArrowRight, Compass, LayoutGrid } from 'lucide-react'
+import { ArrowRight, Compass } from 'lucide-react'
 import { AppLink } from '../../components/AppLink'
-import { SubjectIcon } from '../../components/SubjectIcon'
-import { SUBJECTS } from '../../data/subjects'
-import { modulesOf } from '../../data/topics'
 import { INTERESTS } from './interests'
-
-/** One line per subject with every module as a link: the whole atlas at a glance. */
-export function AtlasGlance() {
-  return (
-    <section className="home-section glance" aria-labelledby="glance-heading">
-      <h2 id="glance-heading" className="home-h2">
-        <LayoutGrid size={18} aria-hidden="true" /> At a glance
-      </h2>
-      <ul className="glance-list">
-        {SUBJECTS.map((s) => (
-          <li key={s.id} className={`glance-row is-${s.id}`}>
-            <a className="glance-subject" href={`#/${s.id}`}>
-              <SubjectIcon subject={s.id} size={16} />
-              {s.name}
-            </a>
-            <ul className="glance-modules" aria-label={`${s.name} modules`}>
-              {modulesOf(s.id).map((m) => (
-                <li key={m.id}>
-                  <AppLink href={m.href}>{m.name}</AppLink>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
 
 export function InterestStarts() {
   return (

@@ -1,24 +1,14 @@
-import { Pause, Play } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 /*
  * Decorative hero art: a travelling wave, a bent three-atom molecule and a cell outline, drawn in
- * SVG (no WebGL, no images). Motion uses CSS transforms only and stops when:
- * - the visitor presses Pause (remembered on this browser),
- * - the illustration is scrolled out of view or the tab is hidden,
- * - the system asks for reduced motion (then nothing moves and no control is shown).
- * It is a mood piece, not a scientific model, and is hidden from assistive technology.
+ * SVG (no WebGL, no images). The motion is short, not continuous: the wave travels two
+ * wavelengths and the molecule settles once (about 8 s), then everything rests. Replay runs it
+ * again. It holds while the illustration is out of view or the tab is hidden, and with reduced
+ * motion nothing moves and no control is shown. It is a mood piece, not a scientific model, and
+ * is hidden from assistive technology.
  */
-
-const PAUSE_KEY = 'stem-explorer:hero-paused'
-
-const readPaused = () => {
-  try {
-    return window.localStorage.getItem(PAUSE_KEY) === '1'
-  } catch {
-    return false
-  }
-}
 
 const reducedQuery = () => window.matchMedia('(prefers-reduced-motion: reduce)')
 const subscribeReduced = (cb: () => void) => {
@@ -32,7 +22,7 @@ const WAVE = Array.from({ length: 6 }, () => 'q 20 -22 40 0 t 40 0').join(' ')
 
 export function HeroIllustration() {
   const reduced = useSyncExternalStore(subscribeReduced, () => reducedQuery().matches, () => false)
-  const [userPaused, setUserPaused] = useState(readPaused)
+  const [run, setRun] = useState(0)
   const [inView, setInView] = useState(true)
   const [tabVisible, setTabVisible] = useState(() => document.visibilityState !== 'hidden')
   const ref = useRef<HTMLDivElement>(null)
@@ -51,20 +41,12 @@ export function HeroIllustration() {
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
 
-  const running = !reduced && !userPaused && inView && tabVisible
-  const toggle = () => {
-    const next = !userPaused
-    setUserPaused(next)
-    try {
-      window.localStorage.setItem(PAUSE_KEY, next ? '1' : '0')
-    } catch {
-      // Not remembered when storage is blocked; the button still works for this visit.
-    }
-  }
+  const running = !reduced && inView && tabVisible
 
   return (
     <div ref={ref} className="hero-art" data-running={running ? 'true' : 'false'}>
-      <svg viewBox="0 0 320 236" aria-hidden="true" focusable="false">
+      {/* A new key restarts the CSS animations from the beginning. */}
+      <svg key={run} viewBox="0 0 320 236" aria-hidden="true" focusable="false">
         <defs>
           <clipPath id="hero-wave-clip">
             <rect x="16" y="150" width="288" height="70" rx="12" />
@@ -99,8 +81,8 @@ export function HeroIllustration() {
         <rect x="16" y="150" width="288" height="70" rx="12" fill="none" stroke="var(--color-border)" />
       </svg>
       {!reduced && (
-        <button type="button" className="hero-art-toggle icon-button" aria-pressed={userPaused} aria-label="Pause decorative animation" onClick={toggle}>
-          {userPaused ? <Play size={14} aria-hidden="true" /> : <Pause size={14} aria-hidden="true" />}
+        <button type="button" className="hero-art-toggle icon-button" aria-label="Replay decorative animation" title="Replay animation" onClick={() => setRun((n) => n + 1)}>
+          <RotateCcw size={14} aria-hidden="true" />
         </button>
       )}
     </div>
