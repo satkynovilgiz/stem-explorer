@@ -69,7 +69,9 @@ test('the glossary searches, filters by subject, and labels conventions', async 
 
 test('Home search lists glossary definitions after explorations', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('searchbox', { name: 'Search everything you can explore' }).fill('vein')
+  // "valve": a few explorations and a glossary entry within Home's first 12 results. ("vein" now
+  // matches more than 12 explorations since the atlas gained the great veins.)
+  await page.getByRole('searchbox', { name: 'Search everything you can explore' }).fill('valve')
   const results = page.getByRole('list', { name: 'Search results' }).getByRole('link')
   await expect(results.first()).not.toContainText('Glossary:')
   await expect(results.filter({ hasText: 'Glossary:' }).first()).toHaveAttribute('href', /#\/glossary$/)
