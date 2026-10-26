@@ -52,10 +52,16 @@ export function browserStorage(): KeyValueStore | null {
   }
 }
 
+/** Replaces unpaired surrogates (which JSON would write as 6-byte escapes) with U+FFFD. */
+export const wellFormed = (s: string) => s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '\uFFFD')
+
+/** Cuts to at most `max` UTF-16 units (as a textarea's maxLength counts) without splitting a surrogate pair. */
+export const cutText = (s: string, max: number) => (s.length <= max ? s : s.slice(0, /[\uD800-\uDBFF]/.test(s[max - 1]) ? max - 1 : max))
+
 export function cleanTitle(title: string, fallback: string): string {
-  // Collapse whitespace, drop control characters, and cap the length.
-  const printable = Array.from(title, (ch) => (ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127 ? ' ' : ch)).join('')
-  const t = printable.replace(/\s+/g, ' ').trim().slice(0, MAX_TITLE_LENGTH)
+  // Collapse whitespace, drop control characters, and cap the length (never splitting a character).
+  const printable = Array.from(wellFormed(title), (ch) => (ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127 ? ' ' : ch)).join('')
+  const t = cutText(printable.replace(/\s+/g, ' ').trim(), MAX_TITLE_LENGTH).trim()
   return t || fallback
 }
 

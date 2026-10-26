@@ -1811,11 +1811,29 @@ item is one saved explorer configuration plus a short observation or question.
   - Collections and items have stable ids. Each item copies the subject and its validated
     parameters, so deleting a saved exploration never breaks a collection.
   - Saved explorations, recent views and the notebook keep their own keys and are not touched.
-  - Limits: 20 collections, 30 items each, notes of up to 500 characters. Damaged stored data is
-    never overwritten.
-- **Multiple tabs:** each collection carries a revision number. A change based on an older
-  revision is refused with a message, and the newer version is shown, so one tab never silently
-  overwrites another tab's edits. Other tabs update through the `storage` event.
+  - Limits: 20 collections, 30 items each. Titles can be up to 80 characters, and descriptions and
+    notes up to 500, counted in UTF-16 units like a text field's `maxLength`. An item's settings are
+    limited to 40 keys and 3,000 bytes as JSON. The largest valid explorer link, 100 typed statistics
+    values, fits.
+  - Text is never cut in the middle of a character. An unpaired surrogate becomes U+FFFD.
+  - Damaged stored data is never overwritten, and reading never shortens anything: a collection
+    stored by an older version over a limit keeps every item and note. It can shrink but not grow.
+- **Multiple tabs:**
+  - Each collection carries a revision number. One-click actions (move, duplicate, remove, delete)
+    based on an older revision are refused with a message, and the newer version is shown. Other
+    tabs update through the `storage` event.
+  - **Drafts:** an unsaved title and description, or an item note, is kept by the page, not by the
+    card. It records the revision and the saved text from when editing began.
+  - **Conflicts:** if the same text is then saved in another tab, the draft stays as typed and Save
+    is withheld. A notice (`role="alert"`, with text and a border, not only colour) shows the saved
+    version, with **Load saved version** and **Replace it with my draft**.
+  - Changes to *other* parts of the collection made meanwhile, such as a reordering, are not a
+    conflict. The draft's fields are written on top of them, and those changes are kept.
+  - If the collection, or the item a note belongs to, is deleted in another tab, the draft is shown
+    read-only so it can be copied or discarded. A title-and-description draft can also be turned
+    into a new collection.
+  - A failed write (full storage, blocked storage) keeps the draft and says why.
+  - Drafts live only while the page is open; they are not stored.
 - **Items that no longer validate:** an item may come from a newer or changed version. It is kept
   unchanged, labelled "Can't be opened" with a dashed border, and offers a link to that explorer's
   default view plus Remove.
@@ -1829,6 +1847,18 @@ item is one saved explorer configuration plus a short observation or question.
   - Import always adds collections with new ids and never replaces existing ones. It re-checks for
     changes made in another tab before writing, and reports a full storage quota without changing
     anything.
+  - **Size:** files up to 5 MB can be imported. The file picker checks `file.size` and the parser
+    checks the text, both in UTF-8 bytes (`utf8Bytes`).
+  - Export goes through `collectionsFileText`, which refuses to make a file it could not import
+    again. Within the limits above that can't happen: the largest possible export, every field full
+    of 3-byte characters, is about 3.3 MB, and a unit test builds it and imports it back. (The
+    earlier version compared a byte size in the picker with a string length in the parser, against
+    1 MB, so large multibyte exports could not be imported again.)
+  - **Nothing is shortened on import.** A collection in the file that breaks a limit (over-long
+    title, description, note or item name, more than 30 items, or oversized settings) is listed
+    as "Can't be imported" with the reason and left out. Entries in an item list that aren't items
+    are counted in the preview and skipped.
+  - Existing v1 files import as before.
   - **Copy link** is different: it shares one explorer view, and its URL never contains collections
     or notes.
 
@@ -2078,7 +2108,7 @@ How the URL is kept up to date:
 | `src/math/tangent.test.ts` | Hand-derived partials against known values and against finite differences for every surface; tangent planes through the point with first-order agreement; the plane surface as its own tangent plane; the saddle origin (zero gradient, z = 0); flat-plane and sine residue degenerate cases; gradient magnitude and direction; the substituted equation; display formatting that never shows small non-zero coefficients or offsets as 0 (A = k = 0.05 sine case, small negatives, scientific notation, ≈ marking). |
 | `src/data/anatomy/vessels.test.ts` | Vessel facts cover exactly the model's vessels, name them by direction (artery = away, vein = toward, including the reversed pulmonary pattern), agree with the heart entries' oxygenation and connections, and presets pair different vessels. |
 | `src/lib/notesStore.test.ts` | Add, edit, delete and undo with the canonical snapshot; empty titles and invalid explorations refused; length caps and control characters; the note limit; unavailable, damaged and quota states leaving data unchanged; newer-version entries preserved. |
-| `src/lib/collectionsStore.test.ts` | Create, add, reorder (refusing moves past either end), duplicate, note and remove, with the order surviving a reload; a write based on an older revision refused so the newer edit is kept; whole-collection duplicate with new ids; the collection limit; quota, refused, damaged and unavailable storage leaving data unchanged; items that no longer validate kept without a link; saved explorations untouched; export/import round trip preserving order and notes; duplicates skipped or added as "(imported)" copies, never replacing; wrong, newer, empty and oversized files refused; reading full and relative exploration links. |
+| `src/lib/collectionsStore.test.ts` | Create, add, reorder (refusing moves past either end), duplicate, note and remove, with the order surviving a reload; a write based on an older revision refused so the newer edit is kept; whole-collection duplicate with new ids; the collection limit; quota, refused, damaged and unavailable storage leaving data unchanged; items that no longer validate kept without a link; saved explorations untouched; export/import round trip preserving order and notes; duplicates skipped or added as "(imported)" copies, never replacing; wrong, newer, empty and oversized files refused; reading full and relative exploration links. Sizes in UTF-8 bytes, not string length; the largest possible export, in 3-byte characters, emoji and escaped quotes, stays under the import limit and imports back without loss; every valid explorer link fits the per-item settings limit; over-limit collections refused with reasons instead of shortened, the rest imported; malformed files and failed writes leave storage byte-for-byte unchanged; no split characters or unpaired surrogates; reading never shortens over-limit stored data. Drafts: an older title draft refused as a conflict, then saved on request; unrelated changes not a conflict and kept; note drafts on a changed note, a removed item, a deleted collection and full storage. |
 | `src/data/collections.test.ts` | The four starter collections; every step already canonical (opens unchanged); every connection states its limits and cites registered sources; no progress or score wording. |
 | `src/lib/notebookBackup.test.ts` | Export/import round trip without IDs; the notebook and saved-exploration formats recognising each other; duplicates, invalid notes and the limit; text kept as text; nothing written when the plan changed or the write fails; 100 maximum-length notes of ASCII, Cyrillic, CJK, emoji and escaped text exported and imported into an empty notebook; emoji never split, lone surrogates replaced; a finite input limit. |
 | `src/lib/noteDrafts.test.ts` | Draft round trip with its exploration snapshot, never touching saved notes; scopes kept apart; older drafts without a snapshot; malformed drafts and unknown versions ignored; quota, refused and unavailable storage reported. |
@@ -2230,6 +2260,15 @@ the production build:
     file formats are refused;
   - an item that no longer validates is labelled, offers recovery and keeps its data;
   - another tab's rename appears, and a stale delete is refused with the newer edit kept;
+  - two tabs editing one title: the older draft is kept, Save is withheld, and both **Replace it
+    with my draft** and **Load saved version** work;
+  - an item-note draft survives another tab's newer note, while another tab's reordering is not
+    treated as a conflict;
+  - a collection deleted in another tab keeps the open draft, which can become a new collection;
+  - a failed write (full storage) keeps the note draft;
+  - 20 × 30 items with every field at its limit in multi-byte text (over 1 MB) exports and imports
+    back unchanged;
+  - a file over 5 MB, broken JSON and a note over the limit are refused, with storage unchanged;
   - a full quota is reported with nothing changed.
 - `statistics.e2e.ts` (reset): seed 31 then *Restore default settings* gives 2026 in the field, the
   legend, the link and the same table; reset with invalid seed text clears the error; the reset

@@ -3,6 +3,7 @@ import {
   addCollection,
   applyCollectionsImport,
   buildCollectionsFile,
+  collectionsFileText,
   COLLECTIONS_KEY,
   createCollection,
   deleteCollection,
@@ -10,17 +11,29 @@ import {
   duplicateItem,
   itemHref,
   MAX_COLLECTIONS,
+  MAX_DESCRIPTION,
+  MAX_IMPORT_BYTES,
+  MAX_ITEMS,
+  MAX_NOTE,
+  MAX_PARAM_KEYS,
+  MAX_PARAMS_BYTES,
   moveItem,
   newItem,
   planCollectionsImport,
   readCollections,
   removeItem,
+  saveDetailsDraft,
+  saveNoteDraft,
   setItemNote,
+  startDetailsDraft,
+  startNoteDraft,
   stateFromLink,
   updateCollection,
+  utf8Bytes,
+  type Collection,
 } from './collectionsStore'
-import { SAVED_KEY } from './explorationStore'
-import type { ShareState } from './explorations'
+import { cleanTitle, MAX_TITLE_LENGTH, SAVED_KEY } from './explorationStore'
+import { canonicalize, type ShareState } from './explorations'
 
 function memory(failWith?: 'quota' | 'other') {
   const data = new Map<string, string>()
@@ -137,7 +150,7 @@ describe('collections export and import', () => {
     const plan = planCollectionsImport(file, [])
     expect(plan.ok && plan.candidates[0]).toMatchObject({ title: 'Path', description: 'Desc', duplicateOf: null, brokenItems: 0 })
     if (!plan.ok) return
-    expect(applyCollectionsImport(b, plan.candidates, false)).toEqual({ ok: true, value: { added: 1, skipped: 0 } })
+    expect(applyCollectionsImport(b, plan.candidates, false)).toEqual({ ok: true, value: { added: 1, skipped: 0, refused: 0 } })
     const read = readCollections(b)
     expect(read.ok && read.collections[0].items.map((i) => [i.title, i.note])).toEqual([
       ['Wave', 'First'],
@@ -153,8 +166,8 @@ describe('collections export and import', () => {
     const plan = planCollectionsImport(file, [c.value])
     expect(plan.ok && plan.candidates[0].duplicateOf).toBe('Path')
     if (!plan.ok) return
-    expect(applyCollectionsImport(s, plan.candidates, false)).toEqual({ ok: true, value: { added: 0, skipped: 1 } })
-    expect(applyCollectionsImport(s, plan.candidates, true)).toEqual({ ok: true, value: { added: 1, skipped: 0 } })
+    expect(applyCollectionsImport(s, plan.candidates, false)).toEqual({ ok: true, value: { added: 0, skipped: 1, refused: 0 } })
+    expect(applyCollectionsImport(s, plan.candidates, true)).toEqual({ ok: true, value: { added: 1, skipped: 0, refused: 0 } })
     const read = readCollections(s)
     expect(read.ok && read.collections.map((x) => [x.title, x.items[0].note])).toEqual([
       ['Path', 'mine'],
@@ -167,7 +180,7 @@ describe('collections export and import', () => {
     expect(planCollectionsImport('{"format":"stem-explorer.saved-explorations","version":1}', [])).toEqual({ ok: false, error: 'wrong-format' })
     expect(planCollectionsImport('{"format":"stem-explorer.collections","version":2,"collections":[]}', [])).toEqual({ ok: false, error: 'unsupported-version' })
     expect(planCollectionsImport('{"format":"stem-explorer.collections","version":1,"collections":[]}', [])).toEqual({ ok: false, error: 'empty' })
-    expect(planCollectionsImport('x'.repeat(1_000_001), [])).toEqual({ ok: false, error: 'too-large' })
+    expect(planCollectionsImport('x'.repeat(MAX_IMPORT_BYTES + 1), [])).toEqual({ ok: false, error: 'too-large' })
     const plan = planCollectionsImport(JSON.stringify({ format: 'stem-explorer.collections', version: 1, collections: [{ title: 'T', items: [{ subject: 'chemistry', params: { molecule: 'zzz' }, title: 'x', note: '' }] }, 'junk'] }), [])
     expect(plan.ok && plan.candidates[0].brokenItems).toBe(1)
     expect(plan.ok && plan.skippedInvalid).toBe(1)
@@ -177,6 +190,184 @@ describe('collections export and import', () => {
     const plan = planCollectionsImport(JSON.stringify({ format: 'stem-explorer.collections', version: 1, collections: [{ title: 'T', items: [] }] }), [])
     if (!plan.ok) throw new Error()
     expect(applyCollectionsImport(memory('quota'), plan.candidates, false)).toEqual({ ok: false, reason: 'quota' })
+  })
+})
+
+const FILE = 'stem-explorer.collections'
+const now = new Date('2026-10-26T10:00:00.000Z')
+
+/** The largest content the app lets anyone save: every limit reached, in the most bytes per character. */
+function largestCollections(char: string): Collection[] {
+  const fill = (n: number) => char.repeat(Math.floor(n / char.length))
+  // Settings at both limits at once: MAX_PARAM_KEYS keys, the JSON at MAX_PARAMS_BYTES.
+  const params: Record<string, string> = {}
+  for (let k = 0; k < MAX_PARAM_KEYS; k++) params[`key${String(k).padStart(2, '0')}`] = ''
+  const room = MAX_PARAMS_BYTES - utf8Bytes(JSON.stringify(params))
+  for (let k = 0; k < MAX_PARAM_KEYS; k++) params[`key${String(k).padStart(2, '0')}`] = 'v'.repeat(Math.floor(room / MAX_PARAM_KEYS))
+  return Array.from({ length: MAX_COLLECTIONS }, (_, c) => ({
+    id: `c${c}`,
+    title: fill(MAX_TITLE_LENGTH),
+    description: fill(MAX_DESCRIPTION),
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    revision: 1,
+    items: Array.from({ length: MAX_ITEMS }, (_, i) => ({ id: `i${c}-${i}`, subject: 'physics' as const, params, title: fill(MAX_TITLE_LENGTH), note: fill(MAX_NOTE) })),
+  }))
+}
+
+describe('collection file sizes', () => {
+  it('measures UTF-8 bytes, not string length', () => {
+    expect(utf8Bytes('abc')).toBe(3)
+    expect(utf8Bytes('語')).toBe(3)
+    expect(utf8Bytes('😀')).toBe(4)
+    // 1.7 million CJK characters: under the limit as a string length, over it in bytes, so refused.
+    const cjk = '語'.repeat(1_700_000)
+    expect(cjk.length).toBeLessThan(MAX_IMPORT_BYTES)
+    expect(planCollectionsImport(cjk, [])).toEqual({ ok: false, error: 'too-large' })
+  })
+
+  it.each([
+    ['3-byte characters', '語'],
+    ['4-byte emoji (surrogate pairs)', '😀'],
+    ['quotes and backslashes (escaped in JSON)', '"\\'],
+  ])('the largest possible export, in %s, is under the import limit and imports back without loss', (_, char) => {
+    const all = largestCollections(char)
+    const file = collectionsFileText(all, now)
+    if (!file.ok) throw new Error(`export too large: ${file.bytes}`)
+    expect(file.bytes).toBeLessThanOrEqual(MAX_IMPORT_BYTES)
+    const plan = planCollectionsImport(file.text, [])
+    if (!plan.ok) throw new Error(plan.error)
+    expect(plan.candidates.flatMap((c) => c.problems)).toEqual([])
+    const s = memory()
+    expect(applyCollectionsImport(s, plan.candidates, false, now)).toEqual({ ok: true, value: { added: MAX_COLLECTIONS, skipped: 0, refused: 0 } })
+    const read = readCollections(s)
+    if (!read.ok) throw new Error()
+    expect(read.collections.map((c) => [c.title, c.description, c.items.map((i) => [i.title, i.note, i.params])])).toEqual(all.map((c) => [c.title, c.description, c.items.map((i) => [i.title, i.note, i.params])]))
+  })
+
+  it('every valid explorer link fits the per-item settings limit (largest: 100 typed statistics values)', () => {
+    const value = '-0.000000123456789012'
+    const state = canonicalize('mathematics', { msec: 'statistics', sv: 'describe', ds: 'custom', data: Array(100).fill(value).join(',') })
+    expect(state?.params.data?.split(',')).toHaveLength(100)
+    const item = newItem(state!, '')
+    expect(Object.keys(item.params).length).toBeLessThanOrEqual(MAX_PARAM_KEYS)
+    expect(utf8Bytes(JSON.stringify(item.params))).toBeLessThanOrEqual(MAX_PARAMS_BYTES)
+  })
+
+  it('refuses over-limit collections in a file with a reason instead of shortening them, and imports the rest', () => {
+    const ok = { title: 'Fine', description: '', items: [{ ...water, title: 'Water', note: 'kept' }] }
+    const file = JSON.stringify({
+      format: FILE,
+      version: 1,
+      collections: [
+        ok,
+        { title: 'Long note', items: [{ ...water, title: 'W', note: 'n'.repeat(MAX_NOTE + 1) }] },
+        { title: 'Too many', items: Array(MAX_ITEMS + 1).fill({ ...water, title: 'W', note: '' }) },
+        { title: 'T'.repeat(MAX_TITLE_LENGTH + 1), items: [] },
+        { title: 'Big settings', items: [{ subject: 'physics', params: { x: 'v'.repeat(MAX_PARAMS_BYTES) }, title: 'P', note: '' }] },
+        { title: 'Has junk', items: [{ ...water, title: 'W', note: '' }, 42, null] },
+      ],
+    })
+    const plan = planCollectionsImport(file, [])
+    if (!plan.ok) throw new Error()
+    expect(plan.candidates.map((c) => c.problems.length > 0)).toEqual([false, true, true, true, true, false])
+    expect(plan.candidates[1].problems.join()).toContain('1 note is longer than 500 characters')
+    expect(plan.candidates[2].problems.join()).toContain('31 items (the limit is 30)')
+    expect(plan.candidates[5].unreadableItems).toBe(2)
+    const s = memory()
+    expect(applyCollectionsImport(s, plan.candidates, false, now)).toEqual({ ok: true, value: { added: 2, skipped: 0, refused: 4 } })
+    const read = readCollections(s)
+    expect(read.ok && read.collections.map((c) => c.title)).toEqual(['Fine', 'Has junk'])
+  })
+
+  it('a malformed file, or a failed write, leaves the stored collections exactly as they were', () => {
+    const s = memory()
+    addCollection(s, { title: 'Mine', description: '', items: [] }, now)
+    const before = s.data.get(COLLECTIONS_KEY)
+    for (const bad of ['{', '[]', 'null', '{"format":"stem-explorer.collections","version":1,"collections":"x"}']) expect(planCollectionsImport(bad, []).ok).toBe(false)
+    const plan = planCollectionsImport(JSON.stringify({ format: FILE, version: 1, collections: [{ title: 'New', items: [] }] }), [])
+    if (!plan.ok) throw new Error()
+    const failing = { ...s, setItem: () => { throw new DOMException('full', 'QuotaExceededError') } }
+    expect(applyCollectionsImport(failing, plan.candidates, false)).toEqual({ ok: false, reason: 'quota' })
+    expect(s.data.get(COLLECTIONS_KEY)).toBe(before)
+  })
+
+  it('never splits a character or writes an unpaired surrogate', () => {
+    expect(cleanTitle('a'.repeat(79) + '😀', 'x')).toBe('a'.repeat(79))
+    const s = memory()
+    const c = addCollection(s, { title: 'Bad \uD800 title', description: '\uDC00', items: [{ ...water, title: 'W', note: 'x\uD83D' }] })
+    if (!c.ok) throw new Error()
+    expect(c.value.title).toBe('Bad \uFFFD title')
+    expect(c.value.items[0].note).toBe('x\uFFFD')
+    expect(s.data.get(COLLECTIONS_KEY)).not.toMatch(/\\ud[89a-f]/i)
+  })
+
+  it('reading never shortens stored data: an over-long collection keeps every item and note, can shrink but not grow', () => {
+    const s = memory()
+    const items = Array.from({ length: MAX_ITEMS + 2 }, (_, i) => ({ id: `i${i}`, ...water, title: `W${i}`, note: 'n'.repeat(MAX_NOTE + 10) }))
+    s.data.set(COLLECTIONS_KEY, JSON.stringify({ version: 1, collections: [{ id: 'c', title: 'Old', description: '', createdAt: now.toISOString(), updatedAt: now.toISOString(), revision: 3, items }] }))
+    const read = readCollections(s)
+    if (!read.ok) throw new Error()
+    expect(read.collections[0].items).toHaveLength(MAX_ITEMS + 2)
+    expect(read.collections[0].items[0].note).toHaveLength(MAX_NOTE + 10)
+    expect(updateCollection(s, 'c', 3, (c) => duplicateItem(c, 'i0')).ok).toBe(false)
+    expect(updateCollection(s, 'c', 3, (c) => removeItem(c, 'i0')).ok).toBe(true)
+  })
+})
+
+describe('drafts across tabs', () => {
+  function setup() {
+    const s = memory()
+    const c = addCollection(s, { title: 'Path', description: 'Original', items: [{ ...water, title: 'Water', note: 'first note' }] }, now)
+    if (!c.ok) throw new Error()
+    return { s, c: c.value }
+  }
+  const latest = (s: ReturnType<typeof memory>) => {
+    const r = readCollections(s)
+    if (!r.ok) throw new Error()
+    return r.collections[0]
+  }
+
+  it('an older title draft never overwrites a newer save; the draft is kept and can replace it on request', () => {
+    const { s, c } = setup()
+    const draftA = { ...startDetailsDraft(c), title: 'Title from A' }
+    // Tab B saves first.
+    expect(saveDetailsDraft(s, c.id, { ...startDetailsDraft(c), title: 'Title from B' }).ok).toBe(true)
+    expect(saveDetailsDraft(s, c.id, draftA)).toEqual({ ok: false, reason: 'conflict' })
+    expect(latest(s).title).toBe('Title from B')
+    expect(draftA.title).toBe('Title from A')
+    // The person chooses to replace B's version.
+    const r = saveDetailsDraft(s, c.id, draftA, true)
+    expect(r.ok && r.value.title).toBe('Title from A')
+  })
+
+  it('a title draft saves over unrelated changes made meanwhile and keeps them', () => {
+    const { s, c } = setup()
+    const draft = { ...startDetailsDraft(c), title: 'Renamed' }
+    updateCollection(s, c.id, c.revision, (x) => setItemNote(x, x.items[0].id, 'note from B'))
+    const r = saveDetailsDraft(s, c.id, draft)
+    expect(r.ok && [r.value.title, r.value.description, r.value.items[0].note]).toEqual(['Renamed', 'Original', 'note from B'])
+  })
+
+  it('note drafts: conflict when the note changed, item removed, collection deleted, storage full', () => {
+    const { s, c } = setup()
+    const item = c.items[0]
+    const draft = { ...startNoteDraft(c, item), note: 'note from A' }
+    updateCollection(s, c.id, c.revision, (x) => setItemNote(x, item.id, 'note from B'))
+    expect(saveNoteDraft(s, c.id, item.id, draft)).toEqual({ ok: false, reason: 'conflict' })
+    expect(latest(s).items[0].note).toBe('note from B')
+    const before = s.data.get(COLLECTIONS_KEY)
+    const full = { ...s, setItem: () => { throw new DOMException('full', 'QuotaExceededError') } }
+    expect(saveNoteDraft(full, c.id, item.id, draft, true)).toEqual({ ok: false, reason: 'quota' })
+    expect(s.data.get(COLLECTIONS_KEY)).toBe(before)
+    const r = saveNoteDraft(s, c.id, item.id, draft, true)
+    expect(r.ok && r.value.items[0].note).toBe('note from A')
+    const now2 = latest(s)
+    updateCollection(s, c.id, now2.revision, (x) => removeItem(x, item.id))
+    expect(saveNoteDraft(s, c.id, item.id, draft, true)).toEqual({ ok: false, reason: 'item-not-found' })
+    deleteCollection(s, c.id, latest(s).revision)
+    expect(saveNoteDraft(s, c.id, item.id, draft, true)).toEqual({ ok: false, reason: 'not-found' })
+    expect(saveDetailsDraft(s, c.id, startDetailsDraft(c), true)).toEqual({ ok: false, reason: 'not-found' })
   })
 })
 

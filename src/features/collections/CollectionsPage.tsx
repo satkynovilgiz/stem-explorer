@@ -1,16 +1,17 @@
 import { ArrowDown, ArrowUp, Copy, Download, FolderPlus, Plus, Trash2, Upload, X } from 'lucide-react'
-import { useId, useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { CURATED_COLLECTIONS, type CuratedCollection } from '../../data/collections'
 import { canonicalKey, defaultTitle, hrefFor, subjectName, type ShareState } from '../../lib/explorations'
-import { browserStorage } from '../../lib/explorationStore'
+import { browserStorage, MAX_TITLE_LENGTH } from '../../lib/explorationStore'
 import {
   addCollection,
   applyCollectionsImport,
-  buildCollectionsFile,
   COLLECTION_MESSAGES,
+  collectionsFileText,
   createCollection,
   deleteCollection,
+  detailsConflict,
   duplicateCollection,
   duplicateItem,
   itemHref,
@@ -21,16 +22,23 @@ import {
   MAX_NOTE,
   moveItem,
   newItem,
+  noteConflict,
   planCollectionsImport,
   readCollections,
   removeItem,
-  setItemNote,
+  saveDetailsDraft,
+  saveNoteDraft,
+  startDetailsDraft,
+  startNoteDraft,
   stateFromLink,
   updateCollection,
+  utf8Bytes,
   type Collection,
   type CollectionFailure,
   type CollectionItem,
+  type DetailsDraft,
   type ImportCandidate,
+  type NoteDraft,
 } from '../../lib/collectionsStore'
 import { useExplorationLibrary } from '../../lib/useExplorationLibrary'
 import { notifyCollectionsChange, useCollections } from '../../lib/useCollections'
@@ -63,16 +71,75 @@ function download(name: string, text: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
+const MB = (bytes: number) => `${(bytes / 1_000_000).toLocaleString('en', { maximumFractionDigits: 1 })} MB`
+
+/** Exports through `collectionsFileText`, so a file is only offered if it can be imported again. */
+function exportFile(name: string, collections: readonly Collection[], say: Say, done: string) {
+  const r = collectionsFileText(collections)
+  if (!r.ok) return say(`The export would be ${MB(r.bytes)}, over the ${MB(MAX_IMPORT_BYTES)} that can be imported again, so no file was made. Export collections one at a time instead.`)
+  download(name, r.text)
+  say(done)
+}
+
+/*
+ * Unsaved edits, kept by the page (not by each card) so that they survive the card re-rendering or
+ * disappearing when another tab changes or deletes its collection. Keys: collection id for title
+ * and description drafts; "collectionId/itemId" for note drafts.
+ */
+interface NoteDraftEntry extends NoteDraft {
+  collectionId: string
+  itemId: string
+  collectionTitle: string
+  itemTitle: string
+}
+interface DetailsDraftEntry extends DetailsDraft {
+  collectionId: string
+}
+interface Drafts {
+  details: Record<string, DetailsDraftEntry>
+  notes: Record<string, NoteDraftEntry>
+  setDetails: (id: string, d: DetailsDraftEntry | null) => void
+  setNote: (key: string, d: NoteDraftEntry | null) => void
+}
+
+function useDrafts(): Drafts {
+  const [details, setAllDetails] = useState<Record<string, DetailsDraftEntry>>({})
+  const [notes, setAllNotes] = useState<Record<string, NoteDraftEntry>>({})
+  const without = <T,>(rec: Record<string, T>, key: string) => Object.fromEntries(Object.entries(rec).filter(([k]) => k !== key))
+  return {
+    details,
+    notes,
+    setDetails: (id, d) => setAllDetails((all) => (d ? { ...all, [id]: d } : without(all, id))),
+    setNote: (key, d) => setAllNotes((all) => (d ? { ...all, [key]: d } : without(all, key))),
+  }
+}
+
+const noteKey = (collectionId: string, itemId: string) => `${collectionId}/${itemId}`
+
 const fileName = (what: string) => `stem-explorer-${what}-${new Date().toISOString().slice(0, 10)}.json`
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'collection'
 
 /* ---------- One item ---------- */
 
-function ItemRow({ item, index, count, collection, write }: { item: CollectionItem; index: number; count: number; collection: Collection; write: (fn: (c: Collection) => Collection | null, done?: string) => boolean }) {
+function ItemRow({ item, index, count, collection, write, drafts, say, refresh }: { item: CollectionItem; index: number; count: number; collection: Collection; write: (fn: (c: Collection) => Collection | null, done?: string) => boolean; drafts: Drafts; say: Say; refresh: () => void }) {
   const id = useId()
-  const [note, setNote] = useState(item.note)
+  const run = useWrite(say, refresh)
+  const key = noteKey(collection.id, item.id)
+  const draft = drafts.notes[key]
   const href = itemHref(item)
-  const dirty = note.trim() !== item.note
+  const conflict = draft ? noteConflict(collection, item, draft) : false
+  const dirty = !!draft && draft.note.trim() !== draft.base.note
+  const setDraft = (note: string) => {
+    const started = draft ?? startNoteDraft(collection, item)
+    // Typing back to the text as it was when editing began leaves nothing to save.
+    if (note === started.base.note) return drafts.setNote(key, null)
+    drafts.setNote(key, { ...started, note, collectionId: collection.id, itemId: item.id, collectionTitle: collection.title, itemTitle: item.title })
+  }
+  const save = (replace: boolean) => {
+    if (!draft) return
+    // On any failure (conflict, full storage, item gone) the draft stays as typed.
+    if (run(saveNoteDraft(browserStorage(), collection.id, item.id, draft, replace), replace ? 'Your note replaced the version saved in the other tab.' : 'Note saved.')) drafts.setNote(key, null)
+  }
   return (
     <li className={`collection-item is-${item.subject}${href ? '' : ' is-broken'}`}>
       <div className="collection-item-head">
@@ -103,11 +170,24 @@ function ItemRow({ item, index, count, collection, write }: { item: CollectionIt
       <label className="param-label" htmlFor={`${id}-note`}>
         Observation or question (optional)
       </label>
-      <textarea id={`${id}-note`} className="note-body-input collection-note" value={note} maxLength={MAX_NOTE} rows={2} onChange={(e) => setNote(e.target.value)} />
+      <textarea id={`${id}-note`} className="note-body-input collection-note" value={draft?.note ?? item.note} maxLength={MAX_NOTE} rows={2} onChange={(e) => setDraft(e.target.value)} />
+      {conflict && draft && (
+        <ConflictNotice
+          what="note"
+          saved={[['Saved note', item.note || '(empty)']]}
+          onLoad={() => drafts.setNote(key, null)}
+          onReplace={() => save(true)}
+        />
+      )}
       <div className="share-row collection-item-actions">
-        {dirty && (
-          <button type="button" className="button" onClick={() => write((c) => setItemNote(c, item.id, note), 'Note saved.')}>
+        {dirty && !conflict && (
+          <button type="button" className="button" onClick={() => save(false)}>
             Save note
+          </button>
+        )}
+        {draft && (
+          <button type="button" className="tool-button bordered" onClick={() => drafts.setNote(key, null)}>
+            Discard note changes<span className="visually-hidden"> for “{item.title}”</span>
           </button>
         )}
         <button type="button" className="tool-button bordered" disabled={index === 0} onClick={() => write((c) => moveItem(c, item.id, -1), `Moved “${item.title}” up to position ${index}.`)}>
@@ -136,6 +216,53 @@ function ItemRow({ item, index, count, collection, write }: { item: CollectionIt
         </button>
       </div>
     </li>
+  )
+}
+
+/** Shown when the text being edited was changed in another tab. The draft stays until the person chooses. */
+function ConflictNotice({ what, saved, onLoad, onReplace }: { what: string; saved: [string, string][]; onLoad: () => void; onReplace: () => void }) {
+  return (
+    <div className="collection-conflict" role="alert">
+      <p className="small">
+        <strong>Changed in another tab.</strong> This {what} was saved elsewhere after you started editing. Your draft is kept above
+        and has not been saved. The version saved now:
+      </p>
+      <dl className="collection-conflict-saved small">
+        {saved.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="share-row">
+        <button type="button" className="tool-button bordered" onClick={onLoad}>
+          Load saved version
+        </button>
+        <button type="button" className="tool-button bordered" onClick={onReplace}>
+          Replace it with my draft
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/** A draft whose collection or item no longer exists: the text is shown so nothing typed is lost. */
+function OrphanDraft({ heading, text, onDiscard, children }: { heading: string; text: string; onDiscard: () => void; children?: ReactNode }) {
+  const id = useId()
+  return (
+    <div className="collection-orphan" role="note" aria-labelledby={`${id}-h`}>
+      <p id={`${id}-h`} className="small">
+        <strong>{heading}</strong> Your unsaved text is kept here so you can copy it:
+      </p>
+      <textarea className="note-body-input collection-note" readOnly value={text} rows={2} aria-label="Unsaved text" />
+      <div className="share-row">
+        {children}
+        <button type="button" className="tool-button bordered" onClick={onDiscard}>
+          Discard draft
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -232,13 +359,20 @@ function AddItem({ collection, write }: { collection: Collection; write: (fn: (c
 
 /* ---------- One collection ---------- */
 
-function CollectionCard({ collection, say, refresh }: { collection: Collection; say: Say; refresh: () => void }) {
+function CollectionCard({ collection, say, refresh, drafts }: { collection: Collection; say: Say; refresh: () => void; drafts: Drafts }) {
   const id = useId()
   const run = useWrite(say, refresh)
-  const [editing, setEditing] = useState(false)
-  const [title, setTitle] = useState(collection.title)
-  const [description, setDescription] = useState(collection.description)
+  const draft = drafts.details[collection.id]
+  const editing = !!draft
+  const conflict = draft ? detailsConflict(collection, draft) : false
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const setDraft = (patch: Partial<DetailsDraft>) => draft && drafts.setDetails(collection.id, { ...draft, ...patch })
+  const saveDetails = (replace: boolean) => {
+    if (!draft) return
+    // The draft stays (as typed) unless the write succeeds.
+    if (run(saveDetailsDraft(browserStorage(), collection.id, draft, replace), replace ? 'Your draft replaced the version saved in the other tab.' : 'Collection details saved.')) drafts.setDetails(collection.id, null)
+  }
+  const goneNotes = Object.entries(drafts.notes).filter(([, d]) => d.collectionId === collection.id && !collection.items.some((i) => i.id === d.itemId))
   const write = (fn: (c: Collection) => Collection | null, done?: string) => run(updateCollection(browserStorage(), collection.id, collection.revision, fn), done)
   const broken = collection.items.filter((i) => !itemHref(i)).length
 
@@ -249,22 +383,35 @@ function CollectionCard({ collection, say, refresh }: { collection: Collection; 
           className="collection-edit"
           onSubmit={(e) => {
             e.preventDefault()
-            if (write((c) => ({ ...c, title, description: description.slice(0, MAX_DESCRIPTION) }), 'Collection details saved.')) setEditing(false)
+            if (!conflict) saveDetails(false)
           }}
         >
           <label className="param-label" htmlFor={`${id}-t`}>
             Title
           </label>
-          <input id={`${id}-t`} className="search-input" value={title} maxLength={80} required onChange={(e) => setTitle(e.target.value)} />
+          <input id={`${id}-t`} className="search-input" value={draft.title} maxLength={MAX_TITLE_LENGTH} required onChange={(e) => setDraft({ title: e.target.value })} />
           <label className="param-label" htmlFor={`${id}-d`}>
             Description (optional)
           </label>
-          <textarea id={`${id}-d`} className="note-body-input collection-note" value={description} maxLength={MAX_DESCRIPTION} rows={2} onChange={(e) => setDescription(e.target.value)} />
+          <textarea id={`${id}-d`} className="note-body-input collection-note" value={draft.description} maxLength={MAX_DESCRIPTION} rows={2} onChange={(e) => setDraft({ description: e.target.value })} />
+          {conflict && (
+            <ConflictNotice
+              what="title and description"
+              saved={[
+                ['Saved title', collection.title],
+                ['Saved description', collection.description || '(none)'],
+              ]}
+              onLoad={() => drafts.setDetails(collection.id, { ...startDetailsDraft(collection), collectionId: collection.id })}
+              onReplace={() => saveDetails(true)}
+            />
+          )}
           <div className="share-row">
-            <button type="submit" className="button">
-              Save
-            </button>
-            <button type="button" className="tool-button bordered" onClick={() => setEditing(false)}>
+            {!conflict && (
+              <button type="submit" className="button">
+                Save
+              </button>
+            )}
+            <button type="button" className="tool-button bordered" onClick={() => drafts.setDetails(collection.id, null)}>
               Cancel
             </button>
           </div>
@@ -287,10 +434,14 @@ function CollectionCard({ collection, say, refresh }: { collection: Collection; 
       ) : (
         <ol className="collection-items" aria-label={`Items in ${collection.title}, in order`}>
           {collection.items.map((item, i) => (
-            <ItemRow key={`${item.id}:${item.note}`} item={item} index={i} count={collection.items.length} collection={collection} write={write} />
+            <ItemRow key={item.id} item={item} index={i} count={collection.items.length} collection={collection} write={write} drafts={drafts} say={say} refresh={refresh} />
           ))}
         </ol>
       )}
+
+      {goneNotes.map(([key, d]) => (
+        <OrphanDraft key={key} heading={`“${d.itemTitle}” was removed from this collection (perhaps in another tab) while you were editing its note.`} text={d.note} onDiscard={() => drafts.setNote(key, null)} />
+      ))}
 
       <AddItem collection={collection} write={write} />
 
@@ -299,11 +450,7 @@ function CollectionCard({ collection, say, refresh }: { collection: Collection; 
           <button
             type="button"
             className="tool-button bordered"
-            onClick={() => {
-              setTitle(collection.title)
-              setDescription(collection.description)
-              setEditing(true)
-            }}
+            onClick={() => drafts.setDetails(collection.id, { ...startDetailsDraft(collection), collectionId: collection.id })}
           >
             <span>
               Rename or describe<span className="visually-hidden"> “{collection.title}”</span>
@@ -319,10 +466,7 @@ function CollectionCard({ collection, say, refresh }: { collection: Collection; 
         <button
           type="button"
           className="tool-button bordered"
-          onClick={() => {
-            download(fileName(`collection-${slug(collection.title)}`), JSON.stringify(buildCollectionsFile([collection]), null, 2))
-            say(`Exported “${collection.title}” as a collection file. It includes your notes on its items.`)
-          }}
+          onClick={() => exportFile(fileName(`collection-${slug(collection.title)}`), [collection], say, `Exported “${collection.title}” as a collection file. It includes your notes on its items.`)}
         >
           <Download size={15} aria-hidden="true" />
           <span>
@@ -332,7 +476,12 @@ function CollectionCard({ collection, say, refresh }: { collection: Collection; 
         {confirmDelete ? (
           <span className="collection-confirm" role="group" aria-label="Confirm deletion">
             <span className="small">Delete “{collection.title}” and its notes?</span>
-            <button type="button" className="tool-button bordered is-danger" onClick={() => run(deleteCollection(browserStorage(), collection.id, collection.revision), `Deleted “${collection.title}”.`)}>
+            <button type="button" className="tool-button bordered is-danger" onClick={() => {
+                if (run(deleteCollection(browserStorage(), collection.id, collection.revision), `Deleted “${collection.title}”.`)) {
+                  drafts.setDetails(collection.id, null)
+                  for (const key of Object.keys(drafts.notes)) if (drafts.notes[key].collectionId === collection.id) drafts.setNote(key, null)
+                }
+              }}>
               Delete
             </button>
             <button type="button" className="tool-button bordered" onClick={() => setConfirmDelete(false)}>
@@ -424,13 +573,14 @@ function ImportExport({ collections, disabled, say, refresh }: { collections: Co
     if (fileRef.current) fileRef.current.value = ''
     if (!file) return
     setPending(null)
-    if (file.size > MAX_IMPORT_BYTES) return say(`That file is larger than ${MAX_IMPORT_BYTES / 1_000_000} MB, so it was not read.`)
+    // file.size is in bytes; the parser measures the text the same way (UTF-8 bytes).
+    if (file.size > MAX_IMPORT_BYTES) return say(`That file is ${MB(file.size)}, larger than the ${MB(MAX_IMPORT_BYTES)} limit, so it was not read. Nothing was imported.`)
     const text = await file.text().catch(() => null)
-    if (text === null) return say('That file could not be read.')
+    if (text === null) return say('That file could not be read. Nothing was imported.')
     const plan = planCollectionsImport(text, collections)
     if (!plan.ok) {
       const why = {
-        'too-large': `That file is larger than ${MAX_IMPORT_BYTES / 1_000_000} MB.`,
+        'too-large': `That file is ${MB(utf8Bytes(text))}, larger than the ${MB(MAX_IMPORT_BYTES)} limit.`,
         'not-json': 'That file is not valid JSON.',
         'wrong-format': 'That file is not a STEM Explorer collection file. (Saved-exploration backups are imported on Home; notebook backups in the Notebook.)',
         'unsupported-version': 'That collection file comes from a newer version of STEM Explorer and can’t be read here.',
@@ -457,12 +607,15 @@ function ImportExport({ collections, disabled, say, refresh }: { collections: Co
     const candidates = fresh.candidates
     const r = applyCollectionsImport(browserStorage(), candidates, includeDuplicates)
     if (run(r)) {
-      say(`Imported ${plural(r.value.added, 'collection')}${r.value.skipped ? `; skipped ${plural(r.value.skipped, 'duplicate')}` : ''}. Existing collections were not changed.`)
+      const skipped = [r.value.skipped ? plural(r.value.skipped, 'duplicate') : '', r.value.refused ? `${plural(r.value.refused, 'collection')} that can’t be imported in full` : ''].filter(Boolean).join(' and ')
+      say(`Imported ${plural(r.value.added, 'collection')}${skipped ? `; skipped ${skipped}` : ''}. Existing collections were not changed.`)
       setPending(null)
     }
+    // On failure (full storage, limit) the preview stays open and nothing was changed.
   }
 
-  const dupes = pending?.candidates.filter((c) => c.duplicateOf).length ?? 0
+  const importable = pending?.candidates.filter((c) => c.problems.length === 0) ?? []
+  const dupes = importable.filter((c) => c.duplicateOf).length
   return (
     <div className="backup">
       <div className="share-row">
@@ -470,10 +623,7 @@ function ImportExport({ collections, disabled, say, refresh }: { collections: Co
           type="button"
           className="tool-button bordered"
           disabled={disabled || collections.length === 0}
-          onClick={() => {
-            download(fileName('collections'), JSON.stringify(buildCollectionsFile(collections), null, 2))
-            say(`Exported ${plural(collections.length, 'collection')}.`)
-          }}
+          onClick={() => exportFile(fileName('collections'), collections, say, `Exported ${plural(collections.length, 'collection')}.`)}
         >
           <Download size={15} aria-hidden="true" />
           <span>Export all collections</span>
@@ -486,7 +636,7 @@ function ImportExport({ collections, disabled, say, refresh }: { collections: Co
       </div>
       <p className="muted small">
         A collection file (format “stem-explorer.collections”, version 1) holds whole collections: titles, descriptions, each
-        item’s explorer settings <strong>and your notes</strong>. It is a file you keep or hand to someone deliberately. It is not
+        item’s explorer settings <strong>and your notes</strong>. Files up to {MB(MAX_IMPORT_BYTES)} can be imported; every export fits. It is a file you keep or hand to someone deliberately. It is not
         the same as <strong>Copy link</strong>, which shares one explorer view and never includes notes or collections. Importing
         always adds collections; it never replaces or merges into existing ones.
       </p>
@@ -501,6 +651,13 @@ function ImportExport({ collections, disabled, say, refresh }: { collections: Co
                 <strong>{c.title}</strong> · {plural(c.items.length, 'item')}
                 {c.brokenItems > 0 && <> · {plural(c.brokenItems, 'item')} can’t be opened in this version (kept, shown with recovery options)</>}
                 {c.duplicateOf && <> · <em>same as your “{c.duplicateOf}”</em></>}
+                {c.unreadableItems > 0 && <> · {plural(c.unreadableItems, 'entry', 'entries')} in its item list can’t be read and will be skipped</>}
+                {c.problems.length > 0 && (
+                  <p className="status-error small">
+                    <strong>Can’t be imported:</strong> {c.problems.join('; ')}. Nothing is shortened on import, so this collection will be
+                    left out.
+                  </p>
+                )}
               </li>
             ))}
           </ul>
@@ -512,7 +669,7 @@ function ImportExport({ collections, disabled, say, refresh }: { collections: Co
             </label>
           )}
           <div className="share-row">
-            <button type="button" className="button" onClick={confirm} disabled={!includeDuplicates && dupes === pending.candidates.length}>
+            <button type="button" className="button" onClick={confirm} disabled={importable.length === 0 || (!includeDuplicates && dupes === importable.length)}>
               Import
             </button>
             <button type="button" className="tool-button bordered" onClick={() => setPending(null)}>
@@ -534,7 +691,11 @@ export function CollectionsPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const run = useWrite(setMessage, data.refresh)
+  const drafts = useDrafts()
   const collections = data.ok ? data.collections : []
+  // Drafts whose collection was deleted (here or in another tab). Only judged on a successful read.
+  const goneDetails = data.ok ? Object.values(drafts.details).filter((d) => !collections.some((c) => c.id === d.collectionId)) : []
+  const goneNotes = data.ok ? Object.entries(drafts.notes).filter(([, d]) => !collections.some((c) => c.id === d.collectionId)) : []
   const blocked = !data.ok
 
   const copyCurated = (c: CuratedCollection) => {
@@ -584,12 +745,33 @@ export function CollectionsPage() {
                 </button>
               </div>
             </form>
+            {goneDetails.map((d) => (
+              <OrphanDraft
+                key={d.collectionId}
+                heading={`“${d.base.title}” was deleted (perhaps in another tab) while you were editing its title and description.`}
+                text={[d.title, d.description].filter(Boolean).join('\n\n')}
+                onDiscard={() => drafts.setDetails(d.collectionId, null)}
+              >
+                <button
+                  type="button"
+                  className="tool-button bordered"
+                  onClick={() => {
+                    if (run(createCollection(browserStorage(), d.title, d.description), `Created “${d.title.trim() || 'Untitled collection'}” from your draft.`)) drafts.setDetails(d.collectionId, null)
+                  }}
+                >
+                  Create a new collection from this draft
+                </button>
+              </OrphanDraft>
+            ))}
+            {goneNotes.map(([key, d]) => (
+              <OrphanDraft key={key} heading={`“${d.collectionTitle}” was deleted (perhaps in another tab) while you were editing the note on “${d.itemTitle}”.`} text={d.note} onDiscard={() => drafts.setNote(key, null)} />
+            ))}
             {collections.length === 0 ? (
               <p className="empty-state">No collections yet. Create one above, or copy a starter collection below.</p>
             ) : (
               <ul className="collection-list">
                 {collections.map((c) => (
-                  <CollectionCard key={c.id} collection={c} say={setMessage} refresh={data.refresh} />
+                  <CollectionCard key={c.id} collection={c} say={setMessage} refresh={data.refresh} drafts={drafts} />
                 ))}
               </ul>
             )}
