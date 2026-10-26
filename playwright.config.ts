@@ -4,8 +4,13 @@ import { defineConfig } from '@playwright/test'
  * Browser tests run against the production build (`vite preview`), the same bundle Vercel serves.
  * They use the locally installed Google Chrome (`channel: 'chrome'`), so no browser download is
  * needed. SwiftShader gives headless Chrome a software WebGL implementation.
+ *
+ * Set BASE_URL to test an already-deployed site instead (CI does this after each production
+ * deployment); no local server is started then.
  */
 const PORT = 4173
+const BASE_URL = process.env.BASE_URL
+const CI = !!process.env.CI
 const WEBGL_ARGS = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
 
 export default defineConfig({
@@ -15,19 +20,22 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: true,
   workers: 2,
-  reporter: [['list']],
+  retries: CI ? 1 : 0,
+  reporter: CI ? [['list'], ['github'], ['html', { open: 'never' }]] : [['list']],
   use: {
-    baseURL: `http://127.0.0.1:${PORT}`,
+    baseURL: BASE_URL ?? `http://127.0.0.1:${PORT}`,
     channel: 'chrome',
     launchOptions: { args: WEBGL_ARGS },
     permissions: ['clipboard-read', 'clipboard-write'],
   },
-  webServer: {
-    command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
-    url: `http://127.0.0.1:${PORT}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: BASE_URL
+    ? undefined
+    : {
+        command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
+        url: `http://127.0.0.1:${PORT}`,
+        reuseExistingServer: !CI,
+        timeout: 120_000,
+      },
   projects: [
     {
       name: 'desktop',

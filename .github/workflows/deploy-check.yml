@@ -1,0 +1,57 @@
+name: Production smoke test
+
+# Vercel reports each deployment to GitHub. When a production deployment succeeds, run a read-only
+# subset of the browser tests against the live site, so a broken deployment shows up as a failed
+# check on the commit.
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SITE_URL: https://stem-explorer-nine.vercel.app
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chrome
+      - name: Wait for the production domain to serve the new build
+        run: |
+          expected=$(curl -fsS "${{ github.event.deployment_status.environment_url || env.SITE_URL }}" | grep -o 'assets/index-[^"]*\.js' | head -1 || true)
+          for i in $(seq 1 30); do
+            live=$(curl -fsS "$SITE_URL" | grep -o 'assets/index-[^"]*\.js' | head -1 || true)
+            if [ -z "$expected" ] || [ "$live" = "$expected" ]; then echo "Serving $live"; exit 0; fi
+            echo "Waiting ($live, want $expected)"; sleep 10
+          done
+          echo "Production domain did not switch to the new build"; exit 1
+      - run: >-
+          npx playwright test --project=desktop
+          e2e/home.e2e.ts e2e/navigation.e2e.ts e2e/collections.e2e.ts
+          e2e/gas-breathing.e2e.ts e2e/solutions-diffusion.e2e.ts
+        env:
+          CI: 'true'
+          BASE_URL: ${{ env.SITE_URL }}
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14

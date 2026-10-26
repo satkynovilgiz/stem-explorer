@@ -2353,6 +2353,13 @@ coverage.
 `vite preview` on port 4173 before running the suite. Otherwise Playwright reuses that server,
 which may be serving an older build.
 
+## Continuous integration and deployment
+
+- **CI** (`.github/workflows/ci.yml`) runs on every push to `main` and every pull request. One job runs typecheck, lint, unit tests and a production build. If that passes, a second job runs the full Playwright suite in Google Chrome on Ubuntu: desktop, 390 px mobile and no-WebGL. On CI a failing browser test is retried once, and the HTML report and traces are uploaded as an artifact when anything fails.
+- **CD** is Vercel's Git integration. Every push to `main` deploys to production and every pull request gets a preview deployment. Vercel builds on its own and doesn't wait for CI.
+- **Production smoke test** (`.github/workflows/deploy-check.yml`) starts when Vercel reports a successful production deployment to GitHub. It waits until https://stem-explorer-nine.vercel.app serves the new bundle, then runs a read-only subset of the browser tests against it: home, navigation, collections, gas/breathing, and solutions/diffusion. It can also be started by hand from the Actions tab.
+- `BASE_URL=https://… npx playwright test` runs any tests against a deployed site instead of a local build.
+
 ## Bundle and loading
 
 Measured on the production build (`npm run build`, Vite 8):
