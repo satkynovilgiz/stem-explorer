@@ -3,6 +3,8 @@
 An interactive science exploration workspace: **explore → interact → understand**.
 Users rotate, zoom, select and measure parts of 3D models and read concise, sourced explanations.
 
+**Built By Ilgiz Satkynov**
+
 The app opens on a **Home page** (`#/home`) with search, questions to explore, the five subjects
 and their modules, featured explorations and the explorations you saved or visited recently.
 Every explorer has breadcrumbs and a searchable **Topics** drawer. All five subjects are implemented:
