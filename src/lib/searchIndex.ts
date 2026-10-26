@@ -169,6 +169,15 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     terms: ['diffusion', 'concentration gradient', 'dynamic equilibrium', 'passive transport', 'random motion', 'brownian', 'selectively permeable', 'membrane', 'net movement'],
   },
   {
+    id: 'section:motion',
+    name: 'Derivatives and motion',
+    subject: 'mathematics',
+    kind: 'section',
+    description: 'Position, velocity and acceleration as a function and its first and second derivatives: secant and tangent, average and instantaneous velocity, synchronized graphs and a moving object.',
+    href: linkTo('mathematics', { msec: 'motion' }),
+    terms: ['derivative', 'derivatives', 'velocity', 'acceleration', 'position', 'displacement', 'secant', 'tangent', 'average velocity', 'instantaneous velocity', 'free fall', 'vertical throw', 'oscillation', 'kinematics', 'rate of change', 'second derivative'],
+  },
+  {
     id: 'section:enzymes',
     name: 'Enzymes and catalysis',
     subject: 'biology',

@@ -1517,6 +1517,65 @@ inheritance simulation also links to the binomial lab with the same n and p.
   [7.8 Cramer’s Rule](https://openstax.org/books/college-algebra-2e/pages/7-8-solving-systems-with-cramers-rule)
   (2×2 inverse and determinant).
 
+### Derivatives and motion (Mathematics ↔ Physics)
+
+`?msec=motion` (Mathematics › **Derivatives and motion**) connects a function and its derivatives
+with position, velocity and acceleration. The code is in `src/math/motion.ts`,
+`src/lib/motionUrl.ts` and `src/features/mathematics/motion/MotionLab.tsx`.
+- **Reused:** the shared axis helpers in `src/lib/ticks.ts`, the Mathematics layout, mobile tabs
+  and share actions, and the 2D-functions idea of a secant and tangent.
+- **Library:** a fixed set of motions with analytical first and second derivatives:
+  - **Constant velocity** (linear x(t) = x₀ + v·t);
+  - **Constant acceleration** (quadratic x(t) = x₀ + v₀·t + ½·a·t²);
+  - **Vertical throw** (y(t) = y₀ + v₀·t − ½·g·t², g = 9.81 m/s², up positive, no air
+    resistance; the motion ends at landing, y = 0);
+  - **Oscillation** (x(t) = A·cos(ω·t)).
+  - Parameters are bounded. Nothing typed is evaluated as code.
+- **Mathematics:**
+  - **Current time:** a time slider, ±0.1 s steps and Reset.
+  - **Δt:** adjustable and never zero, with |Δt| from 0.001 to 5 s. Presets are 1, 0.1, 0.01 and
+    0.001 s, and a negative Δt uses the interval before t.
+  - **Lines:** on the position graph, the secant through t and t + Δt (dashed, with a square
+    marker) and the tangent at t (solid).
+  - **Readouts:** average velocity Δx/Δt (5 significant figures, so the Δt presets visibly converge)
+    next to the instantaneous velocity x′(t) and their difference.
+  - **Equations:** every equation is shown with numbers substituted.
+- **Physics:**
+  - **Graphs:** synchronized position, velocity and acceleration graphs share one current-time
+    marker.
+  - **Moving object:** a 1D motion view (a track, or a height scale with the ground for the throw)
+    with labelled velocity and acceleration arrows.
+  - **Playback:** Play runs in real time from the current t to the end of the motion (it stops at
+    landing), with Pause, Reset to t = 0 and scrubbing.
+  - **Same time everywhere:** the graphs, the moving object and the readouts all read the same t.
+  - **Units and direction:** every axis and readout has a unit, and each motion states its positive
+    direction and what the sign of a means.
+- **Explain as Mathematics / Physics** (`mex`): changes words and labels only (x(t), x′(t), x″(t)
+  as slopes, or position, velocity and acceleration). The motion, time and Δt are kept.
+- **Investigations:**
+  - *Constant velocity*: every secant equals the tangent, and a = 0.
+  - *Constant acceleration*: the secant differs from the tangent by exactly ½·a·Δt.
+  - *Top of a vertical throw*: v = 0 while a = −9.81 m/s².
+  - *Oscillation*: a = −ω²·x, and the speed is greatest at equilibrium.
+  - Each explanation uses the current numbers.
+- **Without animation:** the numbers never depend on it. With reduced motion there is no Play;
+  the slider and step buttons still move time.
+- **Share links:** `mo`, the motion's own parameter keys, `mt`, `mdt` and `mex`. A link opens paused
+  at its time, and the address is not rewritten during playback.
+- **Validation:** invalid or foreign keys make a link invalid. Typed values outside a range, or
+  Δt = 0, are refused with a reason and the last valid value is kept.
+- **No NaN or Infinity:**
+  - Δt = 0, |Δt| < 0.001 and t + Δt outside the motion are refused with a reason (for example,
+    "t + Δt = 14 s is outside the motion (0 to 10 s). Use a smaller Δt or a negative one.");
+  - values within 10⁻⁹ of zero (such as the height at the computed landing time) show as 0.
+- **Links** to Physics › Projectile motion and Spring–mass oscillator, and to 2D functions. A new
+  cross-subject relation (*derivatives-motion*) links the lab and the projectile lab.
+- **Sources:** OpenStax Calculus Vol. 1 §3.1 (secant and tangent, the derivative as a limit) and
+  §3.4 (v = s′, a = v′ = s″); University Physics Vol. 1 §3.2 (instantaneous velocity as the tangent
+  slope), §3.3 (acceleration as the derivative of velocity), §3.5 (free fall: up positive,
+  a = −g, v = 0 at the top while the acceleration stays −g) and §15.1 (x = A cos(ωt + φ) and its
+  derivatives).
+
 ## Mathematics: 3D surfaces
 
 Choose a surface z = f(x, y), reshape it with parameters, read exact values at points, and cut it
@@ -1737,7 +1796,7 @@ repository):
     jumps instead of gliding under reduced motion.
   - **Browse subjects** moves focus to the subject cards. Returning visitors also get **How it
     works**.
-  - A line of facts (*5 subjects · 26 modules · 5 guided activities · 4 starter paths*) is computed
+  - A line of facts (*5 subjects · 27 modules · 5 guided activities · 4 starter paths*) is computed
     from the topic map, the activity list and the starter collections. Nothing about visitors is
     shown or counted.
 - **Hero illustration:** a small decorative SVG beside the text: a cell outline, a bent three-atom
@@ -2238,6 +2297,7 @@ How the URL is kept up to date:
 | `src/chem/solutions.test.ts` | L, mL, dm³, cm³ and mmol conversions; OpenStax Examples 3.14, 3.19, 3.20, 3.21 and their check exercises; solving for amount and volume; C₁V₁ = C₂V₂ for every solve-for choice; no-dilution case; zero, negative, over-limit and impossible dilutions refused with reasons. |
 | `src/data/biology/diffusion.test.ts` | Particle totals conserved at every step; the same seed reproduces the run (also stepping one at a time); a different seed differs; the starting split; particles stay in the box; net movement then counts near half with crossings both ways; membrane never passes B, gap rows only; the step limit; parameter validation; concentration units. |
 | `src/physics/gas.test.ts` | Halving and doubling the volume (inverse cases) and equal volumes; the OpenStax Example 9.8 numbers and its check exercise; P·V constant along the drawn isotherm and the graph through the readout point; n = PV/RT; zero, negative and non-finite input rejected; plain-language reasons for invalid typed values; kPa ↔ atm ↔ torr. |
+| `src/math/motion.test.ts` | Analytical derivatives against known values (including zero and negative velocity, the top of a throw at t = v₀/g and an oscillation through equilibrium) and against numerical differentiation for every motion; a = −ω²x; secant slopes approaching the tangent as Δt shrinks from 1 to 0.001 s, and the exact ½·a·Δt gap for a parabola; Δt = 0, tiny, non-finite and out-of-domain intervals refused with reasons that never mention NaN or Infinity; a throw ending exactly at landing, time clamped to the motion, never below ground; parameter limits; formatting; the four investigations. |
 | `src/data/biology/enzymes.test.ts` | [S] = 0 gives v = 0; [S] = Km gives exactly Vmax/2 for several parameter sets; v never exceeds Vmax and is never negative for valid inputs up to [S] = 10¹²; the curve never falls; near-proportional at low [S]; hand-computed values; NaN (never Infinity) outside the model; Km > 0 and other input checks with reasons; formatting and axis ranges; the three investigations' computed explanations; the four cycle stages. |
 | `src/data/anatomy/atlas/circulation.test.ts` | Every new cardiovascular and lymphatic structure has an introduction, location, functions, connections to existing structures, key terms, limitations, OpenStax sources and a group parent; new shapes touch only related structures or real junctions; the important connections (pulmonary trunk to heart and arteries, arteries and veins to the lungs, arch branches, venous angles, ducts to the subclavian veins) are drawn touching; existing ids kept. `src/features/anatomy/atlas/atlas.test.ts` adds the system level: `asys` links, Back one level at a time, a structure reached through another system, rejected systems, Isolate and Show all for a system, and tours returning to the system level. |
 | `src/data/anatomy/breathing.test.ts` | Expansion through both phases; airflow in only while alveolar pressure is below atmospheric, out while above, none at either end; quiet expiration described as passive; no timings, volumes or medical wording; breathing links parsed and canonicalized, invalid values rejected. |
@@ -2403,6 +2463,22 @@ the production build:
   (sternocleidomastoid) and "Not listed" (deltoid); grouped hamstrings; elbow and knee
   demonstrations (labels, conceptual wording, slider words, sketch orientation per side, the canvas
   changing, Play/Pause, exit, nothing in the link); reduced motion without Play; the limb comparison.
+- `motion.e2e.ts`:
+  - a shared link opens paused, with the graphs, the moving object and the readouts at the same t;
+  - Play runs to landing and stops, and Pause, Reset and keyboard scrubbing work;
+  - the secant converges to the tangent as Δt shrinks, a boundary past the end is refused without
+    NaN, and Δt = 0 is refused;
+  - the four investigations, and switching Mathematics/Physics keeps every setting;
+  - reduced motion has no Play;
+  - older Mathematics links still work.
+  - Phone and no-WebGL versions are in `mobile.e2e.ts` and `no-webgl.e2e.ts`.
+- `enzymes.e2e.ts`:
+  - [S] = 0, [S] = Km and saturation, with the substitution, units and the link kept;
+  - Km must be greater than zero;
+  - the three investigations;
+  - comparing two sets, a reload and the resets;
+  - keyboard sliders and stages, and the cycle never playing by itself;
+  - reduced motion, the explanations and the Chemistry link.
 - `atlas-systems.e2e.ts`:
   - Body → System → Organ → Structure from the system picker, with the level path and
     `aria-current`;
@@ -2855,10 +2931,10 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Matrix presets | 6 |
 | Sample datasets | 4 |
 | Glossary terms | 83 |
-| Cross-subject relations | 13 |
+| Cross-subject relations | 14 |
 | Starter collections | 4 |
-| Registered sources | 142 |
-| Search index entries | 536 |
+| Registered sources | 145 |
+| Search index entries | 537 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.

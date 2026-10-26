@@ -1,3 +1,5 @@
+import { MOTION_INVESTIGATIONS } from '../math/motion'
+import { motionEntries, parseMotionState } from '../lib/motionUrl'
 /*
  * The navigation map: subject → module → topic. One source for Home's subject cards, the
  * breadcrumbs, the topic drawer and "Explore by question". Every link goes through the same
@@ -381,6 +383,19 @@ export const MODULES: readonly TopicModule[] = [
     ],
     matches: (s) => parseMathSection(s).section === 'statistics',
     current: (s) => (new URLSearchParams(s).get('sv') === 'binomial' ? 'Binomial probability' : 'Descriptive statistics'),
+  },
+  {
+    id: 'mathematics.motion',
+    subject: 'mathematics',
+    name: 'Derivatives and motion',
+    summary: 'Position, velocity and acceleration as a function and its derivatives: secant, tangent, synchronized graphs and a moving object',
+    href: linkTo('mathematics', { msec: 'motion' }),
+    topics: MOTION_INVESTIGATIONS.map((inv) => ({ label: inv.title, href: linkTo('mathematics', motionEntries({ ...inv.state, view: 'phys' })) })),
+    matches: (s) => parseMathSection(s).section === 'motion',
+    current: (s) => {
+      const st = parseMotionState(s).state
+      return MOTION_INVESTIGATIONS.find((inv) => inv.state.motion === st.motion && inv.state.t === st.t && Object.entries(inv.state.params).every(([k, v]) => st.params[k] === v))?.title ?? null
+    },
   },
   {
     id: 'mathematics.vectors',

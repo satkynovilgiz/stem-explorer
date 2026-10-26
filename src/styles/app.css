@@ -8481,3 +8481,151 @@ html.ws-focus .chem-stage :is(.optics-svg,
     transition: none;
   }
 }
+
+/* ---------- Mathematics: derivatives and motion ---------- */
+
+.mo-lab {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.mo-playback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.mo-scrub {
+  display: grid;
+  gap: var(--space-1);
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.mo-scrub input {
+  width: 100%;
+}
+
+.mo-track {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: 0 auto var(--space-3);
+}
+
+.mo-object {
+  fill: var(--subject-mathematics);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.mo-ground {
+  stroke: var(--color-text-muted);
+  stroke-width: 3;
+}
+
+.mo-arrow-v line,
+.mo-arrow-v polygon {
+  stroke: var(--subject-physics);
+  fill: var(--subject-physics);
+  stroke-width: 3;
+}
+
+.mo-arrow-a line,
+.mo-arrow-a polygon {
+  stroke: var(--color-danger);
+  fill: var(--color-danger);
+  stroke-width: 2;
+}
+
+.mo-arrow-a line {
+  stroke-dasharray: 5 3;
+}
+
+.mo-graphs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-3);
+}
+
+.mo-graph {
+  margin: 0;
+  min-width: 0;
+}
+
+.mo-graph svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mo-graph-title {
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+}
+
+.mo-curve {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.mo-curve.is-s {
+  stroke: var(--subject-mathematics);
+}
+
+.mo-curve.is-v {
+  stroke: var(--subject-physics);
+}
+
+.mo-curve.is-a {
+  stroke: var(--color-danger);
+}
+
+.mo-zero {
+  stroke: var(--color-border-strong);
+}
+
+.mo-tangent {
+  stroke: var(--color-text);
+  stroke-width: 1.5;
+}
+
+.mo-secant {
+  stroke: var(--color-accent-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.mo-secant-point {
+  fill: var(--color-surface);
+  stroke: var(--color-accent-strong);
+  stroke-width: 2;
+}
+
+.mo-now {
+  stroke: var(--color-measure);
+  stroke-dasharray: 3 3;
+}
+
+.mo-point {
+  fill: var(--color-surface);
+  stroke: var(--color-measure);
+  stroke-width: 3;
+}
+
+.mo-formula,
+.mo-sub {
+  margin: var(--space-1) 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.mo-readouts th {
+  text-align: left;
+  font-weight: 500;
+}

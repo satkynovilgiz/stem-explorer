@@ -259,6 +259,18 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Calculus Volume 1 — 3.1 Defining the Derivative',
     url: 'https://openstax.org/books/calculus-volume-1/pages/3-1-defining-the-derivative',
   },
+  'calc1-3-4': {
+    label: 'OpenStax Calculus Volume 1 — 3.4 Derivatives as Rates of Change',
+    url: 'https://openstax.org/books/calculus-volume-1/pages/3-4-derivatives-as-rates-of-change',
+  },
+  'up-3-2': {
+    label: 'OpenStax University Physics Volume 1 — 3.2 Instantaneous Velocity and Speed',
+    url: 'https://openstax.org/books/university-physics-volume-1/pages/3-2-instantaneous-velocity-and-speed',
+  },
+  'up-3-3': {
+    label: 'OpenStax University Physics Volume 1 — 3.3 Average and Instantaneous Acceleration',
+    url: 'https://openstax.org/books/university-physics-volume-1/pages/3-3-average-and-instantaneous-acceleration',
+  },
   'calc1-3-3': {
     label: 'OpenStax Calculus Volume 1 — 3.3 Differentiation Rules',
     url: 'https://openstax.org/books/calculus-volume-1/pages/3-3-differentiation-rules',

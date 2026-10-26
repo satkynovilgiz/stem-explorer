@@ -1,3 +1,5 @@
+import { motionEntries, parseMotionState } from './motionUrl'
+import { MOTIONS } from '../math/motion'
 import { ATLAS_CONFIG } from '../data/anatomy/atlas/config'
 import { ATLAS_SYSTEMS, findStructure } from '../data/anatomy/atlas'
 import { findHeartPart, HEART_PART_IDS } from '../data/anatomy/heart'
@@ -125,6 +127,10 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
         const st = parseStatsState(search)
         return st.invalid.length ? null : { subject, params: statsEntries(st.state) }
       }
+      if (sec.section === 'motion') {
+        const mo = parseMotionState(search)
+        return mo.invalid.length ? null : { subject, params: motionEntries(mo.state) }
+      }
       if (sec.section === 'vectors') {
         const v = parseVectorsState(search)
         return v.invalid.length ? null : { subject, params: vectorsEntries(v.state) }
@@ -198,6 +204,7 @@ export function defaultTitle(state: ShareState): string {
       return `Launch at ${p.speed} m/s, ${p.angle}°${Number(p.height) > 0 ? ` from ${p.height} m` : ''}${p.gravity !== '9.81' ? `, g = ${p.gravity} m/s²` : ''}`
     case 'mathematics': {
       if (p.msec === 'functions') return `${FUNCTIONS.find((f) => f.id === p.fn)?.name ?? 'Function'} function · calculus tools`
+      if (p.msec === 'motion') return `Derivatives and motion · ${MOTIONS.find((m) => m.id === p.mo)?.name ?? 'motion'} at t = ${p.mt} s`
       if (p.msec === 'vectors') return 'Vectors and a 2×2 transformation'
       if (p.msec === 'statistics')
         return p.sv === 'binomial' ? `Binomial distribution: n = ${p.bn}, p = ${p.bp}` : `Descriptive statistics · ${p.ds === 'custom' ? 'your values' : (findDataset(p.ds)?.name ?? 'data')}`

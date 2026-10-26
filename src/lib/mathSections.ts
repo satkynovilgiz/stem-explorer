@@ -1,3 +1,4 @@
+import { MOTION_URL_KEYS } from './motionUrl'
 import { defaultFnParams, FUNCTION_IDS, getFunction, type FunctionId } from '../math/functions'
 import type { Mat2, Vec2 } from '../math/linear'
 import { DEFAULT_DATASET, findDataset } from '../data/mathematics/datasets'
@@ -10,7 +11,7 @@ import { isValidSeed } from './random'
  *   ?msec=vectors&vu=2,1&vv=-1,2&vk=1.5&vm=1,0,0,1
  */
 
-export type MathSection = 'surfaces' | 'functions' | 'vectors' | 'statistics'
+export type MathSection = 'surfaces' | 'functions' | 'vectors' | 'statistics' | 'motion'
 
 export interface FunctionsState {
   fn: FunctionId
@@ -42,7 +43,7 @@ const round = (v: number, d = 2) => Number(v.toFixed(d))
 
 export function parseMathSection(search: string): { section: MathSection; invalid: string[] } {
   const raw = new URLSearchParams(search).get('msec')
-  const section: MathSection = raw === 'functions' || raw === 'vectors' || raw === 'statistics' ? raw : 'surfaces'
+  const section: MathSection = raw === 'functions' || raw === 'vectors' || raw === 'statistics' || raw === 'motion' ? raw : 'surfaces'
   return { section, invalid: raw !== null && section !== raw ? ['msec'] : [] }
 }
 
@@ -199,7 +200,7 @@ export function statsEntries(s: StatsState): Record<string, string> {
   }
 }
 
-export const MATH_SECTION_KEYS = ['msec', 'fn', 'fx', 'ia', 'ib', 'vu', 'vv', 'vk', 'vm', 'fm', 'fb', 'fa', 'fc', 'fA', 'fk', 'sv', 'ds', 'bins', 'data', 'bn', 'bp', 'br', 'seed'] as const
+export const MATH_SECTION_KEYS = ['msec', 'fn', 'fx', 'ia', 'ib', 'vu', 'vv', 'vk', 'vm', 'fm', 'fb', 'fa', 'fc', 'fA', 'fk', 'sv', 'ds', 'bins', 'data', 'bn', 'bp', 'br', 'seed', ...MOTION_URL_KEYS] as const
 
 /** `search` with only this section's keys (surface keys are kept: the surfaces section owns them). */
 export function withMathSection(search: string, entries: Record<string, string>): string {

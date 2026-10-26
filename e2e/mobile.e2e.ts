@@ -409,3 +409,12 @@ test('enzyme lab fits a phone: graph, inputs and the cycle without horizontal sc
   await expect(page.locator('.enz-cycle')).toContainText('stage 2 of 4')
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
+
+test('derivatives and motion fit a phone without horizontal scrolling', async ({ page }) => {
+  await page.goto('/?msec=motion&mo=oscillation&mA=1&mw=2&mt=0.785&mdt=0.1&mex=math#/mathematics')
+  await expect(page.locator('#mo-heading')).toContainText('Oscillation')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  await page.getByRole('tab', { name: 'Explanation' }).tap()
+  await expect(page.locator('#mo-explain')).toHaveText('Derivative as a slope')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+})

@@ -25,11 +25,12 @@ const SurfaceScene = lazy(() => import('./scene/SurfaceScene'))
 const FunctionsLab = lazy(() => import('./functions/FunctionsLab').then((m) => ({ default: m.FunctionsLab })))
 const VectorsLab = lazy(() => import('./vectors/VectorsLab').then((m) => ({ default: m.VectorsLab })))
 const StatisticsLab = lazy(() => import('./statistics/StatisticsLab').then((m) => ({ default: m.StatisticsLab })))
+const MotionLab = lazy(() => import('./motion/MotionLab').then((m) => ({ default: m.MotionLab })))
 
-const SECTION_LABEL: Record<MathSection, string> = { functions: '2D functions', surfaces: '3D surfaces', vectors: 'Vectors and transformations', statistics: 'Statistics and probability' }
+const SECTION_LABEL: Record<MathSection, string> = { functions: '2D functions', surfaces: '3D surfaces', vectors: 'Vectors and transformations', statistics: 'Statistics and probability', motion: 'Derivatives and motion' }
 
 /**
- * Mathematics has four sections. Links without `msec` are surface links, so every older link
+ * Mathematics has five sections. Links without `msec` are surface links, so every older link
  * opens as before.
  */
 export function MathematicsExplorer() {
@@ -47,7 +48,7 @@ export function MathematicsExplorer() {
         Module
       </span>
       <div className="segmented section-switch section-switch--grid math-switch" role="group" aria-label="Mathematics section">
-        {(['functions', 'surfaces', 'vectors', 'statistics'] as const).map((s) => (
+        {(['functions', 'surfaces', 'vectors', 'statistics', 'motion'] as const).map((s) => (
           <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => choose(s)}>
             {SECTION_LABEL[s]}
           </button>
@@ -63,6 +64,8 @@ export function MathematicsExplorer() {
         <FunctionsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />
       ) : section === 'statistics' ? (
         <StatisticsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />
+      ) : section === 'motion' ? (
+        <MotionLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />
       ) : (
         <VectorsLab sectionSwitch={sectionSwitch} guidePanel={guidePanel} />
       )}

@@ -306,3 +306,11 @@ test('the enzyme lab needs no WebGL: cycle, rate graph and comparison all work',
   await page.locator('.enz-cycle').getByRole('button', { name: 'Next' }).click()
   await expect(page.locator('.enz-cycle')).toContainText('Enzyme–substrate complex')
 })
+
+test('derivatives and motion need no WebGL: graphs, motion and readouts all work', async ({ page }) => {
+  await page.goto('/?msec=motion&mo=constant-velocity&mx0=-2&mv=1.5&mt=2&mdt=1&mex=phys#/mathematics')
+  await expect(page.locator('.mo-graph')).toHaveCount(3)
+  await expect(page.locator('canvas')).toHaveCount(0)
+  await page.getByRole('button', { name: '+0.1 s' }).click()
+  await expect(page.locator('#mo-heading')).toHaveText('Constant velocity · t = 2.1 s')
+})

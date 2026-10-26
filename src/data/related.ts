@@ -90,6 +90,14 @@ export const RELATIONS: readonly Relation[] = [
     sources: ['bio-5-2', 'ap-22-4'],
   },
   {
+    id: 'derivatives-motion',
+    kind: 'connection',
+    between: [['section:motion'], ['experiment:projectile']],
+    text: 'Velocity is the derivative of position and acceleration the derivative of velocity. In the projectile lab the vertical motion is a vertical throw: its height graph is a parabola whose tangent is horizontal at the highest point, where the vertical velocity is zero while the acceleration stays −g.',
+    limits: 'The derivatives lab is one-dimensional; the projectile lab adds a constant horizontal velocity. Both ignore air resistance.',
+    sources: ['calc1-3-4', 'up-3-5'],
+  },
+  {
     id: 'catalysis-enzymes',
     kind: 'connection',
     between: [['section:reactions'], ['section:enzymes']],
