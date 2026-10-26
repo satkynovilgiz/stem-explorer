@@ -2,6 +2,7 @@ import type { AnchorHTMLAttributes, MouseEvent } from 'react'
 import { navigateTo } from '../lib/hooks'
 
 /**
+ * **
  * Link to an in-app route such as "?molecule=water#/chemistry". It is a real anchor (open in new
  * tab, copy address all work), but a plain click navigates without reloading the page.
  */

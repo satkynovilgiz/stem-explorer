@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 
 interface Props {
   /** Changing this value clears a caught error. */
+  // **
   resetKey?: unknown
   fallback: (error: Error, reset: () => void) => ReactNode
   children: ReactNode
