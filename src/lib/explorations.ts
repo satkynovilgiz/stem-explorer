@@ -75,7 +75,7 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
       const r = parseBiologyParams(search, (t) => CELL_STRUCTURES[t], { structureId: null, cellView: 'cutaway' })
       const sec = parseBiologySection(search)
       if (r.invalid.length || sec.invalid.length) return null
-      if (sec.section !== 'cells') return { subject, params: { cell: r.cellView, ...biologySectionEntries(sec.section, sec.parents, sec.diffusion) } }
+      if (sec.section !== 'cells') return { subject, params: { cell: r.cellView, ...biologySectionEntries(sec.section, sec.parents, sec.diffusion, sec.enzyme) } }
       // `type` only for the plant cell, so animal-cell states keep their original canonical form.
       return {
         subject,
@@ -183,6 +183,7 @@ export function defaultTitle(state: ShareState): string {
       if (p.bsec === 'meiosis') return 'Meiosis'
       if (p.bsec === 'inheritance') return `Inheritance: ${p.p1} × ${p.p2}`
       if (p.bsec === 'energy') return 'Energy processes'
+      if (p.bsec === 'enzymes') return `Enzyme lab: [S] = ${p.ezs} mM, Vmax = ${p.ezv} µM/s, Km = ${p.ezk} mM${p.ezv2 ? `, compared with Vmax = ${p.ezv2}, Km = ${p.ezk2}` : ''}`
       if (p.bsec === 'diffusion') return `Diffusion: ${p.dfn} particles, ${p.dfm === 'membrane' ? 'membrane' : 'gap'}, seed ${p.dfs}`
       return p.structure
         ? `${findOrganelle(p.structure)?.name ?? 'Cell structure'} in the ${p.type === 'plant' ? 'plant cell' : p.type === 'bacterium' ? 'bacterial cell' : 'animal cell'}`

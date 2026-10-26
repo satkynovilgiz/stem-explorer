@@ -953,6 +953,62 @@ two-compartment model in `src/data/biology/diffusion.ts`, unit tested.
 - **Links:** to breathing mechanics, through a sourced relation: gas exchange is diffusion.
 - **Sources:** OpenStax Biology 2e §5.2, and Anatomy and Physiology 2e §22.4 for the relation.
 
+### Enzymes and catalysis (Chemistry ↔ Biology)
+
+`?bsec=enzymes` (Biology › **Enzymes**). Before this there was no enzyme or catalysis module. The
+cell and energy sections only mentioned enzymes in passing, so the lab is new and links both ways
+with Chemistry › Reactions. The code is in `src/data/biology/enzymes.ts` and
+`src/features/biology/processes/EnzymeView.tsx`.
+
+- **Catalytic cycle (conceptual):** four stages: enzyme and substrate → enzyme–substrate complex
+  (the active-site notch closes slightly: induced fit) → reaction at the active site → products
+  released, with the enzyme unchanged.
+  - **Controls:** **Previous**, **Next** and a numbered stage list (`aria-current="step"`). The
+    optional **Play once** never starts by itself, steps through once and stops at the last
+    stage.
+  - **Reduced motion:** there is no Play and no transition.
+  - **Shapes, not colour:** substrate, products and enzyme have different shapes and are labelled
+    in words.
+  - **Disclaimer:** the panel says the shapes, sizes and motion are schematic, not a molecular
+    simulation, and not a reaction time.
+- **Rate lab:** v = Vmax × [S] / (Km + [S]).
+  - **Inputs:** [S] (0–100 mM), Vmax (0.1–1000 µM/s) and Km (0.01–100 mM), each a slider plus a
+    typed field. A typed value outside the model is refused with a reason (Km must be greater than
+    zero, no negative concentration), and the graph keeps the last valid value.
+  - **Graph:** v against [S], with labelled axes and units, a dashed Vmax asymptote, dotted lines
+    marking Km and Vmax/2, and the current state as a ring (set A) and a square (set B).
+  - **Readouts:** the full numerical substitution for each set, and a table of Vmax, Km, v and
+    v/Vmax.
+  - **Comparison:** a second parameter set (B, dashed line) with a sentence comparing the two.
+  - **Reset:** **Reset values** resets everything; **Reset set B** resets the second set.
+- **Values:** all values are labelled illustrative. No real enzyme's parameters are claimed.
+- **Investigations:** three buttons set [S] relative to Km and explain with numbers computed from
+  the current set:
+  - **Low substrate concentration** ([S] = Km/10: v ≈ 9.1% of Vmax, and doubling [S] multiplies v
+    by 1.83);
+  - **Half-maximal rate** ([S] = Km gives exactly Vmax/2);
+  - **Saturation** ([S] = 20 Km: about 95% of Vmax, and doubling [S] adds only about 2.4%).
+- **Explanations:**
+  - chemical catalysis (lower activation energy, not consumed), with a schematic energy diagram
+    with no scale;
+  - enzymes' biological roles (lower activation energies in cells, unchanged by the reaction,
+    no change to ΔG);
+  - why [S] = Km gives Vmax/2;
+  - the assumptions: one substrate, steady state, initial rates, far more substrate than enzyme,
+    no inhibitors or cooperativity;
+  - why Km is not a universal measure of binding affinity (close to the dissociation constant only
+    when k₋₁ ≫ k₂).
+- **Temperature and pH** are described, not simulated: extremes denature enzymes, but the lab has
+  no data for how Vmax and Km change, so it applies no factor.
+- **Links:** to Chemistry › Reactions, Biology › Energy processes and the lysosome. A new
+  cross-subject relation (*catalysis-enzymes*) shows the lab from the reactions section and back.
+- **Share links:** keep [S], set A and set B. The cycle stage is never stored, so a shared lab opens
+  at stage 1, paused.
+- **Sources:** OpenStax Biology 2e §6.5, OpenStax Chemistry 2e §12.7, and LibreTexts *Principles of
+  Biochemistry* 7.2 (M. Blaber) for the equation, the half-maximal property, the assumptions and
+  the Km/Kd caveat. The LibreTexts page lists its license as not declared, so it is cited and
+  paraphrased, never copied.
+
 ## Biology: animal cell model
 
 > This is a simplified educational model of a generalized animal cell. Shapes, sizes, quantities,
@@ -2182,6 +2238,7 @@ How the URL is kept up to date:
 | `src/chem/solutions.test.ts` | L, mL, dm³, cm³ and mmol conversions; OpenStax Examples 3.14, 3.19, 3.20, 3.21 and their check exercises; solving for amount and volume; C₁V₁ = C₂V₂ for every solve-for choice; no-dilution case; zero, negative, over-limit and impossible dilutions refused with reasons. |
 | `src/data/biology/diffusion.test.ts` | Particle totals conserved at every step; the same seed reproduces the run (also stepping one at a time); a different seed differs; the starting split; particles stay in the box; net movement then counts near half with crossings both ways; membrane never passes B, gap rows only; the step limit; parameter validation; concentration units. |
 | `src/physics/gas.test.ts` | Halving and doubling the volume (inverse cases) and equal volumes; the OpenStax Example 9.8 numbers and its check exercise; P·V constant along the drawn isotherm and the graph through the readout point; n = PV/RT; zero, negative and non-finite input rejected; plain-language reasons for invalid typed values; kPa ↔ atm ↔ torr. |
+| `src/data/biology/enzymes.test.ts` | [S] = 0 gives v = 0; [S] = Km gives exactly Vmax/2 for several parameter sets; v never exceeds Vmax and is never negative for valid inputs up to [S] = 10¹²; the curve never falls; near-proportional at low [S]; hand-computed values; NaN (never Infinity) outside the model; Km > 0 and other input checks with reasons; formatting and axis ranges; the three investigations' computed explanations; the four cycle stages. |
 | `src/data/anatomy/atlas/circulation.test.ts` | Every new cardiovascular and lymphatic structure has an introduction, location, functions, connections to existing structures, key terms, limitations, OpenStax sources and a group parent; new shapes touch only related structures or real junctions; the important connections (pulmonary trunk to heart and arteries, arteries and veins to the lungs, arch branches, venous angles, ducts to the subclavian veins) are drawn touching; existing ids kept. `src/features/anatomy/atlas/atlas.test.ts` adds the system level: `asys` links, Back one level at a time, a structure reached through another system, rejected systems, Isolate and Show all for a system, and tours returning to the system level. |
 | `src/data/anatomy/breathing.test.ts` | Expansion through both phases; airflow in only while alveolar pressure is below atmospheric, out while above, none at either end; quiet expiration described as passive; no timings, volumes or medical wording; breathing links parsed and canonicalized, invalid values rejected. |
 | `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the 1.52 → 1 at 41.14° reproduction (total internal reflection, θc ≈ 41.1395104°); below, at and above θc at full precision for four media pairs; the tolerance far below one slider step; critical mode only when θc exists; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
@@ -2798,10 +2855,10 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Matrix presets | 6 |
 | Sample datasets | 4 |
 | Glossary terms | 83 |
-| Cross-subject relations | 12 |
+| Cross-subject relations | 13 |
 | Starter collections | 4 |
-| Registered sources | 139 |
-| Search index entries | 535 |
+| Registered sources | 142 |
+| Search index entries | 536 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.

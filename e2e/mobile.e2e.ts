@@ -400,3 +400,12 @@ test('atlas system level on a phone: path, Back and controls fit without overlap
   const back = await page.getByRole('button', { name: 'Back to the whole body' }).boundingBox()
   expect(path!.y + path!.height).toBeLessThanOrEqual(back!.y + 1)
 })
+
+test('enzyme lab fits a phone: graph, inputs and the cycle without horizontal scrolling', async ({ page }) => {
+  await page.goto('/?bsec=enzymes&ezs=2&ezv=10&ezk=2&ezv2=6&ezk2=8#/biology')
+  await expect(page.locator('.enz-kinetics')).toContainText('= 5 µM/s')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  await page.locator('.enz-cycle').getByRole('button', { name: 'Next' }).tap()
+  await expect(page.locator('.enz-cycle')).toContainText('stage 2 of 4')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+})

@@ -259,6 +259,24 @@ export const MODULES: readonly TopicModule[] = [
     current: (s) => (new URLSearchParams(s).get('dfm') === 'membrane' ? 'Selective membrane' : 'Wall with an opening'),
   },
   {
+    id: 'biology.enzymes',
+    subject: 'biology',
+    name: 'Enzymes',
+    summary: 'A conceptual catalytic cycle and a Michaelis–Menten rate lab: v against [S], Km and Vmax, with a comparison set',
+    href: linkTo('biology', { bsec: 'enzymes' }),
+    topics: [
+      { label: 'Low substrate concentration', href: linkTo('biology', { bsec: 'enzymes', ezs: '0.2', ezv: '10', ezk: '2' }) },
+      { label: 'Half-maximal rate', href: linkTo('biology', { bsec: 'enzymes', ezs: '2', ezv: '10', ezk: '2' }) },
+      { label: 'Saturation', href: linkTo('biology', { bsec: 'enzymes', ezs: '40', ezv: '10', ezk: '2' }) },
+    ],
+    matches: (s) => parseBiologySection(s).section === 'enzymes',
+    current: (s) => {
+      const { enzyme } = parseBiologySection(s)
+      const r = enzyme.s / enzyme.a.km
+      return r <= 0.1 ? 'Low substrate concentration' : r === 1 ? 'Half-maximal rate' : r >= 20 ? 'Saturation' : null
+    },
+  },
+  {
     id: 'physics.projectile',
     subject: 'physics',
     name: 'Projectile motion',

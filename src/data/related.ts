@@ -90,6 +90,15 @@ export const RELATIONS: readonly Relation[] = [
     sources: ['bio-5-2', 'ap-22-4'],
   },
   {
+    id: 'catalysis-enzymes',
+    kind: 'connection',
+    between: [['section:reactions'], ['section:enzymes']],
+    text: 'Enzymes are biological catalysts. Like any catalyst they speed a reaction by providing a pathway with a lower activation energy and are not consumed, so the reaction equations and mole ratios in the reactions lab are unchanged by them.',
+    limits:
+      'The reactions lab balances equations and amounts; it has no rates or activation energies. The enzyme lab’s rates use illustrative Michaelis–Menten parameters, not data for any reaction in the reactions lab.',
+    sources: ['chem-12-7', 'bio-6-5'],
+  },
+  {
     id: 'circuit-blood-flow',
     kind: 'analogy',
     between: [['experiment:circuit'], ['structure:heart', 'subject:anatomy']],

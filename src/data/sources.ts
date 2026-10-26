@@ -155,6 +155,18 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Anatomy and Physiology 2e — 20.5 Circulatory Pathways',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/20-5-circulatory-pathways',
   },
+  'bio-6-5': {
+    label: 'OpenStax Biology 2e — 6.5 Enzymes',
+    url: 'https://openstax.org/books/biology-2e/pages/6-5-enzymes',
+  },
+  'chem-12-7': {
+    label: 'OpenStax Chemistry 2e — 12.7 Catalysis',
+    url: 'https://openstax.org/books/chemistry-2e/pages/12-7-catalysis',
+  },
+  'mm-derivation': {
+    label: 'LibreTexts, Principles of Biochemistry (M. Blaber) — 7.2 Derivation of the Michaelis–Menten equation',
+    url: 'https://bio.libretexts.org/Courses/Wheaton_College_Massachusetts/Principles_of_Biochemistry/07:_Enzymes_catalysis_and_kinetics/7.02:_Derivation_of_Michaelis-Menten_equation',
+  },
   'ap-21-1': {
     label: 'OpenStax Anatomy and Physiology 2e — 21.1 Anatomy of the Lymphatic and Immune Systems',
     url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/21-1-anatomy-of-the-lymphatic-and-immune-systems',

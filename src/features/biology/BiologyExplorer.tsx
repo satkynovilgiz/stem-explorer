@@ -7,6 +7,7 @@ import type { OrganelleId } from '../../data/biology/types'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
 import { pushHistoryEntry } from '../../lib/location'
 import type { DiffusionParams } from '../../data/biology/diffusion'
+import type { EnzymeState } from '../../data/biology/enzymes'
 import { biologySectionEntries, parseBiologyParams, parseBiologySection, withBiologyParams, withBiologySection, type BiologySection, type Parents } from '../../lib/urlState'
 import { ActivityPanel } from '../activities/ActivityPanel'
 import { SubjectGuidePanel } from '../guide/SubjectGuidePanel'
@@ -32,6 +33,8 @@ const MeiosisPanel = lazy(() => import('./processes/MeiosisView').then((m) => ({
 const InheritanceView = lazy(() => import('./processes/InheritanceView').then((m) => ({ default: m.InheritanceView })))
 const DiffusionView = lazy(() => import('./processes/DiffusionView').then((m) => ({ default: m.DiffusionView })))
 const DiffusionPanel = lazy(() => import('./processes/DiffusionView').then((m) => ({ default: m.DiffusionPanel })))
+const EnzymeView = lazy(() => import('./processes/EnzymeView').then((m) => ({ default: m.EnzymeView })))
+const EnzymePanel = lazy(() => import('./processes/EnzymeView').then((m) => ({ default: m.EnzymePanel })))
 const InheritancePanel = lazy(() => import('./processes/InheritanceView').then((m) => ({ default: m.InheritancePanel })))
 
 const SECTION_LABEL: Record<BiologySection, string> = {
@@ -42,6 +45,7 @@ const SECTION_LABEL: Record<BiologySection, string> = {
   inheritance: 'Inheritance',
   energy: 'Energy processes',
   diffusion: 'Diffusion',
+  enzymes: 'Enzymes',
 }
 
 type MobileTab = 'details' | 'structures'
@@ -64,6 +68,7 @@ export function BiologyExplorer() {
   const [section, setSection] = useState<BiologySection>(() => parseBiologySection(window.location.search).section)
   const [parents, setParents] = useState<Parents>(() => parseBiologySection(window.location.search).parents)
   const [diffusion, setDiffusion] = useState<DiffusionParams>(() => parseBiologySection(window.location.search).diffusion)
+  const [enzyme, setEnzyme] = useState<EnzymeState>(() => parseBiologySection(window.location.search).enzyme)
 
   // Switching module adds a history entry, so Back returns to the previous module.
   const goSection = (next: BiologySection) => {
@@ -88,14 +93,15 @@ export function BiologyExplorer() {
       section,
       parents,
       diffusion,
+      enzyme,
     )
     if (search !== window.location.search) {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
-  }, [selection?.organelleId, view, cellType, section, parents, diffusion])
+  }, [selection?.organelleId, view, cellType, section, parents, diffusion, enzyme])
 
   // Process sections are shared and saved as the section alone (see canonicalize).
-  const sectionParams = { cell: view, ...biologySectionEntries(section, parents, diffusion) }
+  const sectionParams = { cell: view, ...biologySectionEntries(section, parents, diffusion, enzyme) }
   useRecordVisit({
     subject: 'biology',
     params:
@@ -127,7 +133,7 @@ export function BiologyExplorer() {
         Module
       </span>
       <div className="segmented section-switch section-switch--grid" role="group" aria-label="Biology section">
-        {(['cells', 'dna', 'division', 'meiosis', 'inheritance', 'energy', 'diffusion'] as const).map((s) => (
+        {(['cells', 'dna', 'division', 'meiosis', 'inheritance', 'energy', 'diffusion', 'enzymes'] as const).map((s) => (
           <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => goSection(s)}>
             {SECTION_LABEL[s]}
           </button>
@@ -155,6 +161,8 @@ export function BiologyExplorer() {
       <EnergyView onOpenStructure={openStructure} />
     ) : section === 'diffusion' ? (
       <DiffusionView params={diffusion} onParams={setDiffusion} shareParams={sectionParams} />
+    ) : section === 'enzymes' ? (
+      <EnzymeView st={enzyme} onState={setEnzyme} shareParams={sectionParams} />
     ) : null
   const processPanel =
     section === 'dna' ? (
@@ -169,6 +177,8 @@ export function BiologyExplorer() {
       <EnergyPanel shareParams={sectionParams} />
     ) : section === 'diffusion' ? (
       <DiffusionPanel />
+    ) : section === 'enzymes' ? (
+      <EnzymePanel />
     ) : null
 
   const typeSwitch = (
@@ -313,6 +323,8 @@ export function BiologyExplorer() {
                     ? 'One gene, two alleles: Punnett square, probabilities and a repeatable sampling simulation.'
                     : section === 'diffusion'
                       ? 'Particles moving at random between two compartments: net movement, dynamic equilibrium and a selective membrane.'
+                      : section === 'enzymes'
+                        ? 'How enzymes catalyse reactions: a conceptual catalytic cycle and a Michaelis–Menten rate lab with comparison.'
                 : 'Photosynthesis and cellular respiration, linked to the chloroplast and mitochondrion.'}
           </p>
         )}

@@ -1,5 +1,6 @@
 import { SOLUTIONS_URL_KEYS } from './solutionsUrl'
 import { DEFAULT_DIFFUSION, validDiffusionParams, type DiffusionParams } from '../data/biology/diffusion'
+import { checkValue as checkEnzymeValue, DEFAULT_COMPARE, DEFAULT_ENZYME, type EnzymeState } from '../data/biology/enzymes'
 import { DEFAULT_REACTION, REACTION_IDS } from '../data/chemistry/reactions'
 import {
   DEFAULT_SURFACE,
@@ -97,8 +98,8 @@ export function withChemistrySection(search: string, section: ChemistrySection, 
 }
 
 /* Biology sections. Links without `bsec` are cell links, so older links open as before. */
-export type BiologySection = 'cells' | 'dna' | 'division' | 'meiosis' | 'inheritance' | 'energy' | 'diffusion'
-export const BIOLOGY_SECTIONS: readonly BiologySection[] = ['cells', 'dna', 'division', 'meiosis', 'inheritance', 'energy', 'diffusion']
+export type BiologySection = 'cells' | 'dna' | 'division' | 'meiosis' | 'inheritance' | 'energy' | 'diffusion' | 'enzymes'
+export const BIOLOGY_SECTIONS: readonly BiologySection[] = ['cells', 'dna', 'division', 'meiosis', 'inheritance', 'energy', 'diffusion', 'enzymes']
 export type ParentGenotype = 'YY' | 'Yy' | 'yy'
 export interface Parents {
   p1: ParentGenotype
@@ -139,10 +140,44 @@ function parseDiffusion(q: URLSearchParams, inSection: boolean, invalid: string[
   return p
 }
 
+/*
+ * Enzyme lab: `?bsec=enzymes&ezs=<[S], mM>&ezv=<Vmax, µM/s>&ezk=<Km, mM>[&ezv2=…&ezk2=…]`.
+ * The second set (both keys together) turns comparison on. The catalytic-cycle step is never
+ * stored, so a shared link always opens at its first stage, paused.
+ */
+export const ENZYME_URL_KEYS = ['ezs', 'ezv', 'ezk', 'ezv2', 'ezk2'] as const
+
+function parseEnzyme(q: URLSearchParams, inSection: boolean, invalid: string[]): EnzymeState {
+  const st: EnzymeState = { ...DEFAULT_ENZYME, a: { ...DEFAULT_ENZYME.a } }
+  const num = (key: string, field: 's' | 'vmax' | 'km', set: (v: number) => void) => {
+    const raw = q.get(key)
+    if (raw === null) return
+    if (inSection && checkEnzymeValue(field, raw) === null) set(Number(raw))
+    else invalid.push(key)
+  }
+  num('ezs', 's', (v) => (st.s = v))
+  num('ezv', 'vmax', (v) => (st.a.vmax = v))
+  num('ezk', 'km', (v) => (st.a.km = v))
+  const b = { ...DEFAULT_COMPARE }
+  let bKeys = 0
+  num('ezv2', 'vmax', (v) => ((b.vmax = v), bKeys++))
+  num('ezk2', 'km', (v) => ((b.km = v), bKeys++))
+  if (bKeys === 2) st.b = b
+  else if (bKeys === 1) invalid.push(q.has('ezv2') ? 'ezk2' : 'ezv2')
+  return st
+}
+
+export const enzymeEntries = (st: EnzymeState): Record<string, string> => ({
+  ezs: String(st.s),
+  ezv: String(st.a.vmax),
+  ezk: String(st.a.km),
+  ...(st.b ? { ezv2: String(st.b.vmax), ezk2: String(st.b.km) } : {}),
+})
+
 export const diffusionEntries = (p: DiffusionParams): Record<string, string> => ({ dfn: String(p.count), dfl: String(p.startLeft), dfb: String(p.blocked), dfm: p.mode, dfs: String(p.seed) })
 
 /** Reads `?bsec=…`, plus `p1`/`p2` (parent genotypes) for the inheritance section and the diffusion keys. */
-export function parseBiologySection(search: string): { section: BiologySection; parents: Parents; diffusion: DiffusionParams; invalid: string[] } {
+export function parseBiologySection(search: string): { section: BiologySection; parents: Parents; diffusion: DiffusionParams; enzyme: EnzymeState; invalid: string[] } {
   const q = new URLSearchParams(search)
   const raw = q.get('bsec')
   const section: BiologySection = (BIOLOGY_SECTIONS as readonly string[]).includes(raw ?? '') && raw !== 'cells' ? (raw as BiologySection) : 'cells'
@@ -155,20 +190,28 @@ export function parseBiologySection(search: string): { section: BiologySection; 
     else invalid.push(k)
   }
   const diffusion = parseDiffusion(q, section === 'diffusion', invalid)
-  return { section, parents, diffusion, invalid }
+  const enzyme = parseEnzyme(q, section === 'enzymes', invalid)
+  return { section, parents, diffusion, enzyme, invalid }
 }
-export const biologySectionEntries = (section: BiologySection, parents: Parents = DEFAULT_PARENTS, diffusion: DiffusionParams = DEFAULT_DIFFUSION): Record<string, string> =>
+export const biologySectionEntries = (
+  section: BiologySection,
+  parents: Parents = DEFAULT_PARENTS,
+  diffusion: DiffusionParams = DEFAULT_DIFFUSION,
+  enzyme: EnzymeState = DEFAULT_ENZYME,
+): Record<string, string> =>
   section === 'cells'
     ? {}
     : section === 'inheritance'
       ? { bsec: section, p1: parents.p1, p2: parents.p2 }
       : section === 'diffusion'
         ? { bsec: section, ...diffusionEntries(diffusion) }
-        : { bsec: section }
-export function withBiologySection(search: string, section: BiologySection, parents?: Parents, diffusion?: DiffusionParams): string {
+        : section === 'enzymes'
+          ? { bsec: section, ...enzymeEntries(enzyme) }
+          : { bsec: section }
+export function withBiologySection(search: string, section: BiologySection, parents?: Parents, diffusion?: DiffusionParams, enzyme?: EnzymeState): string {
   const q = new URLSearchParams(search)
-  for (const k of ['bsec', 'p1', 'p2', ...DIFFUSION_URL_KEYS]) q.delete(k)
-  for (const [k, v] of Object.entries(biologySectionEntries(section, parents, diffusion))) q.set(k, v)
+  for (const k of ['bsec', 'p1', 'p2', ...DIFFUSION_URL_KEYS, ...ENZYME_URL_KEYS]) q.delete(k)
+  for (const [k, v] of Object.entries(biologySectionEntries(section, parents, diffusion, enzyme))) q.set(k, v)
   return `?${q.toString()}`
 }
 

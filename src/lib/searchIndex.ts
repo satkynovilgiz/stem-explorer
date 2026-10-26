@@ -169,6 +169,15 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     terms: ['diffusion', 'concentration gradient', 'dynamic equilibrium', 'passive transport', 'random motion', 'brownian', 'selectively permeable', 'membrane', 'net movement'],
   },
   {
+    id: 'section:enzymes',
+    name: 'Enzymes and catalysis',
+    subject: 'biology',
+    kind: 'section',
+    description: 'A conceptual catalytic cycle (substrate, enzyme, enzyme–substrate complex, products) and a Michaelis–Menten lab: v against [S], Km, Vmax and a comparison of two parameter sets.',
+    href: linkTo('biology', { bsec: 'enzymes' }),
+    terms: ['enzyme', 'enzymes', 'catalyst', 'catalysis', 'active site', 'substrate', 'enzyme-substrate complex', 'induced fit', 'activation energy', 'michaelis', 'menten', 'michaelis-menten', 'km', 'vmax', 'saturation', 'reaction rate'],
+  },
+  {
     id: 'section:inheritance',
     name: 'Mendelian inheritance',
     subject: 'biology',

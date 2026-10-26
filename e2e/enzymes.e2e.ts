@@ -1,0 +1,91 @@
+import type { Page } from '@playwright/test'
+import { expect, test } from './fixtures.ts'
+
+const params = (page: Page) => new URL(page.url()).searchParams
+const lab = (page: Page) => page.locator('.enz-kinetics')
+const cycle = (page: Page) => page.locator('.enz-cycle')
+const row = (page: Page, set: string) => page.locator('.enz-table tbody tr', { has: page.getByRole('rowheader', { name: set, exact: true }) })
+
+test('the rate lab: [S] = 0, [S] = Km and saturation, with substitution, units and the link kept', async ({ page }) => {
+  await page.goto('/?bsec=enzymes#/biology')
+  await expect(lab(page)).toContainText('v = Vmax × [S] / (Km + [S]) = 10 µM/s × 2 mM / (2 mM + 2 mM) = 5 µM/s (50% of Vmax)')
+  await expect(page.getByText('[S], substrate concentration (mM)')).toBeVisible()
+  await expect(page.getByText('v, initial rate (µM/s)')).toBeVisible()
+  const s = lab(page).getByRole('textbox', { name: 'Substrate concentration [S] (mM)' })
+  await s.fill('0')
+  await expect(row(page, 'A').locator('td').nth(2)).toHaveText('0')
+  await s.fill('100')
+  await expect(row(page, 'A').locator('td').nth(3)).toHaveText('98%')
+  await expect.poll(() => params(page).get('ezs')).toBe('100')
+  // Km must be greater than zero; the graph keeps the last valid value.
+  const km = lab(page).getByRole('group', { name: 'Set A (solid line)' }).getByRole('textbox', { name: 'Km (mM)' })
+  await km.fill('0')
+  await expect(lab(page)).toContainText('Km must be greater than zero')
+  await expect(km).toHaveAttribute('aria-invalid', 'true')
+  expect(params(page).get('ezk')).toBe('2')
+  await km.fill('5')
+  await expect.poll(() => params(page).get('ezk')).toBe('5')
+})
+
+test('the three investigations set [S] from Km and explain with computed numbers', async ({ page }) => {
+  await page.goto('/?bsec=enzymes&ezs=1&ezv=10&ezk=2#/biology')
+  const group = page.getByRole('group', { name: 'Investigations' })
+  await group.getByRole('button', { name: 'Low substrate concentration' }).click()
+  await expect(page.locator('.enz-investigation')).toContainText('9.1% of Vmax')
+  expect(params(page).get('ezs')).toBe('0.2')
+  await group.getByRole('button', { name: 'Half-maximal rate' }).click()
+  await expect(page.locator('.enz-investigation')).toContainText('v = 5 µM/s, exactly half of Vmax = 10 µM/s')
+  await expect(group.getByRole('button', { name: 'Half-maximal rate' })).toHaveAttribute('aria-pressed', 'true')
+  await group.getByRole('button', { name: 'Saturation' }).click()
+  await expect(page.locator('.enz-investigation')).toContainText('95.2% of Vmax')
+  // Changing [S] by hand ends the investigation's explanation (it no longer applies).
+  await lab(page).getByRole('textbox', { name: 'Substrate concentration [S] (mM)' }).fill('3')
+  await expect(page.locator('.enz-investigation')).toHaveCount(0)
+})
+
+test('comparing two parameter sets, keeping them in the link, and resetting', async ({ page }) => {
+  await page.goto('/?bsec=enzymes#/biology')
+  await page.getByLabel('Compare with a second parameter set (B, dashed line)').check()
+  await expect(row(page, 'B')).toContainText('8')
+  await expect(lab(page)).toContainText('B has the larger Km')
+  await expect.poll(() => params(page).get('ezk2')).toBe('8')
+  const url = page.url()
+  await page.goto(url)
+  await expect(row(page, 'B').locator('td').nth(2)).toHaveText('2')
+  await page.getByRole('button', { name: 'Reset values' }).click()
+  await expect(lab(page)).toContainText('= 5 µM/s (50% of Vmax)')
+  await page.getByLabel('Compare with a second parameter set (B, dashed line)').uncheck()
+  await expect.poll(() => params(page).get('ezv2')).toBeNull()
+})
+
+test('keyboard: sliders move with arrow keys; the cycle steps by keyboard and never plays by itself', async ({ page }) => {
+  await page.goto('/?bsec=enzymes&ezs=2&ezv=10&ezk=2#/biology')
+  const slider = lab(page).getByRole('slider', { name: 'Substrate concentration [S] slider (mM)' })
+  await slider.focus()
+  await page.keyboard.press('ArrowRight')
+  await expect.poll(() => params(page).get('ezs')).toBe('2.01')
+  await expect(cycle(page)).toContainText('stage 1 of 4')
+  await page.waitForTimeout(2600)
+  await expect(cycle(page)).toContainText('stage 1 of 4')
+  await cycle(page).getByRole('button', { name: 'Next' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(cycle(page)).toContainText('Enzyme–substrate complex')
+  await expect(cycle(page).getByRole('button', { name: '2. Enzyme–substrate complex' })).toHaveAttribute('aria-current', 'step')
+  await expect(cycle(page)).toContainText('not a molecular simulation')
+  // Play once runs to the end and stops.
+  await cycle(page).getByRole('button', { name: 'Play once' }).click()
+  await expect(cycle(page)).toContainText('stage 4 of 4', { timeout: 10_000 })
+  await expect(cycle(page).getByRole('button', { name: 'Play once' })).toBeVisible()
+})
+
+test('reduced motion: no Play; the explanation panel covers catalysis, roles, assumptions and the Km caveat with links', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/?bsec=enzymes#/biology')
+  await expect(cycle(page).getByRole('button', { name: /Play/ })).toHaveCount(0)
+  const panel = page.locator('.panel.info', { has: page.getByRole('heading', { name: 'Enzymes and catalysis' }) })
+  await expect(panel).toContainText('lower activation energy')
+  await expect(panel).toContainText('not a universal, direct measure of binding affinity')
+  await expect(panel).toContainText('Temperature and pH are not simulated')
+  await panel.getByRole('link', { name: 'Chemistry › Reactions and stoichiometry' }).click()
+  await expect(page).toHaveURL(/csec=reactions.*#\/chemistry$/)
+})

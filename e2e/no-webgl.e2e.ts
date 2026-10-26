@@ -296,3 +296,13 @@ test('atlas systems without WebGL: the system level, new structures and a guided
   await page.locator('.atlas-tour').getByRole('button', { name: 'Next' }).click()
   await expect(page.locator('.atlas-tour')).toContainText('one-way valves')
 })
+
+test('the enzyme lab needs no WebGL: cycle, rate graph and comparison all work', async ({ page }) => {
+  await page.goto('/?bsec=enzymes#/biology')
+  await expect(page.locator('.enz-kinetics')).toContainText('= 5 µM/s (50% of Vmax)')
+  await expect(page.locator('canvas')).toHaveCount(0)
+  await page.getByLabel('Compare with a second parameter set (B, dashed line)').check()
+  await expect(page.locator('.enz-table tbody tr')).toHaveCount(2)
+  await page.locator('.enz-cycle').getByRole('button', { name: 'Next' }).click()
+  await expect(page.locator('.enz-cycle')).toContainText('Enzyme–substrate complex')
+})
