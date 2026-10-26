@@ -74,6 +74,10 @@ export interface AtlasStructure {
   /** For groups: what the group contains and why it is grouped. */
   grouping?: string
   shapes: readonly Shape[]
+  /** Where it lies, in words (body position and neighbours). */
+  location?: string
+  /** Key terms for this structure, each with a short meaning. */
+  terms?: readonly { term: string; meaning: string }[]
   /** What the drawn shape does not show. Falls back to the system's general limitation. */
   limitations?: string
   /** Muscle attachments, only where the cited section states them. */

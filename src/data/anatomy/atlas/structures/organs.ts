@@ -1,6 +1,7 @@
 import { L, add, mirror } from '../figure'
 import { pair } from '../helpers'
 import type { AtlasStructure, Shape, Vec3 } from '../types'
+import { AXILLARY_NODES, BRACHIOCEPHALIC_SPLIT, CARDIOVASCULAR_ADDITIONS, CARDIOVASCULAR_CONTAINERS, LYMPHATIC_ADDITIONS, LYMPHATIC_CONTAINERS, SVC_TOP, VENOUS_ANGLE_LEFT } from './circulation'
 
 /* ---------- Nervous ---------- */
 
@@ -193,8 +194,10 @@ export const CARDIOVASCULAR: AtlasStructure[] = [
     sources: ['ap-19-1', 'ap-1-2'],
     related: [
       { id: 'aorta', relation: 'Pumps blood into' },
+      { id: 'pulmonary-trunk', relation: 'Pumps blood into' },
       { id: 'superior-vena-cava', relation: 'Receives blood from' },
       { id: 'inferior-vena-cava', relation: 'Receives blood from' },
+      { id: 'pulmonary-veins', relation: 'Receives blood from' },
     ],
   },
   {
@@ -202,13 +205,16 @@ export const CARDIOVASCULAR: AtlasStructure[] = [
     name: 'Aorta',
     system: 'cardiovascular',
     region: 'thorax',
+    parent: 'systemic-arteries',
     description: 'The largest artery. It rises from the left ventricle (ascending aorta), arches to the left (aortic arch) and descends through the thorax and abdomen.',
     function: 'Carries blood from the heart to the systemic circuit. It divides at about the level of the fourth lumbar vertebra into the two common iliac arteries.',
     representation: 'individual',
     shapes: [{ kind: 'tube', points: AORTA, radius: 0.07 }],
     sources: ['ap-20-5'],
     related: [
+      { id: 'brachiocephalic-trunk', relation: 'Branch of the aortic arch' },
       { id: 'common-carotid-artery-left', relation: 'Branch of the aortic arch' },
+      { id: 'subclavian-artery-left', relation: 'Branch of the aortic arch' },
       { id: 'common-iliac-artery-left', relation: 'Divides into' },
       { id: 'heart', relation: 'Leaves the' },
     ],
@@ -218,11 +224,13 @@ export const CARDIOVASCULAR: AtlasStructure[] = [
     name: 'common carotid artery',
     system: 'cardiovascular',
     region: 'head-neck',
+    parent: 'systemic-arteries',
     description: 'The left common carotid artery branches directly from the aortic arch; the right one branches from the brachiocephalic artery, which exists only on the right.',
     function: 'Each divides into the external and internal carotid arteries, which supply the head and neck.',
     representation: 'individual',
     shapes: [{ kind: 'tube', points: [[0.1, 7.72, 0.04], [0.14, 8.2, 0.08], [0.18, 8.75, 0.1]], radius: 0.035 }],
-    rightShapes: [{ kind: 'tube', points: [[0.02, 7.7, 0.06], [-0.1, 7.9, 0.08], [-0.14, 8.2, 0.08], [-0.18, 8.75, 0.1]], radius: 0.035 }],
+    // The right one starts where the brachiocephalic artery divides.
+    rightShapes: [{ kind: 'tube', points: [BRACHIOCEPHALIC_SPLIT, [-0.14, 8.2, 0.09], [-0.18, 8.75, 0.1]], radius: 0.035 }],
     sources: ['ap-20-5'],
     related: [{ id: 'aorta', relation: 'Arises from the aortic arch (directly on the left)' }],
   }),
@@ -231,6 +239,7 @@ export const CARDIOVASCULAR: AtlasStructure[] = [
     name: 'common iliac artery',
     system: 'cardiovascular',
     region: 'pelvis',
+    parent: 'systemic-arteries',
     description: 'One of the two arteries formed where the abdominal aorta divides.',
     function: 'Leads to the internal and external iliac arteries; the external iliac becomes the femoral artery as it passes through the body wall.',
     representation: 'individual',
@@ -243,6 +252,7 @@ export const CARDIOVASCULAR: AtlasStructure[] = [
     name: 'femoral artery',
     system: 'cardiovascular',
     region: 'lower-limb',
+    parent: 'systemic-arteries',
     description: 'The continuation of the external iliac artery in the thigh, after it passes through the body wall.',
     function: 'Supplies blood to the thigh and, through its continuation behind the knee, the leg.',
     representation: 'individual',
@@ -254,18 +264,24 @@ export const CARDIOVASCULAR: AtlasStructure[] = [
     name: 'Superior vena cava',
     system: 'cardiovascular',
     region: 'thorax',
+    parent: 'systemic-veins',
     description: 'A large systemic vein to the right of the aorta that enters the right atrium from above.',
     function: 'Returns blood from areas above the diaphragm: the head, neck, chest, shoulders and upper limbs.',
     representation: 'individual',
-    shapes: [{ kind: 'tube', points: [[-0.2, 7.8, 0.12], [-0.16, 7.35, 0.16], [-0.08, 6.98, 0.2]], radius: 0.06 }],
+    shapes: [{ kind: 'tube', points: [SVC_TOP, [-0.16, 7.35, 0.16], [-0.08, 6.98, 0.2]], radius: 0.06 }],
     sources: ['ap-20-5'],
-    related: [{ id: 'heart', relation: 'Drains into' }],
+    related: [
+      { id: 'heart', relation: 'Drains into' },
+      { id: 'brachiocephalic-vein-left', relation: 'Formed by the' },
+      { id: 'brachiocephalic-vein-right', relation: 'Formed by the' },
+    ],
   },
   {
     id: 'inferior-vena-cava',
     name: 'Inferior vena cava',
     system: 'cardiovascular',
     region: 'abdomen',
+    parent: 'systemic-veins',
     description: 'A large systemic vein that runs up the posterior abdominal wall to the right of the aorta and enters the right atrium from below.',
     function: 'Returns blood from below the diaphragm: the abdomen, pelvis and lower limbs.',
     representation: 'individual',
@@ -278,12 +294,16 @@ export const CARDIOVASCULAR: AtlasStructure[] = [
     name: 'internal jugular vein',
     system: 'cardiovascular',
     region: 'head-neck',
+    parent: 'systemic-veins',
     description: 'A large vein in the neck, beside the common carotid artery.',
     function: 'Drains blood from the brain. It joins the subclavian vein to form the brachiocephalic vein, which leads to the superior vena cava.',
     representation: 'individual',
-    shapes: [{ kind: 'tube', points: [[0.24, 8.85, 0.04], [0.24, 8.3, 0.08], [0.18, 7.85, 0.12]], radius: 0.04 }],
-    limitations: 'The brachiocephalic and subclavian veins that connect it to the superior vena cava are not drawn.',
+    shapes: [{ kind: 'tube', points: [[0.24, 8.85, 0.04], [0.24, 8.3, 0.08], VENOUS_ANGLE_LEFT], radius: 0.04 }],
     sources: ['ap-20-5'],
+    related: [
+      { id: 'subclavian-vein-{side}', relation: 'Meets the' },
+      { id: 'brachiocephalic-vein-{side}', relation: 'Joins the subclavian vein to form the' },
+    ],
   }),
 ]
 
@@ -713,6 +733,7 @@ const nodes = (centers: Vec3[], r = 0.05): Shape[] => centers.map((c) => ({ kind
 export const LYMPHATIC: AtlasStructure[] = [
   {
     id: 'thymus',
+    parent: 'lymphoid-organs',
     name: 'Thymus',
     system: 'lymphatic',
     region: 'thorax',
@@ -725,6 +746,7 @@ export const LYMPHATIC: AtlasStructure[] = [
   },
   {
     id: 'spleen',
+    parent: 'lymphoid-organs',
     name: 'Spleen',
     system: 'lymphatic',
     region: 'abdomen',
@@ -736,6 +758,7 @@ export const LYMPHATIC: AtlasStructure[] = [
   },
   {
     id: 'tonsils',
+    parent: 'lymphoid-organs',
     name: 'Tonsils',
     system: 'lymphatic',
     region: 'head-neck',
@@ -748,6 +771,7 @@ export const LYMPHATIC: AtlasStructure[] = [
   },
   {
     id: 'lymph-nodes',
+    parent: 'lymphoid-organs',
     name: 'Lymph node clusters',
     system: 'lymphatic',
     region: 'whole-body',
@@ -757,7 +781,7 @@ export const LYMPHATIC: AtlasStructure[] = [
     grouping: 'A few markers in the neck, armpits and groin stand for the clusters there; nodes in the chest and abdomen are not drawn.',
     shapes: nodes([
       [0.26, 8.5, 0.05], [0.3, 8.3, 0.0], [-0.26, 8.5, 0.05], [-0.3, 8.3, 0.0],
-      [0.98, 7.55, -0.02], [1.02, 7.4, 0.04], [-0.98, 7.55, -0.02], [-1.02, 7.4, 0.04],
+      ...AXILLARY_NODES, ...AXILLARY_NODES.map(mirror),
       [0.42, 4.32, 0.36], [0.5, 4.22, 0.32], [-0.42, 4.32, 0.36], [-0.5, 4.22, 0.32],
     ]),
     sources: ['ap-21-1'],
@@ -767,12 +791,31 @@ export const LYMPHATIC: AtlasStructure[] = [
     name: 'Thoracic duct',
     system: 'lymphatic',
     region: 'thorax',
-    description: 'The largest lymphatic vessel. It begins just below the diaphragm and rises through the thorax.',
+    parent: 'lymph-transport',
+    description: 'The largest lymphatic vessel. It begins just beneath the diaphragm in the cisterna chyli and rises through the thorax.',
     function: 'Drains lymph from most of the body into the left subclavian vein; only the upper right part of the body drains through the right lymphatic duct.',
     representation: 'individual',
-    shapes: [{ kind: 'tube', points: [[0.02, 5.75, -0.3], [0.04, 6.6, -0.36], [0.08, 7.6, -0.26], [0.2, 8.05, -0.05], [0.32, 7.95, 0.06]], radius: 0.022 }],
+    // Ends at the left venous angle, where the left subclavian vein meets the internal jugular vein.
+    shapes: [{ kind: 'tube', points: [[-0.06, 5.56, -0.26], [0.0, 5.9, -0.3], [0.04, 6.6, -0.36], [0.08, 7.6, -0.26], [0.2, 8.0, -0.06], [0.26, 7.97, 0.06], [0.2, 7.88, 0.11]], radius: 0.022 }],
     sources: ['ap-21-1'],
+    related: [
+      { id: 'cisterna-chyli', relation: 'Begins in the' },
+      { id: 'subclavian-vein-left', relation: 'Drains into the' },
+      { id: 'right-lymphatic-duct', relation: 'Counterpart for the upper right body:' },
+    ],
   },
 ]
 
-export const ORGAN_STRUCTURES: AtlasStructure[] = [...NERVOUS, ...CARDIOVASCULAR, ...RESPIRATORY, ...DIGESTIVE, ...URINARY, ...ENDOCRINE, ...LYMPHATIC]
+export const ORGAN_STRUCTURES: AtlasStructure[] = [
+  ...NERVOUS,
+  ...CARDIOVASCULAR_CONTAINERS,
+  ...CARDIOVASCULAR,
+  ...CARDIOVASCULAR_ADDITIONS,
+  ...RESPIRATORY,
+  ...DIGESTIVE,
+  ...URINARY,
+  ...ENDOCRINE,
+  ...LYMPHATIC_CONTAINERS,
+  ...LYMPHATIC,
+  ...LYMPHATIC_ADDITIONS,
+]

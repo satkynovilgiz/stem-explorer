@@ -72,7 +72,8 @@ for this app in this release. The inventory in the app repeats this ("Assets: no
 - `system` (plus `alsoIn` for shared organs such as the pancreas) and `region`;
 - `parent` and `related` structures (each relation is worded, e.g. "Drains urine into");
 - `side` and `pairId` for left/right pairs, and `variant` for reproductive structures;
-- `description` and `function`;
+- `description` and `function`, plus `location` (where it lies, in words) and `terms` (key
+  terms with short meanings) where they are given;
 - `representation` (`individual`, `group` with a `grouping` explanation, or `container` for list
   categories), the drawn `shapes`, and `limitations` (or the system's limitation);
 - `sources` (ids in `src/data/sources.ts`) and optional `aliases` for search.
@@ -184,9 +185,98 @@ system** (that layer plus the skin for context), a tour, and a close-up where on
   and *Peripheral nervous system*. Tour *From a touch to a movement*: every step is labelled
   central or peripheral (sensation → spinal nerves → spinal cord → integration → down → out to
   muscles). It is labelled a conceptual sequence, not a real pathway.
-- **Cardiovascular**: tour *The systemic circuit through the body* (heart → aorta → carotids →
-  descending aorta and iliacs → femoral artery → capillaries (not drawn) → venae cavae → lungs).
-  Two steps link to the detailed heart module, whose blood-flow tour covers the pulmonary circuit.
+- **Cardiovascular**: the heart, then three groups:
+  - *Pulmonary circuit vessels*: pulmonary trunk, left and right pulmonary arteries, and the four
+    pulmonary veins as one group;
+  - *Large systemic arteries*: aorta, brachiocephalic artery, left and right subclavian, common
+    carotid, common iliac and femoral arteries;
+  - *Large systemic veins*: superior and inferior venae cavae, left and right internal jugular,
+    subclavian and brachiocephalic veins, and the hepatic portal vein (also listed under
+    digestive).
+  - Tour *The systemic circuit through the body* (7 steps): heart → aorta → carotids → descending
+    aorta and iliacs → femoral artery → capillaries (not drawn) → venae cavae → lungs.
+  - Tour *The pulmonary circuit and the great vessels* (6 steps): right ventricle → pulmonary trunk
+    → both pulmonary arteries → gas exchange around the alveoli (with the alveolus close-up) →
+    pulmonary veins → the three branches of the aortic arch → subclavian and jugular veins →
+    brachiocephalic veins → superior vena cava.
+  - Both tours link to the detailed heart module.
+- **Lymphatic and immune**: two groups:
+  - *Lymphoid organs*: thymus, spleen, tonsils and lymph node clusters;
+  - *Lymphatic vessels and ducts*: example lymphatic vessels (one line per limb, ending at the
+    armpit or groin nodes), cisterna chyli, thoracic duct and right lymphatic duct.
+  - Tour *From tissue fluid back to the blood* (7 steps): interstitial fluid becomes lymph → valved
+    vessels moved by muscle contraction and breathing → lymph nodes → cisterna chyli → thoracic
+    duct to the left subclavian vein → right lymphatic duct to the right one → brachiocephalic
+    veins and superior vena cava.
+
+**Cardiovascular and lymphatic expansion** (`structures/circulation.ts`).
+- **Why these two systems:** an audit counted the drawn structures per system before the change:
+  - cardiovascular had 12, all in one flat list, with no pulmonary vessels and none of the aortic
+    arch branches;
+  - lymphatic had 5, with no right lymphatic duct and the thoracic duct ending in mid-air;
+  - endocrine (5), urinary (6) and respiratory (9) are also small, but their main organs are
+    present.
+- **Added, a bounded list:** 12 cardiovascular structures, 3 lymphatic structures and 5 list
+  groups (the "organ" level). Their facts come from OpenStax A&P 2e §19.1, §20.5 and §21.1. For
+  example:
+  - the brachiocephalic artery exists only on the right;
+  - the subclavian artery becomes the axillary artery as it leaves the thorax;
+  - the hepatic portal vein begins at about L2 where the superior mesenteric and splenic veins
+    meet;
+  - the thoracic duct begins in the cisterna chyli and drains into the left subclavian vein;
+  - lymph is moved by muscle contraction and breathing, not by the heart.
+- **What each new structure has:** an introduction, location, functions, connections, key terms,
+  model limitations and source links. A unit test checks all of them, and that every source is a
+  registered OpenStax page.
+- **Existing shapes adjusted to meet the new ones:**
+  - the superior vena cava now starts where the brachiocephalic veins join;
+  - the right common carotid starts at the brachiocephalic artery;
+  - the internal jugular veins end at the venous angles;
+  - the thoracic duct now ends at the left venous angle instead of in mid-air;
+  - the armpit lymph nodes moved out of the lung outline.
+  - No ids changed, so every existing link opens as before.
+- **No false joins:** structures that are not connected are not drawn touching. A unit test samples
+  every new shape against the cardiovascular, lymphatic, respiratory, digestive, urinary, endocrine
+  and nervous shapes:
+  - a new shape may touch only structures it is related to, or a real junction (each venous angle,
+    the top of the superior vena cava, the division of the pulmonary trunk and of the
+    brachiocephalic artery);
+  - a second test checks that the connections that matter are drawn touching.
+  - Some older shapes, such as the large liver and lung ellipsoids, still overlap neighbours; the
+    check covers the new shapes.
+- **Not drawn, and said so in the panel and the inventory:** the limb vessels beyond the subclavian
+  and femoral vessels; renal and mesenteric vessels; branching inside the lungs; capillaries,
+  lacteals and lymphatic trunks; red bone marrow.
+- **No external 3D assets:** everything is drawn from primitives.
+
+**Body → System → Organ → Structure** (`SystemPanels.tsx`).
+- **Body level:** with nothing selected, the details panel lists the eleven systems under
+  **Explore a system**.
+- **System level:** the system's summary, then:
+  - **Look at this system**: *Focus* (skin outline plus this system), *Isolate this system* (only
+    its layer, `aria-pressed`) and *Show all layers* (the default layers plus this one), with the
+    visible layers named in words;
+  - its **guided investigations**;
+  - its organs and structures as a tree;
+  - its limitation, omissions and sources.
+- **Organ and structure levels:** a group (for example *Pulmonary circuit vessels*) is the organ
+  level; selecting a structure shows its details.
+- **Level path:** every level shows *Body › System › group › structure* (a `nav` labelled "Atlas
+  level", with `aria-current` on the current level) and a **Back to …** button. Back goes up
+  exactly one level: structure → its group → its system → the whole body.
+- **The system you came through:** a structure reached through another system it belongs to (the
+  hepatic portal vein from *Digestive*, the pancreas from *Endocrine*) keeps that system in the
+  path.
+- **Links:** `asys=<system>` stores the system level. It is written with no structure selected, or
+  when the structure was reached through a system other than its own; a structure's own system is
+  implied, so existing links stay canonical and unchanged.
+  - An unknown system, or one the structure doesn't belong to, is rejected like any invalid
+    parameter.
+  - Tours remember the level and return to it on Exit.
+- **Selection is marked by more than colour:** a check mark and `aria-pressed` in the list, a
+  "● name" label in the model, and the heading and level path in the panel.
+- Everything at these levels is HTML, so it works without WebGL. On phones the path wraps above
+  the Back button without overlapping.
 
 **Tours** (`src/data/anatomy/atlas/tours.ts`):
 - They start only from a button. **Previous**, **Next**, a numbered step for direct selection and
@@ -2092,6 +2182,7 @@ How the URL is kept up to date:
 | `src/chem/solutions.test.ts` | L, mL, dm³, cm³ and mmol conversions; OpenStax Examples 3.14, 3.19, 3.20, 3.21 and their check exercises; solving for amount and volume; C₁V₁ = C₂V₂ for every solve-for choice; no-dilution case; zero, negative, over-limit and impossible dilutions refused with reasons. |
 | `src/data/biology/diffusion.test.ts` | Particle totals conserved at every step; the same seed reproduces the run (also stepping one at a time); a different seed differs; the starting split; particles stay in the box; net movement then counts near half with crossings both ways; membrane never passes B, gap rows only; the step limit; parameter validation; concentration units. |
 | `src/physics/gas.test.ts` | Halving and doubling the volume (inverse cases) and equal volumes; the OpenStax Example 9.8 numbers and its check exercise; P·V constant along the drawn isotherm and the graph through the readout point; n = PV/RT; zero, negative and non-finite input rejected; plain-language reasons for invalid typed values; kPa ↔ atm ↔ torr. |
+| `src/data/anatomy/atlas/circulation.test.ts` | Every new cardiovascular and lymphatic structure has an introduction, location, functions, connections to existing structures, key terms, limitations, OpenStax sources and a group parent; new shapes touch only related structures or real junctions; the important connections (pulmonary trunk to heart and arteries, arteries and veins to the lungs, arch branches, venous angles, ducts to the subclavian veins) are drawn touching; existing ids kept. `src/features/anatomy/atlas/atlas.test.ts` adds the system level: `asys` links, Back one level at a time, a structure reached through another system, rejected systems, Isolate and Show all for a system, and tours returning to the system level. |
 | `src/data/anatomy/breathing.test.ts` | Expansion through both phases; airflow in only while alveolar pressure is below atmospheric, out while above, none at either end; quiet expiration described as passive; no timings, volumes or medical wording; breathing links parsed and canonicalized, invalid values rejected. |
 | `src/physics/optics.test.ts` | Law of reflection; Snell's law (air → water, the textbook air → diamond example); normal incidence and equal indices; the critical angle only from higher to lower index and total internal reflection beyond it; the 1.52 → 1 at 41.14° reproduction (total internal reflection, θc ≈ 41.1395104°); below, at and above θc at full precision for four media pairs; the tolerance far below one slider step; critical mode only when θc exists; invalid input. Thin lens: beyond 2F, inside F, diverging at five distances, the object at the focal plane (infinity, no magnification), image distance growing near the focal plane (±1010 / −990 cm), invalid input; principal rays meeting at real and virtual images and leaving parallel at infinity; parameter domains. |
 | `src/data/biology/meiosis.test.ts` | Meiosis uses the mitosis module's 2n = 4; chromosome, chromatid and set counts at all nine stages for all four option combinations; the text states the computed counts; homologs separate in meiosis I and sisters in meiosis II; crossing over gives four distinct products (two without), with only nonsister chromatids exchanging; independent assortment; the comparison's sources and context. One-gene model: probabilities totalling 1 for all nine crosses, 1:2:1, 3:1 and 1:1. Simulation: repeatable per seed, counts adding up, different seeds differing, impossible genotypes never produced, large samples near ¼, zero offspring; the generator stays in [0, 1) and seeds are validated. |
@@ -2255,6 +2346,18 @@ the production build:
   (sternocleidomastoid) and "Not listed" (deltoid); grouped hamstrings; elbow and knee
   demonstrations (labels, conceptual wording, slider words, sketch orientation per side, the canvas
   changing, Play/Pause, exit, nothing in the link); reduced motion without Play; the limb comparison.
+- `atlas-systems.e2e.ts`:
+  - Body → System → Organ → Structure from the system picker, with the level path and
+    `aria-current`;
+  - the new structure content (location, key terms, connections, limitations, OpenStax link);
+  - Back one level at a time, and `asys` written only when it adds something;
+  - a system link restoring its level;
+  - Focus, Isolate and Show all for a system, and selection marked by a check mark and
+    `aria-pressed`;
+  - both new guided investigations step by step, with Exit returning to the system level;
+  - existing anatomy links opening unchanged.
+  - `mobile.e2e.ts` adds the phone layout (no overflow, path above Back); `no-webgl.e2e.ts` adds
+    the system level, a new structure and a tour from HTML.
 - `organ-tours.e2e.ts`: tours start only on request; Next, Previous and direct steps; the address
   unchanged during a tour; the gas-exchange close-up from the tour; Exit restoring selection and
   view; food-tour contributions labelled apart from the route; CNS/PNS labels; brain regions and
@@ -2675,9 +2778,9 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 
 | Content | Count |
 | --- | --- |
-| Atlas structures | 208 |
+| Atlas structures | 228 |
 | Atlas systems | 11 |
-| Atlas tours | 5 |
+| Atlas tours | 7 |
 | Movement demonstrations | 2 |
 | Sourced anatomical relationships | 19 |
 | Relationship explorations | 3 |
@@ -2698,7 +2801,7 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Cross-subject relations | 12 |
 | Starter collections | 4 |
 | Registered sources | 139 |
-| Search index entries | 515 |
+| Search index entries | 535 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.

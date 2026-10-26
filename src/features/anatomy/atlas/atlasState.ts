@@ -1,5 +1,5 @@
 import { ATLAS_CONFIG } from '../../../data/anatomy/atlas/config'
-import { ATLAS_SYSTEMS, findStructure, getRegion, getSystem, type RegionId, type ReproductiveVariant, type SystemId } from '../../../data/anatomy/atlas'
+import { ATLAS_SYSTEMS, findStructure, getRegion, getSystem, inSystem, type RegionId, type ReproductiveVariant, type SystemId } from '../../../data/anatomy/atlas'
 import { findMovement, type MovementId, type Side } from '../../../data/anatomy/atlas/movements'
 import { findTour, type AtlasTour } from '../../../data/anatomy/atlas/tours'
 import { findRelationExploration, type RelationExploration } from '../../../data/anatomy/atlas/relationships'
@@ -7,6 +7,11 @@ import type { AtlasUrlState, AtlasView } from '../../../lib/urlState'
 
 export interface AtlasState {
   selected: string | null
+  /**
+   * The system level of Body → System → Organ → Structure. With nothing selected the panel shows
+   * this system's overview; with a structure selected it is the system it was reached through.
+   */
+  system: SystemId | null
   isolated: boolean
   /** With isolation: also draw the other side of a left/right pair. */
   isolatePair: boolean
@@ -37,6 +42,14 @@ export type AtlasAction =
   | { type: 'startRelation'; id: RelationExploration['id'] }
   | { type: 'exitRelation' }
   | { type: 'clearSelection' }
+  /** Opens a system's overview (the System level). */
+  | { type: 'openSystem'; system: SystemId }
+  /** Up one level: structure → its group (organ level) → its system → the whole body. */
+  | { type: 'back' }
+  /** Draw only the current system's layer. */
+  | { type: 'isolateSystem' }
+  /** Back to the default layers, keeping the current system's layer. */
+  | { type: 'showAllLayers' }
   | { type: 'isolate' }
   | { type: 'isolatePair' }
   | { type: 'showAll' }
@@ -70,6 +83,7 @@ const ordered = (layers: Iterable<SystemId>) => {
 export function initialAtlasState(url: AtlasUrlState): AtlasState {
   const base: AtlasState = {
     selected: null,
+    system: (url.system as SystemId | null) ?? null,
     isolated: false,
     isolatePair: false,
     view: url.view,
@@ -83,7 +97,15 @@ export function initialAtlasState(url: AtlasUrlState): AtlasState {
     revealNote: null,
     announcement: '',
   }
-  return url.structureId ? reveal(base, url.structureId) : base
+  if (url.structureId) return reveal(base, url.structureId)
+  return base.system ? { ...base, layers: base.layers.includes(base.system) ? base.layers : ordered([...base.layers, base.system]) } : base
+}
+
+/** The system a structure is shown in: the current one if it belongs to it, otherwise its own. */
+const systemFor = (state: AtlasState, id: string): SystemId | null => {
+  const s = findStructure(id)
+  if (!s) return state.system
+  return state.system && inSystem(s, state.system) ? state.system : s.system
 }
 
 /**
@@ -119,6 +141,7 @@ function reveal(state: AtlasState, id: string): AtlasState {
     variant,
     region,
     selected: id,
+    system: systemFor(state, id),
     isolated: state.isolated && state.selected === id,
     isolatePair: state.isolatePair && state.selected === id,
     revealNote: why.length ? `To show ${s.name}: ${why.join('; ')}.` : null,
@@ -182,7 +205,42 @@ export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState
     case 'exitRelation':
       return state.relation ? { ...state.relation.before, tour: null, relation: null, announcement: 'Relationship exploration closed; your previous view is back.' } : state
     case 'clearSelection':
-      return { ...state, selected: null, isolated: false, isolatePair: false, announcement: 'Selection cleared.' }
+      return { ...state, selected: null, system: null, isolated: false, isolatePair: false, announcement: 'Selection cleared.' }
+    case 'openSystem': {
+      const sys = getSystem(action.system)
+      if (action.system === 'reproductive' && !state.variant) {
+        // The reproductive layer needs a chosen configuration first (asked for in the overview).
+        return { ...state, selected: null, system: action.system, isolated: false, isolatePair: false, demo: null, announcement: `${sys.name} system. Choose a configuration to draw it.` }
+      }
+      const shown = state.layers.includes(action.system)
+      return {
+        ...state,
+        selected: null,
+        system: action.system,
+        isolated: false,
+        isolatePair: false,
+        demo: null,
+        layers: shown ? state.layers : ordered([...state.layers, action.system]),
+        announcement: `${sys.name} system.${shown ? '' : ' Its layer has been turned on.'}`,
+      }
+    }
+    case 'back': {
+      const s = state.selected ? findStructure(state.selected) : undefined
+      if (s) {
+        const parent = s.parent ? findStructure(s.parent) : undefined
+        if (parent && state.system && inSystem(parent, state.system)) return { ...reveal(state, parent.id), isolated: false, isolatePair: false, announcement: `Back to ${parent.name}.` }
+        return { ...state, selected: null, system: state.system ?? s.system, isolated: false, isolatePair: false, announcement: `Back to the ${getSystem(state.system ?? s.system).name} system.` }
+      }
+      return state.system ? { ...state, system: null, announcement: 'Back to the whole body.' } : state
+    }
+    case 'isolateSystem':
+      return state.system && (state.system !== 'reproductive' || state.variant)
+        ? { ...state, layers: [state.system], isolated: false, isolatePair: false, announcement: `Showing only the ${getSystem(state.system).name} layer.` }
+        : state
+    case 'showAllLayers': {
+      const layers = ordered([...DEFAULT_LAYERS, ...(state.system && (state.system !== 'reproductive' || state.variant) ? [state.system] : [])])
+      return { ...state, layers, isolated: false, isolatePair: false, announcement: 'Showing the default layers again.' }
+    }
     case 'isolate':
       return state.selected ? { ...state, isolated: true, isolatePair: false, demo: null, announcement: `Showing only ${findStructure(state.selected)!.name}.` } : state
     case 'isolatePair': {
@@ -210,7 +268,7 @@ export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState
       return { ...state, demo: null, announcement: 'Demonstration closed.' }
     case 'showSystem': {
       const layers = ordered(action.system === 'integumentary' ? ['integumentary'] : ['integumentary', action.system])
-      return { ...state, layers, region: 'whole-body', isolated: false, isolatePair: false, demo: null, announcement: `Showing the ${getSystem(action.system).name} system.` }
+      return { ...state, layers, system: action.system, region: 'whole-body', isolated: false, isolatePair: false, demo: null, announcement: `Showing the ${getSystem(action.system).name} system.` }
     }
     case 'startTour': {
       const t = findTour(action.id)
@@ -273,7 +331,9 @@ export function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState
 /** What links, saves and notes store: during a tour, the view the tour will restore. */
 export function atlasShareState(state: AtlasState): AtlasUrlState {
   const s = state.tour ? state.tour.before : state.relation ? state.relation.before : state
-  return { structureId: s.selected, view: s.view, layers: s.layers, region: s.region, variant: s.variant }
+  // A structure's own system is implied by the structure, so only a different one is stored.
+  const own = s.selected ? findStructure(s.selected)?.system : undefined
+  return { structureId: s.selected, system: s.system && s.system !== own ? s.system : null, view: s.view, layers: s.layers, region: s.region, variant: s.variant }
 }
 
 export const DEFAULT_LAYERS = ATLAS_CONFIG.defaultLayers as SystemId[]

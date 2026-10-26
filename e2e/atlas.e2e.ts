@@ -108,9 +108,9 @@ test('reproductive anatomy is never shown by default and needs an explicit, labe
   expect(params(page).get('repro')).toBe('testicular')
   await pick(page, 'prostate', 'Prostate gland')
   await expect(page.locator('.info')).toContainText('Typical testicular configuration — one of two shown')
-  // Switching configuration clears a selection from the other one.
+  // Switching configuration clears a selection from the other one; the system level stays.
   await fieldset.getByRole('radio', { name: 'Typical ovarian configuration' }).check()
-  await expect(page.locator('#atlas-heading')).toHaveText('Body atlas')
+  await expect(page.locator('#atlas-system-heading')).toHaveText('Reproductive system')
   await pick(page, 'fallopian', 'Left uterine tube')
   await expect(heading(page)).toHaveText('Left uterine tube')
   await fieldset.getByRole('radio', { name: 'Not shown' }).check()

@@ -384,3 +384,19 @@ test('Solutions and diffusion on a phone: usable without overflow', async ({ pag
   await expect(page.locator('.dif-lab .panel-title')).toHaveText(/step 100$/)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
+
+test('atlas system level on a phone: path, Back and controls fit without overlap', async ({ page }) => {
+  await page.goto('/?atlas=brachiocephalic-vein-left&asys=cardiovascular#/anatomy')
+  await expect(page.locator('#atlas-structure-heading')).toHaveText('Left brachiocephalic vein')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  await page.getByRole('button', { name: 'Back to Large systemic veins' }).tap()
+  await page.getByRole('button', { name: 'Back to the Cardiovascular system' }).tap()
+  await expect(page.locator('#atlas-system-heading')).toHaveText('Cardiovascular system')
+  const look = page.getByRole('region', { name: 'System layers' })
+  await expect(look.getByRole('button', { name: 'Isolate this system' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  // The level path and Back button do not overlap.
+  const path = await page.getByRole('navigation', { name: 'Atlas level' }).boundingBox()
+  const back = await page.getByRole('button', { name: 'Back to the whole body' }).boundingBox()
+  expect(path!.y + path!.height).toBeLessThanOrEqual(back!.y + 1)
+})

@@ -7,4 +7,5 @@ export const ATLAS_CONFIG = {
   defaultLayers: ATLAS_SYSTEMS.filter((s) => s.defaultVisible).map((s) => s.id),
   regionIds: ATLAS_REGIONS.map((r) => r.id),
   variantOf: Object.fromEntries(ATLAS_STRUCTURES.filter((s) => s.variant).map((s) => [s.id, s.variant!])),
+  systemsOf: Object.fromEntries(ATLAS_STRUCTURES.map((s) => [s.id, [s.system, ...(s.alsoIn ?? [])]])),
 }

@@ -54,7 +54,7 @@ export const ATLAS_SYSTEMS: readonly AtlasSystem[] = [
     defaultOpacity: 1,
     summary: 'The heart and blood vessels. It delivers oxygen and nutrients to tissues.',
     limitation: 'Only a few large vessels are drawn, as smooth tubes. Vessel size, branching and exact course are simplified.',
-    omissions: ['Most named arteries and veins', 'Capillaries', 'The pulmonary vessels (see the detailed heart explorer)'],
+    omissions: ['Most named arteries and veins (the arteries and veins of the limbs beyond the femoral and subclavian vessels, the renal and mesenteric vessels)', 'Capillaries', 'Branching of the pulmonary arteries and veins inside the lungs'],
     sources: ['ap-1-2', 'ap-20-5'],
   },
   {
@@ -114,7 +114,7 @@ export const ATLAS_SYSTEMS: readonly AtlasSystem[] = [
     defaultOpacity: 1,
     summary: 'Lymphatic vessels, lymph nodes, thymus and spleen. It returns fluid to the blood and defends against pathogens.',
     limitation: 'Lymph nodes are shown as a few clusters; the body has hundreds of nodes and a branching vessel network.',
-    omissions: ['Most lymphatic vessels', 'The right lymphatic duct', 'Red bone marrow', 'Lymphoid tissue in the gut wall'],
+    omissions: ['Most lymphatic vessels (four example lines are drawn)', 'Lymphatic capillaries, lacteals and lymphatic trunks', 'Red bone marrow', 'Lymphoid tissue in the gut wall'],
     sources: ['ap-1-2', 'ap-21-1'],
   },
   {

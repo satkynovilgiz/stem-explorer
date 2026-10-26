@@ -281,3 +281,18 @@ test('The solutions calculator and the diffusion model need no WebGL', async ({ 
   await page.goto('/?bsec=diffusion#/biology')
   await expect(page.locator('.dif-svg')).toBeVisible()
 })
+
+test('atlas systems without WebGL: the system level, new structures and a guided investigation all work from HTML', async ({ page }) => {
+  await page.goto('/?asys=lymphatic#/anatomy')
+  await expect(page.locator('#atlas-system-heading')).toHaveText('Lymphatic and immune system')
+  await page.getByRole('region', { name: 'Organs and structures' }).getByRole('button', { name: 'Right lymphatic duct' }).click()
+  await expect(page.locator('#atlas-structure-heading')).toHaveText('Right lymphatic duct')
+  await expect(page.locator('.panel.info')).toContainText('upper right part of the body')
+  await page.getByRole('button', { name: /^Back to/ }).click()
+  await page.getByRole('button', { name: /^Back to/ }).click()
+  await expect(page.locator('#atlas-system-heading')).toHaveText('Lymphatic and immune system')
+  await page.getByRole('region', { name: 'Guided investigations' }).getByRole('button', { name: 'From tissue fluid back to the blood' }).click()
+  await expect(page.locator('.atlas-tour')).toContainText('step 1 of 7')
+  await page.locator('.atlas-tour').getByRole('button', { name: 'Next' }).click()
+  await expect(page.locator('.atlas-tour')).toContainText('one-way valves')
+})

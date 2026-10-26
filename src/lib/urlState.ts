@@ -456,11 +456,17 @@ export function withAnatomyParams(search: string, state: AnatomyUrlState): strin
 
 export type AtlasView = 'front' | 'back' | 'side'
 export const ATLAS_VIEWS: readonly AtlasView[] = ['front', 'back', 'side']
-export const ATLAS_URL_KEYS = ['atlas', 'bview', 'layers', 'region', 'repro'] as const
+export const ATLAS_URL_KEYS = ['atlas', 'asys', 'bview', 'layers', 'region', 'repro'] as const
 export const HEART_URL_KEYS = ['part', 'heart'] as const
 
 export interface AtlasUrlState {
   structureId: string | null
+  /**
+   * The organ system being explored (Body → System → Organ → Structure). Stored only when it adds
+   * something: with no structure selected, or when the structure is reached through a system it
+   * also belongs to (e.g. the pancreas from the endocrine system).
+   */
+  system: string | null
   view: AtlasView
   /** Visible systems, in the fixed system order. */
   layers: string[]
@@ -475,6 +481,8 @@ export interface AtlasUrlConfig {
   regionIds: readonly string[]
   /** Structures that belong to one reproductive configuration. */
   variantOf: Readonly<Record<string, 'ovarian' | 'testicular'>>
+  /** Each structure's systems, its own first (then any it also belongs to). */
+  systemsOf: Readonly<Record<string, readonly string[]>>
 }
 
 /**
@@ -524,7 +532,7 @@ export function breathingParamEntries(s: BreathingUrlState): Record<string, stri
 }
 
 /**
- * Reads `?atlas=<structure>&bview=front|back|side&layers=a,b&region=<id>&repro=ovarian|testicular`.
+ * Reads `?atlas=<structure>&asys=<system>&bview=front|back|side&layers=a,b&region=<id>&repro=ovarian|testicular`.
  * The reproductive layer is only valid with a chosen variant, and a variant only with that layer.
  */
 export function parseAtlasParams(search: string, cfg: AtlasUrlConfig): AtlasUrlState & { invalid: string[] } {
@@ -564,13 +572,24 @@ export function parseAtlasParams(search: string, cfg: AtlasUrlConfig): AtlasUrlS
   }
   // A structure from one configuration is only valid in a link that shows that configuration.
   if (structureId && cfg.variantOf[structureId] && cfg.variantOf[structureId] !== variant) invalid.push('atlas')
-  return { structureId, view, layers, region, variant, invalid: [...new Set(invalid)] }
+
+  // The system must exist and, with a structure, be one the structure belongs to. Naming the
+  // structure's own system adds nothing, so the canonical form leaves it out.
+  const as = q.get('asys')
+  let system: string | null = null
+  if (as !== null) {
+    const systems = structureId ? cfg.systemsOf[structureId] ?? [] : cfg.systemIds
+    if (!cfg.systemIds.includes(as) || !systems.includes(as)) invalid.push('asys')
+    else if (!structureId || systems[0] !== as) system = as
+  }
+  return { structureId, system, view, layers, region, variant, invalid: [...new Set(invalid)] }
 }
 
 export function atlasParamEntries(state: AtlasUrlState, defaultLayers: readonly string[]): Record<string, string> {
   const sameLayers = state.layers.length === defaultLayers.length && state.layers.every((l) => defaultLayers.includes(l))
   return {
     ...(state.structureId ? { atlas: state.structureId } : {}),
+    ...(state.system ? { asys: state.system } : {}),
     bview: state.view,
     ...(sameLayers ? {} : { layers: state.layers.join(',') }),
     ...(state.region !== 'whole-body' ? { region: state.region } : {}),

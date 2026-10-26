@@ -186,3 +186,65 @@ describe('Where is it? and relationship explorations (state)', () => {
     expect(s.opacity.skeletal).toBe(0.4)
   })
 })
+
+describe('Body → System → Organ → Structure', () => {
+  const entries = (s: AtlasState) => atlasParamEntries(atlasShareState(s), ATLAS_CONFIG.defaultLayers)
+
+  it('a system link opens that system’s level and turns its layer on; the canonical link keeps it', () => {
+    const s = fresh('?asys=lymphatic')
+    expect(s.system).toBe('lymphatic')
+    expect(s.selected).toBeNull()
+    expect(s.layers).toContain('lymphatic')
+    expect(entries(s).asys).toBe('lymphatic')
+  })
+
+  it('Back goes up exactly one level: structure → its group → its system → the whole body', () => {
+    let s = atlasReducer(fresh(), { type: 'openSystem', system: 'cardiovascular' })
+    s = atlasReducer(s, { type: 'select', id: 'pulmonary-artery-right' })
+    expect([s.system, s.selected]).toEqual(['cardiovascular', 'pulmonary-artery-right'])
+    s = atlasReducer(s, { type: 'back' })
+    expect(s.selected).toBe('pulmonary-circulation')
+    s = atlasReducer(s, { type: 'back' })
+    expect([s.system, s.selected]).toEqual(['cardiovascular', null])
+    s = atlasReducer(s, { type: 'back' })
+    expect([s.system, s.selected]).toEqual([null, null])
+  })
+
+  it('a structure reached through another system it belongs to keeps that system, and the link says so', () => {
+    let s = atlasReducer(fresh(), { type: 'openSystem', system: 'digestive' })
+    s = atlasReducer(s, { type: 'select', id: 'hepatic-portal-vein' })
+    expect(s.system).toBe('digestive')
+    expect(entries(s)).toMatchObject({ atlas: 'hepatic-portal-vein', asys: 'digestive' })
+    // Its own system is implied, so it is not repeated.
+    s = atlasReducer(fresh(), { type: 'select', id: 'hepatic-portal-vein' })
+    expect(entries(s).asys).toBeUndefined()
+  })
+
+  it('rejects a system the structure does not belong to, or an unknown one; old links are unchanged', () => {
+    expect(parseAtlasParams('?atlas=heart&asys=lymphatic', ATLAS_CONFIG).invalid).toContain('asys')
+    expect(parseAtlasParams('?asys=plumbing', ATLAS_CONFIG).invalid).toContain('asys')
+    // Naming the structure's own system is valid but redundant; the canonical form drops it.
+    const own = parseAtlasParams('?atlas=heart&asys=cardiovascular', ATLAS_CONFIG)
+    expect(own.invalid).toEqual([])
+    expect(atlasParamEntries(own, ATLAS_CONFIG.defaultLayers)).toEqual({ atlas: 'heart', bview: 'front' })
+    expect(atlasParamEntries(parseAtlasParams('?atlas=thoracic-duct&bview=back', ATLAS_CONFIG), ATLAS_CONFIG.defaultLayers)).toEqual({ atlas: 'thoracic-duct', bview: 'back' })
+  })
+
+  it('system layer controls: isolate draws only that system; show all restores the defaults plus it', () => {
+    let s = atlasReducer(fresh(), { type: 'openSystem', system: 'lymphatic' })
+    s = atlasReducer(s, { type: 'isolateSystem' })
+    expect(s.layers).toEqual(['lymphatic'])
+    expect(new Set(drawnStructures(s).map((d) => d.structure.system))).toEqual(new Set(['lymphatic']))
+    s = atlasReducer(s, { type: 'showAllLayers' })
+    expect(s.layers).toEqual(expect.arrayContaining([...ATLAS_CONFIG.defaultLayers, 'lymphatic']))
+  })
+
+  it('a tour remembers the system level and returns to it on exit', () => {
+    let s = atlasReducer(fresh(), { type: 'openSystem', system: 'lymphatic' })
+    s = atlasReducer(s, { type: 'startTour', id: 'lymph' })
+    s = atlasReducer(s, { type: 'tourNext' })
+    expect(atlasShareState(s).system).toBe('lymphatic')
+    s = atlasReducer(s, { type: 'exitTour' })
+    expect([s.system, s.selected, s.tour]).toEqual(['lymphatic', null, null])
+  })
+})

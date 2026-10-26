@@ -1,5 +1,5 @@
 import { ATLAS_CONFIG } from '../data/anatomy/atlas/config'
-import { findStructure } from '../data/anatomy/atlas'
+import { ATLAS_SYSTEMS, findStructure } from '../data/anatomy/atlas'
 import { findHeartPart, HEART_PART_IDS } from '../data/anatomy/heart'
 import { CELL_STRUCTURES, findOrganelle } from '../data/biology/organelles'
 import { findMolecule, MOLECULES } from '../data/chemistry/molecules'
@@ -37,6 +37,8 @@ import {
   parseSpringParams,
   springParamEntries,
 } from './urlState'
+
+const ATLAS_SYSTEM_NAMES: Record<string, string> = Object.fromEntries(ATLAS_SYSTEMS.map((s) => [s.id, s.name]))
 
 /**
  * A shareable exploration: a subject plus its validated query parameters — exactly what Copy link
@@ -206,7 +208,9 @@ export function defaultTitle(state: ShareState): string {
       if (p.bview) {
         const views: Record<string, string> = { front: 'front', back: 'back', side: 'side' }
         const s = p.atlas ? findStructure(p.atlas) : undefined
-        return s ? `Body atlas · ${s.name} · ${views[p.bview] ?? 'front'} view` : `Body atlas · ${views[p.bview] ?? 'front'} view`
+        const sys = p.asys ? ATLAS_SYSTEM_NAMES[p.asys] : undefined
+        if (s) return `Body atlas · ${s.name}${sys ? ` (from the ${sys.toLowerCase()} system)` : ''} · ${views[p.bview] ?? 'front'} view`
+        return sys ? `Body atlas · ${sys} system · ${views[p.bview] ?? 'front'} view` : `Body atlas · ${views[p.bview] ?? 'front'} view`
       }
       return p.part ? `${findHeartPart(p.part)?.name ?? 'Heart structure'} · ${p.heart === 'cutaway' ? 'cutaway' : 'whole'} heart` : `Human heart · ${p.heart === 'cutaway' ? 'cutaway' : 'whole'}`
   }

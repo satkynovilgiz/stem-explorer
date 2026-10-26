@@ -190,6 +190,17 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
       onClear={() => dispatch({ type: 'clearSelection' })}
       onIsolatePair={() => dispatch({ type: 'isolatePair' })}
       onOpenHeart={onOpenHeart}
+      levels={{
+        onSystem: (system) => dispatch({ type: 'openSystem', system }),
+        onBack: () => dispatch({ type: 'back' }),
+        onFocusSystem: () => state.system && dispatch({ type: 'showSystem', system: state.system }),
+        onIsolateSystem: () => dispatch({ type: 'isolateSystem' }),
+        onShowAllLayers: () => dispatch({ type: 'showAllLayers' }),
+        onStartTour: (id) => {
+          setPlaying(false)
+          dispatch({ type: 'startTour', id })
+        },
+      }}
       extra={
         isMobile ? (
           <>

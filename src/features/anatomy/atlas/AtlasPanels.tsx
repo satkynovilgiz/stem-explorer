@@ -2,7 +2,6 @@ import { Check, ChevronRight, Focus, HeartPulse, RotateCcw, ScanSearch, Search, 
 import { memo, useId, useState, type ReactNode } from 'react'
 import { ShareActions } from '../../../components/ShareActions'
 import {
-  ancestorsOf,
   ATLAS_REGIONS,
   ATLAS_STRUCTURES,
   ATLAS_SYSTEMS,
@@ -24,6 +23,8 @@ import { atlasParamEntries, type AtlasView } from '../../../lib/urlState'
 import { SourceLinks } from '../../guide/SourceLinks'
 import { atlasShareState, VIEW_TEXT, type AtlasState } from './atlasState'
 import { RegionPresets, WhereSection } from './WherePanels'
+import { LevelPath, SystemOverview, SystemPicker } from './SystemPanels'
+import type { AtlasTour } from '../../../data/anatomy/atlas/tours'
 
 const REPRESENTATION_LABEL = { individual: 'Individual structure', group: 'Grouped representation', container: 'Grouping in the list' } as const
 const VARIANT_LABEL: Record<ReproductiveVariant, string> = { ovarian: 'Typical ovarian configuration', testicular: 'Typical testicular configuration' }
@@ -333,12 +334,22 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
+export interface LevelActions {
+  onSystem: (s: SystemId) => void
+  onBack: () => void
+  onFocusSystem: () => void
+  onIsolateSystem: () => void
+  onShowAllLayers: () => void
+  onStartTour: (id: AtlasTour['id']) => void
+}
+
 export function AtlasDetails({
   state,
   onSelect,
   onClear,
   onIsolatePair,
   onOpenHeart,
+  levels,
   extra,
 }: {
   state: AtlasState
@@ -346,6 +357,7 @@ export function AtlasDetails({
   onClear: () => void
   onIsolatePair: () => void
   onOpenHeart: () => void
+  levels: LevelActions
   /** Panels shown below the details (layers, inventory). */
   extra?: ReactNode
 }) {
@@ -355,9 +367,26 @@ export function AtlasDetails({
     <ShareActions
       subject="anatomy"
       params={atlasParamEntries(share, ATLAS_CONFIG.defaultLayers)}
-      restores={s ? `${s.name} in the body atlas, with this view, layers and region` : 'this body-atlas view, layers and region'}
+      restores={s ? `${s.name} in the body atlas, with this view, layers and region` : state.system ? `the ${getSystem(state.system).name.toLowerCase()} system in the body atlas, with this view, layers and region` : 'this body-atlas view, layers and region'}
     />
   )
+  const levelPath = <LevelPath state={state} onBody={onClear} onSystem={levels.onSystem} onSelect={onSelect} onBack={levels.onBack} />
+  if (!s && state.system) {
+    return (
+      <SystemOverview
+        state={state}
+        system={state.system}
+        levelPath={levelPath}
+        onSelect={onSelect}
+        onFocusSystem={levels.onFocusSystem}
+        onIsolateSystem={levels.onIsolateSystem}
+        onShowAllLayers={levels.onShowAllLayers}
+        onStartTour={levels.onStartTour}
+        share={shareActions}
+        extra={extra}
+      />
+    )
+  }
   if (!s) {
     return (
       <section className="panel info" aria-labelledby="atlas-heading">
@@ -376,6 +405,7 @@ export function AtlasDetails({
             <strong>Schematic model.</strong> Every shape is a simple primitive placed to show position and relationships. Shapes and sizes are not anatomically
             precise, and no part of it is drawn from a scan or licensed anatomical model.
           </p>
+          <SystemPicker onSystem={levels.onSystem} />
           <button type="button" className="button" onClick={onOpenHeart}>
             <HeartPulse size={16} aria-hidden="true" />
             Open the detailed heart explorer
@@ -388,7 +418,6 @@ export function AtlasDetails({
   }
   const sys = getSystem(s.system)
   const kids = childrenOf(s.id)
-  const path = ancestorsOf(s.id)
   const pair = s.pairId ? findStructure(s.pairId) : undefined
   return (
     <section className="panel info" aria-labelledby="atlas-structure-heading">
@@ -400,18 +429,7 @@ export function AtlasDetails({
         <h2 id="atlas-structure-heading" className="info-title">
           {s.name}
         </h2>
-        {path.length > 0 && (
-          <p className="small muted atlas-path">
-            {path.map((p, i) => (
-              <span key={p.id}>
-                {i > 0 && ' › '}
-                <button type="button" className="relation-link" onClick={() => onSelect(p.id)}>
-                  {p.name}
-                </button>
-              </span>
-            ))}
-          </p>
-        )}
+        {levelPath}
         <p className="info-summary">{s.description}</p>
         <div className="header-actions">
           <button type="button" className="tool-button bordered" onClick={onClear}>
@@ -444,6 +462,7 @@ export function AtlasDetails({
           </p>
         </Section>
         <Section title="Where is it?">
+          {s.location && <p className="prose">{s.location}</p>}
           <WhereSection s={s} state={state} onSelect={onSelect} />
         </Section>
         <dl className="readout atlas-facts">
@@ -517,6 +536,18 @@ export function AtlasDetails({
                 </li>
               ))}
             </ul>
+          </Section>
+        )}
+        {s.terms && s.terms.length > 0 && (
+          <Section title="Key terms">
+            <dl className="atlas-terms">
+              {s.terms.map((t) => (
+                <div key={t.term}>
+                  <dt>{t.term}</dt>
+                  <dd>{t.meaning}</dd>
+                </div>
+              ))}
+            </dl>
           </Section>
         )}
         <Section title="Model limitations">

@@ -5,12 +5,13 @@ import { SourceLinks } from '../../guide/SourceLinks'
 
 export type CloseUp = 'alveolus' | 'nephron'
 
-const MODULES: { system: SystemId; tour: AtlasTour['id']; blurb: string; closeUp?: { id: CloseUp; label: string } }[] = [
-  { system: 'respiratory', tour: 'airflow', blurb: 'Airways from nose to bronchi, the lungs and the diaphragm.', closeUp: { id: 'alveolus', label: 'Gas exchange in an alveolus' } },
-  { system: 'digestive', tour: 'food', blurb: 'The tract from mouth to anus, with the liver, gallbladder and pancreas.' },
-  { system: 'urinary', tour: 'urine', blurb: 'Kidneys, ureters, bladder and urethra.', closeUp: { id: 'nephron', label: 'A nephron' } },
-  { system: 'nervous', tour: 'signal', blurb: 'Brain regions, spinal cord, and cranial, spinal and limb nerves: central vs peripheral.' },
-  { system: 'cardiovascular', tour: 'circulation', blurb: 'The systemic circuit through the body, connected to the detailed heart.' },
+const MODULES: { system: SystemId; tours: AtlasTour['id'][]; blurb: string; closeUp?: { id: CloseUp; label: string } }[] = [
+  { system: 'respiratory', tours: ['airflow'], blurb: 'Airways from nose to bronchi, the lungs and the diaphragm.', closeUp: { id: 'alveolus', label: 'Gas exchange in an alveolus' } },
+  { system: 'digestive', tours: ['food'], blurb: 'The tract from mouth to anus, with the liver, gallbladder and pancreas.' },
+  { system: 'urinary', tours: ['urine'], blurb: 'Kidneys, ureters, bladder and urethra.', closeUp: { id: 'nephron', label: 'A nephron' } },
+  { system: 'nervous', tours: ['signal'], blurb: 'Brain regions, spinal cord, and cranial, spinal and limb nerves: central vs peripheral.' },
+  { system: 'cardiovascular', tours: ['circulation', 'pulmonary'], blurb: 'The systemic and pulmonary circuits, the branches of the aortic arch and the great veins, connected to the detailed heart.' },
+  { system: 'lymphatic', tours: ['lymph'], blurb: 'Lymphoid organs, lymph nodes, and the vessels and ducts that return lymph to the blood.' },
 ]
 
 export function AtlasModules({
@@ -30,7 +31,6 @@ export function AtlasModules({
       <ul className="module-list">
         {MODULES.map((m) => {
           const sys = getSystem(m.system)
-          const tour = findTour(m.tour)!
           return (
             <li key={m.system} className="module-card">
               <p className="module-name">
@@ -41,10 +41,12 @@ export function AtlasModules({
                 <button type="button" className="tool-button bordered" onClick={() => onShowSystem(m.system)}>
                   Show this system
                 </button>
-                <button type="button" className="tool-button bordered" onClick={() => onStartTour(m.tour)}>
-                  <Route size={15} aria-hidden="true" />
-                  <span>Tour: {tour.title}</span>
-                </button>
+                {m.tours.map((id) => (
+                  <button key={id} type="button" className="tool-button bordered" onClick={() => onStartTour(id)}>
+                    <Route size={15} aria-hidden="true" />
+                    <span>Tour: {findTour(id)!.title}</span>
+                  </button>
+                ))}
                 {m.closeUp && (
                   <button type="button" className="tool-button bordered" onClick={() => onCloseUp(m.closeUp!.id)}>
                     <Microscope size={15} aria-hidden="true" />
