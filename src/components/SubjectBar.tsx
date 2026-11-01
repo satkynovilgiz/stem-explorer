@@ -43,6 +43,8 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
   const CHEM_WORKSPACES = ['chemistry.molecules', 'chemistry.periodic', 'chemistry.atomic', 'chemistry.bonding']
   const hasPanels = subject !== 'chemistry' || CHEM_WORKSPACES.includes(module.id)
   const isChemTopics = module.id === 'chemistry.topics'
+  // Chemistry's Elements, Atomic structure and Bonding workspaces have no left panel.
+  const hasLeft = subject !== 'chemistry' || module.id === 'chemistry.molecules'
 
   const close = () => {
     setOpen(false)
@@ -97,10 +99,12 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
         </ol>
       </nav>
       {hasPanels && <div className="workspace-controls" role="group" aria-label="Workspace layout">
-        <button type="button" className="tool-button bordered" data-ws-toggle="left" aria-pressed={leftShown} title="Left panel ( [ )" onClick={() => toggleSide('left')}>
-          <PanelLeft size={15} aria-hidden="true" />
-          <span>{ws.focus ? 'Controls' : 'Left panel'}</span>
-        </button>
+        {hasLeft && (
+          <button type="button" className="tool-button bordered" data-ws-toggle="left" aria-pressed={leftShown} title="Left panel ( [ )" onClick={() => toggleSide('left')}>
+            <PanelLeft size={15} aria-hidden="true" />
+            <span>{ws.focus ? 'Controls' : 'Left panel'}</span>
+          </button>
+        )}
         <button type="button" className="tool-button bordered" data-ws-toggle="right" aria-pressed={rightShown} title="Right panel ( ] )" onClick={() => toggleSide('right')}>
           <PanelRight size={15} aria-hidden="true" />
           <span>{ws.focus ? 'Details' : 'Right panel'}</span>

@@ -11,6 +11,16 @@ import {
   type ElementInfo,
 } from '../../../data/chemistry/periodicTable'
 import { MOLECULES } from '../../../data/chemistry/molecules'
+import { CompareElements } from './CompareElements'
+import {
+  PROPERTIES,
+  findProperty,
+  formatProperty,
+  propertiesOf,
+  propertyRange,
+  scalePosition,
+  type PropertyDef,
+} from '../../../data/chemistry/elementProperties'
 
 type FilterKind = 'block' | 'category'
 const BLOCKS: Block[] = ['s', 'p', 'd', 'f']
@@ -48,13 +58,54 @@ export interface PeriodicTableViewProps {
   onSelect: (z: number) => void
 }
 
-/** The periodic table (with a list alternative), search and one classification filter. */
+const heatOf = (def: PropertyDef | undefined, z: number) => (def ? scalePosition(def, propertiesOf(z)[def.id]) : null)
+const heatStyle = (def: PropertyDef | undefined, z: number) => {
+  const t = heatOf(def, z)
+  return t === null ? undefined : { '--heat': `${Math.round(t * 100)}%` }
+}
+/** Cell classes for property colouring: heat (light text past the middle of the scale) or no value. */
+const heatClass = (def: PropertyDef | undefined, z: number) => {
+  if (!def) return ''
+  const t = heatOf(def, z)
+  return t === null ? ' is-nodata' : t > 0.5 ? ' is-heat is-dark' : ' is-heat'
+}
+
+/** The legend for a property: what it measures, its unit and range, and the no-value swatch. */
+function PropertyLegend({ def }: { def: PropertyDef }) {
+  const { min, max, count } = propertyRange(def.id)
+  return (
+    <div className="ptable-scale small" aria-label={`${def.label} colour scale`}>
+      <p className="ptable-scale-def">
+        <strong>{def.label}</strong> ({def.unit}). {def.definition}
+      </p>
+      <div className="ptable-scale-bar">
+        <span>{formatProperty(def, min)}</span>
+        <span className="ptable-scale-gradient" aria-hidden="true" />
+        <span>{formatProperty(def, max)}</span>
+      </div>
+      <p className="muted">
+        <span className="ptable-swatch is-nodata" aria-hidden="true" /> No PubChem value · {count} of 118 elements have one
+        {def.scale === 'log' ? ' · log scale' : ''}. Source:{' '}
+        <a href={PUBCHEM_URL} target="_blank" rel="noreferrer">
+          PubChem Periodic Table
+          <ExternalLink size={11} aria-hidden="true" className="external-icon" />
+          <span className="visually-hidden"> (opens in a new tab)</span>
+        </a>
+        .
+      </p>
+    </div>
+  )
+}
+
+/** The periodic table (with a list alternative), search, one classification filter and property colouring. */
 export default function PeriodicTableView({ selected, onSelect }: PeriodicTableViewProps) {
   const id = useId()
   const [query, setQuery] = useState('')
   const [kind, setKind] = useState<FilterKind>('block')
   const [filter, setFilter] = useState<string>('all')
   const [layout, setLayout] = useState<'table' | 'list'>('table')
+  const [colourBy, setColourBy] = useState<string>('block')
+  const prop = findProperty(colourBy)
   const buttons = useRef(new Map<number, HTMLButtonElement>())
 
   const matches = useMemo(() => {
@@ -76,7 +127,14 @@ export default function PeriodicTableView({ selected, onSelect }: PeriodicTableV
   }
 
   const options = kind === 'block' ? BLOCKS : CATEGORIES
-  const label = (e: ElementInfo) => `${e.name}, ${e.symbol}, atomic number ${e.number}`
+  const label = (e: ElementInfo) =>
+    `${e.name}, ${e.symbol}, atomic number ${e.number}${prop ? `, ${prop.label.toLowerCase()} ${formatProperty(prop, propertiesOf(e.number)[prop.id])}` : ''}`
+  // With a property chosen, the list ranks elements by it (highest first; no value last).
+  const listed = ELEMENTS.filter((e) => matches.has(e.number))
+  if (prop) {
+    const v = (e: ElementInfo) => propertiesOf(e.number)[prop.id]
+    listed.sort((a, b) => (v(b) ?? -Infinity) - (v(a) ?? -Infinity))
+  }
 
   return (
     <section className="ptable" aria-labelledby={`${id}-title`}>
@@ -140,6 +198,17 @@ export default function PeriodicTableView({ selected, onSelect }: PeriodicTableV
               </option>
             ))}
           </select>
+          <label htmlFor={`${id}-colour`} className="small muted">
+            Colour by
+          </label>
+          <select id={`${id}-colour`} className="select" value={colourBy} onChange={(e) => setColourBy(e.target.value)}>
+            <option value="block">Block (s, p, d, f)</option>
+            {PROPERTIES.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label} ({p.unit})
+              </option>
+            ))}
+          </select>
         </div>
         <p className="muted small" role="status">
           {matches.size === 118 ? 'All 118 elements' : `${matches.size} of 118 elements match`}
@@ -169,8 +238,8 @@ export default function PeriodicTableView({ selected, onSelect }: PeriodicTableV
                   else buttons.current.delete(e.number)
                 }}
                 type="button"
-                className={`ptable-cell is-${e.block}${matches.has(e.number) ? '' : ' is-dimmed'}`}
-                style={gridPlacement(e)}
+                className={`ptable-cell is-${e.block}${heatClass(prop, e.number)}${matches.has(e.number) ? '' : ' is-dimmed'}`}
+                style={{ ...gridPlacement(e), ...heatStyle(prop, e.number) }}
                 aria-label={label(e)}
                 aria-pressed={selected === e.number}
                 tabIndex={selected === e.number ? 0 : -1}
@@ -185,21 +254,22 @@ export default function PeriodicTableView({ selected, onSelect }: PeriodicTableV
         </div>
       ) : (
         <ol className="ptable-list" aria-label="Elements">
-          {ELEMENTS.filter((e) => matches.has(e.number)).map((e) => (
+          {listed.map((e) => (
             <li key={e.number}>
               <button type="button" className="ptable-list-item" aria-pressed={selected === e.number} onClick={() => onSelect(e.number)}>
                 <span className="ptable-list-z">{e.number}</span>
                 <span className="ptable-list-sym">{e.symbol}</span>
                 <span>{e.name}</span>
                 <span className="muted small">
-                  {e.block} block · {e.category}
+                  {prop ? formatProperty(prop, propertiesOf(e.number)[prop.id]) : `${e.block} block · ${e.category}`}
                 </span>
               </button>
             </li>
           ))}
         </ol>
       )}
-      {layout === 'table' && (
+      {prop && <PropertyLegend def={prop} />}
+      {layout === 'table' && !prop && (
         <ul className="ptable-legend small" aria-label="Block colours">
           {BLOCKS.map((b) => (
             <li key={b}>
@@ -211,6 +281,7 @@ export default function PeriodicTableView({ selected, onSelect }: PeriodicTableV
       {layout === 'table' && (
         <p className="muted small ptable-hint">Arrow keys move between elements. Dimmed elements don’t match the search or filter.</p>
       )}
+      <CompareElements selected={selected} />
     </section>
   )
 }
@@ -219,6 +290,7 @@ export default function PeriodicTableView({ selected, onSelect }: PeriodicTableV
 export function ElementPanel({ z, onOpenMolecule, onOpenAtomic }: { z: number; onOpenMolecule: (moleculeId: string) => void; onOpenAtomic?: () => void }) {
   const e = findElement(z)!
   const molecules = moleculesWith(e.symbol)
+  const props = propertiesOf(z)
   return (
     <section className="panel info" aria-labelledby="element-heading">
       <header className="info-header">
@@ -264,6 +336,29 @@ export function ElementPanel({ z, onOpenMolecule, onOpenAtomic }: { z: number; o
         </div>
       </dl>
       <div className="info-section">
+        <h3 className="section-title">Properties (PubChem)</h3>
+        <dl className="element-props">
+          {PROPERTIES.map((p) => (
+            <div key={p.id}>
+              <dt>{p.label}</dt>
+              <dd>{formatProperty(p, props[p.id])}</dd>
+            </div>
+          ))}
+          <div>
+            <dt>Standard state</dt>
+            <dd>{props.state || 'No PubChem value'}</dd>
+          </div>
+          <div>
+            <dt>Common oxidation states</dt>
+            <dd>{props.oxidation || 'No PubChem value'}</dd>
+          </div>
+          <div>
+            <dt>Discovered</dt>
+            <dd>{props.discovered || 'No PubChem value'}</dd>
+          </div>
+        </dl>
+      </div>
+      <div className="info-section">
         <h3 className="section-title">In this app’s molecules</h3>
         {molecules.length ? (
           <ul className="element-molecules">
@@ -281,7 +376,7 @@ export function ElementPanel({ z, onOpenMolecule, onOpenAtomic }: { z: number; o
       </div>
       <div className="info-section">
         <p className="muted small">
-          Names, symbols, atomic numbers and categories come from the{' '}
+          Names, symbols, atomic numbers, categories and properties come from the{' '}
           <a href={PUBCHEM_URL} target="_blank" rel="noreferrer">
             PubChem Periodic Table
             <ExternalLink size={11} aria-hidden="true" className="external-icon" />

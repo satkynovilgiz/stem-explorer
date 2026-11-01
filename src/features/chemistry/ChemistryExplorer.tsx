@@ -297,7 +297,7 @@ export function ChemistryExplorer() {
       <div className="chem chem--mobile">
         {announcer}
         <p className="chem-mobile-topic">
-          <span className="muted small">Topic:</span> <strong>{SECTION_LABEL[section]}</strong> <span className="muted small">(change it with All chemistry topics above)</span>
+          <span className="muted small">Topic:</span> <strong>{SECTION_LABEL[section]}</strong> <span className="muted small">(change it with the tabs above)</span>
         </p>
         <div className="chem-stage">{stage}</div>
         {section === 'molecules' && activityPanel}
@@ -317,11 +317,10 @@ export function ChemistryExplorer() {
   }
 
   return (
-    <div className="chem">
+    // Only Molecules has a left panel (the molecule library); the other workspaces use two columns.
+    <div className={section === 'molecules' ? 'chem' : 'chem chem--no-left'}>
       {announcer}
-      <aside className="chem-side chem-side--left">
-        {section === 'molecules' && library}
-      </aside>
+      {section === 'molecules' && <aside className="chem-side chem-side--left">{library}</aside>}
       <div className="chem-stage">{stage}</div>
       <aside className="chem-side chem-side--right">
         {section === 'molecules' && activityPanel}

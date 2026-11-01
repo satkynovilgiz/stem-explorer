@@ -932,7 +932,25 @@ table and its data load only when this view is opened (a separate ~13 kB chunk).
   does.
 - **Selected element.** Symbol, atomic number, period, group, block and category. **In this app's
   molecules** opens any of the six molecules containing the element in the molecule view, where
-  the measurement tools work as before.
+  the measurement tools work as before. **Properties (PubChem)** lists electronegativity, atomic
+  radius, first ionization energy, electron affinity, melting and boiling points (K, with °C),
+  density, standard state, common oxidation states and year discovered.
+- **Colour by a property.** *Colour by* switches the cells from block colours to one of seven
+  PubChem properties: electronegativity (Pauling), atomic radius (van der Waals, pm), first
+  ionization energy (eV), electron affinity (eV), melting point (K), boiling point (K) or density
+  (g/cm³). A sequential pale-to-teal scale is used; density uses a log scale because gases are
+  about a thousand times less dense than solids. The legend gives the property's definition, unit,
+  the lowest and highest values, and how many elements have a value; elements with no PubChem value
+  are hatched and named "No PubChem value", never given a made-up number. Each cell's accessible
+  name includes its value, and the **List** layout ranks elements by the chosen property. Some
+  listed values are measured under special conditions (helium only solidifies under pressure;
+  carbon and arsenic sublime at 1 atm), and the melting-point definition says so.
+- **Compare elements.** Up to four elements side by side (*Add ⟨selected element⟩* or choose from
+  a list): every property with its unit, the highest of each row marked in words (· highest), plus
+  standard state, block and category. The table scrolls inside its own box on phones.
+- **Property data** come from the same PubChem source, retrieved 2026-11-01, in
+  `src/data/chemistry/elementProperties.data.ts` (generated; electronegativity is reused from
+  `atomic.data.ts`). Unit tests spot-check iron, hydrogen, helium and the extremes against PubChem.
 
 ## Biology Explorer — cells, DNA, division and energy
 

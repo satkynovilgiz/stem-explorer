@@ -74,3 +74,37 @@ test('opens a molecule containing the element, and the molecule tools still work
   await page.locator('.measure-panel .chip').filter({ hasText: /^\d?H1$/ }).click()
   await expect(page.locator('.measure-result')).toContainText('Bond length')
 })
+
+test('colours the table by a PubChem property, with units, definition, range and missing values', async ({ page }) => {
+  await open(page)
+  await page.getByLabel('Colour by').selectOption({ label: 'Electronegativity (Pauling scale)' })
+  const scale = page.getByLabel('Electronegativity colour scale')
+  await expect(scale).toContainText('pulls shared electrons')
+  await expect(scale).toContainText('3.98')
+  await expect(scale).toContainText('No PubChem value')
+  // Each cell's name carries its value; helium has none and is drawn as "no value".
+  await expect(page.getByRole('button', { name: 'Fluorine, F, atomic number 9, electronegativity 3.98' })).toHaveClass(/is-heat/)
+  await expect(cell(page, 'He')).toHaveClass(/is-nodata/)
+  // The list ranks by the property: fluorine first.
+  await page.getByRole('group', { name: 'Layout' }).getByRole('button', { name: 'List' }).click()
+  await expect(page.locator('.ptable-list-item').first()).toContainText('Fluorine')
+  // The element panel lists every property with its unit.
+  await page.locator('.ptable-list-item', { hasText: 'Iron' }).click()
+  const props = page.locator('.element-props')
+  await expect(props).toContainText('Atomic radius194 pm')
+  await expect(props).toContainText('Melting point1811 K (1537.85 °C)')
+  await expect(props).toContainText('Density7.874 g/cm³')
+})
+
+test('compares up to four elements property by property', async ({ page }) => {
+  await open(page)
+  const compare = page.getByRole('region', { name: /Element comparison/ })
+  await page.getByRole('button', { name: 'Iron, Fe, atomic number 26' }).click()
+  await page.getByRole('button', { name: 'Add Iron' }).click()
+  await page.getByLabel('or choose').selectOption({ label: '29 Cu Copper' })
+  await expect(compare.getByRole('columnheader')).toHaveText(['Property', /Iron \(Fe\)/, /Copper \(Cu\)/])
+  // Iron melts higher than copper (1811 K vs 1357.77 K), and the row says so in words.
+  await expect(compare.getByRole('row', { name: /Melting point/ })).toContainText('1811 K (1537.85 °C) · highest')
+  await page.getByRole('button', { name: 'Remove Copper' }).click()
+  await expect(compare.getByRole('columnheader')).toHaveCount(2)
+})
