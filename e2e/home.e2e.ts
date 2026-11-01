@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test, waitForViewport } from './fixtures.ts'
+import { expect, test, waitForViewport, goHome, openSubject } from './fixtures.ts'
 
 const SUBJECT_HEADINGS = {
   anatomy: 'Anatomy Explorer: body atlas and heart',
@@ -20,7 +20,8 @@ test.describe('Home page', () => {
     await page.goto('/')
     await expect(homeTitle(page)).toBeVisible()
     await expect(page).toHaveTitle('STEM Explorer')
-    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page')
+    // There is no global header on any page.
+    await expect(page.locator('header')).toHaveCount(0)
     // No WebGL scene (and no three.js chunk) is needed on Home.
     await expect(page.locator('canvas')).toHaveCount(0)
 
@@ -30,15 +31,14 @@ test.describe('Home page', () => {
     }
   })
 
-  test('opens every subject and returns Home with the logo and the Home tab', async ({ page }) => {
+  test('opens every subject and returns Home with the in-page Home link', async ({ page }) => {
     await page.goto('/')
     for (const [id, heading] of Object.entries(SUBJECT_HEADINGS)) {
       await page.locator(`.subject-card.is-${id} .subject-card-action`).click()
       await expect(page).toHaveURL(new RegExp(`#/${id}$`))
       // Each card opens its subject's first lab (some are 2D, so no 3D viewport is awaited).
       await expect(page.getByRole('heading', { level: 1, name: new RegExp(`^${heading.split(':')[0]}`) })).toBeAttached()
-      if (id === 'physics') await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Home' }).click()
-      else await page.getByRole('link', { name: 'STEM Explorer home' }).click()
+      await goHome(page)
       await expect(homeTitle(page)).toBeVisible()
     }
   })
@@ -54,7 +54,7 @@ test.describe('Home page', () => {
 
     // After a visit, the welcome panel gives way to Continue exploring, and the guide is a disclosure.
     await expect.poll(() => page.evaluate(() => localStorage.getItem('stem-explorer:recent'))).not.toBeNull()
-    await page.getByRole('link', { name: 'STEM Explorer home' }).click()
+    await goHome(page)
     await expect(page.getByRole('heading', { name: /New here\?/ })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Continue exploring' })).toBeVisible()
     const toggle = page.getByRole('button', { name: 'How it works' })
@@ -89,7 +89,7 @@ test.describe('Home page', () => {
   test('only working links in the footer', async ({ page, baseURL }) => {
     await page.goto('/')
     const hrefs = await page.locator('.home-footer a').evaluateAll((as) => as.map((a) => a.getAttribute('href')))
-    expect(hrefs).toEqual(['#/anatomy', '#/chemistry', '#/physics', '#/mathematics', '#/biology', 'https://github.com/satkynovilgiz/stem-explorer'])
+    expect(hrefs).toEqual(['#/chemistry', '#/anatomy', '#/biology', '#/physics', '#/mathematics', 'https://github.com/satkynovilgiz/stem-explorer'])
     expect(baseURL).toBeTruthy()
   })
 })
@@ -160,7 +160,7 @@ test.describe('Saved and recent explorations', () => {
     expect(stored).toContain('"subject":"chemistry"')
     expect(stored).not.toContain('http')
 
-    await page.getByRole('link', { name: 'STEM Explorer home' }).click()
+    await goHome(page)
     await page.reload()
     const item = savedPanel(page).getByRole('link', { name: /My ammonia/ })
     await expect(item).toHaveAttribute('href', '?molecule=ammonia&view=space-filling#/chemistry')
@@ -185,7 +185,7 @@ test.describe('Saved and recent explorations', () => {
     await page.getByRole('button', { name: 'Save exploration' }).click()
     await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue('Aorta · whole heart')
     await page.getByRole('button', { name: 'Save', exact: true }).click()
-    await page.getByRole('link', { name: 'STEM Explorer home' }).click()
+    await goHome(page)
     await expect(savedPanel(page).getByRole('link', { name: /Aorta/ })).toHaveAttribute('href', '?part=aorta&heart=whole#/anatomy')
   })
 
@@ -227,7 +227,7 @@ test.describe('Saved and recent explorations', () => {
     await page.goto('/?structure=nucleus#/biology')
     await expect.poll(recentTitles).toEqual(['Nucleus in the animal cell', expect.stringContaining('Benzene')])
 
-    await page.getByRole('link', { name: 'STEM Explorer home' }).click()
+    await goHome(page)
     const links = recentPanel(page).getByRole('link')
     await expect(links).toHaveCount(2)
     await expect(links.first()).toContainText('Nucleus')
@@ -249,8 +249,10 @@ test('Back and Forward move between Home and explorers', async ({ page }) => {
   await expect(homeTitle(page)).toBeVisible()
   await page.goForward()
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Physics' }).click()
+  await openSubject(page, 'physics')
   await expect(page.getByRole('heading', { level: 1, name: SUBJECT_HEADINGS.physics })).toBeAttached()
+  await page.goBack()
+  await expect(homeTitle(page)).toBeVisible()
   await page.goBack()
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
   await page.goBack()
@@ -366,7 +368,8 @@ test.describe('Home motion and featured content', () => {
     expect(await docBox()).toEqual(before)
     // A module link inside the card is its own target, above the card's stretched link.
     await card.locator('.subject-module').first().click()
-    await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Body atlas')
+    // The first card is Chemistry; its first module is the periodic table.
+    await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Periodic table')
   })
 })
 

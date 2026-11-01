@@ -68,7 +68,8 @@
   --radius-lg: 14px;
 
   /* Layout */
-  --nav-height: 56px;
+  /* There is no global header; kept at 0 so older layout rules need no special case. */
+  --nav-height: 0px;
   --subject-bar-height: 44px;
   --panel-left: 280px;
   --panel-right: 360px;

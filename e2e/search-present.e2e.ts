@@ -7,7 +7,9 @@ const status = (page: Page) => page.locator('.search-page .search-status')
 
 test('global search: grouped results open the real state; synonyms, plurals and symbols', async ({ page }) => {
   await page.goto('/#/chemistry')
-  await page.getByRole('link', { name: 'Search', exact: true }).click()
+  // No header: Search is on Home (and on the / shortcut).
+  await page.locator('.crumb-home').click()
+  await page.getByRole('navigation', { name: 'Library and saved work' }).getByRole('link', { name: 'Search all subjects' }).click()
   await expect(page.getByRole('heading', { name: 'Search', level: 1 })).toBeVisible()
   const box = page.getByRole('searchbox', { name: 'Search everything you can explore' })
   await expect(box).toBeFocused()
@@ -87,7 +89,7 @@ test('presentation mode hides secondary UI, exports a captioned PNG, and exits w
   await expect(bar).toContainText('Cosine function · calculus tools · Mathematics')
   await expect(bar).toContainText('Computed from exact formulas')
   await expect(bar.getByRole('button', { name: /Exit presentation/ })).toBeFocused()
-  await expect(page.locator('.topnav')).toBeHidden()
+  await expect(page.locator('.subject-bar')).toBeHidden()
   await expect(page.locator('.chem-side').first()).toBeHidden()
   await expect(page.locator('.fn-svg')).toBeVisible()
   const [download] = await Promise.all([page.waitForEvent('download'), bar.getByRole('button', { name: 'Export PNG' }).click()])
@@ -97,7 +99,7 @@ test('presentation mode hides secondary UI, exports a captioned PNG, and exits w
   await expect(bar).toContainText('PNG exported')
   await page.keyboard.press('Escape')
   await expect(bar).toBeHidden()
-  await expect(page.locator('.topnav')).toBeVisible()
+  await expect(page.locator('.subject-bar')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Present' })).toBeFocused()
   // The state is unchanged by presenting.
   expect(params(page).get('fn')).toBe('cosine')
@@ -113,5 +115,5 @@ test('presentation of a 3D view exports the WebGL picture; leaving the page ends
   await expect(page.getByRole('toolbar', { name: 'Presentation' })).toHaveCount(0)
   await page.goForward()
   await expect(page.getByRole('toolbar', { name: 'Presentation' })).toHaveCount(0)
-  await expect(page.locator('.topnav')).toBeVisible()
+  await expect(page.locator('.subject-bar')).toBeVisible()
 })

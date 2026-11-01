@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { canvasShot, expect, parkMouse, search, stableCanvasShot, test, waitForViewport } from './fixtures.ts'
+import { canvasShot, expect, parkMouse, search, stableCanvasShot, test, waitForViewport, switchSubject } from './fixtures.ts'
 
 const live = (page: Page, name: string) => page.locator('.readout > div').filter({ hasText: name }).locator('dd')
 const summary = (page: Page, name: string) => page.locator('.stats > div').filter({ hasText: name }).locator('dd')
@@ -187,21 +187,28 @@ test.describe('URL state', () => {
   test('keeps subjects separate across switching, Back/Forward and refresh', async ({ page }) => {
     await page.goto('/?molecule=benzene&view=space-filling&structure=golgi#/chemistry')
     await waitForViewport(page)
-    await page.getByRole('link', { name: /^Physics/ }).click()
+    await switchSubject(page, 'physics')
     await waitForViewport(page)
     await expect(field(page, 'Launch angle')).toHaveValue('45')
     await typeParam(page, 'Launch angle', '30')
 
-    await page.getByRole('link', { name: /^Chemistry/ }).click()
+    await switchSubject(page, 'chemistry')
     await waitForViewport(page)
     await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
 
+    // Switching goes through Home (there is no header), so Back passes Home first.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(field(page, 'Launch angle')).toHaveValue('30')
+    // Switching goes through Home (there is no header), so Back passes Home first.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
+    await page.goForward()
     await page.goForward()
     await waitForViewport(page)
     await expect(field(page, 'Launch angle')).toHaveValue('30')
@@ -211,7 +218,7 @@ test.describe('URL state', () => {
     await expect(live(page, 'Time t')).toHaveText('0 s')
 
     // Biology still reads only its own keys from the shared address.
-    await page.getByRole('link', { name: /^Biology/ }).click()
+    await switchSubject(page, 'biology')
     await waitForViewport(page)
     await expect(page.locator('#structure-heading')).toHaveText('Golgi apparatus')
   })

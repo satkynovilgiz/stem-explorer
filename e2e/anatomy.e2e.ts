@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { canvasShot, expect, parkMouse, pressed, search, stableCanvasShot, test, visibleLabels, waitForViewport } from './fixtures.ts'
+import { canvasShot, expect, parkMouse, pressed, search, stableCanvasShot, test, visibleLabels, waitForViewport, switchSubject } from './fixtures.ts'
 
 const item = (page: Page, name: string) =>
   page.locator('.structure-item').filter({ has: page.locator('.structure-name', { hasText: new RegExp(`^${name}$`) }) })
@@ -158,24 +158,31 @@ test.describe('URL state', () => {
   test('keeps subjects separate across switching, Back/Forward and refresh', async ({ page }) => {
     await page.goto('/?structure=golgi&surface=sine#/biology')
     await waitForViewport(page)
-    await page.getByRole('link', { name: /^Anatomy/ }).click()
+    await switchSubject(page, 'anatomy')
     await waitForViewport(page)
-    // The top-bar link opens the body atlas; the heart is one module switch away.
+    // A subject link opens the body atlas; the heart is one module switch away.
     await page.getByRole('group', { name: 'Anatomy module' }).getByRole('button', { name: 'Heart (detailed)' }).click()
     await waitForViewport(page)
     await item(page, 'Pulmonary veins').click()
-    await page.getByRole('link', { name: /^Mathematics/ }).click()
+    await switchSubject(page, 'mathematics')
     await waitForViewport(page)
     await expect(page.locator('#math-heading')).toContainText('Sinusoidal')
+    // Switching goes through Home (there is no header), so Back passes Home first.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(heading(page)).toHaveText('Pulmonary veins')
     // Opening the heart module was its own history entry.
     await page.goBack()
     await expect(page.locator('#atlas-heading')).toHaveText('Body atlas')
+    // Switching goes through Home (there is no header), so Back passes Home first.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(page.locator('#structure-heading')).toHaveText('Golgi apparatus')
+    await page.goForward()
     await page.goForward()
     await page.goForward()
     await waitForViewport(page)

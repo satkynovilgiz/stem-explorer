@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test, waitForViewport } from './fixtures.ts'
+import { expect, test, waitForViewport, goHome } from './fixtures.ts'
 
 const left = (page: Page) => page.locator('.chem-side--left')
 const right = (page: Page) => page.locator('.chem-side--right')
@@ -74,7 +74,7 @@ test('keyboard: shortcuts help, no shortcuts while typing, and focus is kept whe
   // "t" opens the Topics drawer; "/" opens Search.
   await page.locator('body').click({ position: { x: 700, y: 860 } })
   await page.keyboard.press('t')
-  await expect(page.getByRole('dialog', { name: 'Modules and topics' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: /topics$/ })).toBeVisible()
   await page.keyboard.press('Escape')
   await page.keyboard.press('/')
   await expect(page.getByRole('heading', { name: 'Search', level: 1 })).toBeVisible()
@@ -103,7 +103,7 @@ test('Home: overview of real modules, interest starting points, and recent items
   await interests.getByRole('link', { name: /Cross two pea plants/ }).click()
   await expect(page.locator('table.punnett')).toBeVisible()
   await page.waitForTimeout(1800) // a visit is recorded after about 1.5 s
-  await page.getByRole('link', { name: 'STEM Explorer home' }).click()
+  await goHome(page)
   await expect(page.locator('.recent-item').first()).toContainText('Biology · Inheritance')
   await expect(page.locator('.recent-item').first()).toContainText('just now')
 })

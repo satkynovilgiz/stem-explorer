@@ -1,16 +1,5 @@
 import type { Page } from '@playwright/test'
-import {
-  canvasShot,
-  expect,
-  labelTransforms,
-  parkMouse,
-  pressed,
-  search,
-  stableCanvasShot,
-  test,
-  visibleLabels,
-  waitForViewport,
-} from './fixtures.ts'
+import { canvasShot, expect, labelTransforms, parkMouse, pressed, search, stableCanvasShot, test, visibleLabels, waitForViewport, switchSubject } from './fixtures.ts'
 
 const list = (page: Page) => page.getByRole('list').filter({ has: page.locator('.structure-item') })
 const structureButton = (page: Page, name: string) =>
@@ -204,27 +193,34 @@ test.describe('URL state', () => {
     await waitForViewport(page)
     await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
 
-    await page.getByRole('link', { name: /^Biology/ }).click()
+    await switchSubject(page, 'biology')
     await waitForViewport(page)
     // Chemistry's view=space-filling must not leak into Biology.
     await pressed(page.getByRole('button', { name: 'Cutaway' }))
     await structureButton(page, 'Golgi apparatus').click()
     await expect(heading(page)).toHaveText('Golgi apparatus')
 
-    await page.getByRole('link', { name: /^Chemistry/ }).click()
+    await switchSubject(page, 'chemistry')
     await waitForViewport(page)
     await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
     await pressed(page.getByRole('button', { name: 'Space-filling' }))
 
+    // Switching goes through Home (there is no header), so Back passes Home first.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(heading(page)).toHaveText('Golgi apparatus')
 
+    // Switching goes through Home (there is no header), so Back passes Home first.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
     await pressed(page.getByRole('button', { name: 'Space-filling' }))
 
+    await page.goForward()
     await page.goForward()
     await waitForViewport(page)
     await expect(heading(page)).toHaveText('Golgi apparatus')

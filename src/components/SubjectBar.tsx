@@ -1,4 +1,4 @@
-import { ChevronRight, ListTree, Maximize2, Minimize2, PanelLeft, PanelRight, Search, X } from 'lucide-react'
+import { ArrowLeft, ChevronRight, ListTree, Maximize2, Minimize2, PanelLeft, PanelRight, Presentation, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { locate, MODULES, type TopicModule } from '../data/topics'
 import { SUBJECTS, type SubjectId } from '../data/subjects'
@@ -12,10 +12,12 @@ import { SubjectIcon } from './SubjectIcon'
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
 
 /**
- * Where you are (Home › subject › module › topic) and a searchable drawer of every module and
- * curated topic. This is navigation; each explorer's own toolbar holds its display controls.
+ * Local navigation inside a subject (the app has no global header): the way back Home, where you
+ * are (Home › subject › module › topic) and a drawer of this subject's modules and topics. Other
+ * subjects are reached from Home and from search. Each explorer's own toolbar holds its display
+ * controls.
  */
-export function SubjectBar({ subject }: { subject: SubjectId }) {
+export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPresent?: () => void }) {
   const search = useLocationSearch()
   const { module, topic } = locate(subject, search)
   const [open, setOpen] = useState(false)
@@ -47,7 +49,10 @@ export function SubjectBar({ subject }: { subject: SubjectId }) {
       <nav aria-label="Breadcrumb" className="crumbs">
         <ol>
           <li>
-            <a href="#/home">Home</a>
+            <a href="#/home" className="crumb-home">
+              <ArrowLeft size={15} aria-hidden="true" />
+              Home
+            </a>
             <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
           </li>
           <li>
@@ -93,8 +98,14 @@ export function SubjectBar({ subject }: { subject: SubjectId }) {
       </div>
       <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <ListTree size={15} aria-hidden="true" />
-        <span>Topics</span>
+        <span>All {subjectName(subject).toLowerCase()} topics</span>
       </button>
+      {onPresent && (
+        <button type="button" className="tool-button bordered present-toggle" onClick={onPresent}>
+          <Presentation size={15} aria-hidden="true" />
+          <span>Present</span>
+        </button>
+      )}
       {open && <TopicDrawer subject={subject} current={module} onClose={close} />}
     </div>
   )
@@ -118,7 +129,8 @@ function TopicDrawer({ subject, current, onClose }: { subject: SubjectId; curren
 
   // The current subject first, then the others in the app's order.
   const groups = useMemo(() => {
-    const order = [subject, ...SUBJECTS.map((s) => s.id).filter((id) => id !== subject)]
+    // Only this subject: other subjects are reached from Home and search.
+    const order = [subject]
     const terms = normalize(query).split(/\s+/).filter(Boolean)
     const hit = (text: string) => terms.every((t) => normalize(text).includes(t))
     return order
@@ -156,7 +168,7 @@ function TopicDrawer({ subject, current, onClose }: { subject: SubjectId; curren
     >
       <div className="topic-drawer-inner">
         <header className="topic-drawer-head">
-          <h2 id="topic-drawer-title">Modules and topics</h2>
+          <h2 id="topic-drawer-title">{subjectName(subject)} topics</h2>
           <button type="button" className="icon-button" aria-label="Close topics" onClick={onClose}>
             <X size={18} aria-hidden="true" />
           </button>
@@ -164,14 +176,14 @@ function TopicDrawer({ subject, current, onClose }: { subject: SubjectId; curren
         <label className="topic-search">
           <Search size={15} aria-hidden="true" />
           <span className="visually-hidden">Filter modules and topics</span>
-          <input type="search" placeholder="Filter modules and topics…" ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input type="search" placeholder={`Filter ${subjectName(subject).toLowerCase()} topics…`} ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} />
         </label>
         <p className="visually-hidden" role="status">
           {query ? `${count} module${count === 1 ? '' : 's'} match` : ''}
         </p>
         {groups.length === 0 ? (
           <p className="muted small topic-empty">
-            No module or topic matches “{query}”. Search covers every structure and term: <AppLink href={`?q=${encodeURIComponent(query)}#/search`}>search for “{query}”</AppLink>.
+            No {subjectName(subject).toLowerCase()} topic matches “{query}”. <AppLink href={`?q=${encodeURIComponent(query)}#/search`}>Search all subjects for “{query}”</AppLink>.
           </p>
         ) : (
           groups.map((g) => (

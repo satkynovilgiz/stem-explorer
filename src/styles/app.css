@@ -5614,9 +5614,9 @@ html.is-presenting .subject-bar {
     padding: var(--space-1) var(--space-4);
   }
 
-  /* On phones only the module and topic are shown; Home is one tap away in the top bar. */
-  .crumbs li:first-child {
-    display: none;
+  /* There is no top bar: the breadcrumb, starting with ← Home, gets its own row on phones. */
+  .crumbs {
+    flex: 1 1 100%;
   }
 }
 
@@ -8756,3 +8756,27 @@ html.ws-focus .chem-stage :is(.optics-svg,
 .sources-note-grid > div { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
 .sources-note-grid p { margin: 0; color: var(--color-text-muted); line-height: 1.55; }
 .sources-note-grid .home-h3 { display: flex; gap: 6px; align-items: center; margin-top: 0; }
+
+/* ---------- No global header: in-page navigation (chemistry redesign) ---------- */
+.subject-bar { position: static; flex-wrap: wrap; row-gap: var(--space-2); padding-top: var(--space-2); padding-bottom: var(--space-2); }
+.crumb-home { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--color-text) !important; }
+.home-link-bar { width: min(1180px, 100%); margin: 0 auto; padding: var(--space-4) var(--space-5) 0; }
+.home-link { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font-weight: 600; text-decoration: none; }
+.home-link:hover { background: var(--color-surface-hover); }
+.home-shortcuts ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.home-shortcut { display: flex; align-items: center; gap: var(--space-2); min-height: 48px; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font-weight: 600; text-decoration: none; }
+.home-shortcut:hover { background: var(--color-surface-hover); }
+.home-shortcut svg { color: var(--color-accent); flex: none; }
+
+.topic-nav { display: grid; gap: var(--space-1); }
+.topic-nav-toggle { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); width: 100%; min-height: 40px; padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: none; color: var(--color-text); font: inherit; cursor: pointer; text-align: left; }
+.topic-nav-toggle:hover { background: var(--color-surface-hover); }
+.topic-nav-title { font-weight: 700; }
+.topic-nav-current { color: var(--color-text-muted); }
+.topic-nav-list { display: grid; gap: 2px; }
+.topic-nav-item { display: grid; gap: 1px; width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid transparent; border-left: 3px solid transparent; border-radius: var(--radius-sm); background: none; color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.topic-nav-item:hover { background: var(--color-surface-hover); }
+.topic-nav-item[aria-pressed='true'] { border-left-color: var(--color-accent); background: var(--color-accent-soft); }
+.topic-nav-label { font-weight: 600; }
+.topic-nav-blurb { font-size: var(--text-sm); color: var(--color-text-muted); }
+.chem-mobile-topic { margin: 0; padding: 0 var(--space-1); }

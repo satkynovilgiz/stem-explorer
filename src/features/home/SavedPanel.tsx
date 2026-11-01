@@ -98,7 +98,7 @@ export function SavedPanel({
   onMessage: (text: string) => void
 }) {
   return (
-    <section className="home-panel" aria-labelledby="saved-heading">
+    <section id="saved-section" className="home-panel" aria-labelledby="saved-heading" tabIndex={-1}>
       <div className="home-panel-head">
         <h2 id="saved-heading" className="home-h2">
           <Bookmark size={18} aria-hidden="true" /> Saved explorations

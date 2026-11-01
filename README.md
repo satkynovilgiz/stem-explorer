@@ -7,7 +7,16 @@ Users rotate, zoom, select and measure parts of 3D models and read concise, sour
 
 The app opens on a **Home page** (`#/home`) with search, questions to explore, the five subjects
 and their modules, featured explorations and the explorations you saved or visited recently.
-Every explorer has breadcrumbs and a searchable **Topics** drawer. All five subjects are implemented:
+
+**There is no global header** (since the chemistry redesign). Home is the hub: the subject cards
+(Chemistry first), search, and a *Library and saved work* row (Search all subjects, Reference
+library, Glossary, Saved explorations, Collections, Notebook). Inside a subject, a small in-page
+bar starts with **← Home**, shows where you are (*Home › Chemistry › Solutions and dilution*), and
+has **All ⟨subject⟩ topics** (a drawer listing only that subject's modules and topics; Escape
+closes it and returns focus) and *Present*. Other pages (search, reference, glossary, notebook,
+collections) have a **← Home** link at the top. Other subjects are reached from Home and from
+search; the `/` shortcut still opens search. Chemistry adds a collapsible **topic sidebar** on
+desktop (remembered on this browser); on phones the drawer does that job. All five subjects are implemented:
 - **Anatomy Explorer:** a schematic whole-body atlas with eleven organ-system layers, skeletal and
   muscular detail with elbow and knee demonstrations, organ-system tours and close-ups, and a
   detailed heart module with a blood-flow tour.
@@ -1755,13 +1764,13 @@ added.
 
 ## Navigation: breadcrumbs, topic drawer and module memory
 
-Every explorer has a **subject bar** under the top bar (`src/components/SubjectBar.tsx`):
+Every explorer has a **subject bar** at the top of its content (`src/components/SubjectBar.tsx`; there is no global header):
 - **Breadcrumbs** (`nav` named *Breadcrumb*): *Home › subject › module › topic*, for example
   *Home › Chemistry › Molecules › Water* or *Home › Anatomy › Body atlas › Left femur*. The last
   item has `aria-current="page"`. The breadcrumb follows the page as you select things, because
   `pushState`/`replaceState` are wrapped once to announce address changes
   (`src/lib/location.ts`). Old links without a module key land in the module they always opened.
-  On phones *Home* is left out (it is in the top bar) and a long topic is truncated.
+  On phones the breadcrumb (starting with ← Home) takes its own row and a long topic is truncated.
 - **Topics** opens a drawer (a modal `dialog`) listing every module of every subject, current
   subject first, with its contents and curated topics. Typing filters modules and topics; with no
   match it offers the global search. The current module says *You are here*. Esc, the close button
@@ -1787,7 +1796,7 @@ start fresh, as when opening a link.
 ## Home page, search and the exploration library
 
 **Home** is `#/home`. It is also what you see with no hash or with any hash that is not a subject
-(`#/`, `#/nowhere`). The brand logo and the **Home** tab in the top bar lead back to it. Home does
+(`#/`, `#/nowhere`). The **← Home** link at the start of every subject's breadcrumb, and at the top of every other page, leads back to it. Home does
 not mount a WebGL canvas and does not load the Three.js chunk.
 
 Home is laid out top to bottom (redesigned in the homepage milestone; before-and-after
@@ -1989,7 +1998,7 @@ with a title (suggested from the view) and plain-text observations. Nothing is s
 parameters Copy link uses. It never stores activity progress, animation time, tour steps or
 camera positions; a note written during the Anatomy tour stores the pre-tour view.
 
-**Notebook** (`#/notebook`, in the top bar) lists notes newest first, with a subject filter that
+**Notebook** (`#/notebook`, linked from Home) lists notes newest first, with a subject filter that
 shows counts. Each note has its created and updated times, **Reopen exploration** (a relative
 in-app link rebuilt from the stored state), **Edit** (the same editor, with **Save changes**) and
 **Delete**, which offers **Undo** and puts the note back in its place. The page says notes live
@@ -2129,7 +2138,7 @@ item is one saved explorer configuration plus a short observation or question.
 
 Each claim names the source that supports it, beside the claim.
 
-**Glossary** (`#/glossary`, also in the top bar). It has search over terms and definitions, a subject
+**Glossary** (`#/glossary`, linked from Home). It has search over terms and definitions, a subject
 filter, and `?term=<id>` deep links that scroll to and highlight one entry. Each entry links to
 places in the explorers where the term can be seen. Definitions are stored once
 (`src/data/glossary.ts`):
@@ -2529,11 +2538,11 @@ the production build:
   1 Ω minimum, a mixed link reopening paused with arrows then markers; the wave's derived speed,
   paused start, scrubbing to −A after half a period, both graph kinds, Play/Pause, nothing about
   time in the link; reduced motion; old links and dropping lab keys.
-- `search-present.e2e.ts`: the Search page from the top bar (focus in the box, synonyms, a femur
+- `search-present.e2e.ts`: the Search page from Home (focus in the box, synonyms, a femur
   result opening the atlas, Back restoring the query, *Fe* opening iron in the periodic table);
   subject and type filters in the link and after reload, the filtered-out empty state and Clear
   filters; Home's *See all results*; related topics both ways (wave lab ↔ sine) and the circuit
-  analogy with its limits; presentation mode hiding the top bar and side panels, a real PNG
+  analogy with its limits; presentation mode hiding the subject bar and side panels, a real PNG
   download, Esc returning focus to Present, a WebGL export, and Back/Forward ending presentation.
 - `workspace.e2e.ts`: hiding the left panel (link unchanged, kept after reload and in another
   explorer, restored by *Show all panels*); Focus mode widening the stage by more than 400 px with
@@ -2716,7 +2725,7 @@ These are local measurements, not network or real-device figures.
 ```
 src/
   App.tsx                       hash routing: Home (#/home, default) and subjects (#/chemistry, …)
-  components/                   shell: TopNav, AppLink, ErrorBoundary, Tabs, ViewportShell, CopyLinkButton, ShareActions, RangeField
+  components/                   shell: SubjectBar, HomeLink, AppLink, ErrorBoundary, Tabs, ViewportShell, CopyLinkButton, ShareActions, RangeField
   features/home/                Home page, search, saved/recent sections, backup, activity entries, SVG subject illustrations
   features/activities/          guided-activity types, hook (state, detection, snapshot/restore) and panel
   features/guide/, features/glossary/   About this explorer panel, term buttons, source links; glossary page
@@ -2923,7 +2932,7 @@ after it has been fetched and read; the text is written for the app and paraphra
 ## Search, related topics and presentation
 ### Global search
 
-**Search** (top bar, `#/search`, or *See all results* on Home) runs locally over an index built
+**Search** (`#/search`: *Search all subjects* on Home, the `/` shortcut, or *See all results* in Home's search) runs locally over an index built
 from the app's own data (`src/lib/searchIndex.ts`); nothing is sent over the network.
 - **What is indexed:** subjects, atlas and heart structures, elements, molecules, cell models and
   structures, biology processes, physics labs, functions, surfaces, vector and matrix tools, and
@@ -2967,7 +2976,7 @@ existing items in different subjects, cites registered sources and states its li
 
 ### Presentation mode
 
-**Present** (top bar, in any explorer) hides the top bar, the side panels and the phone tabs, and
+**Present** (in any explorer's subject bar) hides the subject bar, the side panels and the phone tabs, and
 lets the stage fill the window. A bar at the top shows the view's title and the kind of model.
 - **Exit presentation** or **Esc** leaves presentation mode, and focus returns to **Present**.
   Leaving the page also ends it, and presenting never changes the explorer's state or link.

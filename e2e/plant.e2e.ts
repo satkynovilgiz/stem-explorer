@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, search, test, waitForViewport } from './fixtures.ts'
+import { expect, search, test, waitForViewport, goHome } from './fixtures.ts'
 
 const item = (page: Page, name: string) =>
   page.locator('.structure-item').filter({ has: page.locator('.structure-name', { hasText: new RegExp(`^${name}`) }) })
@@ -82,7 +82,7 @@ test('saving a plant-cell view stores the type and reopens it', async ({ page })
   await page.getByRole('button', { name: 'Save exploration' }).click()
   await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue('Chloroplasts in the plant cell')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await page.getByRole('link', { name: 'STEM Explorer home' }).click()
+  await goHome(page)
   const link = page.locator('section', { has: page.getByRole('heading', { name: 'Saved explorations' }) }).getByRole('link', { name: /Chloroplasts/ })
   await expect(link).toHaveAttribute('href', /type=plant/)
   await link.click()

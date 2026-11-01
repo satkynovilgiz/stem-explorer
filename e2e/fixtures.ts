@@ -93,3 +93,27 @@ export function pressed(locator: Locator) {
 export async function search(page: Page): Promise<URLSearchParams> {
   return new URLSearchParams(await page.evaluate(() => window.location.search))
 }
+
+/**
+ * Back to Home with the in-page link: a subject's breadcrumb starts with "← Home"; other pages
+ * have a Home link at the top. (There is no global header.)
+ */
+export async function goHome(page: Page) {
+  await page.locator('.crumb-home, .home-link').first().click()
+}
+
+/** Opens a subject the way a reader does without a header: Home, then the subject's card. */
+export async function openSubject(page: Page, subject: 'anatomy' | 'chemistry' | 'biology' | 'physics' | 'mathematics') {
+  if (!/#\/(home)?$/.test(new URL(page.url()).hash || '#/')) await goHome(page)
+  await page.locator(`.subject-card.is-${subject} .subject-card-action`).click()
+}
+
+/**
+ * Switches subject keeping each subject's state, without a header: ← Home, then the subject's
+ * hash-only link in the Home footer (the query, which holds every subject's state, is kept).
+ * Adds two history entries: Home, then the subject.
+ */
+export async function switchSubject(page: Page, subject: 'anatomy' | 'chemistry' | 'biology' | 'physics' | 'mathematics') {
+  await goHome(page)
+  await page.locator(`.home-footer a[href="#/${subject}"]`).click()
+}

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { canvasShot, expect, parkMouse, search, stableCanvasShot, test, waitForViewport } from './fixtures.ts'
+import { canvasShot, expect, parkMouse, search, stableCanvasShot, test, waitForViewport, switchSubject } from './fixtures.ts'
 
 const preset = (page: Page, name: string) => page.locator('.surface-item').filter({ hasText: name })
 const heading = (page: Page) => page.locator('#math-heading')
@@ -191,21 +191,28 @@ test.describe('URL state', () => {
   test('keeps subjects separate across switching, Back/Forward and refresh', async ({ page }) => {
     await page.goto('/?speed=15&angle=30&molecule=benzene#/physics')
     await waitForViewport(page)
-    await page.getByRole('link', { name: /^Mathematics/ }).click()
+    await switchSubject(page, 'mathematics')
     await waitForViewport(page)
     await preset(page, 'Sinusoidal surface').click()
     await page.getByRole('slider', { name: 'Amplitude slider' }).fill('1.5')
 
-    await page.getByRole('link', { name: /^Physics/ }).click()
+    await switchSubject(page, 'physics')
     await waitForViewport(page)
     await expect(page.getByRole('textbox', { name: /^Launch speed/ })).toHaveValue('15.0')
 
+    // Switching goes through Home (there is no header), so Back passes Home first.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(substituted(page)).toHaveText('z = 1.50·sin(1.00·x)·cos(1.00·y)')
+    // Switching goes through Home (there is no header), so Back passes Home first.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(page.getByRole('textbox', { name: /^Launch angle/ })).toHaveValue('30')
+    await page.goForward()
     await page.goForward()
     await waitForViewport(page)
     await expect(substituted(page)).toHaveText('z = 1.50·sin(1.00·x)·cos(1.00·y)')
@@ -213,7 +220,7 @@ test.describe('URL state', () => {
     await waitForViewport(page)
     await expect(substituted(page)).toHaveText('z = 1.50·sin(1.00·x)·cos(1.00·y)')
 
-    await page.getByRole('link', { name: /^Chemistry/ }).click()
+    await switchSubject(page, 'chemistry')
     await waitForViewport(page)
     await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
   })

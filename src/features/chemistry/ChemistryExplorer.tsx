@@ -15,6 +15,7 @@ import { InfoPanel } from './InfoPanel'
 import { MeasurementPanel } from './MeasurementPanel'
 import { MoleculeLibrary } from './MoleculeLibrary'
 import { MoleculeViewer } from './MoleculeViewer'
+import { ChemistryTopicNav } from './ChemistryTopicNav'
 import { SceneControls } from './SceneControls'
 import { chemistryReducer, initialChemistryState } from './state'
 
@@ -107,20 +108,7 @@ export function ChemistryExplorer() {
   }
   const pickAtom = (atomId: string) => dispatch({ type: 'pickAtom', atomId })
 
-  const sectionSwitch = (
-    <div className="module-switch">
-      <span className="module-switch-label" aria-hidden="true">
-        Module
-      </span>
-      <div className="segmented section-switch section-switch--grid" role="group" aria-label="Chemistry section">
-        {(['periodic', 'atomic', 'molecules', 'bonding', 'reactions', 'solutions'] as const).map((s) => (
-          <button key={s} type="button" className="segmented-option" aria-pressed={section === s} onClick={() => goSection(s)}>
-            {SECTION_LABEL[s]}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
+  const topicNav = <ChemistryTopicNav section={section} onSection={goSection} />
   const loading = <p className="muted small panel">Loading {SECTION_LABEL[section].toLowerCase()}…</p>
   const elementsView = (
     <Suspense fallback={loading}>
@@ -252,7 +240,9 @@ export function ChemistryExplorer() {
     return (
       <div className="chem chem--mobile">
         {announcer}
-        {sectionSwitch}
+        <p className="chem-mobile-topic">
+          <span className="muted small">Topic:</span> <strong>{SECTION_LABEL[section]}</strong> <span className="muted small">(change it with All chemistry topics above)</span>
+        </p>
         <div className="chem-stage">{stage}</div>
         {activityPanel}
         {guidePanel}
@@ -274,7 +264,7 @@ export function ChemistryExplorer() {
     <div className="chem">
       {announcer}
       <aside className="chem-side chem-side--left">
-        <div className="section-switch-wrap">{sectionSwitch}</div>
+        {topicNav}
         {library}
       </aside>
       <div className="chem-stage">{stage}</div>

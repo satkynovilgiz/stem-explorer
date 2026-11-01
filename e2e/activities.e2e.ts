@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, search, test, waitForViewport } from './fixtures.ts'
+import { expect, search, test, waitForViewport, switchSubject } from './fixtures.ts'
 
 const panel = (page: Page) => page.locator('.activity')
 const inPanel = (page: Page, name: string | RegExp) => panel(page).getByRole('button', { name })
@@ -190,11 +190,13 @@ test('leaving for another subject mid-activity exits cleanly without touching th
   await waitForViewport(page)
   await start(page)
   await expect(page.locator('#molecule-heading')).toHaveText('Water')
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Physics' }).click()
+  // Leaving through Home (there is no header), then Home's hash-only Physics link, which keeps the query.
+  await switchSubject(page, 'physics')
   await expect(page.getByRole('textbox', { name: /^Launch angle/ })).toHaveValue('70')
   let q = await search(page)
   expect([q.get('molecule'), q.get('speed'), q.get('angle')]).toEqual(['benzene', '12', '70'])
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Chemistry' }).click()
+  // Back to Chemistry the same way (Home, then its hash-only link): the pre-activity view returns.
+  await switchSubject(page, 'chemistry')
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
   await expect(panel(page).locator('.activity-launch')).toBeVisible()
   q = await search(page)

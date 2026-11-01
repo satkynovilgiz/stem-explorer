@@ -48,7 +48,7 @@ test('a term links to its shared glossary entry, which links back to an explorer
 
 test('the glossary searches, filters by subject, and labels conventions', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Glossary' }).click()
+  await page.getByRole('navigation', { name: 'Library and saved work' }).getByRole('link', { name: 'Glossary' }).click()
   await expect(page).toHaveTitle('Glossary · STEM Explorer')
   const search = page.getByRole('searchbox', { name: 'Search the glossary' })
   await search.fill('oxygen content')

@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Library, ChevronDown, Compass, ExternalLink, FlaskConical, HelpCircle, Link2, ListOrdered, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
+import { ArrowRight, BookA, Bookmark, BookOpen, Library, NotebookPen, Search, ChevronDown, Compass, ExternalLink, FlaskConical, HelpCircle, Link2, ListOrdered, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SubjectIcon } from '../../components/SubjectIcon'
@@ -18,7 +18,8 @@ import { SubjectArt } from './SubjectArt'
 import { REFERENCE_COUNTS, REFERENCE_TOTAL } from '../../reference/counts'
 import { AtlasPreview, Connections, LibraryTeaser, SourcesNote } from './HomeShowcase'
 
-const ORDER: SubjectId[] = SUBJECTS.map((s) => s.id)
+/** Home's order: Chemistry first (the subject being tested with students), then the others. */
+const ORDER: SubjectId[] = ['chemistry', 'anatomy', 'biology', 'physics', 'mathematics']
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
 
 /** Curated deep links using only supported URL parameters; next steps the URL cannot encode are spelled out. */
@@ -291,6 +292,47 @@ export function Home() {
       <div className="home-search-band">
         <HomeSearch />
       </div>
+
+      <nav className="home-shortcuts" aria-label="Library and saved work">
+        <ul>
+          <li>
+            <a href="#/search" className="home-shortcut">
+              <Search size={18} aria-hidden="true" />
+              <span>Search all subjects</span>
+            </a>
+          </li>
+          <li>
+            <AppLink href="#/reference" className="home-shortcut">
+              <Library size={18} aria-hidden="true" />
+              <span>Reference library</span>
+            </AppLink>
+          </li>
+          <li>
+            <a href="#/glossary" className="home-shortcut">
+              <BookA size={18} aria-hidden="true" />
+              <span>Glossary</span>
+            </a>
+          </li>
+          <li>
+            <a href="#/home" className="home-shortcut" onClick={(e) => (e.preventDefault(), jump(document.getElementById('saved-section')))}>
+              <Bookmark size={18} aria-hidden="true" />
+              <span>Saved explorations</span>
+            </a>
+          </li>
+          <li>
+            <a href="#/collections" className="home-shortcut">
+              <ListOrdered size={18} aria-hidden="true" />
+              <span>Collections</span>
+            </a>
+          </li>
+          <li>
+            <a href="#/notebook" className="home-shortcut">
+              <NotebookPen size={18} aria-hidden="true" />
+              <span>Notebook</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
 
       {guideOpen && !firstVisit && (
         <section id="home-guide" ref={guideRef} className="home-panel home-guide" aria-labelledby="guide-heading">

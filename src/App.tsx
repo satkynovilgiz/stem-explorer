@@ -3,7 +3,7 @@ import { PresentationBar } from './components/PresentationBar'
 import { SubjectBar } from './components/SubjectBar'
 import { KeyboardHelp } from './components/KeyboardHelp'
 import { getPeek, isTypingTarget, setPeek, toggleFocus, toggleSide, usePeek, useWorkspace } from './lib/workspace'
-import { TopNav } from './components/TopNav'
+import { HomeLink } from './components/HomeLink'
 import { isSubjectId, SUBJECTS } from './data/subjects'
 import { AnatomyExplorer } from './features/anatomy/AnatomyExplorer'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
@@ -109,11 +109,11 @@ export default function App() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <TopNav active={route} onPresent={isSubjectId(route) ? () => setPresenting(route) : undefined} />
       {isPresenting && isSubjectId(route) && <PresentationBar subject={route} onExit={exitPresentation} />}
       {helpOpen && <KeyboardHelp onClose={() => setHelpOpen(false)} />}
-      {isSubjectId(route) && <SubjectBar subject={route} />}
       <main id="main" className="main" tabIndex={-1} key={isSubjectId(route) ? `${route}:${generation}` : route}>
+        {/* No global header: subjects carry their own local navigation; other pages a link back Home. */}
+        {isSubjectId(route) ? <SubjectBar subject={route} onPresent={() => setPresenting(route)} /> : route !== 'home' && <HomeLink />}
         {route === 'anatomy' ? (
           <>
             <h1 className="visually-hidden">Anatomy Explorer: body atlas and heart</h1>

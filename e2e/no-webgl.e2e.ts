@@ -228,7 +228,7 @@ test('presentation export explains the failure when there is no picture', async 
   await expect(page.locator('.present-message[role="alert"]')).toContainText('Export failed: The 3D view is not available in this browser, so there is no picture to export')
   expect(new URL(page.url()).searchParams.get('molecule')).toBe('water')
   await page.keyboard.press('Escape')
-  await expect(page.locator('.topnav')).toBeVisible()
+  await expect(page.locator('.subject-bar')).toBeVisible()
 })
 
 test('Anatomy Where is it? and relationship explorations work as text without WebGL', async ({ page }) => {
