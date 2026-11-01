@@ -2842,6 +2842,60 @@ Also fixed during the review:
   the legend are moved above it or hidden.
 
 ## Search, related topics and presentation
+## Reference library
+
+`#/reference` is a library of reference entries shared by all five subjects;
+`#/reference/<subject>/<id>` is one entry's canonical page (Copy link copies it).
+
+**Entry types** (`src/reference/types.ts`) have their own fields instead of one shared shape:
+
+| Type | Extra fields |
+| --- | --- |
+| Formula | LaTeX, plain-text form, symbols (meaning + unit), units note, domain and conditions of use; for physics also vector/scalar/component form, exact or approximation, general or special case, instantaneous or average, sign conventions. Formulas are labelled by kind: equation, definition, law, identity, theorem, approximation or empirical relationship. |
+| Concept | where it applies, key terms |
+| Structure | system, region, location, functions, relationships to nearby structures, subdivisions, body-atlas ids (absent = reference only) |
+| Process | ordered steps, inputs, outputs, where it happens; chemistry reactions add a balanced equation, type and conditions; whether the app's diagram is conceptual or quantitative |
+| Substance or molecule | formula, composition, bonding, geometry, properties with conditions, relevance, molecule-viewer id |
+| Worked example | the formula entries it uses |
+
+Every entry has a stable id, subject → category → optional topic, title, summary, aliases, tags,
+level, prerequisites, explanation, conditions/limitations, at least one example, related entries
+(each with a reason), citations (a registered source plus a locator such as a section or example),
+optional app links (lab, 3D structure, tool) and model limitations.
+
+**Catalogs** live in `src/reference/catalogs/<subject>/` and are loaded on demand, one chunk per
+subject: an entry page loads only its subject's catalog. Math is rendered with KaTeX (pinned
+0.18.11), whose output includes MathML for screen readers; KaTeX and the reference styles load
+only with the reference pages.
+
+**Completeness audit** (`src/reference/audit.ts`, run by `npm run reference:audit`). It reports
+duplicate ids, missing required fields (per type), broken related/prerequisite/`uses` links,
+unknown source ids, empty examples, placeholder text ("coming soon", "TODO", …), duplicated titles
+or explanations within a subject, and counts by subject and type. Only entries with no issues are
+counted or published. `library.test.ts` also checks that every app link opens a valid state, that
+atlas and molecule ids exist, that every numerical worked example recomputes to its stated answer,
+and that all math renders. **Passing the audit is not a scientific review**: it shows that fields
+are present and links resolve, not that the statements are correct.
+
+**Generated index.** `src/reference/generated/manifest.json` (titles, summaries and search terms of
+qualifying entries) and `counts.json` are generated from the catalogs by
+`npm run reference:update`, and a test fails if they are stale. The homepage and search read these
+small files instead of loading the catalogs.
+
+**Library page.** Filter by subject, type and category, and search names, aliases, symbols and
+formulas. Formula text is normalized, so `y = y0+v0 t − 1/2 g t^2` matches the free-fall entry
+regardless of spaces, `·`, `×`, `*`, `^` or Unicode sub/superscripts. Filters are kept in the
+address (`rq`, `rs`, `rt`, `rc`), and the page has loading, error (with Try again) and empty states.
+
+**Entry page.** Breadcrumbs (Library › Subject › Category › Entry), type and level badges,
+app links (*Interactive lab*, *3D structure*, *Locate in 3D* for structures drawn in the atlas),
+the type-specific facts, and collapsible sections for the explanation, examples, conditions and
+limitations, common mistakes, related entries (marked when they are in another subject) and
+sources. Printing opens every section and prints source URLs.
+
+**Sources.** `src/reference/sources.ts` extends the app's source registry. A page is added only
+after it has been fetched and read; the text is written for the app and paraphrases the source.
+
 
 ### Global search
 

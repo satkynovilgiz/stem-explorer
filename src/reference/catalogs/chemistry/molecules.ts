@@ -1,0 +1,75 @@
+import type { ReferenceEntry } from '../../types'
+
+export const MOLECULES: ReferenceEntry[] = [
+  {
+    id: 'water',
+    type: 'substance',
+    subject: 'chemistry',
+    category: 'Substances and molecules',
+    topic: 'Molecular geometry',
+    title: 'Water',
+    summary: 'H₂O: a bent molecule whose polarity explains much of its behaviour as a liquid and a solvent.',
+    aliases: ['H2O', 'dihydrogen monoxide'],
+    tags: ['polar molecule', 'VSEPR', 'hydrogen bonding', 'solvent'],
+    level: 'introductory',
+    prerequisites: ['electron-pair-geometry'],
+    formula: '\\mathrm{H_2O}',
+    composition: 'Two hydrogen atoms and one oxygen atom; molar mass about 18.02 g/mol.',
+    bonding: 'Two polar O–H covalent bonds; oxygen also carries two lone pairs.',
+    geometry: 'Four electron pairs around oxygen give a tetrahedral electron-pair geometry; with two of them lone pairs, the molecular structure is bent, with an H–O–H angle of 104.5°.',
+    properties: [
+      { name: 'H–O–H bond angle', value: '104.5°', conditions: 'isolated molecule' },
+      { name: 'Polarity', value: 'polar: the bond dipoles do not cancel in the bent shape' },
+    ],
+    relevance: 'Water is the solvent of living cells and of most laboratory solutions. Its polarity lets it dissolve ionic and polar substances.',
+    explanation: [
+      'Valence-shell electron-pair repulsion (VSEPR) predicts the shape: oxygen’s four electron pairs spread toward the corners of a tetrahedron. Lone pairs repel more strongly than bonding pairs, so the angle between the bonds closes from 109.5° to 104.5°.',
+      'Because the molecule is bent, the two O–H bond dipoles add to a net dipole pointing from the hydrogens toward the oxygen. A linear molecule with the same bonds, like CO₂ with C=O bonds, can be non-polar overall.',
+    ],
+    conditions: ['The 104.5° angle is for a single molecule; in liquid water and ice the molecules interact and the geometry fluctuates.'],
+    examples: [
+      {
+        problem: 'Predict whether H₂O or CO₂ has a net dipole moment.',
+        steps: ['H₂O: four electron pairs on O, two lone pairs → bent; the bond dipoles do not cancel.', 'CO₂: two double bonds and no lone pairs on C → linear; the opposite C=O dipoles cancel.'],
+        answer: 'Water is polar; carbon dioxide has no net dipole.',
+      },
+    ],
+    related: [{ id: 'electron-pair-geometry', why: 'Water is the standard example of a tetrahedral electron-pair geometry with a bent molecular structure.' }],
+    sources: [{ id: 'chem-7-6', locator: '§7.6 Example 7.13 (water: tetrahedral electron pairs, bent, 104.5°); molecular polarity' }],
+    moleculeId: 'water',
+    links: [{ label: 'Water in the molecule viewer', href: '?molecule=water#/chemistry', kind: '3d' }],
+    modelLimitations: ['The 3D viewer uses fixed illustrative coordinates; real molecules vibrate.'],
+  },
+  {
+    id: 'electron-pair-geometry',
+    type: 'concept',
+    subject: 'chemistry',
+    category: 'Bonding and molecular geometry',
+    title: 'Electron-pair geometry and molecular structure (VSEPR)',
+    summary: 'Electron pairs around a central atom spread as far apart as possible; the shape named after the atoms alone is the molecular structure.',
+    aliases: ['VSEPR theory', 'electron-domain geometry'],
+    tags: ['VSEPR', 'lone pair', 'molecular shape', 'bond angle'],
+    level: 'introductory',
+    where: 'Molecules and polyatomic ions with a central atom.',
+    explanation: [
+      'Count the regions of electron density around the central atom: each bond (single, double or triple) counts as one region, and each lone pair counts as one. Two regions are linear, three trigonal planar, four tetrahedral, five trigonal bipyramidal and six octahedral. That arrangement is the electron-pair geometry.',
+      'The molecular structure describes only where the atoms are. When some regions are lone pairs, the molecular structure differs from the electron-pair geometry: four regions with one lone pair is trigonal pyramidal (NH₃); with two it is bent (H₂O).',
+    ],
+    terms: [
+      { term: 'Lone pair', meaning: 'a pair of valence electrons not shared in a bond' },
+      { term: 'Bond angle', meaning: 'the angle between two bonds at the atom they share' },
+    ],
+    conditions: ['VSEPR is a qualitative model: it predicts shapes and the direction of angle changes, not exact bond angles.', 'It applies best to main-group central atoms.'],
+    examples: [
+      {
+        problem: 'Predict the electron-pair geometry and molecular structure of NH₃.',
+        steps: ['N has three bonds and one lone pair: four regions.', 'Four regions → tetrahedral electron-pair geometry; one is a lone pair.'],
+        answer: 'Tetrahedral electron-pair geometry; trigonal pyramidal molecular structure.',
+      },
+    ],
+    mistakes: ['Naming the shape from the electron pairs. Water’s electron pairs are tetrahedral, but the molecule is bent.'],
+    related: [{ id: 'water', why: 'Water applies the model: four regions, two lone pairs, bent.' }],
+    sources: [{ id: 'chem-7-6', locator: '§7.6 VSEPR theory; electron-pair geometry versus molecular structure' }],
+    links: [{ label: 'Bonding and geometry', href: '?csec=bonding#/chemistry', kind: 'lab' }],
+  },
+]

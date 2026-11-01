@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { BookA, House, ListOrdered, NotebookPen, Presentation, Search } from 'lucide-react'
+import { BookA, House, Library, ListOrdered, NotebookPen, Presentation, Search } from 'lucide-react'
 import { SUBJECTS } from '../data/subjects'
 import type { Route } from '../lib/hooks'
 import { SubjectIcon } from './SubjectIcon'
@@ -58,6 +58,16 @@ export function TopNav({ active, onPresent }: { active: Route; onPresent?: () =>
               </a>
             </li>
           ))}
+          <li>
+            <a
+              href="#/reference"
+              className={`subject-link${active === 'reference' ? ' is-active' : ''}`}
+              aria-current={active === 'reference' ? 'page' : undefined}
+            >
+              <Library size={16} aria-hidden="true" />
+              <span>Reference</span>
+            </a>
+          </li>
           <li>
             <a
               href="#/glossary"

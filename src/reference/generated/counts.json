@@ -1,0 +1,25 @@
+{
+  "anatomy": {
+    "total": 2,
+    "structure": 2
+  },
+  "chemistry": {
+    "total": 2,
+    "substance": 1,
+    "concept": 1
+  },
+  "physics": {
+    "total": 1,
+    "formula": 1
+  },
+  "mathematics": {
+    "total": 1,
+    "formula": 1
+  },
+  "biology": {
+    "total": 3,
+    "process": 1,
+    "formula": 1,
+    "worked-example": 1
+  }
+}
