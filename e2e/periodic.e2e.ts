@@ -17,7 +17,7 @@ test('shows all 118 elements and selects one into the element panel', async ({ p
   await expect(page.locator('.element-facts')).toContainText('Period4')
   await expect(page.locator('.element-facts')).toContainText('Group8')
   await expect(page.locator('.element-facts')).toContainText('d block')
-  await expect(page.locator('.info')).toContainText('None of this app’s 12 molecules contain iron.')
+  await expect(page.locator('.info')).toContainText('None of this app’s 27 molecules contain iron.')
   // The lanthanoids have no group number in this layout, and say so.
   await page.getByRole('button', { name: 'Cerium, Ce, atomic number 58' }).click()
   await expect(page.locator('.element-facts')).toContainText('Lanthanoid row (no group number in this layout)')

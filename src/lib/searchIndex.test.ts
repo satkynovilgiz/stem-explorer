@@ -12,7 +12,7 @@ describe('search index', () => {
   it('covers all subjects and the content of every explorer', () => {
     const count = (prefix: string) => SEARCH_INDEX.filter((i) => i.id.startsWith(prefix)).length
     expect(count('subject:')).toBe(5)
-    expect(count('molecule:')).toBe(12)
+    expect(count('molecule:')).toBe(27)
     expect(count('organelle:')).toBe(23) // 10 animal-model structures + 4 plant-only + 9 bacterial
     expect(count('heart:')).toBe(14)
     expect(count('surface:')).toBe(4)
@@ -61,7 +61,8 @@ describe('searchAll', () => {
   })
 
   it('filters by subject and kind, and reproductive structures open their own configuration', () => {
-    expect(new Set(searchAll('energy').map((r) => r.subject))).toEqual(new Set(['biology', 'physics']))
+    // Glucose (“the sugar cells burn for energy”) brings Chemistry in.
+    expect(new Set(searchAll('energy').map((r) => r.subject))).toEqual(new Set(['biology', 'physics', 'chemistry']))
     expect(searchAll('energy', { subject: 'physics' }).every((r) => r.subject === 'physics')).toBe(true)
     expect(searchAll('oxygen', { subject: 'chemistry' }).every((r) => r.subject === 'chemistry')).toBe(true)
     expect(searchAll('oxygen', { kind: 'element' }).map((r) => r.name)).toEqual(['Oxygen'])
@@ -72,7 +73,7 @@ describe('searchAll', () => {
   })
 
   it('groups by subject in app order, then by kind', () => {
-    expect(groupResults(searchAll('energy')).map((g) => g.subject)).toEqual(['physics', 'biology'])
+    expect(groupResults(searchAll('energy')).map((g) => g.subject)).toEqual(['chemistry', 'physics', 'biology'])
     const chem = groupResults(searchAll('carbon')).find((g) => g.subject === 'chemistry')!
     expect(chem.kinds.map((k) => k.kind)).toEqual(expect.arrayContaining(['element', 'molecule']))
   })

@@ -25,7 +25,7 @@ test('Chemistry ignores Biology parameters and falls back on invalid values', as
   expect(params.get('structure')).toBe('golgi')
 })
 
-test('selects all twelve molecules', async ({ page }) => {
+test('selects each of the twelve measured molecules', async ({ page }) => {
   await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
   const atoms: Record<string, number> = {
@@ -127,4 +127,27 @@ test('chemistry sections: atomic structure, bonding, and backward-compatible lin
   // A link made before sections existed still opens the molecule.
   await page.goto('/?molecule=ammonia&view=space-filling#/chemistry')
   await expect(page.locator('#molecule-heading')).toHaveText('Ammonia')
+})
+
+test('the computed molecules open, say they are computed, and can be measured', async ({ page }) => {
+  await page.goto('/?csec=library#/chemistry')
+  await expect(page.getByRole('heading', { level: 2, name: 'Measured structures (12)' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'Everyday and biological molecules (15)' })).toBeVisible()
+  await page.locator('.chem-molecule-card', { hasText: 'Caffeine' }).click()
+  await waitForViewport(page)
+  await expect(page.locator('#molecule-heading')).toHaveText('Caffeine')
+  await expect(page.locator('.data-table tfoot td')).toHaveText('24')
+  await expect(page.locator('.info-kind')).toHaveText('Computed structure (PubChem)')
+  await page.getByRole('tab', { name: 'Structure' }).click()
+  await expect(page.locator('.info')).toContainText('No measured bond lengths or angles are quoted')
+  // The distance tool measures the computed model: a C=O bond near 1.22 Å.
+  await page.getByRole('button', { name: 'Distance', exact: true }).click()
+  await chip(page, 'C3').click()
+  await chip(page, 'O1').click()
+  await expect(result(page)).toContainText(/1\.2\d+ Å/)
+  // Every new molecule is a valid link that opens its own heading.
+  for (const [id, name] of [['glucose', 'Glucose'], ['aspirin', 'Aspirin'], ['ascorbic-acid', 'Vitamin C (ascorbic acid)'], ['hydrogen-cyanide', 'Hydrogen cyanide']]) {
+    await page.goto(`/?molecule=${id}#/chemistry`)
+    await expect(page.locator('#molecule-heading')).toHaveText(name)
+  }
 })

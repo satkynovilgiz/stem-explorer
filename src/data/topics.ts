@@ -195,7 +195,7 @@ export const MODULES: readonly TopicModule[] = [
     id: 'chemistry.molecules',
     subject: 'chemistry',
     name: 'Molecules',
-    summary: `${MOLECULES.length} 3D molecules from experimental geometry, with distance and angle tools`,
+    summary: `${MOLECULES.length} 3D molecules from measured or computed geometry, with distance and angle tools`,
     href: linkTo('chemistry', { molecule: 'water', view: 'ball-and-stick' }),
     topics: [molecule('water'), molecule('methane'), molecule('benzene'), molecule('carbon-dioxide')],
     matches: (s) => parseChemistrySection(s).section === 'molecules',

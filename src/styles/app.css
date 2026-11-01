@@ -9044,3 +9044,4 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 /* The hero atom may hang past the edge on narrow screens; it is clipped, never scrolled to. */
 .home--design { overflow-x: clip; }
 @media print { .home.has-motion [data-reveal] { opacity: 1 !important; translate: none !important; } }
+.info-kind { margin: 4px 0 0; font-size: var(--text-xs); }

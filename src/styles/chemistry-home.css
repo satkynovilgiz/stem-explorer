@@ -200,3 +200,6 @@
 .chem-home.is-overview .chem-home-art { max-width: 30%; opacity: 0.55; }
 .chem-home.is-overview .chem-home-title-wrap { max-width: 72%; }
 @media (max-width: 640px) { .chem-home.is-overview .chem-home-art { display: none; } .chem-home.is-overview .chem-home-title-wrap { max-width: none; } }
+/* Molecules page: measured and computed groups; computed cards say so. */
+.chem-section-note { margin: calc(-1 * var(--space-2)) 0 var(--space-3); color: var(--color-text-muted); font-size: 0.9375rem; max-width: var(--measure-text); }
+.chem-molecule-kind { justify-self: start; margin-top: 4px; padding: 1px 8px; border-radius: 999px; background: var(--color-surface-hover); color: var(--color-text-muted); font-size: 0.75rem; font-weight: 600; }

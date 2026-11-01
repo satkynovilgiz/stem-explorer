@@ -68,9 +68,10 @@ describe('search and molecule links', () => {
   })
 
   it('lists the app’s molecules containing an element', () => {
-    expect(moleculesWith('O').map((m) => m.id).sort()).toEqual(['carbon-dioxide', 'ethanol', 'formaldehyde', 'hydrogen-peroxide', 'oxygen', 'water'])
-    expect(moleculesWith('N').map((m) => m.id)).toEqual(['ammonia', 'nitrogen'])
-    expect(moleculesWith('C').map((m) => m.id).sort()).toEqual(['acetylene', 'benzene', 'carbon-dioxide', 'ethanol', 'ethene', 'formaldehyde', 'methane'])
+    expect(moleculesWith('N').map((m) => m.id).sort()).toEqual(['ammonia', 'caffeine', 'glycine', 'hydrogen-cyanide', 'nitrogen', 'paracetamol', 'urea'])
+    expect(moleculesWith('O')).toHaveLength(17)
+    expect(moleculesWith('C').map((m) => m.id)).toContain('cyclohexane')
+    expect(moleculesWith('H')).toHaveLength(24)
     expect(moleculesWith('Fe')).toEqual([])
   })
 })

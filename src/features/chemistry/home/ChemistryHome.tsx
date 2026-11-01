@@ -86,7 +86,7 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
 
   const heading =
     page === 'library'
-      ? { title: 'Molecules', lead: 'Real molecules in 3D, from experimental structures. Search by name, formula or shape.', placeholder: 'Search molecules by name or formula (e.g. H2O, ethanol)' }
+      ? { title: 'Molecules', lead: `${MOLECULES.length} molecules in 3D, from small gases to caffeine, aspirin and glucose. Search by name, formula or shape.`, placeholder: 'Search molecules by name or formula (e.g. H2O, caffeine)' }
       : page === 'contents'
         ? { title: 'Topics', lead: 'Every chemistry topic, by chapter. Each one explains the idea, shows a worked example and links to a tool or model.', placeholder: 'Search topics, formulas, molecules…' }
         : { title: 'Explore the world of chemistry.', lead: 'Discover elements, understand molecules, and visualize the structures and reactions that shape our world.', placeholder: 'Search chemistry topics, formulas, molecules…' }
@@ -147,7 +147,7 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
       </form>
 
       {page === 'library' ? (
-        <MoleculeGrid list={molecules} q={q} onClear={() => set({ q: '' })} />
+        <MoleculeSections list={molecules} q={q} onClear={() => set({ q: '' })} />
       ) : q ? (
         <section className="chem-results" aria-labelledby={`${id}-res`}>
           <h2 id={`${id}-res`} className="chem-h2">
@@ -216,7 +216,7 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
 
 const EXPLORE: { title: string; text: string; href: string; icon: ReactNode }[] = [
   { title: 'Elements', text: 'All 118 elements in the periodic table, with atomic structure.', href: '?csec=periodic#/chemistry', icon: <Grid3x3 size={22} aria-hidden="true" /> },
-  { title: 'Molecules', text: '12 molecules in 3D: measure bond lengths and angles.', href: '?csec=library#/chemistry', icon: <Hexagon size={22} aria-hidden="true" /> },
+  { title: 'Molecules', text: `${MOLECULES.length} molecules in 3D: measure bond lengths and angles.`, href: '?csec=library#/chemistry', icon: <Hexagon size={22} aria-hidden="true" /> },
   { title: 'Topics', text: 'Short explanations with worked examples, by chapter.', href: '?csec=contents#/chemistry', icon: <BookOpen size={22} aria-hidden="true" /> },
   { title: 'Visualizations', text: 'Interactive models of atoms, bonds, molecules and gases.', href: '?csec=visual#/chemistry', icon: <Box size={22} aria-hidden="true" /> },
 ]
@@ -406,6 +406,35 @@ function Contents({ items }: { items: readonly ChemItem[] }) {
 
 /* ---------- Molecules ---------- */
 
+/** The Molecules page: measured structures first, then PubChem's computed ones, each explained. */
+function MoleculeSections({ list, q, onClear }: { list: typeof MOLECULES; q: string; onClear: () => void }) {
+  if (!list.length) return <MoleculeGrid list={list} q={q} onClear={onClear} />
+  const measured = list.filter((m) => m.coordinates.kind === 'experimental')
+  const computed = list.filter((m) => m.coordinates.kind === 'computed')
+  return (
+    <>
+      {measured.length > 0 && (
+        <section className="chem-section" aria-labelledby="mol-measured">
+          <h2 id="mol-measured" className="chem-h2">
+            Measured structures ({measured.length})
+          </h2>
+          <p className="chem-section-note">Atom positions from experiment (NIST CCCBDB), with the reported bond lengths and angles.</p>
+          <MoleculeGrid list={measured} q={q} onClear={onClear} />
+        </section>
+      )}
+      {computed.length > 0 && (
+        <section className="chem-section" aria-labelledby="mol-computed">
+          <h2 id="mol-computed" className="chem-h2">
+            Everyday and biological molecules ({computed.length})
+          </h2>
+          <p className="chem-section-note">Computed 3D shapes from PubChem (a force-field model, not a measurement). Measure them with the Distance and Angle tools.</p>
+          <MoleculeGrid list={computed} q={q} onClear={onClear} />
+        </section>
+      )}
+    </>
+  )
+}
+
 function MoleculeGrid({ list, q, onClear }: { list: typeof MOLECULES; q: string; onClear: () => void }) {
   if (!list.length)
     return (
@@ -413,7 +442,7 @@ function MoleculeGrid({ list, q, onClear }: { list: typeof MOLECULES; q: string;
         <p>
           <strong>No molecule matches “{q}”.</strong>
         </p>
-        <p>The library has 12 molecules. Try a name (“ethanol”), a formula (“CO2”) or a shape (“bent”).</p>
+        <p>The library has {MOLECULES.length} molecules. Try a name (“caffeine”), a formula (“CO2”) or a shape (“bent”).</p>
         <div className="chem-empty-actions">
           <button type="button" className="chem-button" onClick={onClear}>
             Show all molecules
@@ -431,6 +460,7 @@ function MoleculeGrid({ list, q, onClear }: { list: typeof MOLECULES; q: string;
             </span>
             <span className="chem-molecule-name">{m.name.replace(/\s*\(.*\)$/, '')}</span>
             <span className="chem-molecule-shape">{m.shapeSummary}</span>
+            {m.coordinates.kind === 'computed' && <span className="chem-molecule-kind">Computed</span>}
           </AppLink>
         </li>
       ))}

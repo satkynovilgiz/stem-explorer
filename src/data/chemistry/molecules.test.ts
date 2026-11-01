@@ -11,7 +11,7 @@ const pos = (moleculeId: string, atomId: string) => {
 }
 
 describe('molecule data integrity', () => {
-  it('contains the twelve expected molecules with unique IDs', () => {
+  it('contains the expected molecules (12 experimental, then 15 computed) with unique IDs', () => {
     expect(MOLECULES.map((m) => m.id)).toEqual([
       'water',
       'carbon-dioxide',
@@ -25,7 +25,46 @@ describe('molecule data integrity', () => {
       'formaldehyde',
       'acetylene',
       'ethene',
+      'glucose',
+      'caffeine',
+      'aspirin',
+      'paracetamol',
+      'ascorbic-acid',
+      'acetic-acid',
+      'formic-acid',
+      'acetone',
+      'methanol',
+      'urea',
+      'glycine',
+      'ethane',
+      'propane',
+      'cyclohexane',
+      'hydrogen-cyanide',
     ])
+    expect(MOLECULES.filter((m) => m.coordinates.kind === 'experimental')).toHaveLength(12)
+  })
+
+  it('labels every computed molecule as computed, cites PubChem’s 3D conformer and quotes no “reported” values', () => {
+    const computed = MOLECULES.filter((m) => m.coordinates.kind === 'computed')
+    expect(computed).toHaveLength(15)
+    for (const m of computed) {
+      expect(m.parameters).toEqual([])
+      expect(m.sources[0].url).toMatch(/^https:\/\/pubchem\.ncbi\.nlm\.nih\.gov\/compound\/\d+#section=3D-Conformer$/)
+      expect(m.limitations.join(' ')).toMatch(/computed low-energy shape/)
+      // Every shape statement names an atom that exists.
+      for (const c of m.centers) expect(m.atoms.some((a) => a.id === c.atomId), `${m.id} ${c.atomId}`).toBe(true)
+    }
+  })
+
+  it('draws the benzene rings of aspirin and paracetamol as aromatic, and cyclohexane as a puckered ring', () => {
+    for (const id of ['aspirin', 'paracetamol']) expect(getMolecule(id).bonds.filter((b) => b.order === 'aromatic')).toHaveLength(6)
+    expect(getMolecule('caffeine').bonds.some((b) => b.order === 'aromatic')).toBe(false)
+    // A chair: the C–C–C angles are near tetrahedral, not the 120° of a flat hexagon.
+    const ang = angleAt(pos('cyclohexane', 'C2'), pos('cyclohexane', 'C1'), pos('cyclohexane', 'C3'))!
+    expect(ang).toBeGreaterThan(108)
+    expect(ang).toBeLessThan(114)
+    // Hydrogen cyanide is linear.
+    expect(angleAt(pos('hydrogen-cyanide', 'H1'), pos('hydrogen-cyanide', 'C1'), pos('hydrogen-cyanide', 'N1'))).toBeCloseTo(180, 0)
   })
 
   describe.each(MOLECULES.map((m) => [m.name, m] as const))('%s', (_, molecule) => {

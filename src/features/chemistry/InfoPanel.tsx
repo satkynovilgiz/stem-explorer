@@ -36,6 +36,11 @@ export function InfoPanel({ molecule, representation, mode, inspectedAtomId, onP
           {molecule.name}
         </h2>
         <Formula formula={molecule.formula} className="info-formula" />
+        <p className="info-kind">
+          <span className={`kind-tag kind-${molecule.coordinates.kind}`}>
+            {molecule.coordinates.kind === 'computed' ? 'Computed structure (PubChem)' : 'Measured structure (NIST CCCBDB)'}
+          </span>
+        </p>
         <p className="info-summary">{molecule.summary}</p>
         <ShareActions subject="chemistry" params={{ molecule: molecule.id, view: representation }} restores="this molecule and display mode" />
       </header>
@@ -149,35 +154,44 @@ function Structure({ molecule, representation }: { molecule: Molecule; represent
     <div className="info-body">
       <div className="info-section">
         <h3 className="section-title">Reported geometry</h3>
-        <table className="data-table">
-          <caption className="visually-hidden">Bond lengths and angles reported by the source</caption>
-          <thead>
-            <tr>
-              <th scope="col">Parameter</th>
-              <th scope="col" className="num">
-                Value
-              </th>
-              <th scope="col" className="num">
-                Type
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {molecule.parameters.map((p) => (
-              <tr key={p.label}>
-                <td>{p.label}</td>
-                <td className="num">{p.unit === '°' ? `${p.value}°` : `${p.value} ${p.unit}`}</td>
-                <td className="num">
-                  <span className={`kind-tag kind-${p.kind}`}>{KIND_LABEL[p.kind]}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="muted small table-note">
-          Values as reported by the source. Use the Distance and Angle tools to measure any pair or triple of atoms
-          in the model.
-        </p>
+        {molecule.parameters.length === 0 ? (
+          <p className="muted small table-note">
+            No measured bond lengths or angles are quoted for this molecule: its positions are PubChem’s computed
+            model. Use the Distance and Angle tools to measure any pair or triple of atoms in the model.
+          </p>
+        ) : (
+          <>
+            <table className="data-table">
+              <caption className="visually-hidden">Bond lengths and angles reported by the source</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Parameter</th>
+                  <th scope="col" className="num">
+                    Value
+                  </th>
+                  <th scope="col" className="num">
+                    Type
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {molecule.parameters.map((p) => (
+                  <tr key={p.label}>
+                    <td>{p.label}</td>
+                    <td className="num">{p.unit === '°' ? `${p.value}°` : `${p.value} ${p.unit}`}</td>
+                    <td className="num">
+                      <span className={`kind-tag kind-${p.kind}`}>{KIND_LABEL[p.kind]}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="muted small table-note">
+              Values as reported by the source. Use the Distance and Angle tools to measure any pair or triple of atoms
+              in the model.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="info-section">

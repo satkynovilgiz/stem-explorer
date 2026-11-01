@@ -70,7 +70,10 @@ export function MoleculeLibrary({ molecules, activeId, query, onQueryChange, onS
                   <Formula formula={m.formula} className="molecule-card-formula" />
                   <span className="molecule-card-text">
                     <span className="molecule-card-name">{m.name}</span>
-                    <span className="molecule-card-shape">{m.shapeSummary}</span>
+                    <span className="molecule-card-shape">
+                      {m.shapeSummary}
+                      {m.coordinates.kind === 'computed' && ' · computed'}
+                    </span>
                   </span>
                 </button>
               </li>
@@ -81,13 +84,12 @@ export function MoleculeLibrary({ molecules, activeId, query, onQueryChange, onS
         <div className="empty-state">
           <p>No molecules match “{query.trim()}”.</p>
           <p className="muted">
-            Search by name (benzene) or formula (NH3, C₂H₆O). Available: water, carbon dioxide, methane,
-            ammonia, ethanol and benzene.
+            Search by name (benzene, caffeine) or formula (NH3, C₂H₆O).
           </p>
         </div>
       )}
 
-      <p className="library-footnote muted">More molecules are planned for future releases.</p>
+      <p className="library-footnote muted">Measured molecules come first; “computed” ones use PubChem’s calculated 3D shape.</p>
     </section>
   )
 }

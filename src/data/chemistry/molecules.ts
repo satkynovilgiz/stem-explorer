@@ -1,3 +1,4 @@
+import { computedMolecules } from './moleculesComputed'
 import type { Atom, Molecule, Source, Vec3 } from './types'
 
 /*
@@ -564,6 +565,8 @@ export const MOLECULES: readonly Molecule[] = [
     ]),
     sources: [cccbdb('74851', 'C₂H₄'), pubchem(6325, 'Ethene'), BONDI, JMOL_COLORS],
   },
+  // Larger and everyday molecules: PubChem's computed 3D conformers, labelled "Computed".
+  ...computedMolecules({ sources: [BONDI, JMOL_COLORS], limitations: SHARED_LIMITATIONS.slice(0, 2) }),
 ]
 
 export const DEFAULT_MOLECULE_ID = MOLECULES[0].id

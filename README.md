@@ -731,6 +731,30 @@ checks do not show that the explanations are easy to understand: that needs test
 | Formaldehyde | CH₂O | Trigonal planar around C; C=O double bond; H–C–H 116.1° |
 | Acetylene | C₂H₂ | Linear; C≡C triple bond |
 | Ethene | C₂H₄ | Planar; trigonal planar around each C; C=C double bond |
+| Glucose | C₆H₁₂O₆ | Six-membered ring (chair); tetrahedral ring carbons (**computed**) |
+| Caffeine | C₈H₁₀N₄O₂ | Flat fused rings; three methyl groups (**computed**) |
+| Aspirin | C₉H₈O₄ | Aromatic ring with acid and ester groups (**computed**) |
+| Paracetamol | C₈H₉NO₂ | Aromatic ring; nearly planar amide (**computed**) |
+| Vitamin C (ascorbic acid) | C₆H₈O₆ | Nearly flat five-membered ring with a side chain (**computed**) |
+| Acetic acid | C₂H₄O₂ | Trigonal planar at the carboxyl carbon (**computed**) |
+| Formic acid | CH₂O₂ | Planar (**computed**) |
+| Acetone | C₃H₆O | Trigonal planar at the C=O carbon (**computed**) |
+| Methanol | CH₄O | Tetrahedral C, bent at O (**computed**) |
+| Urea | CH₄N₂O | Trigonal planar at C; nearly flat NH₂ groups (**computed**) |
+| Glycine | C₂H₅NO₂ | Tetrahedral α-carbon; neutral form (zwitterion in water noted) (**computed**) |
+| Ethane | C₂H₆ | Tetrahedral carbons, staggered (**computed**) |
+| Propane | C₃H₈ | Bent chain of tetrahedral carbons (**computed**) |
+| Cyclohexane | C₆H₁₂ | Chair-shaped ring (**computed**) |
+| Hydrogen cyanide | HCN | Linear; C≡N triple bond (**computed**) |
+
+The fifteen molecules after Ethene (added 2026-11-01) use **PubChem's computed 3D conformers**
+(PubChem3D: OpenEye OMEGA with the MMFF94s force field), generated into
+`src/data/chemistry/moleculesComputed.data.ts`; their descriptions are in `moleculesComputed.ts`.
+They are labelled *Computed* in the viewer, quote no “reported” bond lengths or angles (students
+measure the model with the Distance and Angle tools), and say that the model is one conformer of a
+possibly flexible molecule. Benzene rings in aspirin and paracetamol are drawn as aromatic, like
+benzene; other bonds and orders are PubChem's. Unit tests check formulas, connectivity, bond
+lengths (0.9–1.6 Å), the aromatic rings, cyclohexane's chair angle and HCN's linearity.
 
 The six molecules added in this release use CCCBDB experimental coordinates exactly as listed
 (fetched for this release), with PubChem CIDs 977, 947, 784, 712, 6326 and 6325 checked for
@@ -2484,6 +2508,21 @@ How the URL is kept up to date:
 | Ammonia | [CCCBDB NH₃](https://cccbdb.nist.gov/expgeom2x.asp?casno=7664417) — N–H 1.012 Å, H–N–H 106.67° (Herzberg, 1966) | [PubChem CID 222](https://pubchem.ncbi.nlm.nih.gov/compound/222) |
 | Ethanol | [CCCBDB ethanol](https://cccbdb.nist.gov/expgeom2x.asp?casno=64175) — C–C 1.512, C–O 1.431, O–H 0.971 Å; C–C–O 107.8°, C–O–H 105.4° ([Coussan et al., J. Phys. Chem. A 1998, 102, 5789](https://doi.org/10.1021/jp9805961)) | [PubChem CID 702](https://pubchem.ncbi.nlm.nih.gov/compound/702) |
 | Benzene | [CCCBDB C₆H₆](https://cccbdb.nist.gov/expgeom2x.asp?casno=71432) — C:C aromatic 1.397 Å, C–H 1.084 Å, 120° (Herzberg, 1966) | [PubChem CID 241](https://pubchem.ncbi.nlm.nih.gov/compound/241) |
+| Glucose | [PubChem 3D conformer, CID 5793](https://pubchem.ncbi.nlm.nih.gov/compound/5793#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 5793](https://pubchem.ncbi.nlm.nih.gov/compound/5793) |
+| Caffeine | [PubChem 3D conformer, CID 2519](https://pubchem.ncbi.nlm.nih.gov/compound/2519#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 2519](https://pubchem.ncbi.nlm.nih.gov/compound/2519) |
+| Aspirin | [PubChem 3D conformer, CID 2244](https://pubchem.ncbi.nlm.nih.gov/compound/2244#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 2244](https://pubchem.ncbi.nlm.nih.gov/compound/2244) |
+| Paracetamol | [PubChem 3D conformer, CID 1983](https://pubchem.ncbi.nlm.nih.gov/compound/1983#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 1983](https://pubchem.ncbi.nlm.nih.gov/compound/1983) |
+| Vitamin C (ascorbic acid) | [PubChem 3D conformer, CID 54670067](https://pubchem.ncbi.nlm.nih.gov/compound/54670067#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 54670067](https://pubchem.ncbi.nlm.nih.gov/compound/54670067) |
+| Acetic acid | [PubChem 3D conformer, CID 176](https://pubchem.ncbi.nlm.nih.gov/compound/176#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 176](https://pubchem.ncbi.nlm.nih.gov/compound/176) |
+| Formic acid | [PubChem 3D conformer, CID 284](https://pubchem.ncbi.nlm.nih.gov/compound/284#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 284](https://pubchem.ncbi.nlm.nih.gov/compound/284) |
+| Acetone | [PubChem 3D conformer, CID 180](https://pubchem.ncbi.nlm.nih.gov/compound/180#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 180](https://pubchem.ncbi.nlm.nih.gov/compound/180) |
+| Methanol | [PubChem 3D conformer, CID 887](https://pubchem.ncbi.nlm.nih.gov/compound/887#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 887](https://pubchem.ncbi.nlm.nih.gov/compound/887) |
+| Urea | [PubChem 3D conformer, CID 1176](https://pubchem.ncbi.nlm.nih.gov/compound/1176#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 1176](https://pubchem.ncbi.nlm.nih.gov/compound/1176) |
+| Glycine | [PubChem 3D conformer, CID 750](https://pubchem.ncbi.nlm.nih.gov/compound/750#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 750](https://pubchem.ncbi.nlm.nih.gov/compound/750) |
+| Ethane | [PubChem 3D conformer, CID 6324](https://pubchem.ncbi.nlm.nih.gov/compound/6324#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 6324](https://pubchem.ncbi.nlm.nih.gov/compound/6324) |
+| Propane | [PubChem 3D conformer, CID 6334](https://pubchem.ncbi.nlm.nih.gov/compound/6334#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 6334](https://pubchem.ncbi.nlm.nih.gov/compound/6334) |
+| Cyclohexane | [PubChem 3D conformer, CID 8078](https://pubchem.ncbi.nlm.nih.gov/compound/8078#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 8078](https://pubchem.ncbi.nlm.nih.gov/compound/8078) |
+| Hydrogen cyanide | [PubChem 3D conformer, CID 768](https://pubchem.ncbi.nlm.nih.gov/compound/768#section=3D-Conformer) — computed (MMFF94s), no reported values | [PubChem CID 768](https://pubchem.ncbi.nlm.nih.gov/compound/768) |
 
 - Van der Waals radii (H 1.20, C 1.70, N 1.55, O 1.52 Å): A. Bondi, *van der Waals Volumes and Radii*,
   J. Phys. Chem. 1964, 68, 441–451. <https://doi.org/10.1021/j100785a001>
@@ -3201,7 +3240,7 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Relationship explorations | 3 |
 | Heart module structures | 14 |
 | Elements | 118 |
-| Molecules | 12 |
+| Molecules | 27 |
 | Curated reactions | 10 |
 | Isotopes in the library | 25 |
 | Cell structures (animal, plant, bacterial) | 23 |
@@ -3216,7 +3255,7 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Cross-subject relations | 14 |
 | Starter collections | 4 |
 | Registered sources | 145 |
-| Search index entries | 537 |
+| Search index entries | 552 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.

@@ -17,7 +17,7 @@ test('calculators show only their task: no molecule library, activity, layout or
 
 test('the molecule workspace keeps its library, activity and model controls', async ({ page }) => {
   await page.goto('/?molecule=water#/chemistry')
-  await expect(page.locator('.molecule-card')).toHaveCount(12)
+  await expect(page.locator('.molecule-card')).toHaveCount(27)
   await expect(page.locator('.activity-launch')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Present' })).toBeVisible()
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
