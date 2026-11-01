@@ -169,7 +169,7 @@ test.describe('URL state', () => {
     await expect(page.locator('#math-heading')).toContainText('Sinusoidal')
     // Switching goes through Home (there is no header), so Back passes Home first.
     await page.goBack()
-    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(heading(page)).toHaveText('Pulmonary veins')
@@ -178,7 +178,7 @@ test.describe('URL state', () => {
     await expect(page.locator('#atlas-heading')).toHaveText('Body atlas')
     // Switching goes through Home (there is no header), so Back passes Home first.
     await page.goBack()
-    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(page.locator('#structure-heading')).toHaveText('Golgi apparatus')

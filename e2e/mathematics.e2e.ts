@@ -202,13 +202,13 @@ test.describe('URL state', () => {
 
     // Switching goes through Home (there is no header), so Back passes Home first.
     await page.goBack()
-    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(substituted(page)).toHaveText('z = 1.50·sin(1.00·x)·cos(1.00·y)')
     // Switching goes through Home (there is no header), so Back passes Home first.
     await page.goBack()
-    await expect(page.getByRole('heading', { level: 1, name: /Explore science/ })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()
     await page.goBack()
     await waitForViewport(page)
     await expect(page.getByRole('textbox', { name: /^Launch angle/ })).toHaveValue('30')

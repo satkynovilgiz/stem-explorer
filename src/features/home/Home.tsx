@@ -1,5 +1,5 @@
-import { ArrowRight, BookA, Bookmark, BookOpen, Library, NotebookPen, Search, ChevronDown, Compass, ExternalLink, FlaskConical, HelpCircle, Link2, ListOrdered, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { ArrowRight, BookA, Bookmark, BookOpen, NotebookPen, Search, Compass, ExternalLink, FlaskConical, HelpCircle, Link2, ListOrdered, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SubjectIcon } from '../../components/SubjectIcon'
 import { CURATED_COLLECTIONS } from '../../data/collections'
@@ -12,10 +12,8 @@ import { SUBJECT_CARDS } from './content'
 import { HomeSearch } from './HomeSearch'
 import { RecentStrip } from './RecentStrip'
 import { SavedPanel } from './SavedPanel'
-import { HeroIllustration } from './HeroIllustration'
 import { InterestStarts } from './HomeSections'
 import { SubjectArt } from './SubjectArt'
-import { REFERENCE_COUNTS, REFERENCE_TOTAL } from '../../reference/counts'
 import { AtlasPreview, Connections, LibraryTeaser, SourcesNote } from './HomeShowcase'
 
 /** Home's order: Chemistry first (the subject being tested with students), then the others. */
@@ -94,14 +92,8 @@ function GuideSteps() {
 const CHEMISTRY_START = ACTIVITIES.find((a) => a.subject === 'chemistry')!
 const FIRST_PATH = CURATED_COLLECTIONS[0]
 
-/** Counts shown under the hero, all derived from the project's data (nothing about visitors). */
-const FACTS = [
-  { value: SUBJECTS.length, label: 'subjects' },
-  { value: SUBJECTS.reduce((n, s) => n + modulesOf(s.id).length, 0), label: 'interactive modules' },
-  ...(REFERENCE_TOTAL > 0 ? [{ value: REFERENCE_TOTAL, label: 'reference entries' }] : []),
-  { value: ACTIVITIES.length, label: 'guided activities' },
-  { value: CURATED_COLLECTIONS.length, label: 'starter paths' },
-]
+/** Chemistry's card opens the subject itself (its landing page from Stage 3 on). */
+const CHEMISTRY_HOME = '#/chemistry'
 
 /** First visit (no history and nothing saved): concrete starting points and how exploring works. */
 function WelcomePanel() {
@@ -233,15 +225,8 @@ function Investigations({ sectionRef }: { sectionRef: React.RefObject<HTMLElemen
 export function Home() {
   const library = useExplorationLibrary()
   const firstVisit = library.recent.length === 0 && library.saved.length === 0 && library.savedError === null
-  const [guideOpen, setGuideOpen] = useState(false)
   const [message, setMessage] = useState('')
-  const subjectsRef = useRef<HTMLElement>(null)
   const investigationsRef = useRef<HTMLElement>(null)
-  const guideRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    if (guideOpen) guideRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'nearest' })
-  }, [guideOpen])
 
   const jump = (el: HTMLElement | null) => {
     el?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
@@ -249,147 +234,101 @@ export function Home() {
   }
 
   return (
-    <div className={`home${message ? ' has-toast' : ''}`}>
+    <div className={`home home--design${message ? ' has-toast' : ''}`}>
       <section className="home-hero" aria-labelledby="home-title">
-        <div className="home-hero-text">
-          <p className="eyebrow">Interactive science models</p>
-          <h1 id="home-title" className="home-title">
-            Explore science.
-            <span className="home-title-sub">See how it works.</span>
-          </h1>
-          <p className="home-lead">
-            Interactive models and a sourced reference library for anatomy, chemistry, physics, mathematics and biology: change a
-            value or turn a model, and read why it behaves that way.
-          </p>
-          <div className="home-actions">
-            <button type="button" className="button home-cta" onClick={() => jump(investigationsRef.current)}>
-              Start exploring
-              <ArrowRight size={16} aria-hidden="true" />
-            </button>
-            <AppLink href="#/reference" className="tool-button bordered home-cta-secondary">
-              <Library size={15} aria-hidden="true" />
-              <span>Browse reference library</span>
-            </AppLink>
-            {!firstVisit && (
-              <button type="button" className="tool-button bordered" aria-expanded={guideOpen} aria-controls="home-guide" onClick={() => setGuideOpen((v) => !v)}>
-                <BookOpen size={15} aria-hidden="true" />
-                <span>How it works</span>
-                <ChevronDown size={14} aria-hidden="true" className={guideOpen ? 'is-flipped' : ''} />
-              </button>
-            )}
-          </div>
-          <ul className="home-facts" aria-label="What is here">
-            {FACTS.map((f) => (
-              <li key={f.label}>
-                <strong>{f.value}</strong> {f.label}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <HeroIllustration />
+        <p className="home-eyebrow">STEM Explorer</p>
+        <h1 id="home-title" className="home-title">
+          Science, made clearer.
+        </h1>
+        <p className="home-lead">Explore a model. Understand an idea. Try it yourself.</p>
+        <HomeSearch />
       </section>
 
-      <div className="home-search-band">
-        <HomeSearch />
-      </div>
-
-      <nav className="home-shortcuts" aria-label="Library and saved work">
-        <ul>
-          <li>
-            <a href="#/search" className="home-shortcut">
-              <Search size={18} aria-hidden="true" />
-              <span>Search all subjects</span>
-            </a>
-          </li>
-          <li>
-            <AppLink href="#/reference" className="home-shortcut">
-              <Library size={18} aria-hidden="true" />
-              <span>Reference library</span>
-            </AppLink>
-          </li>
-          <li>
-            <a href="#/glossary" className="home-shortcut">
-              <BookA size={18} aria-hidden="true" />
-              <span>Glossary</span>
-            </a>
-          </li>
-          <li>
-            <a href="#/home" className="home-shortcut" onClick={(e) => (e.preventDefault(), jump(document.getElementById('saved-section')))}>
-              <Bookmark size={18} aria-hidden="true" />
-              <span>Saved explorations</span>
-            </a>
-          </li>
-          <li>
-            <a href="#/collections" className="home-shortcut">
-              <ListOrdered size={18} aria-hidden="true" />
-              <span>Collections</span>
-            </a>
-          </li>
-          <li>
-            <a href="#/notebook" className="home-shortcut">
-              <NotebookPen size={18} aria-hidden="true" />
-              <span>Notebook</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      {guideOpen && !firstVisit && (
-        <section id="home-guide" ref={guideRef} className="home-panel home-guide" aria-labelledby="guide-heading">
-          <h2 id="guide-heading" className="home-h2">
-            How to explore
-          </h2>
-          <GuideSteps />
-        </section>
-      )}
-
-      {firstVisit ? <WelcomePanel /> : library.recent.length > 0 && <RecentStrip recent={library.recent} onMessage={setMessage} />}
-
-      <section ref={subjectsRef} className="home-section" aria-labelledby="subjects-heading" tabIndex={-1}>
+      <section className="home-section" aria-labelledby="subjects-heading">
         <h2 id="subjects-heading" className="home-h2">
-          Explore subjects
+          Choose a subject
         </h2>
-        <ul className="subject-cards">
-          {ORDER.map((id, i) => {
+        <ul className="subject-cards subject-tiles">
+          {ORDER.map((id) => {
             const card = SUBJECT_CARDS[id]
-            const modules = modulesOf(id)
+            const href = id === 'chemistry' ? CHEMISTRY_HOME : modulesOf(id)[0].href
             return (
-              <li key={id} className={`subject-card is-${id}`} style={{ '--i': i } as CSSProperties}>
-                <div className="subject-card-preview">
-                  <SubjectArt subject={id} />
-                </div>
-                <div className="subject-card-body">
-                  <p className="subject-card-name">
-                    <SubjectIcon subject={id} size={14} /> {subjectName(id)} · {modules.length} module{modules.length === 1 ? '' : 's'}
-                  </p>
-                  <h3 className="subject-card-title">{card.title}</h3>
-                  <p className="subject-card-text">{card.summary}</p>
-                  <ul className="subject-card-modules" aria-label={`${subjectName(id)} modules`}>
-                    {modules.map((m) => (
-                      <li key={m.id}>
-                        <AppLink href={m.href} className="subject-module">
-                          <span className="subject-module-name">{m.name}</span>
-                          <span className="visually-hidden subject-module-summary">: {m.summary}</span>
-                        </AppLink>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                {REFERENCE_COUNTS[id].total > 0 && (
-                  <AppLink className="subject-card-ref" href={`?rs=${id}#/reference`}>
-                    {REFERENCE_COUNTS[id].total} reference {REFERENCE_COUNTS[id].total === 1 ? 'entry' : 'entries'}
-                  </AppLink>
-                )}
-                <AppLink className="subject-card-action" href={modules[0].href}>
-                  Open {modules[0].name.replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase())}
-                  <ArrowRight size={16} aria-hidden="true" />
+              <li key={id} className={`subject-card is-${id}`}>
+                <AppLink className="subject-card-action" href={href}>
+                  <span className="subject-card-text">
+                    <span className="subject-card-title">{subjectName(id)}</span>
+                    <span className="subject-card-summary">{card.summary}</span>
+                    {id === 'chemistry' && (
+                      <span className="subject-card-button">
+                        Explore chemistry <ArrowRight size={16} aria-hidden="true" />
+                      </span>
+                    )}
+                  </span>
+                  <img className="subject-card-img" src={`${import.meta.env.BASE_URL}img/design/${id}-card.webp`} alt="" loading={id === 'chemistry' ? 'eager' : 'lazy'} />
                 </AppLink>
               </li>
             )
           })}
         </ul>
-        <p className="muted small">Card illustrations are simplified previews, not the scientific models.</p>
       </section>
+
+      <nav className="home-section study-space" aria-label="Library and saved work">
+        <h2 className="home-h2">Your study space</h2>
+        <ul className="study-main">
+          <li>
+            <a href="#/home" className="study-card" onClick={(e) => (e.preventDefault(), jump(document.getElementById('saved-section')))}>
+              <span className="study-icon">
+                <Bookmark size={20} aria-hidden="true" />
+              </span>
+              <span>
+                <span className="study-title">
+                  Saved explorations <ArrowRight size={15} aria-hidden="true" />
+                </span>
+                <span className="study-text">Pick up where you left off.</span>
+              </span>
+            </a>
+          </li>
+          <li>
+            <AppLink href="#/reference" className="study-card">
+              <span className="study-icon">
+                <BookOpen size={20} aria-hidden="true" />
+              </span>
+              <span>
+                <span className="study-title">
+                  Reference library <ArrowRight size={15} aria-hidden="true" />
+                </span>
+                <span className="study-text">Key concepts, formulas, and more.</span>
+              </span>
+            </AppLink>
+          </li>
+        </ul>
+        <ul className="study-more">
+          <li>
+            <a href="#/search">
+              <Search size={16} aria-hidden="true" /> Search all subjects
+            </a>
+          </li>
+          <li>
+            <a href="#/glossary">
+              <BookA size={16} aria-hidden="true" /> Glossary
+            </a>
+          </li>
+          <li>
+            <a href="#/collections">
+              <ListOrdered size={16} aria-hidden="true" /> Collections
+            </a>
+          </li>
+          <li>
+            <a href="#/notebook">
+              <NotebookPen size={16} aria-hidden="true" /> Notebook
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      {firstVisit ? <WelcomePanel /> : library.recent.length > 0 && <RecentStrip recent={library.recent} onMessage={setMessage} />}
+
+      <h2 className="home-more-heading">More to explore</h2>
 
       <AtlasPreview />
 

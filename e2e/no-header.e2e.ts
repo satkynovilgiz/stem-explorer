@@ -1,6 +1,6 @@
 import { expect, goHome, test } from './fixtures.ts'
 
-const homeTitle = (page: import('@playwright/test').Page) => page.getByRole('heading', { level: 1, name: /Explore science/ })
+const homeTitle = (page: import('@playwright/test').Page) => page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })
 
 test('no page has a global header; every former header destination is reachable from Home', async ({ page }) => {
   for (const path of ['/', '/#/chemistry', '/#/search', '/#/reference', '/#/glossary', '/#/notebook', '/#/collections', '/?bview=front#/anatomy']) {

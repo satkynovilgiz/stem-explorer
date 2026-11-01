@@ -1,11 +1,12 @@
 /** Colors used inside WebGL, mirroring the CSS tokens in styles/tokens.css. */
 export const SCENE = {
-  background: '#121518',
-  accent: '#2fc4c0',
+  /* Light and neutral, as in the design mockup, so the atom colours read clearly. */
+  background: '#eef1ec',
+  accent: '#0b5f5b',
   /** Measurement overlays and measured atoms (mirrors --color-measure). */
-  measure: '#f5c26b',
-  hover: '#1d4a49',
-  aromaticDash: '#c3ccd2',
+  measure: '#b07400',
+  hover: '#bfe0db',
+  aromaticDash: '#5b6663',
   bondRadius: 0.075,
   /** Gap between parallel sticks of a double/triple bond, in Å. */
   multiBondSpacing: 0.2,

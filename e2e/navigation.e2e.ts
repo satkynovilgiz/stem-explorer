@@ -5,20 +5,20 @@ const crumbs = (page: Page) => page.getByRole('navigation', { name: 'Breadcrumb'
 const current = (page: Page) => crumbs(page).locator('[aria-current="page"]')
 const params = (page: Page) => new URL(page.url()).searchParams
 
-test('Home lists real modules per subject and only questions whose destination exists', async ({ page }) => {
+test('modules are listed inside each subject; Home lists only questions whose destination exists', async ({ page }) => {
+  await page.goto('/?experiment=projectile#/physics')
+  // A subject's modules are in its own topic drawer (Home's cards keep to one sentence each).
+  await page.getByRole('button', { name: 'All physics topics' }).click()
+  const drawer = page.getByRole('dialog', { name: 'Physics topics' })
+  await expect(drawer.locator('.topic-module-name')).toHaveText([/Projectile motion/, /Spring–mass oscillator/, /DC circuits/, /Travelling waves/, /Geometric optics/, /Gas pressure and volume/])
+  await drawer.getByRole('link', { name: /^DC circuits/ }).click()
+  await expect(current(page)).toHaveText('DC circuits')
+  expect(params(page).get('experiment')).toBe('circuit')
   await page.goto('/')
-  const physics = page.locator('.subject-card.is-physics')
-  await expect(physics.getByRole('list', { name: 'Physics modules' }).getByRole('link')).toHaveText([/Projectile motion/, /Spring–mass oscillator/, /DC circuits/, /Travelling waves/, /Geometric optics/, /Gas pressure and volume/])
-  await expect(page.locator('.subject-card.is-chemistry')).toContainText('All 118 elements')
   const questions = page.getByRole('region', { name: 'Explore by question' }).getByRole('link')
   // All three curated questions now have implemented destinations (the optics lab shipped in Task 6).
   await expect(questions).toHaveCount(3)
   await expect(questions.filter({ hasText: 'How does a lens form an image?' })).toHaveAttribute('href', /experiment=optics&opt=lens/)
-  // A module link opens that module; the breadcrumb says where you are.
-  await physics.getByRole('link', { name: /DC circuits/ }).click()
-  await expect(current(page)).toHaveText('DC circuits')
-  expect(params(page).get('experiment')).toBe('circuit')
-  await page.goBack()
   await page.getByRole('link', { name: /How does breathing work\?/ }).click()
   await waitForViewport(page)
   await expect(page.locator('#atlas-structure-heading')).toHaveText('Diaphragm')

@@ -1,57 +1,67 @@
 :root {
-  color-scheme: dark;
+  /* Light, calm palette taken from the design mockup (public/img/STEM Explorer home and chemistry pages.png).
+     Every text colour meets WCAG AA (4.5:1) on both --color-surface and --color-bg. */
+  color-scheme: light;
 
-  /* Surfaces — graphite */
-  --color-bg: #0f1113;
-  --color-surface: #16191c;
-  --color-surface-raised: #1c2024;
-  --color-surface-hover: #22272c;
-  --color-viewport: #121518;
+  /* Surfaces: warm off-white page, white content */
+  --color-bg: #f7f6f1;
+  --color-surface: #ffffff;
+  --color-surface-raised: #fbfaf6;
+  --color-surface-hover: #f1f0e9;
+  /* 3D views stay light and neutral so atom colours read as in the mockup. */
+  --color-viewport: #eef1ec;
 
-  /* Borders */
-  --color-border: #2a3036;
-  --color-border-strong: #3a424a;
+  /* Borders: muted */
+  --color-border: #e4e1d8;
+  --color-border-strong: #c9c5b9;
 
-  /* Text (all ≥ 4.5:1 on --color-surface) */
-  --color-text: #e8ecef;
-  --color-text-muted: #a3adb5;
-  --color-text-subtle: #8a959e;
+  /* Text: dark slate; secondary text stays readable (8.1:1 and 6.0:1 on white) */
+  --color-text: #13201f;
+  --color-text-muted: #47524f;
+  --color-text-subtle: #5b6663;
 
-  /* Accent — restrained teal */
-  --color-accent: #2fc4c0;
-  --color-accent-strong: #6fe0dc;
-  --color-accent-soft: rgb(47 196 192 / 0.12);
-  --color-accent-border: rgb(47 196 192 / 0.45);
-  --color-on-accent: #06201f;
-  --color-focus: #7ae8e4;
-  --color-warning: #f0b75a;
-  --color-danger: #f07a72;
-  --color-danger-soft: rgb(240 122 114 / 0.12);
-  --color-danger-border: rgb(240 122 114 / 0.5);
-  --color-success: #6fd69a;
+  /* Accent: deep teal (white on it 7.5:1) */
+  --color-accent: #0b5f5b;
+  --color-accent-strong: #084a47;
+  --color-accent-soft: rgb(11 95 91 / 0.08);
+  --color-accent-border: rgb(11 95 91 / 0.35);
+  --color-on-accent: #ffffff;
+  --color-focus: #0b5f5b;
+  --color-warning: #8a5a00;
+  --color-danger: #b3261e;
+  --color-danger-soft: rgb(179 38 30 / 0.07);
+  --color-danger-border: rgb(179 38 30 / 0.4);
+  --color-success: #1d6e3f;
 
-  /* Subject accents, used consistently for chips, card edges and the active nav item. */
-  --subject-anatomy: #e8837e;
-  --subject-chemistry: #6fe0dc;
-  --subject-biology: #a99cf0;
-  --subject-physics: #8db4ff;
-  --subject-mathematics: #f5c26b;
+  /* Subject accents (text-safe on white), and the mockup's soft card tints */
+  --subject-anatomy: #a8473a;
+  --subject-chemistry: #0b6b5f;
+  --subject-biology: #634aa8;
+  --subject-physics: #2d5ca8;
+  --subject-mathematics: #8a5a00;
+  --tint-anatomy: #f6efe3;
+  --tint-chemistry: #e9eee6;
+  --tint-biology: #e7ede4;
+  --tint-physics: #e5ebef;
+  --tint-mathematics: #f8eedd;
 
   /* Measurement — amber, distinct from the teal selection accent */
-  --color-measure: #f5c26b;
-  --color-measure-soft: rgb(245 194 107 / 0.12);
-  --color-measure-border: rgb(245 194 107 / 0.5);
-  --color-on-measure: #2a1c03;
+  --color-measure: #8a5a00;
+  --color-measure-soft: rgb(138 90 0 / 0.08);
+  --color-measure-border: rgb(138 90 0 / 0.4);
+  --color-on-measure: #ffffff;
 
-  /* Typography */
+  /* Typography: 16 px body (was 15), larger steps */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --text-xs: 0.75rem;
-  --text-sm: 0.8125rem;
-  --text-base: 0.9375rem;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.5rem;
   --text-2xl: 2rem;
+  /* Comfortable line length for explanations */
+  --measure-text: 68ch;
 
   /* Spacing */
   --space-1: 4px;
@@ -62,10 +72,11 @@
   --space-6: 24px;
   --space-8: 32px;
 
-  /* Shape */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  /* Shape: softer, as in the mockup */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-card: 0 1px 2px rgb(19 32 31 / 0.05), 0 2px 8px rgb(19 32 31 / 0.04);
 
   /* Layout */
   /* There is no global header; kept at 0 so older layout rules need no special case. */

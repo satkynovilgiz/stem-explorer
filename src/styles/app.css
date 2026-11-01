@@ -501,7 +501,7 @@ button {
   height: 10px;
   margin-right: var(--space-2);
   border-radius: 50%;
-  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4);
+  box-shadow: 0 0 0 1px rgb(19 32 31 / 0.14);
   vertical-align: -1px;
 }
 
@@ -649,7 +649,7 @@ button {
 }
 
 .atom-detail .stats > div {
-  background: rgb(15 17 19 / 0.5);
+  background: rgb(255 255 255 / 0.92);
 }
 
 .atom-detail .small {
@@ -709,7 +709,7 @@ button {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: rgb(15 17 19 / 0.85);
+  background: rgb(255 255 255 / 0.92);
   pointer-events: none;
 }
 
@@ -733,7 +733,7 @@ button {
   gap: var(--space-2);
   padding: 4px var(--space-3);
   border-radius: 999px;
-  background: rgb(15 17 19 / 0.8);
+  background: rgb(255 255 255 / 0.92);
   color: var(--color-text-muted);
   font-size: var(--text-xs);
   white-space: nowrap;
@@ -810,8 +810,8 @@ button {
   will-change: transform;
   padding: 1px 6px;
   border-radius: 4px;
-  background: rgb(15 17 19 / 0.78);
-  border: 1px solid rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.92);
+  border: 1px solid rgb(19 32 31 / 0.14);
   color: var(--color-text);
   font: 600 11px/1.4 var(--font-sans);
   white-space: nowrap;
@@ -1552,7 +1552,7 @@ button {
   width: 20px;
   height: 20px;
   border-radius: 6px;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+  box-shadow: inset 0 0 0 1px rgb(19 32 31 / 0.14);
   color: #0f1113;
 }
 
@@ -1590,9 +1590,9 @@ button {
   align-items: center;
   gap: 6px;
   padding: 2px 8px;
-  border: 1px solid rgb(255 255 255 / 0.14);
+  border: 1px solid rgb(19 32 31 / 0.14);
   border-radius: 999px;
-  background: rgb(15 17 19 / 0.82);
+  background: rgb(255 255 255 / 0.92);
   color: var(--color-text);
   font: 600 11.5px/1.4 var(--font-sans);
   white-space: nowrap;
@@ -2069,19 +2069,19 @@ button {
 
 .physics-label.is-axis {
   color: var(--color-text);
-  background: rgb(15 17 19 / 0.7);
+  background: rgb(255 255 255 / 0.92);
 }
 
 .physics-label.is-marker,
 .physics-label.is-projectile {
-  border: 1px solid rgb(255 255 255 / 0.14);
-  background: rgb(15 17 19 / 0.82);
+  border: 1px solid rgb(19 32 31 / 0.14);
+  background: rgb(255 255 255 / 0.92);
   color: var(--color-text);
 }
 
 .physics-label.is-run-a {
   border: 1px dotted #c9a2f2;
-  background: rgb(15 17 19 / 0.82);
+  background: rgb(255 255 255 / 0.92);
   color: #dcc4f7;
 }
 
@@ -2108,7 +2108,7 @@ button {
   gap: 2px var(--space-4);
   padding: 4px var(--space-3);
   border-radius: var(--radius-sm);
-  background: rgb(15 17 19 / 0.78);
+  background: rgb(255 255 255 / 0.92);
   font-size: var(--text-xs);
   color: var(--color-text-muted);
   pointer-events: none;
@@ -2275,17 +2275,17 @@ button {
 .math-label.is-axis {
   padding: 0 6px;
   border-radius: 4px;
-  background: rgb(15 17 19 / 0.75);
+  background: rgb(255 255 255 / 0.92);
   color: var(--color-text);
   font: italic 700 14px/1.4 'Cambria Math', 'STIX Two Math', Georgia, serif;
 }
 
 .math-label.is-point {
   padding: 1px 6px;
-  border: 1px solid rgb(255 255 255 / 0.4);
+  border: 1px solid rgb(19 32 31 / 0.14);
   border-radius: 4px;
-  background: rgb(15 17 19 / 0.85);
-  color: #fff;
+  background: rgb(255 255 255 / 0.92);
+  color: var(--color-text);
   font-weight: 700;
 }
 
@@ -2298,7 +2298,7 @@ button {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: rgb(15 17 19 / 0.85);
+  background: rgb(255 255 255 / 0.92);
   font-size: var(--text-xs);
   color: var(--color-text-muted);
   pointer-events: none;
@@ -2445,9 +2445,9 @@ button {
   left: 0;
   visibility: hidden;
   padding: 2px 8px;
-  border: 1px solid rgb(255 255 255 / 0.14);
+  border: 1px solid rgb(19 32 31 / 0.14);
   border-radius: 999px;
-  background: rgb(15 17 19 / 0.82);
+  background: rgb(255 255 255 / 0.92);
   color: var(--color-text);
   font: 600 11.5px/1.4 var(--font-sans);
   white-space: nowrap;
@@ -2491,7 +2491,7 @@ button {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: rgb(15 17 19 / 0.85);
+  background: rgb(255 255 255 / 0.92);
   font-size: var(--text-xs);
   color: var(--color-text);
   pointer-events: none;
@@ -3207,7 +3207,7 @@ button {
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+  box-shadow: 0 8px 24px rgb(19 32 31 / 0.14);
 }
 
 .home-toast .library-status {
@@ -4404,7 +4404,7 @@ button {
 
 /* Atlas orientation labels sit over busy geometry, so they get a backing. */
 .atlas .heart-label.is-orientation {
-  background: rgb(15 17 19 / 0.78);
+  background: rgb(255 255 255 / 0.92);
   border-radius: 4px;
   color: var(--color-text-muted);
 }
@@ -4871,7 +4871,7 @@ button {
 }
 
 .div-spindle {
-  stroke: rgb(232 236 239 / 0.22);
+  stroke: rgb(19 32 31 / 0.22);
   stroke-width: 1;
 }
 
@@ -5125,7 +5125,7 @@ button {
 }
 
 .fn-grid {
-  stroke: rgb(232 236 239 / 0.07);
+  stroke: rgb(19 32 31 / 0.07);
 }
 
 .fn-axis {
@@ -5202,7 +5202,7 @@ button {
 }
 
 .vec-grid {
-  stroke: rgb(232 236 239 / 0.06);
+  stroke: rgb(19 32 31 / 0.06);
 }
 
 .vec-axis {
@@ -5248,7 +5248,7 @@ button {
 }
 
 .vec-original-grid {
-  stroke: rgb(232 236 239 / 0.22);
+  stroke: rgb(19 32 31 / 0.22);
   stroke-dasharray: 3 4;
   stroke-width: 1 !important;
 }
@@ -5640,7 +5640,7 @@ html.is-presenting .subject-bar {
 }
 
 .topic-drawer::backdrop {
-  background: rgb(5 7 9 / 0.6);
+  background: rgb(19 32 31 / 0.32);
 }
 
 .topic-drawer[open] {
@@ -6120,7 +6120,7 @@ html.is-presenting .subject-bar {
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: rgb(15 17 19 / 0.85);
+  background: rgb(255 255 255 / 0.92);
 }
 
 .body-overview svg {
@@ -6144,7 +6144,7 @@ html.is-presenting .subject-bar {
 }
 
 .body-overview-hit:hover {
-  fill: rgb(255 255 255 / 0.08);
+  fill: rgb(19 32 31 / 0.05);
 }
 
 .body-overview-caption {
@@ -6161,7 +6161,7 @@ html.is-presenting .subject-bar {
   padding: 2px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: rgb(15 17 19 / 0.85);
+  background: rgb(255 255 255 / 0.92);
   pointer-events: none;
 }
 
@@ -6994,7 +6994,7 @@ html.is-presenting .workspace-controls {
 }
 
 .keyboard-help::backdrop {
-  background: rgb(5 7 9 / 0.6);
+  background: rgb(19 32 31 / 0.32);
 }
 
 .keyboard-help h2 {
@@ -8780,3 +8780,87 @@ html.ws-focus .chem-stage :is(.optics-svg,
 .topic-nav-label { font-weight: 600; }
 .topic-nav-blurb { font-size: var(--text-sm); color: var(--color-text-muted); }
 .chem-mobile-topic { margin: 0; padding: 0 var(--space-1); }
+
+/* ---------- Homepage design (from public/img/STEM Explorer home and chemistry pages.png) ---------- */
+body { background: var(--color-bg); color: var(--color-text); font-size: var(--text-base); line-height: 1.55; }
+
+.home--design { width: min(1040px, 100%); gap: var(--space-8); padding-top: clamp(28px, 6vw, 64px); }
+.home--design .home-hero { display: block; }
+.home--design .home-hero > * { margin: 0; }
+.home-eyebrow { font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.32em; text-transform: uppercase; color: var(--color-text); }
+.home--design .home-title { margin: var(--space-4) 0 var(--space-2); font-size: clamp(2.6rem, 7vw, 4.75rem); font-weight: 800; line-height: 1.02; letter-spacing: -0.04em; color: var(--color-text); }
+.home--design .home-lead { margin-bottom: var(--space-6); max-width: none; font-size: clamp(1.15rem, 2.2vw, 1.4rem); color: var(--color-text-muted); }
+
+.home--design .home-search { padding: 0; border: 0; background: none; }
+.home--design .home-search-box { display: flex; align-items: center; min-height: 60px; padding: 6px 6px 6px 18px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); box-shadow: var(--shadow-card); }
+.home--design .home-search-box:focus-within { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-soft); }
+.home--design .home-search-box .search-icon { position: static; flex: none; color: var(--color-text-muted); }
+.home--design .home-search-box .search-input { flex: 1; min-width: 0; height: 46px; padding: 0 var(--space-3); border: 0; background: none; font-size: 1.0625rem; box-shadow: none; outline: none; }
+.home--design .home-search-box .search-clear { position: static; }
+.home-search-submit { display: grid; place-items: center; flex: none; width: 50px; height: 46px; border: 0; border-radius: 10px; background: var(--color-accent); color: var(--color-on-accent); cursor: pointer; }
+.home-search-submit:hover { background: var(--color-accent-strong); }
+
+.home--design .home-h2 { margin: 0 0 var(--space-4); font-size: clamp(1.4rem, 2.6vw, 1.75rem); font-weight: 700; letter-spacing: -0.015em; color: var(--color-text); }
+
+/* Subject tiles: Chemistry full width, then a 2 × 2 grid. */
+.subject-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.subject-tiles > li { grid-column: auto !important; }
+.subject-tiles > li.is-chemistry { grid-column: 1 / -1 !important; }
+.subject-tiles .subject-card { display: block; border: 0; border-radius: var(--radius-lg); overflow: hidden; animation: none; transform: none !important; box-shadow: none; background: var(--tint, var(--color-surface)); }
+.subject-tiles .subject-card.is-chemistry { --tint: var(--tint-chemistry); }
+.subject-tiles .subject-card.is-anatomy { --tint: var(--tint-anatomy); }
+.subject-tiles .subject-card.is-biology { --tint: var(--tint-biology); }
+.subject-tiles .subject-card.is-physics { --tint: var(--tint-physics); }
+.subject-tiles .subject-card.is-mathematics { --tint: var(--tint-mathematics); }
+.subject-tiles .subject-card-action { position: relative; display: flex; justify-content: space-between; align-items: stretch; min-height: 170px; padding: 0; border: 0; color: var(--color-text); text-decoration: none; background: none; font-weight: 400; }
+.subject-tiles .subject-card-action::after { content: none; }
+.subject-tiles .is-chemistry .subject-card-action { min-height: 196px; }
+.subject-tiles .subject-card-text { position: relative; z-index: 1; display: grid; align-content: center; gap: 6px; padding: var(--space-6) var(--space-5); max-width: 62%; }
+.subject-tiles .subject-card-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.015em; }
+.subject-tiles .is-chemistry .subject-card-title { font-size: clamp(2rem, 4vw, 2.5rem); letter-spacing: -0.03em; }
+.subject-tiles .subject-card-summary { font-size: 1rem; color: var(--color-text-muted); line-height: 1.45; }
+.subject-tiles .is-chemistry .subject-card-summary { font-size: 1.0625rem; }
+.subject-card-button { justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin-top: var(--space-3); min-height: 44px; padding: 0 18px; border-radius: 10px; background: var(--color-accent); color: var(--color-on-accent); font-weight: 600; }
+.subject-tiles .subject-card-img { position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: 62%; object-fit: cover; object-position: right center; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28%); mask-image: linear-gradient(to right, transparent 0, #000 28%); pointer-events: none; }
+.subject-tiles .subject-card:hover, .subject-tiles .subject-card:focus-within { box-shadow: 0 0 0 2px var(--color-accent-border), var(--shadow-card); }
+.subject-tiles .subject-card-action:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-lg); }
+.subject-tiles .subject-card:hover .subject-card-button { background: var(--color-accent-strong); }
+@media (max-width: 640px) {
+  .subject-tiles { grid-template-columns: 1fr; }
+  .subject-tiles .subject-card-action, .subject-tiles .is-chemistry .subject-card-action { min-height: 150px; }
+  .subject-tiles .subject-card-text { max-width: 66%; padding: var(--space-5) var(--space-4); }
+  .subject-tiles .subject-card-img { max-width: 55%; }
+}
+
+/* Your study space */
+.study-space ul { margin: 0; padding: 0; list-style: none; }
+.study-main { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--space-4); }
+.study-card { display: flex; align-items: center; gap: var(--space-4); min-height: 84px; padding: var(--space-4) var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-card); color: var(--color-text); text-decoration: none; }
+.study-card:hover { border-color: var(--color-accent-border); }
+.study-card > span:last-child { display: grid; gap: 2px; }
+.study-icon { display: grid; place-items: center; flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--tint-chemistry); color: var(--color-accent); }
+.study-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.study-text { color: var(--color-text-muted); font-size: 0.9375rem; }
+.study-more { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin-top: var(--space-4) !important; }
+.study-more a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; color: var(--color-accent); font-weight: 600; text-decoration: none; }
+.study-more a:hover { text-decoration: underline; }
+
+.home-more-heading { margin: var(--space-8) 0 calc(-1 * var(--space-4)); padding-top: var(--space-6); border-top: 1px solid var(--color-border); font-size: 1.25rem; color: var(--color-text-muted); }
+
+/* Calmer shared surfaces: no glows, one primary button style. */
+.button, .home-cta { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); box-shadow: none; }
+.button:hover, .home-cta:hover { background: var(--color-accent-strong); }
+.panel, .home-panel, .home-section .investigation, .connection, .question-link { box-shadow: none; }
+:focus-visible { outline-color: var(--color-focus); }
+.subject-tiles .subject-card-title { color: var(--color-text); }
+@media (max-width: 640px) {
+  .subject-tiles .subject-card-text { max-width: 58%; }
+  .subject-tiles .subject-card-img { max-width: 46%; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 40%); mask-image: linear-gradient(to right, transparent 0, #000 40%); }
+}
+.subject-card-button { white-space: nowrap; }
+.swatch, .legend-swatch, .ptable-swatch, .structure-swatch { box-shadow: inset 0 0 0 1px rgb(19 32 31 / 0.35); }
+
+/* Layout controls are secondary: icon-only (names stay for assistive technology and tooltips). */
+.workspace-controls .tool-button:not(.workspace-restore) span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.workspace-controls .tool-button { min-width: 36px; justify-content: center; }
+.subject-bar { background: var(--color-bg); }

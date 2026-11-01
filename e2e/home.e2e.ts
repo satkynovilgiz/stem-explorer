@@ -9,7 +9,7 @@ const SUBJECT_HEADINGS = {
   mathematics: 'Mathematics Explorer: interactive 3D surfaces',
 } as const
 
-const homeTitle = (page: Page) => page.getByRole('heading', { level: 1, name: 'Explore science. See how it works.' })
+const homeTitle = (page: Page) => page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })
 const search = (page: Page) => page.getByRole('searchbox', { name: 'Search everything you can explore' })
 const savedPanel = (page: Page) => page.locator('section', { has: page.getByRole('heading', { name: 'Saved explorations' }) })
 const results = (page: Page) => page.getByRole('list', { name: 'Search results' })
@@ -43,34 +43,29 @@ test.describe('Home page', () => {
     }
   })
 
-  test('first visit shows a welcome panel with starting points; returning visitors get How it works', async ({ page }) => {
+  test('first visit shows a welcome panel with starting points; returning visitors get Continue exploring', async ({ page }) => {
     await page.goto('/')
     const welcome = page.locator('section', { has: page.getByRole('heading', { name: /New here\?/ }) })
     await expect(welcome).toContainText('How exploring works')
-    await expect(page.getByRole('button', { name: 'How it works' })).toHaveCount(0)
     // A starting point opens the chemistry activity introduction.
     await welcome.getByRole('link', { name: /Measure the H–O–H angle/ }).click()
     await expect(page.locator('.activity')).toContainText('Start activity')
-
-    // After a visit, the welcome panel gives way to Continue exploring, and the guide is a disclosure.
+    // After a visit, the welcome panel gives way to Continue exploring.
     await expect.poll(() => page.evaluate(() => localStorage.getItem('stem-explorer:recent'))).not.toBeNull()
     await goHome(page)
     await expect(page.getByRole('heading', { name: /New here\?/ })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Continue exploring' })).toBeVisible()
-    const toggle = page.getByRole('button', { name: 'How it works' })
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    await toggle.click()
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    await expect(page.locator('#home-guide')).toContainText('Share or save.')
   })
 
-  test('subject cards list real modules and keyboard users can reach every card link', async ({ page }) => {
+  test('subject cards: one sentence each, a clear destination, and keyboard access', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('.subject-card.is-chemistry')).toContainText('12 3D molecules from experimental geometry, with distance and angle tools')
-    await expect(page.locator('.subject-card.is-physics')).toContainText('Period, forces and energy of an ideal spring')
-    await expect(page.locator('.subject-card.is-mathematics .subject-module')).toHaveCount(5)
+    await expect(page.locator('.subject-card.is-chemistry')).toContainText('Atoms, reactions, and everyday questions.')
+    await expect(page.locator('.subject-card.is-chemistry')).toContainText('Explore chemistry')
+    for (const id of ['anatomy', 'biology', 'physics', 'mathematics']) await expect(page.locator(`.subject-card.is-${id} .subject-card-summary`)).not.toBeEmpty()
     const link = page.locator('.subject-card.is-mathematics .subject-card-action')
     await link.focus()
+    await expect(link).toBeFocused()
+    expect(await link.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid')
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/#\/mathematics$/)
   })
@@ -113,6 +108,8 @@ test.describe('Home search', () => {
     await expect(page.getByRole('status').filter({ hasText: /result/ })).toHaveText('1 explorer result')
     await page.keyboard.press('Tab')
     await expect(page.getByRole('button', { name: 'Clear search' })).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(page.getByRole('button', { name: 'Search all subjects' })).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(page.getByRole('link', { name: /Mitral valve/ })).toBeFocused()
     await page.keyboard.press('Enter')
@@ -268,135 +265,50 @@ test('deep links to every subject still open directly', async ({ page }) => {
   await expect(page.locator('#math-heading')).toContainText('Elliptic paraboloid')
 })
 
-test('reduced motion: transitions are effectively off and Start exploring jumps instead of gliding', async ({ page }) => {
+test('reduced motion: transitions are effectively off', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const duration = await page.locator('.investigation').first().evaluate((el) => getComputedStyle(el).transitionDuration)
   expect(parseFloat(duration)).toBeLessThan(0.001)
-  await page.getByRole('button', { name: 'Start exploring' }).click()
-  // No smooth scrolling: the investigations heading is in view straight away.
-  await expect(page.getByRole('heading', { name: 'Start an investigation', exact: true })).toBeInViewport({ timeout: 500 })
+  expect(await page.locator('.subject-card').first().evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
 })
 
 test.describe('Home motion and featured content', () => {
-  const art = (page: Page) => page.locator('.hero-art')
 
-  test('the decorative animation is short, runs only while visible, and can be replayed', async ({ page }) => {
+  test('the search button opens full results; the featured exploration opens real content; the search stays responsive', async ({ page }) => {
     await page.goto('/')
-    await expect(art(page)).toHaveAttribute('data-running', 'true')
-    await expect(art(page).locator('> svg')).toHaveAttribute('aria-hidden', 'true')
-    // Only transform and opacity are animated, and nothing loops forever.
-    const props = await page.evaluate(() =>
-      [...document.styleSheets].flatMap((s) => [...s.cssRules]).filter((r): r is CSSKeyframesRule => r instanceof CSSKeyframesRule && r.name.startsWith('hero-'))
-        .flatMap((r) => [...r.cssRules].flatMap((k) => [...(k as CSSKeyframeRule).style])),
-    )
-    expect([...new Set(props)].sort()).toEqual(['opacity', 'transform'])
-    const iterations = await art(page).evaluate((el) => el.getAnimations({ subtree: true }).map((a) => a.effect?.getTiming().iterations))
-    expect(iterations.length).toBeGreaterThan(0)
-    expect(iterations.every((n) => typeof n === 'number' && Number.isFinite(n))).toBe(true)
-
-    // Scrolled out of view: held.
-    await page.getByRole('heading', { name: 'Saved explorations' }).scrollIntoViewIfNeeded()
-    await expect(art(page)).toHaveAttribute('data-running', 'false')
-    await page.evaluate(() => window.scrollTo(0, 0))
-    await expect(art(page)).toHaveAttribute('data-running', 'true')
-
-    // Hidden tab: held.
-    await page.evaluate(() => {
-      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
-      document.dispatchEvent(new Event('visibilitychange'))
-    })
-    await expect(art(page)).toHaveAttribute('data-running', 'false')
-    expect(await page.locator('.hero-wave').evaluate((el) => getComputedStyle(el).animationPlayState)).toBe('paused')
-    await page.evaluate(() => {
-      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
-      document.dispatchEvent(new Event('visibilitychange'))
-    })
-    await expect(art(page)).toHaveAttribute('data-running', 'true')
-
-    // It finishes by itself; the keyboard-operable Replay starts it again.
-    // A finished CSS animation (no fill) is no longer listed by getAnimations().
-    await expect.poll(() => page.locator('.hero-wave').evaluate((el) => el.getAnimations().length), { timeout: 15_000 }).toBe(0)
-    const replay = page.getByRole('button', { name: 'Replay decorative animation' })
-    await replay.focus()
-    await page.keyboard.press('Enter')
-    await expect.poll(() => page.locator('.hero-wave').evaluate((el) => el.getAnimations()[0]?.playState ?? 'none')).toBe('running')
-  })
-
-  test('reduced motion: nothing animates and no replay control is shown', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('/')
-    await expect(art(page)).toHaveAttribute('data-running', 'false')
-    await expect(page.getByRole('button', { name: 'Replay decorative animation' })).toHaveCount(0)
-    expect(await page.locator('.hero-wave').evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
-    expect(await page.locator('.subject-card').first().evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
-  })
-
-  test('search examples fill the search; the featured exploration opens real content; the search stays responsive', async ({ page }) => {
-    await page.goto('/')
-    const examples = page.locator('.search-examples')
-    await examples.getByRole('button', { name: 'saddle' }).click()
     const input = page.getByRole('searchbox', { name: 'Search everything you can explore' })
-    await expect(input).toHaveValue('saddle')
-    await expect(input).toBeFocused()
+    await expect(input).toHaveAttribute('placeholder', 'What would you like to understand?')
+    await input.fill('saddle')
     await expect(page.locator('.search-results')).toContainText('Saddle')
     await input.fill('benz')
     await expect(page.locator('.search-results')).toContainText('Benzene')
-    await input.fill('')
+    await page.getByRole('button', { name: 'Search all subjects' }).click()
+    await expect(page).toHaveURL(/q=benz.*#\/search$/)
+    await page.goBack()
     await page.locator('.spotlight').click()
     await expect(page.locator('#math-heading')).toContainText('saddle', { ignoreCase: true })
     expect(new URL(page.url()).searchParams.get('surface')).toBe('saddle')
   })
 
-  test('subject cards respond to hover and keyboard focus without moving layout', async ({ page }) => {
-    await page.goto('/')
-    const card = page.locator('.subject-card').first()
-    // Let the cards' entrance animations finish.
-    await page.waitForFunction(() => document.getAnimations().filter((a) => (a.effect as KeyframeEffect | null)?.target?.closest('.subject-card')).every((a) => a.playState === 'finished'))
-    const next = page.locator('.subject-card').nth(1)
-    // Document coordinates: focusing may scroll the page.
-    const docBox = () => next.evaluate((el) => {
-      const r = el.getBoundingClientRect()
-      return { x: r.left + window.scrollX, y: r.top + window.scrollY, w: r.width, h: r.height }
-    })
-    const before = await docBox()
-    const border = await card.evaluate((el) => getComputedStyle(el).borderLeftColor)
-    await card.locator('.subject-card-action').focus()
-    await expect.poll(() => card.evaluate((el) => getComputedStyle(el).borderLeftColor)).not.toBe(border)
-    // The focused card lifts by a transform only, so nothing else on the page moves.
-    await expect.poll(() => card.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).f)).toBeCloseTo(-2, 1)
-    expect(await docBox()).toEqual(before)
-    // A module link inside the card is its own target, above the card's stretched link.
-    await card.locator('.subject-module').first().click()
-    // The first card is Chemistry; its first module is the periodic table.
-    await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Periodic table')
-  })
 })
 
 test.describe('Home design and exploration flow', () => {
-  test('Start exploring jumps to real investigations; counts come from the data', async ({ page }) => {
+  test('investigations list real activities and starter paths from the catalog', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: 'Start exploring' }).click()
     const section = page.getByRole('region', { name: 'Start an investigation' })
-    await expect(section.getByRole('heading', { name: 'Start an investigation' })).toBeInViewport()
-    await expect(section).toBeFocused()
-    // Five guided activities and four starter paths, named from the catalog.
     await expect(section.locator('.investigation-grid').first().getByRole('link')).toHaveCount(5)
     await expect(section.getByRole('link', { name: /Path · 6 steps.*How breathing works/ })).toHaveAttribute('href', '#/collections')
-    // "N modules" equals the module links on the subject cards.
-    const modules = await page.locator('.subject-module').count()
-    await expect(page.getByRole('list', { name: 'What is here' })).toContainText(`${modules} interactive modules`)
     await section.getByRole('link', { name: /Compare 30° and 60° launches/ }).click()
     await expect(page).toHaveURL(/#\/physics$/)
     await expect(page.locator('.activity')).toContainText('Start activity')
   })
 
-  test('each subject card opens its first real lab', async ({ page }) => {
+  test('each subject card opens a real destination', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('.subject-card.is-chemistry .subject-card-action')).toHaveText(/Open periodic table/)
-    await expect(page.locator('.subject-card.is-mathematics .subject-card-action')).toHaveText(/Open 2D functions/)
-    await page.locator('.subject-card.is-anatomy').getByRole('link', { name: /^Breathing mechanics/ }).click()
-    await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Breathing mechanics')
+    await expect(page.locator('.subject-card.is-mathematics .subject-card-action')).toHaveAttribute('href', /#\/mathematics$/)
+    await page.locator('.subject-card.is-anatomy .subject-card-action').click()
+    await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Anatomy')
   })
 
   test('the home page loads no 3D module code', async ({ page }) => {
@@ -411,15 +323,15 @@ test.describe('Home design and exploration flow', () => {
     await expect(page.locator('canvas')).toHaveCount(0)
   })
 
-  test('keyboard order reaches the primary action first and shows a focus ring', async ({ page }) => {
+  test('keyboard order: the search comes first, then the Chemistry card, with a visible focus ring', async ({ page }) => {
     await page.goto('/')
-    const cta = page.getByRole('button', { name: 'Start exploring' })
-    await cta.focus()
+    await page.getByRole('searchbox', { name: 'Search everything you can explore' }).focus()
     await page.keyboard.press('Tab')
-    await expect(page.getByRole('link', { name: 'Browse reference library' })).toBeFocused()
-    const action = page.locator('.subject-card.is-biology .subject-card-action')
-    await action.focus()
-    expect(await action.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid')
+    await expect(page.getByRole('button', { name: 'Search all subjects' })).toBeFocused()
+    await page.keyboard.press('Tab')
+    const chem = page.locator('.subject-card.is-chemistry .subject-card-action')
+    await expect(chem).toBeFocused()
+    expect(await chem.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid')
   })
 })
 

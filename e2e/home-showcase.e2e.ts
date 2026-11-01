@@ -4,17 +4,13 @@ import { expect, test } from './fixtures.ts'
 type Counts = Record<string, { total: number }>
 const counts = async () => JSON.parse(await readFile(new URL('../src/reference/generated/counts.json', import.meta.url), 'utf8')) as Counts
 
-test('hero: one-sentence description, Start exploring and Browse reference library; facts use the generated counts', async ({ page }) => {
+test('hero follows the design: one heading, one sentence, search; the library counts use the generated data', async ({ page }) => {
   const c = await counts()
-  const total = Object.values(c).reduce((n, x) => n + x.total, 0)
   await page.goto('/')
-  await expect(page.locator('.home-lead').first()).toContainText('Interactive models and a sourced reference library')
-  await expect(page.getByRole('list', { name: 'What is here' })).toContainText(`${total} reference entries`)
-  for (const [subject, x] of Object.entries(c)) {
-    if (x.total) await expect(page.locator(`.subject-card.is-${subject} .subject-card-ref`)).toHaveText(`${x.total} reference ${x.total === 1 ? 'entry' : 'entries'}`)
-    await expect(page.locator(`.library-subject.is-${subject} .library-subject-count`)).toHaveText(String(x.total))
-  }
-  await page.getByRole('link', { name: 'Browse reference library' }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Science, made clearer.')
+  await expect(page.locator('.home-lead').first()).toHaveText('Explore a model. Understand an idea. Try it yourself.')
+  for (const [subject, x] of Object.entries(c)) await expect(page.locator(`.library-subject.is-${subject} .library-subject-count`)).toHaveText(String(x.total))
+  await page.getByRole('navigation', { name: 'Library and saved work' }).getByRole('link', { name: /Reference library/ }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Reference library' })).toBeVisible()
 })
 

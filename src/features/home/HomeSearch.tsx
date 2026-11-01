@@ -1,6 +1,7 @@
 import { Search, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
+import { navigateTo } from '../../lib/hooks'
 import { formulaParts } from '../../lib/chemistry'
 import { subjectName } from '../../lib/explorations'
 import { KIND_BADGE, nameShowsFormula, searchAll } from '../../lib/searchIndex'
@@ -8,7 +9,6 @@ import { ENTRY_TYPE_LABELS, entryHref, FORMULA_KIND_LABELS, type ManifestRow } f
 import { searchManifest } from '../reference/search'
 import { loadManifest } from '../reference/useManifest'
 import { searchUrl } from '../../lib/searchUrl'
-import { SEARCH_EXAMPLES as EXAMPLES } from './content'
 
 /** Plain input + result list (no custom autocomplete): Tab moves through results, Enter opens one. */
 export function HomeSearch() {
@@ -37,17 +37,23 @@ export function HomeSearch() {
 
   return (
     <div className="home-search" role="search">
-      <label htmlFor={id} className="home-search-label">
+      <label htmlFor={id} className="visually-hidden">
         Search everything you can explore
       </label>
-      <div className="search home-search-box">
+      <form
+        className="search home-search-box"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (trimmed) navigateTo(`${searchUrl({ q: trimmed, subject: null, kind: null })}#/search`)
+        }}
+      >
         <Search className="search-icon" size={18} aria-hidden="true" />
         <input
           id={id}
           ref={inputRef}
           type="search"
           className="search-input"
-          placeholder="Search structures, molecules, labs, surfaces…"
+          placeholder="What would you like to understand?"
           value={query}
           autoComplete="off"
           spellCheck={false}
@@ -59,30 +65,10 @@ export function HomeSearch() {
             <X size={14} aria-hidden="true" />
           </button>
         )}
-      </div>
-      {!trimmed && (
-        <div className="search-examples">
-          <span className="muted small" id={`${id}-examples`}>
-            Examples:
-          </span>
-          <ul aria-labelledby={`${id}-examples`}>
-            {EXAMPLES.map((q) => (
-              <li key={q}>
-                <button
-                  type="button"
-                  className="example-chip"
-                  onClick={() => {
-                    setQuery(q)
-                    inputRef.current?.focus()
-                  }}
-                >
-                  {q}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        <button type="submit" className="home-search-submit" aria-label="Search all subjects">
+          <Search size={18} aria-hidden="true" />
+        </button>
+      </form>
       <p id={`${id}-status`} className="search-status" role="status">
         {trimmed
           ? [all.length ? `${all.length} explorer result${all.length === 1 ? '' : 's'}${all.length > results.length ? `, showing the first ${results.length}` : ''}` : '', refAll.length ? `${refAll.length} reference ${refAll.length === 1 ? 'entry' : 'entries'}` : '']

@@ -106,7 +106,7 @@ test('Anatomy on a phone: tabs, list selection and the tour without overflow', a
 
 test('Home fits a phone, searches and opens a subject', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { level: 1, name: 'Explore science. See how it works.' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   expect(overflow).toBeLessThanOrEqual(0)
   await page.getByRole('searchbox', { name: 'Search everything you can explore' }).fill('ribosome')

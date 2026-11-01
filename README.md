@@ -33,6 +33,31 @@ say whether a link is the same mathematics, a real connection or only an analogy
 **presentation mode** with PNG export. See *Search, related topics and presentation* and
 *Content inventory, attribution and limitations*.
 
+## Visual design (chemistry redesign)
+
+The look follows a design mockup supplied by the project owner (kept locally, not committed):
+- **Palette** (`src/styles/tokens.css`): warm off-white page (`#f7f6f1`), white surfaces, dark
+  slate text (`#13201f`), deep teal for actions and selection (`#0b5f5b`), muted borders, and the
+  mockup's soft tints for the subject cards. Every text colour was checked against WCAG AA: body
+  text 16.8:1 on white, secondary text 8.1:1 and 6.0:1, white on teal 7.5:1, subject accents 5.8–6.8:1.
+- **Type:** 16 px body text (was 15 px), a large bold page title, clearer section headings.
+- **Home** follows the mockup: *STEM Explorer*, “Science, made clearer.”, one sentence, a search
+  field with a teal search button, *Choose a subject* (a large Chemistry card, then Anatomy,
+  Biology, Physics and Mathematics with illustrations) and *Your study space* (Saved explorations,
+  Reference library, plus Search all subjects, Glossary, Collections and Notebook). The earlier
+  sections (atlas preview, investigations, connections, reference counts, questions, saved
+  explorations, sources) follow under *More to explore*. The hero animation, the facts line and
+  the module chips on the cards were removed; the modules are listed inside each subject.
+- **Card illustrations** (`public/img/design/*.webp`) are cropped from the mockup, so they are
+  small (about 150–320 px wide) and can look soft on high-density screens; replacing them with the
+  original artwork is a drop-in change. They are decorative (`alt=""`) and are not scientific
+  models. The Physics card says “Motion, energy, forces, and waves” rather than the mockup's
+  “the universe”, because the app has no astronomy content.
+- **3D views:** Chemistry's molecule viewer uses a light neutral background as in the mockup;
+  atom colours (CPK) are unchanged, and colour swatches now have an outline so white hydrogen
+  stays visible. The other subjects' 3D scenes keep their dark backgrounds for now (their colours
+  were tuned for dark); labels drawn over any 3D view use light, outlined backgrounds.
+
 ## Requirements
 
 - Node.js 20.19+ or 22.12+ (developed on Node 24 LTS) and npm
