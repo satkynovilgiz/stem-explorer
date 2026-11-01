@@ -119,6 +119,19 @@ export const MODULES: readonly TopicModule[] = [
     current: () => null,
   },
   {
+    id: 'chemistry.learn',
+    subject: 'chemistry',
+    name: 'Explanation',
+    summary: 'Reading pages that explain a topic step by step',
+    href: linkTo('chemistry', { csec: 'learn', lt: 'molarity' }),
+    topics: [],
+    matches: (s) => parseChemistrySection(s).section === 'learn',
+    current: (s) => {
+      const id = new URLSearchParams(s).get('lt')
+      return id ? id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ') : null
+    },
+  },
+  {
     id: 'chemistry.periodic',
     subject: 'chemistry',
     name: 'Periodic table',

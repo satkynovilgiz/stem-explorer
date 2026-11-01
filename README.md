@@ -607,6 +607,27 @@ older link and saved exploration opens as before. Other sections add `csec=perio
 plus `el=<1–118>` for the selected element. Invalid values are rejected by the same parser that
 validates saved entries.
 
+### Chemistry page types: Learn, Calculate, Explore
+
+Chemistry no longer puts every topic in the same three-column workspace:
+- **Learn** (`?csec=learn&lt=<entry>#/chemistry`, e.g. `lt=molarity`): a reading page that shows the
+  reference entry inside Chemistry (no duplicate article), in the student layout: in simple words,
+  why it matters, key terms, formula, worked example, common mistake, *Try it yourself*, then more
+  detail and sources. `lf=example` opens it at the worked example, expanded and focused (used by
+  *See a worked example*). Links between Chemistry entries stay inside Chemistry.
+- **Calculate**: the molarity, dilution and balancing pages are one column in reading order: an H1
+  naming the task, one sentence on what it does, the one thing to watch (*use the volume of the
+  whole solution*), *Read the explanation*, the calculator with its visible steps, worked examples
+  and notes collapsed, then **Copy link** and a **Save…** menu (Add note, Save exploration, Add to
+  collection; a disclosure button, Escape closes it and returns focus). No molecule library, water
+  activity, topic sidebar, layout or Present controls.
+- **Explore**: Molecules, the periodic table, atomic structure and bonding keep the model workspace.
+  The molecule library and the water-angle activity appear only on Molecules.
+
+Every older link (`csec=solutions`, `csec=reactions`, molecule links) opens the same calculation or
+model as before. The Biology cell page no longer scrolls sideways: its comparison table scrolls in
+its own box (found by an automated sweep of 30 pages at six widths).
+
 ### Chemistry home: finding things
 
 `?csec=topics#/chemistry` (also any Chemistry address with no molecule or section, such as a bare

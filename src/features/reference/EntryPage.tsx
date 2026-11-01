@@ -8,7 +8,7 @@ import { atlasLink } from '../../lib/links'
 import { loadCatalog } from '../../reference/catalogs'
 import { REFERENCE_SOURCES } from '../../reference/sources'
 import { ENTRY_TYPE_LABELS, entryHref, FORMULA_KIND_LABELS, type AppLink as EntryLink, type ManifestRow, type ReferenceEntry, type WorkedExample as WorkedExampleT } from '../../reference/types'
-import { libraryHref } from './route'
+import { learnHref, libraryHref } from './route'
 import { RichText, Tex } from './Tex'
 
 const subjectName = (s: SubjectId) => SUBJECTS.find((x) => x.id === s)!.name
@@ -16,7 +16,22 @@ const subjectName = (s: SubjectId) => SUBJECTS.find((x) => x.id === s)!.name
 type Load = { state: 'loading' } | { state: 'error' } | { state: 'ready'; entry: ReferenceEntry | null }
 
 /** One reference entry at `#/reference/<subject>/<id>`. Loads only that subject's catalog. */
-export function EntryPage({ subject, id, manifest }: { subject: SubjectId; id: string; manifest: ReadonlyMap<string, ManifestRow> | null }) {
+/** Where the page is shown: the reference library, or inside Chemistry as a reading page. */
+export type EntryContext = 'reference' | 'chemistry'
+
+export function EntryPage({
+  subject,
+  id,
+  manifest,
+  context = 'reference',
+  focus = null,
+}: {
+  subject: SubjectId
+  id: string
+  manifest: ReadonlyMap<string, ManifestRow> | null
+  context?: EntryContext
+  focus?: 'example' | null
+}) {
   const [load, setLoad] = useState<Load>({ state: 'loading' })
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
@@ -75,7 +90,7 @@ export function EntryPage({ subject, id, manifest }: { subject: SubjectId; id: s
         </div>
       </div>
     )
-  return <EntryView entry={entry} manifest={manifest} />
+  return <EntryView entry={entry} manifest={manifest} context={context} focus={focus} />
 }
 
 function Section({ title, children, open = true, id }: { title: string; children: ReactNode; open?: boolean; id?: string }) {
@@ -388,17 +403,28 @@ function ExampleView({ x }: { x: WorkedExampleT }) {
   )
 }
 
-function EntryView({ entry: e, manifest }: { entry: ReferenceEntry; manifest: ReadonlyMap<string, ManifestRow> | null }) {
+function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEntry; manifest: ReadonlyMap<string, ManifestRow> | null; context: EntryContext; focus: 'example' | null }) {
   const title = (id: string) => manifest?.get(id)?.title ?? id.replace(/-/g, ' ')
   const hrefOf = (id: string) => {
     const row = manifest?.get(id)
+    if (row && context === 'chemistry' && row.subject === 'chemistry') return learnHref(row.id)
     return row ? entryHref(row) : libraryHref({ q: id.replace(/-/g, ' ') })
   }
+  // "See a worked example": open the page at its example, visibly, with focus on its heading.
+  useEffect(() => {
+    if (focus !== 'example') return
+    const el = document.getElementById('worked-example')
+    if (!el) return
+    ;(el as HTMLDetailsElement).open = true
+    el.scrollIntoView({ block: 'start' })
+    el.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true })
+  }, [focus, e.id])
   const typeLabel = e.type === 'formula' ? FORMULA_KIND_LABELS[e.kind] : ENTRY_TYPE_LABELS[e.type]
   // Student-first layout when the entry has a plain-words summary (see types.ts).
   const student = Boolean(e.simple)
   return (
-    <article className={`ref-page ref-entry subject-${e.subject}`} aria-labelledby="ref-title">
+    <article className={`ref-page ref-entry subject-${e.subject}${context === 'chemistry' ? ' is-learn' : ''}`} aria-labelledby="ref-title">
+      {context === 'reference' && (
       <nav className="ref-crumbs" aria-label="Breadcrumb">
         <ol>
           <li>
@@ -413,6 +439,7 @@ function EntryView({ entry: e, manifest }: { entry: ReferenceEntry; manifest: Re
           <li aria-current="page">{e.title}</li>
         </ol>
       </nav>
+      )}
       <header className="ref-head">
         <p className="ref-badges">
           <span className="ref-badge ref-badge-type">{typeLabel}</span>
@@ -438,7 +465,10 @@ function EntryView({ entry: e, manifest }: { entry: ReferenceEntry; manifest: Re
           </p>
         ) : null}
         <div className="ref-actions">
-          <CopyLinkButton getUrl={() => `${window.location.origin}${window.location.pathname}${entryHref(e)}`} restores="this reference entry" />
+          <CopyLinkButton
+            getUrl={() => `${window.location.origin}${window.location.pathname}${context === 'chemistry' ? learnHref(e.id) : entryHref(e)}`}
+            restores={context === 'chemistry' ? 'this explanation' : 'this reference entry'}
+          />
         </div>
       </header>
       {student ? (
@@ -486,7 +516,7 @@ function EntryView({ entry: e, manifest }: { entry: ReferenceEntry; manifest: Re
               </div>
             </section>
           )}
-          <Section title={e.examples.length > 1 ? 'Worked examples' : 'Worked example'}>
+          <Section id="worked-example" title={e.examples.length > 1 ? 'Worked examples' : 'Worked example'}>
             {e.examples.map((x, i) => (
               <ExampleView key={i} x={x} />
             ))}
@@ -499,7 +529,7 @@ function EntryView({ entry: e, manifest }: { entry: ReferenceEntry; manifest: Re
           {e.links?.length || (e.type === 'structure' && e.atlasIds?.length) ? (
             <section className="ref-plain" aria-labelledby="ref-explore">
               <h2 id="ref-explore" className="ref-plain-title">
-                Explore it
+                Try it yourself
               </h2>
               <EntryLinks entry={e} />
             </section>

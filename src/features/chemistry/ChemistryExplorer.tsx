@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect, useReducer, useState } from 'react'
+import { ArrowRight } from 'lucide-react'
+import { AppLink } from '../../components/AppLink'
 import { Tabs } from '../../components/Tabs'
 import { DEFAULT_MOLECULE_ID, getMolecule, MOLECULES } from '../../data/chemistry/molecules'
 import { useMediaQuery, usePrefersReducedMotion } from '../../lib/hooks'
@@ -29,13 +31,15 @@ const AtomPanel = lazy(() => import('./atomic/AtomicStructure').then((m) => ({ d
 const BondingView = lazy(() => import('./bonding/Bonding').then((m) => ({ default: m.BondingView })))
 const BondingPanel = lazy(() => import('./bonding/Bonding').then((m) => ({ default: m.BondingPanel })))
 const ReactionLab = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionLab })))
+const ReactionShare = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionShare })))
 const ReactionPanel = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionPanel })))
 const SolutionsLab = lazy(() => import('./solutions/SolutionsLab').then((m) => ({ default: m.SolutionsLab })))
+const ChemLearnPage = lazy(() => import('./learn/ChemLearnPage').then((m) => ({ default: m.ChemLearnPage })))
 const ChemistryHome = lazy(() => import('./home/ChemistryHome').then((m) => ({ default: m.ChemistryHome })))
-const SolutionsPanel = lazy(() => import('./solutions/SolutionsLab').then((m) => ({ default: m.SolutionsPanel })))
 
 const SECTION_LABEL: Record<ChemistrySection, string> = {
-  topics: 'Chemistry home',
+  topics: 'Chemistry topics',
+  learn: 'Explanation',
   periodic: 'Periodic table',
   atomic: 'Atomic structure',
   molecules: 'Molecules',
@@ -150,18 +154,13 @@ export function ChemistryExplorer() {
   )
   const reactionPanel = (
     <Suspense fallback={loading}>
-      <ReactionPanel reactionId={reactionId} shareParams={shareParams} />
+      <ReactionPanel reactionId={reactionId} shareParams={shareParams} withShare={false} />
     </Suspense>
   )
 
   const solutionsView = (
     <Suspense fallback={loading}>
       <SolutionsLab baseParams={shareParams} />
-    </Suspense>
-  )
-  const solutionsPanel = (
-    <Suspense fallback={loading}>
-      <SolutionsPanel />
     </Suspense>
   )
 
@@ -229,12 +228,15 @@ export function ChemistryExplorer() {
   )
 
   const stage = section === 'periodic' ? elementsView : section === 'atomic' ? atomicView : section === 'bonding' ? bondingView : section === 'reactions' ? reactionView : section === 'solutions' ? solutionsView : viewer
-  const details = section === 'periodic' ? elementPanel : section === 'atomic' ? atomPanel : section === 'bonding' ? bondingPanel : section === 'reactions' ? reactionPanel : section === 'solutions' ? solutionsPanel : info
+  const details = section === 'periodic' ? elementPanel : section === 'atomic' ? atomPanel : section === 'bonding' ? bondingPanel : info
+  // Explore pages are model workspaces; Learn and Calculate pages are single reading columns.
+  const isWorkspace = section === 'molecules' || section === 'periodic' || section === 'atomic' || section === 'bonding'
 
   // One polite live region for meaningful changes only (never per animation frame).
   const announcer = (
     <>
-      {section !== 'topics' && <h1 className="visually-hidden">Chemistry: {SECTION_LABEL[section]}</h1>}
+      {/* Workspaces name the page here; topics, reading and calculator pages show their own H1. */}
+      {(section === 'molecules' || section === 'periodic' || section === 'atomic' || section === 'bonding') && <h1 className="visually-hidden">Chemistry: {SECTION_LABEL[section]}</h1>}
       <p className="visually-hidden" role="status" aria-live="polite">
         {state.announcement}
       </p>
@@ -252,6 +254,41 @@ export function ChemistryExplorer() {
       </div>
     )
 
+  // Learn and Calculate: one column, only what the task needs (no molecule library, activity or layout controls).
+  if (!isWorkspace)
+    return (
+      <div className="chem-landing">
+        {announcer}
+        {section === 'learn' ? (
+          <Suspense fallback={loading}>
+            <ChemLearnPage />
+          </Suspense>
+        ) : section === 'solutions' ? (
+          solutionsView
+        ) : (
+          <article className="chem-page" aria-labelledby="rx-page-title">
+            <header className="chem-page-head">
+              <h1 id="rx-page-title" className="chem-page-title">
+                Balance equations and calculate amounts
+              </h1>
+              <p className="chem-page-lead">Change the coefficients until both sides have the same atoms, then use the balanced equation to work out amounts.</p>
+              <AppLink href="?csec=learn&lt=balancing-equations#/chemistry" className="chem-text-link">
+                Read the explanation, with a worked example <ArrowRight size={15} aria-hidden="true" />
+              </AppLink>
+            </header>
+            {reactionView}
+            <details className="sol-more">
+              <summary>About this reaction</summary>
+              {reactionPanel}
+            </details>
+            <Suspense fallback={null}>
+              <ReactionShare shareParams={shareParams} />
+            </Suspense>
+          </article>
+        )}
+      </div>
+    )
+
   if (isMobile) {
     return (
       <div className="chem chem--mobile">
@@ -260,16 +297,16 @@ export function ChemistryExplorer() {
           <span className="muted small">Topic:</span> <strong>{SECTION_LABEL[section]}</strong> <span className="muted small">(change it with All chemistry topics above)</span>
         </p>
         <div className="chem-stage">{stage}</div>
-        {activityPanel}
+        {section === 'molecules' && activityPanel}
         {guidePanel}
         <Tabs
           label="Chemistry panels"
           className="mobile-tabs"
           active={mobileTab}
-          onChange={setMobileTab}
+          onChange={(t) => setMobileTab(t as MobileTab)}
           tabs={[
-            { id: 'details', label: section === 'molecules' ? 'Details' : section === 'bonding' || section === 'reactions' || section === 'solutions' ? 'Summary' : 'Element', content: details },
-            { id: 'library', label: 'Molecule library', content: library },
+            { id: 'details', label: section === 'molecules' ? 'Details' : section === 'bonding' ? 'Summary' : 'Element', content: details },
+            ...(section === 'molecules' ? [{ id: 'library', label: 'Molecule library', content: library }] : []),
           ]}
         />
       </div>
@@ -281,11 +318,11 @@ export function ChemistryExplorer() {
       {announcer}
       <aside className="chem-side chem-side--left">
         {topicNav}
-        {library}
+        {section === 'molecules' && library}
       </aside>
       <div className="chem-stage">{stage}</div>
       <aside className="chem-side chem-side--right">
-        {activityPanel}
+        {section === 'molecules' && activityPanel}
         {guidePanel}
         {details}
       </aside>

@@ -46,3 +46,6 @@ export function libraryHref(f: Partial<LibraryFilters>): string {
   const q = p.toString()
   return `${q ? `?${q}` : '?'}#/reference`
 }
+
+/** A Chemistry reference entry read inside Chemistry (`lf=example` opens it at its worked example). */
+export const learnHref = (id: string, focus?: 'example') => `?csec=learn&lt=${id}${focus ? `&lf=${focus}` : ''}#/chemistry`

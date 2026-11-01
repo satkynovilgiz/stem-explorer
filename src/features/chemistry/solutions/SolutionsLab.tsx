@@ -1,5 +1,8 @@
 import { useEffect, useId, useState } from 'react'
+import { ArrowRight } from 'lucide-react'
+import { AppLink } from '../../../components/AppLink'
 import { ShareActions } from '../../../components/ShareActions'
+import { learnHref } from '../../reference/route'
 import { AMOUNT_UNITS, fromLitres, sig, solveDilution, solveMolarity, toLitres, toMol, VOLUME_UNITS, volumeLabel, type AmountUnit, type DilutionSolveFor, type MolaritySolveFor, type VolumeUnit } from '../../../chem/solutions'
 import { DEFAULT_SOLUTIONS, parseSolutionsState, solutionsEntries, withSolutionsParams, type DilutionForm, type MolarityForm, type SolutionsState, type SolutionsTool } from '../../../lib/solutionsUrl'
 import { SourceLinks } from '../../guide/SourceLinks'
@@ -288,6 +291,25 @@ const EXAMPLES: readonly { id: string; label: string; textbook: string; state: S
 
 /* ---------- Lab ---------- */
 
+const TOOL_TEXT: Record<SolutionsTool, { title: string; lead: string; key: string; learn: string }> = {
+  molarity: {
+    title: 'Molarity calculator',
+    lead: 'Work out a solution’s concentration from the moles of solute and the volume of solution, or work backwards from either.',
+    key: 'Use the volume of the whole solution after mixing, in litres; not the volume of water you added.',
+    learn: 'molarity',
+  },
+  dilution: {
+    title: 'Dilution calculator',
+    lead: 'Work out how much stock solution to dilute, or the concentration or volume after adding solvent (C₁V₁ = C₂V₂).',
+    key: 'The moles of solute stay the same; V₂ is the final total volume, not the volume of solvent added.',
+    learn: 'dilution',
+  },
+}
+
+/**
+ * The Calculate page for solutions: one column in reading order (what it does, the one thing to
+ * watch, the calculator with its steps, worked examples), with the longer notes collapsed.
+ */
 export function SolutionsLab({ baseParams }: { baseParams: Record<string, string> }) {
   const [state, setState] = useState<SolutionsState>(() => parseSolutionsState(window.location.search).state)
   // Remount the tool when an example is loaded, so its text fields start from the example.
@@ -300,11 +322,21 @@ export function SolutionsLab({ baseParams }: { baseParams: Record<string, string
   }, [entriesKey])
 
   const setTool = (tool: SolutionsTool) => setState((s) => ({ ...s, tool }))
+  const text = TOOL_TEXT[state.tool]
   return (
-    <section className="panel sol-lab" aria-labelledby="sol-heading">
-      <h2 id="sol-heading" className="panel-title">
-        Solutions: molarity and dilution
-      </h2>
+    <article className="chem-page sol-lab" aria-labelledby="sol-heading">
+      <header className="chem-page-head">
+        <h1 id="sol-heading" className="chem-page-title">
+          {text.title}
+        </h1>
+        <p className="chem-page-lead">{text.lead}</p>
+        <p className="chem-page-key">
+          <strong>Remember:</strong> {text.key}
+        </p>
+        <AppLink href={learnHref(text.learn)} className="chem-text-link">
+          Read the explanation, with a worked example <ArrowRight size={15} aria-hidden="true" />
+        </AppLink>
+      </header>
       <div className="segmented" role="group" aria-label="Calculator">
         <button type="button" className="segmented-option" aria-pressed={state.tool === 'molarity'} onClick={() => setTool('molarity')}>
           Molarity
@@ -341,45 +373,42 @@ export function SolutionsLab({ baseParams }: { baseParams: Record<string, string
           <SourceLinks ids={['chem-3-3']} />
         </p>
       </details>
-      <ShareActions subject="chemistry" params={{ ...baseParams, ...entries }} restores="this calculation" />
-    </section>
+      <details className="sol-more">
+        <summary>More detail: units, assumptions and limits</summary>
+        <SolutionsNotes />
+      </details>
+      <ShareActions subject="chemistry" params={{ ...baseParams, ...entries }} restores="this calculation" compact />
+    </article>
   )
 }
 
-export function SolutionsPanel() {
+/** The longer notes behind the calculator (collapsed on the page). */
+function SolutionsNotes() {
   return (
-    <section className="panel info" aria-labelledby="sol-panel-heading">
-      <header className="info-header">
-        <p className="eyebrow">Chemistry · solutions</p>
-        <h2 id="sol-panel-heading" className="info-title">
-          Concentration and dilution
-        </h2>
-      </header>
-      <div className="info-body">
-        <p className="small">
-          <strong>Molarity</strong> is the amount of solute (in moles) per litre of <em>solution</em>: M = n / V, in mol/L (symbol M).
-          <SourceLinks ids={['chem-3-3']} />
-        </p>
-        <p className="small">
-          <strong>Volume of solution vs volume of solvent.</strong> V is the volume of the finished solution: the solute and the solvent together, measured after mixing. The volume
-          of solvent you add is a different quantity, so this calculator only takes solution volumes and never treats one as the other.
-        </p>
-        <p className="small">
-          <strong>Dilution</strong> adds solvent only, so the amount of solute does not change: n = C₁V₁ = C₂V₂. A dilution can only lower the concentration, and the final volume
-          is at least the volume of stock taken. Requests that break this are refused, with the reason.
-          <SourceLinks ids={['chem-3-3']} />
-        </p>
-        <p className="small">
-          <strong>Units.</strong> 1 L = 1 dm³ = 1000 mL; 1 mL = 1 cm³. Volumes are converted to litres before calculating.
-          <SourceLinks ids={['chem-1-4']} />
-        </p>
-        <h3 className="section-title">Assumptions</h3>
-        <ul className="guide-list small">
-          <li>The solute is fully dissolved and stays in solution.</li>
-          <li>Dilution adds only solvent; no solute is added or lost.</li>
-          <li>Inputs are limited to 20 M and 100 L. These are calculator limits, not chemical ones; real solutes have a maximum solubility that is not modelled.</li>
-        </ul>
-      </div>
-    </section>
+    <div className="info-body">
+      <p className="small">
+        <strong>Molarity</strong> is the amount of solute (in moles) per litre of <em>solution</em>: M = n / V, in mol/L (symbol M).
+        <SourceLinks ids={['chem-3-3']} />
+      </p>
+      <p className="small">
+        <strong>Volume of solution vs volume of solvent.</strong> V is the volume of the finished solution: the solute and the solvent together, measured after mixing. The volume
+        of solvent you add is a different quantity, so this calculator only takes solution volumes and never treats one as the other.
+      </p>
+      <p className="small">
+        <strong>Dilution</strong> adds solvent only, so the amount of solute does not change: n = C₁V₁ = C₂V₂. A dilution can only lower the concentration, and the final volume
+        is at least the volume of stock taken. Requests that break this are refused, with the reason.
+        <SourceLinks ids={['chem-3-3']} />
+      </p>
+      <p className="small">
+        <strong>Units.</strong> 1 L = 1 dm³ = 1000 mL; 1 mL = 1 cm³. Volumes are converted to litres before calculating.
+        <SourceLinks ids={['chem-1-4']} />
+      </p>
+      <h3 className="section-title">Assumptions</h3>
+      <ul className="guide-list small">
+        <li>The solute is fully dissolved and stays in solution.</li>
+        <li>Dilution adds only solvent; no solute is added or lost.</li>
+        <li>Inputs are limited to 20 M and 100 L. These are calculator limits, not chemical ones; real solutes have a maximum solubility that is not modelled.</li>
+      </ul>
+    </div>
   )
 }

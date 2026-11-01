@@ -619,7 +619,12 @@ function MolarMasses({ reaction }: { reaction: Reaction }) {
   )
 }
 
-export function ReactionPanel({ reactionId, shareParams }: { reactionId: string; shareParams: Record<string, string> }) {
+/** The page's share actions, shown outside the collapsed notes so Copy link stays easy to find. */
+export function ReactionShare({ shareParams }: { shareParams: Record<string, string> }) {
+  return <ShareActions subject="chemistry" params={shareParams} restores="this reaction (your coefficients and amounts are not stored)" compact />
+}
+
+export function ReactionPanel({ reactionId, shareParams, withShare = true }: { reactionId: string; shareParams: Record<string, string>; withShare?: boolean }) {
   const reaction = findReaction(reactionId)!
   return (
     <section className="panel info" aria-labelledby="rx-panel-heading">
@@ -651,7 +656,7 @@ export function ReactionPanel({ reactionId, shareParams }: { reactionId: string;
           Source of the equation
           <SourceLinks ids={[reaction.source]} />
         </p>
-        <ShareActions subject="chemistry" params={shareParams} restores="this reaction (your coefficients and amounts are not stored)" />
+        {withShare && <ShareActions subject="chemistry" params={shareParams} restores="this reaction (your coefficients and amounts are not stored)" />}
       </div>
     </section>
   )

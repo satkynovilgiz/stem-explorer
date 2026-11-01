@@ -44,11 +44,14 @@ test('Chemistry: breadcrumb, local topic sidebar (collapsible), deep links and B
   await expect(crumbs.getByRole('link', { name: 'Home' })).toBeVisible()
   await expect(crumbs).toContainText('Chemistry')
   await expect(crumbs).toContainText('Solutions and dilution')
+  // Calculators are single columns; the topic sidebar belongs to the model workspaces.
+  await expect(page.getByRole('navigation', { name: 'Chemistry topics' })).toHaveCount(0)
+  await page.goto('/?molecule=water#/chemistry')
   const nav = page.getByRole('navigation', { name: 'Chemistry topics' })
   await nav.getByRole('button', { name: /Periodic table/ }).click()
   await expect(crumbs).toContainText('Periodic table')
   await page.goBack()
-  await expect(crumbs).toContainText('Solutions and dilution')
+  await expect(crumbs).toContainText('Molecules')
   await page.goForward()
   await expect(crumbs).toContainText('Periodic table')
   // Collapsing keeps the current topic in view and is remembered.

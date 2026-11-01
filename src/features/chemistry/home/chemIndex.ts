@@ -4,7 +4,7 @@ import { REACTIONS } from '../../../data/chemistry/reactions'
 import { GLOSSARY } from '../../../data/glossary'
 import { normalize } from '../../../lib/chemistry'
 import type { ManifestRow } from '../../../reference/types'
-import { entryHref } from '../../../reference/types'
+import { learnHref } from '../../reference/route'
 
 /*
  * Everything Chemistry offers, as one list a student can search or browse by group. Each item has
@@ -232,7 +232,8 @@ export function referenceItems(rows: readonly ManifestRow[]): ChemItem[] {
       label: r.type === 'formula' ? ('Formula' as const) : r.type === 'substance' ? ('Molecule' as const) : ('Topic' as const),
       role: 'learn' as const,
       group: groupOf(r),
-      href: entryHref(r),
+      // Chemistry's explanations are read inside Chemistry.
+      href: learnHref(r.id),
       terms: r.terms,
     }))
 }

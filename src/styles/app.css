@@ -8867,3 +8867,23 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 
 /* The subject bar is an in-content row, not a full-width toolbar. */
 .subject-bar { border-bottom: 0; background: transparent; min-height: 0; }
+
+/* ---------- Chemistry Learn and Calculate pages: one column, reading order ---------- */
+.chem-landing { min-width: 0; }
+.chem-page { width: min(860px, 100%); margin: 0 auto; padding: var(--space-4) var(--space-5) var(--space-8); display: grid; gap: var(--space-5); align-content: start; }
+.chem-page.panel { border: 0; background: none; }
+.chem-page-head { display: grid; gap: var(--space-2); }
+.chem-page-head > * { margin: 0; }
+.chem-page-title { font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.chem-page-lead { font-size: 1.125rem; color: var(--color-text-muted); max-width: var(--measure-text); line-height: 1.55; }
+.chem-page-key { max-width: var(--measure-text); padding: var(--space-3) var(--space-4); border-left: 3px solid var(--color-accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--color-surface); line-height: 1.55; }
+.chem-text-link { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; color: var(--color-accent); font-weight: 600; text-decoration: none; }
+.chem-text-link:hover { text-decoration: underline; }
+.chem-page .sol-examples, .chem-page .sol-more { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); padding: var(--space-3) var(--space-4); }
+.chem-page .sol-examples > summary, .chem-page .sol-more > summary { min-height: 36px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+.share-menu { padding-left: var(--space-2); border-left: 2px solid var(--color-border); }
+.ref-page.is-learn { padding-top: var(--space-2); }
+
+/* Wide tables scroll inside their own box; grid columns may shrink below a table's width. */
+.cell-compare { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.table-scroll { max-width: 100%; overflow-x: auto; }

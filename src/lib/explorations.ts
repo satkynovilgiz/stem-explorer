@@ -1,3 +1,4 @@
+import { chemLearnEntries, parseChemLearn } from './urlState'
 import { motionEntries, parseMotionState } from './motionUrl'
 import { MOTIONS } from '../math/motion'
 import { ATLAS_CONFIG } from '../data/anatomy/atlas/config'
@@ -70,6 +71,11 @@ export function canonicalize(subject: string, params: Record<string, unknown>): 
       if (sec.section === 'solutions') {
         const sol = parseSolutionsState(search)
         return sol.invalid.length ? null : { subject, params: { molecule: r.moleculeId, view: r.representation, csec: 'solutions', ...solutionsEntries(sol.state) } }
+      }
+      if (sec.section === 'learn') {
+        const l = parseChemLearn(search)
+        if (l.invalid.length || !l.topic) return null
+        return { subject, params: { molecule: r.moleculeId, view: r.representation, csec: 'learn', ...chemLearnEntries(l.topic, l.focus) } }
       }
       return { subject, params: { molecule: r.moleculeId, view: r.representation, ...chemistrySectionEntries(sec.section, sec.element, sec.reaction) } }
     }

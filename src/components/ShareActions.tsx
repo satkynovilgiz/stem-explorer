@@ -1,5 +1,5 @@
-import { Bookmark, Check, ListPlus, NotebookPen } from 'lucide-react'
-import { useId, useState } from 'react'
+import { Bookmark, Check, ChevronDown, ListPlus, NotebookPen } from 'lucide-react'
+import { useId, useRef, useState } from 'react'
 import type { SubjectId } from '../data/subjects'
 import { canonicalize, defaultTitle, subjectName, type ShareState } from '../lib/explorations'
 import { browserStorage, MAX_TITLE_LENGTH, renameExploration, saveExploration, type Exploration } from '../lib/explorationStore'
@@ -20,6 +20,11 @@ interface Props {
   params: Record<string, string>
   /** What the link restores, for the Copy link message. */
   restores: string
+  /**
+   * Reading pages and calculators: Copy link stays visible and the three saving actions sit under
+   * one "Save…" button (a disclosure; Escape closes it and returns focus).
+   */
+  compact?: boolean
 }
 
 type Message =
@@ -32,13 +37,15 @@ type Message =
 
 
 /** Copy link + Save exploration, both built from one canonical share state. */
-export function ShareActions({ subject, params, restores }: Props) {
+export function ShareActions({ subject, params, restores, compact = false }: Props) {
   const id = useId()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [message, setMessage] = useState<Message | null>(null)
   const [noteOpen, setNoteOpen] = useState(false)
   const [collectOpen, setCollectOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(!compact)
+  const menuButton = useRef<HTMLButtonElement>(null)
   const state = canonicalize(subject, params)
   const suggested = state ? defaultTitle(state) : ''
   const draftScope = `new:${subject}`
@@ -88,6 +95,27 @@ export function ShareActions({ subject, params, restores }: Props) {
     <div className="share-actions">
       <div className="share-row">
         <CopyLinkButton restores={restores} getUrl={() => shareUrl(window.location, subject, params)} />
+        {compact && (
+          <button ref={menuButton} type="button" className="tool-button bordered" aria-expanded={menuOpen} aria-controls={`${id}-save-menu`} onClick={() => setMenuOpen((o) => !o)}>
+            <Bookmark size={16} aria-hidden="true" />
+            <span>Save…</span>
+            <ChevronDown size={14} aria-hidden="true" className={menuOpen ? 'is-flipped' : ''} />
+          </button>
+        )}
+      </div>
+      {menuOpen && (
+      <div
+        id={`${id}-save-menu`}
+        className={`share-row${compact ? ' share-menu' : ''}`}
+        role={compact ? 'group' : undefined}
+        aria-label={compact ? 'Save options' : undefined}
+        onKeyDown={(e) => {
+          if (compact && e.key === 'Escape') {
+            setMenuOpen(false)
+            menuButton.current?.focus()
+          }
+        }}
+      >
         <button
           type="button"
           className="tool-button bordered"
@@ -133,6 +161,7 @@ export function ShareActions({ subject, params, restores }: Props) {
           <span>Add to collection</span>
         </button>
       </div>
+      )}
       {collectOpen && state && (
         <AddToCollection
           state={state}

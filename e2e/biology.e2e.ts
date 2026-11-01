@@ -230,3 +230,12 @@ test.describe('URL state', () => {
     await expect(heading(page)).toHaveText('Golgi apparatus')
   })
 })
+
+test('regression: the cell page never scrolls sideways (the comparison table scrolls in its own box)', async ({ page }) => {
+  for (const width of [1440, 1280, 1024, 768]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/#/biology')
+    await expect(page.locator('.compare-table')).toBeAttached()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `${width}px`).toBeLessThanOrEqual(0)
+  }
+})

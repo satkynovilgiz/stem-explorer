@@ -5,6 +5,7 @@ import { AppLink } from '../../../components/AppLink'
 import { subjectName } from '../../../lib/explorations'
 import { searchAll, KIND_BADGE } from '../../../lib/searchIndex'
 import type { ManifestRow } from '../../../reference/types'
+import { learnHref } from '../../reference/route'
 import { loadManifest } from '../../reference/useManifest'
 import { baseItems, CHEM_GROUPS, referenceItems, ROLE_LABELS, searchChem, type ChemGroupId, type ChemItem, type ChemLabel, type ChemRole } from './chemIndex'
 import { CHEM_QUESTIONS } from './questions'
@@ -210,7 +211,7 @@ export function ChemistryHome() {
             </ul>
           </section>
 
-          <AppLink href="?csec=solutions&st=molarity#/chemistry" className="chem-feature">
+          <AppLink href={learnHref('molarity', 'example')} className="chem-feature">
             <span className="chem-feature-text">
               <span className="chem-eyebrow">Start with the basics</span>
               <span className="chem-feature-title">Understand molarity</span>
@@ -226,7 +227,7 @@ export function ChemistryHome() {
             <h2 id={`${id}-molecule`} className="chem-h2">
               Explore a molecule
             </h2>
-            <AppLink href="?molecule=water&view=ball-and-stick#/chemistry" className="chem-molecule">
+            <AppLink href="?molecule=water&view=ball-and-stick#/chemistry" className="chem-molecule" aria-label="Why is water bent? Open the 3D model of water">
               <img src={img('water-molecule')} alt="" className="chem-molecule-img" />
               <span>
                 <span className="chem-molecule-title">Why is water bent?</span>

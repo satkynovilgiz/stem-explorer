@@ -30,6 +30,8 @@ export function CellComparison({ cellType, onSelect }: { cellType: CellType; onS
     <div className="info-section cell-compare">
       <h3 className="section-title">Animal, plant and bacterial cells compared</h3>
       <p className="small muted">How the three simplified models differ. Real cells vary with their type and role; links select the structure in the model on screen.</p>
+      {/* The table scrolls inside its own box on narrow screens instead of widening the page. */}
+      <div className="table-scroll">
       <table className="compare-table">
         <caption className="visually-hidden">Features of the three cell models</caption>
         <thead>
@@ -51,6 +53,7 @@ export function CellComparison({ cellType, onSelect }: { cellType: CellType; onS
           ))}
         </tbody>
       </table>
+      </div>
       <p className="small muted">
         Eukaryotic cells have a membrane-bound nucleus and membrane-bound organelles; prokaryotes have neither.
         <SourceLinks ids={['bio-4-2', 'bio-4-3']} />
