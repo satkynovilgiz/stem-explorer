@@ -7,7 +7,7 @@ import { SUBJECTS, type SubjectId } from '../../data/subjects'
 import { atlasLink } from '../../lib/links'
 import { loadCatalog } from '../../reference/catalogs'
 import { REFERENCE_SOURCES } from '../../reference/sources'
-import { ENTRY_TYPE_LABELS, entryHref, FORMULA_KIND_LABELS, type AppLink as EntryLink, type ManifestRow, type ReferenceEntry } from '../../reference/types'
+import { ENTRY_TYPE_LABELS, entryHref, FORMULA_KIND_LABELS, type AppLink as EntryLink, type ManifestRow, type ReferenceEntry, type WorkedExample as WorkedExampleT } from '../../reference/types'
 import { libraryHref } from './route'
 import { RichText, Tex } from './Tex'
 
@@ -319,6 +319,75 @@ function TypeBody({ entry: e }: { entry: ReferenceEntry }) {
   }
 }
 
+/** A worked example; structured steps (given, find, relationship, conversions) are shown when present. */
+function ExampleView({ x }: { x: WorkedExampleT }) {
+  const structured = Boolean(x.given || x.find || x.relationship)
+  return (
+    <div className="ref-example">
+      {x.title && <h3 className="ref-sub">{x.title}</h3>}
+      <p>
+        <strong>Problem.</strong> <RichText text={x.problem} />
+      </p>
+      {structured ? (
+        <ol className="ref-worked">
+          {x.given?.length ? (
+            <li>
+              <span className="ref-worked-q">What is given?</span>
+              <ul>
+                {x.given.map((g) => (
+                  <li key={g}>
+                    <RichText text={g} />
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ) : null}
+          {x.find && (
+            <li>
+              <span className="ref-worked-q">What are we finding?</span> <RichText text={x.find} />
+            </li>
+          )}
+          {x.relationship && (
+            <li>
+              <span className="ref-worked-q">Which relationship applies?</span> <RichText text={x.relationship} />
+            </li>
+          )}
+          {x.convert && (
+            <li>
+              <span className="ref-worked-q">Are unit conversions needed?</span> <RichText text={x.convert} />
+            </li>
+          )}
+          {x.steps.length > 0 && (
+            <li>
+              <span className="ref-worked-q">Substitute and calculate</span>
+              <ol className="ref-steps">
+                {x.steps.map((s) => (
+                  <li key={s}>
+                    <RichText text={s} />
+                  </li>
+                ))}
+              </ol>
+            </li>
+          )}
+        </ol>
+      ) : (
+        x.steps.length > 0 && (
+          <ol className="ref-steps">
+            {x.steps.map((s) => (
+              <li key={s}>
+                <RichText text={s} />
+              </li>
+            ))}
+          </ol>
+        )
+      )}
+      <p className="ref-answer">
+        <strong>Answer.</strong> <RichText text={x.answer} />
+      </p>
+    </div>
+  )
+}
+
 function EntryView({ entry: e, manifest }: { entry: ReferenceEntry; manifest: ReadonlyMap<string, ManifestRow> | null }) {
   const title = (id: string) => manifest?.get(id)?.title ?? id.replace(/-/g, ' ')
   const hrefOf = (id: string) => {
@@ -326,6 +395,8 @@ function EntryView({ entry: e, manifest }: { entry: ReferenceEntry; manifest: Re
     return row ? entryHref(row) : libraryHref({ q: id.replace(/-/g, ' ') })
   }
   const typeLabel = e.type === 'formula' ? FORMULA_KIND_LABELS[e.kind] : ENTRY_TYPE_LABELS[e.type]
+  // Student-first layout when the entry has a plain-words summary (see types.ts).
+  const student = Boolean(e.simple)
   return (
     <article className={`ref-page ref-entry subject-${e.subject}`} aria-labelledby="ref-title">
       <nav className="ref-crumbs" aria-label="Breadcrumb">
@@ -370,53 +441,119 @@ function EntryView({ entry: e, manifest }: { entry: ReferenceEntry; manifest: Re
           <CopyLinkButton getUrl={() => `${window.location.origin}${window.location.pathname}${entryHref(e)}`} restores="this reference entry" />
         </div>
       </header>
-      <EntryLinks entry={e} />
-      <div className="ref-body">
-        <TypeBody entry={e} />
-      </div>
-      <Section title="Explanation">
-        {e.explanation.map((p) => (
-          <p key={p}>
-            <RichText text={p} />
-          </p>
-        ))}
-      </Section>
-      <Section title={e.examples.length > 1 ? 'Examples' : 'Example'}>
-        {e.examples.map((x, i) => (
-          <div key={i} className="ref-example">
-            {x.title && <h3 className="ref-sub">{x.title}</h3>}
+      {student ? (
+        <>
+          <section className="ref-plain" aria-labelledby="ref-simple">
+            <h2 id="ref-simple" className="ref-plain-title">
+              In simple words
+            </h2>
             <p>
-              <strong>Problem.</strong> <RichText text={x.problem} />
+              <RichText text={e.simple!} />
             </p>
-            {x.steps.length > 0 && (
-              <ol className="ref-steps">
-                {x.steps.map((s) => (
-                  <li key={s}>
-                    <RichText text={s} />
-                  </li>
+          </section>
+          {e.why && (
+            <section className="ref-plain" aria-labelledby="ref-why">
+              <h2 id="ref-why" className="ref-plain-title">
+                Why it matters
+              </h2>
+              <p>
+                <RichText text={e.why} />
+              </p>
+            </section>
+          )}
+          {e.keyTerms?.length ? (
+            <section className="ref-plain" aria-labelledby="ref-terms">
+              <h2 id="ref-terms" className="ref-plain-title">
+                Key terms
+              </h2>
+              <dl className="ref-terms">
+                {e.keyTerms.map((t) => (
+                  <div key={t.term}>
+                    <dt>{t.term}</dt>
+                    <dd>{t.meaning}</dd>
+                  </div>
                 ))}
-              </ol>
-            )}
-            <p className="ref-answer">
-              <strong>Answer.</strong> <RichText text={x.answer} />
-            </p>
+              </dl>
+            </section>
+          ) : null}
+          {e.type !== 'concept' && e.type !== 'worked-example' && (
+            <section className="ref-plain" aria-labelledby="ref-formula">
+              <h2 id="ref-formula" className="ref-plain-title">
+                {e.type === 'formula' ? 'Formula' : e.type === 'process' ? 'Steps' : 'Facts'}
+              </h2>
+              <div className="ref-body">
+                <TypeBody entry={e} />
+              </div>
+            </section>
+          )}
+          <Section title={e.examples.length > 1 ? 'Worked examples' : 'Worked example'}>
+            {e.examples.map((x, i) => (
+              <ExampleView key={i} x={x} />
+            ))}
+          </Section>
+          {e.mistakes?.length ? (
+            <Section title={e.mistakes.length > 1 ? 'Common mistakes' : 'Common mistake'}>
+              <List items={e.mistakes} />
+            </Section>
+          ) : null}
+          {e.links?.length || (e.type === 'structure' && e.atlasIds?.length) ? (
+            <section className="ref-plain" aria-labelledby="ref-explore">
+              <h2 id="ref-explore" className="ref-plain-title">
+                Explore it
+              </h2>
+              <EntryLinks entry={e} />
+            </section>
+          ) : null}
+          <Section title="More detail" open={false}>
+            {e.explanation.map((p) => (
+              <p key={p}>
+                <RichText text={p} />
+              </p>
+            ))}
+            <h3 className="ref-sub">Conditions and limitations</h3>
+            <List items={e.conditions} />
+            {e.modelLimitations?.length ? (
+              <>
+                <h3 className="ref-sub">How the app’s model simplifies this</h3>
+                <List items={e.modelLimitations} />
+              </>
+            ) : null}
+          </Section>
+        </>
+      ) : (
+        <>
+          <EntryLinks entry={e} />
+          <div className="ref-body">
+            <TypeBody entry={e} />
           </div>
-        ))}
-      </Section>
-      <Section title="Conditions and limitations">
-        <List items={e.conditions} />
-        {e.modelLimitations?.length ? (
-          <>
-            <h3 className="ref-sub">How the app’s model simplifies this</h3>
-            <List items={e.modelLimitations} />
-          </>
-        ) : null}
-      </Section>
-      {e.mistakes?.length ? (
-        <Section title="Common mistakes">
-          <List items={e.mistakes} />
-        </Section>
-      ) : null}
+          <Section title="Explanation">
+            {e.explanation.map((p) => (
+              <p key={p}>
+                <RichText text={p} />
+              </p>
+            ))}
+          </Section>
+          <Section title={e.examples.length > 1 ? 'Examples' : 'Example'}>
+            {e.examples.map((x, i) => (
+              <ExampleView key={i} x={x} />
+            ))}
+          </Section>
+          <Section title="Conditions and limitations">
+            <List items={e.conditions} />
+            {e.modelLimitations?.length ? (
+              <>
+                <h3 className="ref-sub">How the app’s model simplifies this</h3>
+                <List items={e.modelLimitations} />
+              </>
+            ) : null}
+          </Section>
+          {e.mistakes?.length ? (
+            <Section title="Common mistakes">
+              <List items={e.mistakes} />
+            </Section>
+          ) : null}
+        </>
+      )}
       <Section title="Related entries">
         <ul className="ref-related">
           {e.related.map((r) => {

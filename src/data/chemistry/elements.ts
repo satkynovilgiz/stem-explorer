@@ -2,7 +2,7 @@ import type { ElementInfo, ElementSymbol, Representation } from './types'
 
 /**
  * Colors: CPK / Jmol convention (https://jmol.sourceforge.net/jscolors/). N
- * and C match Jmol exactly; H and O are slightly adjusted for contrast on the dark background.
+ * and C match Jmol exactly; H and O are slightly adjusted for contrast.
  * Radii: Bondi van der Waals radii, J. Phys. Chem. 1964, 68, 441–451.
  */
 export const ELEMENTS: Record<ElementSymbol, ElementInfo> = {

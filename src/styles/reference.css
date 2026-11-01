@@ -213,3 +213,14 @@
   .ref-summary, .ref-result-summary, .muted { color: #333 !important; }
   .ref-sources a::after { content: ' (' attr(href) ')'; font-size: 0.8em; word-break: break-all; }
 }
+
+/* Student-first layout */
+.ref-plain { display: grid; gap: var(--space-2); }
+.ref-plain > p { margin: 0; max-width: var(--measure-text, 68ch); font-size: 1.0625rem; line-height: 1.65; }
+.ref-plain-title { margin: 0; font-size: 1.25rem; }
+.ref-worked { margin: 0; padding-left: 1.25rem; display: grid; gap: var(--space-3); list-style: decimal; line-height: 1.6; }
+.ref-worked ul { margin: 4px 0 0; padding-left: 1.1rem; list-style: disc; }
+.ref-worked-q { display: block; font-weight: 700; }
+.ref-worked .ref-steps { margin-top: 4px; }
+.ref-terms > div { display: grid; grid-template-columns: minmax(120px, 200px) 1fr; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
+@media (max-width: 560px) { .ref-terms > div { grid-template-columns: 1fr; gap: 2px; } }

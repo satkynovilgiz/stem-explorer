@@ -15,9 +15,12 @@ describe('chemistry search', () => {
   })
 
   it('matches synonyms and student questions to the right tool', () => {
-    expect(top('molarity')?.id).toBe('calc:molarity')
+    // The explanation comes first, the calculator right after it.
+    expect(searchChem(items, 'molarity').slice(0, 2).map((i) => i.id)).toEqual(['ref:molarity', 'calc:molarity'])
     expect(searchChem(items, 'concentration').map((i) => i.id)).toContain('calc:molarity')
-    expect(top('how do I calculate a dilution')?.id).toBe('calc:dilution')
+    expect(searchChem(items, 'how do I calculate a dilution').slice(0, 2).map((i) => i.id).sort()).toEqual(['calc:dilution', 'ref:dilution'])
+    expect(top('what is a mole')?.id).toBe('ref:the-mole')
+    expect(top('pH')?.id).toBe('ref:ph-scale')
     for (const q of ['C1V1=C2V2', 'c1 v1 = c2 v2', 'C₁V₁ = C₂V₂']) expect(searchChem(items, q).map((i) => i.id), q).toContain('calc:dilution')
     expect(top('balance')?.id).toBe('calc:balance')
     expect(top('Fe')?.id).toBe('element:26')

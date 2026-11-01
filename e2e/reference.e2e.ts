@@ -74,3 +74,29 @@ test('Copy link copies the canonical entry route', async ({ page, baseURL }) => 
   await page.getByRole('button', { name: 'Copy link' }).click()
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${baseURL}/#/reference/chemistry/water`)
 })
+
+test('student layout: molarity reads simple words first, a step-by-step example, a common mistake, then the calculator', async ({ page }) => {
+  await page.goto('/#/reference/chemistry/molarity')
+  await expect(page.locator('#ref-simple')).toBeVisible()
+  const headings = await page.locator('.ref-plain-title, .ref-section-title').allTextContents()
+  expect(headings.slice(0, 5)).toEqual(['In simple words', 'Why it matters', 'Key terms', 'Formula', 'Worked examples'])
+  await expect(page.locator('.ref-worked-q').first()).toHaveText('What is given?')
+  await expect(page.locator('.ref-worked').first()).toContainText('Are unit conversions needed?')
+  await expect(page.locator('.ref-answer').first()).toContainText('0.500 M')
+  await expect(page.getByRole('heading', { name: 'Common mistakes' })).toBeVisible()
+  // More detail starts collapsed; sources stay available.
+  await expect(page.locator('details', { has: page.getByRole('heading', { name: 'More detail' }) })).not.toHaveAttribute('open', '')
+  await page.getByRole('link', { name: /Molarity calculator/ }).click()
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Solutions and dilution')
+})
+
+test('Chemistry home: the questions now open explanations, and every group has content', async ({ page }) => {
+  await page.goto('/?csec=topics#/chemistry')
+  await expect(page.locator('.chem-group')).toHaveCount(6)
+  await page.getByRole('link', { name: 'What is a mole?', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('What is a mole?')
+  await page.goBack()
+  await page.getByRole('link', { name: 'Why is water bent?', exact: true }).click()
+  await expect(page.locator('#ref-simple')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 3, name: 'Why is water bent?' })).toBeVisible()
+})

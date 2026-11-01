@@ -34,6 +34,13 @@ export const openstax = (book: keyof typeof BOOKS, page: string, title: string):
 /** Pages added for the reference library (each read before being cited). */
 export const LIBRARY_SOURCES: Record<string, SourceRef> = {
   'up1-3-4': openstax('university-physics-volume-1', '3-4-motion-with-constant-acceleration', '3.4 Motion with Constant Acceleration'),
+  'chem-1-2': openstax('chemistry-2e', '1-2-phases-and-classification-of-matter', '1.2 Phases and Classification of Matter'),
+  'chem-2-4': openstax('chemistry-2e', '2-4-chemical-formulas', '2.4 Chemical Formulas'),
+  'chem-3-1': openstax('chemistry-2e', '3-1-formula-mass-and-the-mole-concept', '3.1 Formula Mass and the Mole Concept'),
+  'chem-5-1': openstax('chemistry-2e', '5-1-energy-basics', '5.1 Energy Basics'),
+  'chem-14-1': openstax('chemistry-2e', '14-1-bronsted-lowry-acids-and-bases', '14.1 Brønsted-Lowry Acids and Bases'),
+  'chem-14-2': openstax('chemistry-2e', '14-2-ph-and-poh', '14.2 pH and pOH'),
+  'jmol-colors': { label: 'Jmol — CPK element colours', url: 'https://jmol.sourceforge.net/jscolors/' },
 }
 
 export const REFERENCE_SOURCES: Record<string, SourceRef> = { ...SOURCES, ...LIBRARY_SOURCES }

@@ -32,7 +32,7 @@ test('search finds formulas however they are typed, labels each result, and filt
     ['H₂O', 'Water (H₂O)'],
     ['co2', 'Carbon dioxide (CO₂)'],
     ['C2H6O', 'Ethanol (C₂H₆O)'],
-    ['molarity', 'Molarity calculator'],
+    ['molarity', 'Molarity'],
   ]) {
     await box(page).fill(q)
     await expect(results(page).first().locator('.chem-result-title'), q).toHaveText(title)

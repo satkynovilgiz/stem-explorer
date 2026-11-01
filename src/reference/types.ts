@@ -62,6 +62,13 @@ export interface AppLink {
 export interface WorkedExample {
   title?: string
   problem: string
+  /** Student layout: what is given, what we are finding, which relationship applies, conversions. */
+  given?: string[]
+  find?: string
+  relationship?: string
+  /** Unit conversions needed, or a sentence saying none are. */
+  convert?: string
+  /** Substitution and calculation, one step per item (values with units). */
   steps: string[]
   answer: string
   check?: { value: number; expected: number; relTol?: number; unit?: string }
@@ -98,6 +105,13 @@ interface BaseEntry {
   links?: AppLink[]
   /** Common mistakes or misconceptions, with the correction. */
   mistakes?: string[]
+  /**
+   * Student-first layout (used when present): the main idea in plain words, why it matters, and the
+   * key terms defined before they are relied on. The fuller explanation moves into "More detail".
+   */
+  simple?: string
+  why?: string
+  keyTerms?: { term: string; meaning: string }[]
 }
 
 export interface SymbolDef {

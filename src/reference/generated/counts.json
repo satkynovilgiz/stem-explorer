@@ -4,9 +4,12 @@
     "structure": 2
   },
   "chemistry": {
-    "total": 2,
-    "substance": 1,
-    "concept": 1
+    "total": 17,
+    "concept": 8,
+    "formula": 5,
+    "process": 2,
+    "worked-example": 1,
+    "substance": 1
   },
   "physics": {
     "total": 1,

@@ -638,6 +638,28 @@ breadcrumb's *Chemistry* and the topic sidebar's *Chemistry home* lead here.
   library's chemistry entries. Unit tests cover the search cases above; every result link is
   checked to open a valid state.
 
+### Chemistry explanations for students
+
+Chemistry's reference entries are written for students meeting the ideas for the first time
+(`src/reference/catalogs/chemistry/`). An entry with a plain-words summary uses a student-first
+layout: **In simple words**, **Why it matters**, **Key terms** (defined before they are used), the
+**Formula** with every symbol and unit, a **Worked example** that answers *What is given? What are
+we finding? Which relationship applies? Are unit conversions needed?* before substituting values
+with units, a **Common mistake**, **Explore it** (the matching calculator or 3D model), and then
+**More detail** (collapsed) and **Sources**. Topics without a formula skip that part.
+
+Entries (17): atoms, elements, molecules and compounds; reading a chemical formula; covalent and
+ionic bonds; electron-pair geometry (VSEPR); water (*Why is water bent?*); reading a molecule model
+(spheres, sticks, CPK colours, ball-and-stick vs space-filling, what the model leaves out); the
+mole; molar mass; balancing equations; mole ratios; molarity (moles of solute, litres of solution
+and mol/L kept apart); dilution (the final volume V₂ is not the volume of water added); acids and
+bases; pH; neutralisation; the ideal gas law; exothermic and endothermic changes. They fill the
+*Acids & bases* and *Gases & energy* groups on the Chemistry home page and answer *What is a
+mole?*. Facts were checked against OpenStax Chemistry 2e §1.2, 1.4, 2.4, 3.1, 3.3, 4.1–4.3, 5.1,
+7.1, 7.2, 7.6, 9.2, 14.1 and 14.2 and the Jmol colour table; every numerical example is recomputed
+by a test. Display rounding is stated in the answers (e.g. 1.998 mol shown as 2.00 mol). These
+checks do not show that the explanations are easy to understand: that needs testing with students.
+
 ### Molecules
 
 | Molecule | Formula | Geometry shown |
