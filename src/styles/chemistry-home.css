@@ -203,3 +203,29 @@
 /* Molecules page: measured and computed groups; computed cards say so. */
 .chem-section-note { margin: calc(-1 * var(--space-2)) 0 var(--space-3); color: var(--color-text-muted); font-size: 0.9375rem; max-width: var(--measure-text); }
 .chem-molecule-kind { justify-self: start; margin-top: 4px; padding: 1px 8px; border-radius: 999px; background: var(--color-surface-hover); color: var(--color-text-muted); font-size: 0.75rem; font-weight: 600; }
+
+/* ---------- Subject overviews (Anatomy, Biology, Physics, Mathematics) ---------- */
+.subj-home .chem-home-head { min-height: 0; padding-top: var(--space-4); }
+.subj-eyebrow { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 var(--space-3); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.subj-eyebrow.is-anatomy { color: var(--subject-anatomy); }
+.subj-eyebrow.is-biology { color: var(--subject-biology); }
+.subj-eyebrow.is-physics { color: var(--subject-physics); }
+.subj-eyebrow.is-mathematics { color: var(--subject-mathematics); }
+.subj-toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.subj-chapter { display: grid; align-content: start; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); overflow: hidden; }
+.subj-chapter-head { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); color: var(--color-text); text-decoration: none; }
+.subj-chapter-head:hover { background: var(--color-surface-hover); }
+.subj-chapter-head:focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; }
+.subj-chapter-num { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px; background: var(--color-accent-soft); color: var(--color-accent-strong); font-weight: 700; font-size: 0.875rem; }
+.subj-chapter-text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.subj-chapter-title { font-weight: 700; font-size: 1.0625rem; }
+.subj-chapter-summary { color: var(--color-text-muted); font-size: 0.875rem; line-height: 1.4; }
+.subj-chapter-chevron { flex: none; margin-top: 4px; color: var(--color-text-muted); }
+.subj-topics { display: grid; gap: 2px; margin: 0; padding: 0 var(--space-4) var(--space-3) calc(var(--space-4) + 28px + var(--space-3)); list-style: none; font-size: 0.9375rem; }
+.subj-topics a { display: inline-flex; align-items: center; gap: 4px; min-height: 30px; color: var(--color-accent-strong); text-decoration: none; }
+.subj-topics a:hover { text-decoration: underline; }
+.subj-more a { font-weight: 600; }
+
+.subj-home .chem-badge { justify-self: start; }
+.subj-home .chem-home-foot { display: block; line-height: 1.6; }
+.subj-home .chem-home-foot svg { vertical-align: -3px; margin-right: 4px; }

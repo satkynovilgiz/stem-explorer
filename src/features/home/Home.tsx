@@ -2,7 +2,7 @@ import { ArrowRight, BookA, Bookmark, BookOpen, Compass, ExternalLink, ListOrder
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SUBJECTS, type SubjectId } from '../../data/subjects'
-import { modulesOf } from '../../data/topics'
+import { overviewHref } from '../../lib/overviewRoute'
 import { useExplorationLibrary } from '../../lib/useExplorationLibrary'
 import { SUBJECT_CARDS } from './content'
 import { HeroAtom } from './HeroAtom'
@@ -99,7 +99,8 @@ export function Home() {
         <ul className="subject-cards subject-tiles">
           {ORDER.map((id, i) => {
             const card = SUBJECT_CARDS[id]
-            const href = id === 'chemistry' ? CHEMISTRY_HOME : modulesOf(id)[0].href
+            // Each card opens the subject's Overview (contents, search and common questions).
+            const href = id === 'chemistry' ? CHEMISTRY_HOME : overviewHref(id)
             return (
               <li key={id} className={`subject-card is-${id}`} data-reveal style={{ '--i': i } as CSSProperties}>
                 <AppLink className="subject-card-action" href={href}>

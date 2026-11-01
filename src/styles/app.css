@@ -9045,3 +9045,17 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 .home--design { overflow-x: clip; }
 @media print { .home.has-motion [data-reveal] { opacity: 1 !important; translate: none !important; } }
 .info-kind { margin: 4px 0 0; font-size: var(--text-xs); }
+
+/* Each subject's brand mark in its own colour. */
+.chem-bar.is-anatomy .chem-brand-mark { color: var(--subject-anatomy); }
+.chem-bar.is-biology .chem-brand-mark { color: var(--subject-biology); }
+.chem-bar.is-physics .chem-brand-mark { color: var(--subject-physics); }
+.chem-bar.is-mathematics .chem-brand-mark { color: var(--subject-mathematics); }
+@media (max-width: 899px) {
+  .chem-bar-actions .topics-toggle { min-width: 36px; justify-content: center; }
+  .chem-bar-actions .topics-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+/* Other subjects have more sections than Chemistry: their tabs get a full-width row under the brand. */
+.chem-bar:not(.is-chemistry) .chem-bar-main { flex-wrap: wrap; row-gap: 0; }
+.chem-bar:not(.is-chemistry) .chem-nav { order: 3; flex-basis: 100%; }
+.chem-bar:not(.is-chemistry) .chem-bar-main { padding-top: 6px; }

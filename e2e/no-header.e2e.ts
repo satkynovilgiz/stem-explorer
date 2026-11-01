@@ -32,7 +32,7 @@ test('Chemistry is the first subject card; each card opens its subject and ← H
   await expect(page.locator('.subject-card').first()).toHaveClass(/is-chemistry/)
   for (const id of ['chemistry', 'anatomy', 'biology', 'physics', 'mathematics']) {
     await page.locator(`.subject-card.is-${id} .subject-card-action`).click()
-    await expect(page).toHaveURL(new RegExp(`#/${id}$`))
+    await expect(page).toHaveURL(new RegExp(id === 'chemistry' ? `#/${id}$` : `#/${id}/overview$`))
     await goHome(page)
     await expect(homeTitle(page)).toBeVisible()
   }

@@ -16,7 +16,24 @@ has **All ⟨subject⟩ topics** (a drawer listing only that subject's modules a
 closes it and returns focus) and *Present*. Other pages (search, reference, glossary, notebook,
 collections) have a **← Home** link at the top. Other subjects are reached from Home and from
 search; the `/` shortcut still opens search. Chemistry replaces the drawer with a row of six
-destination tabs (see *Chemistry destinations*). All five subjects are implemented:
+destination tabs (see *Chemistry destinations*).
+
+**Every subject has the same header** (still local to the subject): a thin breadcrumb row, the
+subject brand (it opens the subject's Overview), tabs for the Overview and each section, a compact
+**Search** box, and on model pages the layout and Present controls. Anatomy, Biology, Physics and
+Mathematics keep the *All ⟨subject⟩ topics* drawer; their tabs have a full-width row because they
+have up to eight sections.
+
+**Subject Overviews** (`#/anatomy/overview`, `#/biology/overview`, `#/physics/overview`,
+`#/mathematics/overview`; `src/features/subjects/`) are where Home's subject cards now lead. Each has
+one plain sentence on what the subject covers; a search of that subject only (structures, labs,
+processes, functions, glossary terms and reference entries; the query is kept in `sq`, so Back from
+a result returns to the results, and the header search opens it); **Contents**, one card per section
+with its summary and direct links (the section's curated topics, or the items the search index
+links into that section); **Common questions**, each opening the top search result for a fixed query
+(a unit test checks every one finds real content, and a question with no answer is not shown); and
+the subject's reference-library entries. The overview is a sub-route of the subject, so no
+subject's URL keys change and every older link opens as before. All five subjects are implemented:
 - **Anatomy Explorer:** a schematic whole-body atlas with eleven organ-system layers, skeletal and
   muscular detail with elbow and knee demonstrations, organ-system tours and close-ups, and a
   detailed heart module with a blood-flow tour.

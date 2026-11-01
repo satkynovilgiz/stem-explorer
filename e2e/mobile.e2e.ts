@@ -114,6 +114,10 @@ test('Home fits a phone, searches and opens a subject', async ({ page }) => {
   await expect(page).toHaveURL(/#\/biology$/)
   await page.locator('.crumb-home, .home-link').first().tap()
   await page.locator('.subject-card.is-physics .subject-card-action').tap()
+  await expect(page.getByRole('heading', { level: 1, name: 'Explore physics' })).toBeVisible()
+  // The overview fits the phone and its contents open a lab.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
+  await page.locator('.subj-chapter-head', { hasText: 'Projectile motion' }).tap()
   await expect(page.getByRole('heading', { level: 1, name: 'Physics Explorer: projectile motion lab' })).toBeAttached()
 })
 

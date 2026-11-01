@@ -7,7 +7,8 @@ import { useLocationSearch } from '../lib/location'
 import { moduleHref, rememberModuleState } from '../lib/moduleContext'
 import { restoreLayout, toggleFocus, toggleSide, usePeek, useWorkspace } from '../lib/workspace'
 import { AppLink } from './AppLink'
-import { ChemHeaderSearch, ChemNav } from './ChemNav'
+import { ChemHeaderSearch, ChemNav, SubjectHeaderSearch, SubjectNav } from './ChemNav'
+import { overviewHref } from '../lib/overviewRoute'
 import { SubjectIcon } from './SubjectIcon'
 
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
@@ -18,7 +19,7 @@ const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
  * subjects are reached from Home and from search. Each explorer's own toolbar holds its display
  * controls.
  */
-export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPresent?: () => void }) {
+export function SubjectBar({ subject, overview = false, onPresent }: { subject: SubjectId; overview?: boolean; onPresent?: () => void }) {
   const search = useLocationSearch()
   const { module, topic } = locate(subject, search)
   const [open, setOpen] = useState(false)
@@ -41,8 +42,11 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
   // Layout and presentation controls belong to model workspaces. Chemistry's topic page, reading
   // pages and calculators are single columns, so they have none.
   const CHEM_WORKSPACES = ['chemistry.molecules', 'chemistry.periodic', 'chemistry.atomic', 'chemistry.bonding']
-  const hasPanels = subject !== 'chemistry' || CHEM_WORKSPACES.includes(module.id)
+  const hasPanels = !overview && (subject !== 'chemistry' || CHEM_WORKSPACES.includes(module.id))
   const isChemTopics = module.id === 'chemistry.topics'
+  // The subject's own landing page: Chemistry's Overview, or another subject's #/<subject>/overview.
+  const atOverview = subject === 'chemistry' ? isChemTopics : overview
+  const name = subjectName(subject)
   // Chemistry's Elements, Atomic structure and Bonding workspaces have no left panel.
   const hasLeft = subject !== 'chemistry' || module.id === 'chemistry.molecules'
 
@@ -72,15 +76,16 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
             {!isChemTopics && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
           </li>
         ) : (
+          // Other subjects: the subject name leads to its Overview.
           <li>
-            <span className={`crumb-subject is-${subject}`}>
+            <AppLink href={overviewHref(subject)} className={`crumb-subject is-${subject}`} aria-current={overview ? 'page' : undefined}>
               <SubjectIcon subject={subject} size={14} />
-              {subjectName(subject)}
-            </span>
-            <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
+              {name}
+            </AppLink>
+            {!overview && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
           </li>
         )}
-        {!isChemTopics && (
+        {!atOverview && (
           <li>
             <span className="crumb-module" aria-current={topic ? undefined : 'page'}>
               {module.name}
@@ -88,7 +93,7 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
             {topic && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
           </li>
         )}
-        {topic && (
+        {topic && !atOverview && (
           <li>
             <span className="crumb-topic" aria-current="page">
               {topic}
@@ -143,39 +148,32 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
     </button>
   )
 
-  // Chemistry has its own header: a thin breadcrumb row, then the brand, the six destination tabs,
-  // a compact search (the Overview has its own large one) and, on model pages, layout controls.
-  if (subject === 'chemistry')
-    return (
-      <div className="subject-bar chem-bar">
-        <div className="chem-bar-top">{crumbs}</div>
-        <div className="chem-bar-main">
-          <AppLink href="?csec=topics#/chemistry" className="chem-brand" aria-label="Chemistry Explorer: Overview">
-            <span className="chem-brand-mark">
-              <SubjectIcon subject="chemistry" size={18} />
-            </span>
-            <span className="chem-brand-name">Chemistry</span>
-          </AppLink>
-          <ChemNav moduleId={module.id} />
-          <div className="chem-bar-actions">
-            {!isChemTopics && <ChemHeaderSearch />}
-            {layoutControls}
-            {present}
-          </div>
+  // Every subject has its own header: a thin breadcrumb row, then the brand (it opens the subject's
+  // Overview), the destination tabs, a compact search (the Overview has its own large one) and, on
+  // model pages, layout controls. Other subjects keep the drawer listing their modules and topics.
+  return (
+    <div className={`subject-bar chem-bar is-${subject}`}>
+      <div className="chem-bar-top">{crumbs}</div>
+      <div className="chem-bar-main">
+        <AppLink href={overviewHref(subject)} className="chem-brand" aria-label={`${name} Explorer: Overview`}>
+          <span className="chem-brand-mark">
+            <SubjectIcon subject={subject} size={18} />
+          </span>
+          <span className="chem-brand-name">{name}</span>
+        </AppLink>
+        {subject === 'chemistry' ? <ChemNav moduleId={module.id} /> : <SubjectNav subject={subject} name={name} moduleId={module.id} overview={overview} />}
+        <div className="chem-bar-actions">
+          {!atOverview && (subject === 'chemistry' ? <ChemHeaderSearch /> : <SubjectHeaderSearch subject={subject} name={name} />)}
+          {subject !== 'chemistry' && (
+            <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+              <ListTree size={15} aria-hidden="true" />
+              <span>All {name.toLowerCase()} topics</span>
+            </button>
+          )}
+          {layoutControls}
+          {present}
         </div>
       </div>
-    )
-
-  return (
-    <div className="subject-bar">
-      {crumbs}
-      {layoutControls}
-      {/* Other subjects list their modules and topics in a drawer. */}
-      <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
-        <ListTree size={15} aria-hidden="true" />
-        <span>All {subjectName(subject).toLowerCase()} topics</span>
-      </button>
-      {present}
       {open && <TopicDrawer subject={subject} current={module} onClose={close} />}
     </div>
   )

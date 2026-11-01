@@ -22,6 +22,11 @@ export function routeFromHash(hash: string): Route {
   return isSubjectId(id) ? id : id === 'glossary' || id === 'notebook' || id === 'collections' || id === 'search' || id === 'reference' || id === 'discover' ? id : 'home'
 }
 
+/** The raw URL hash (e.g. "#/physics/overview"), updated on navigation. */
+export function useHash(): string {
+  return useSyncExternalStore(subscribeHash, () => window.location.hash)
+}
+
 /** Current route from the URL hash; Home when there is no recognized subject. */
 export function useRoute(): Route {
   return routeFromHash(useSyncExternalStore(subscribeHash, () => window.location.hash))

@@ -35,9 +35,9 @@ test.describe('Home page', () => {
     await page.goto('/')
     for (const [id, heading] of Object.entries(SUBJECT_HEADINGS)) {
       await page.locator(`.subject-card.is-${id} .subject-card-action`).click()
-      await expect(page).toHaveURL(new RegExp(`#/${id}$`))
-      // Each card opens its subject's first lab (some are 2D, so no 3D viewport is awaited).
-      await expect(page.getByRole('heading', { level: 1, name: new RegExp(`^${heading.split(':')[0]}`) })).toBeAttached()
+      // Chemistry opens its Overview; the other cards open their subject's Overview page.
+      await expect(page).toHaveURL(new RegExp(id === 'chemistry' ? `#/${id}$` : `#/${id}/overview$`))
+      await expect(page.getByRole('heading', { level: 1, name: id === 'chemistry' ? new RegExp(`^${heading.split(':')[0]}`) : `Explore ${id}` })).toBeAttached()
       await goHome(page)
       await expect(homeTitle(page)).toBeVisible()
     }
@@ -70,7 +70,7 @@ test.describe('Home page', () => {
     await expect(link).toBeFocused()
     expect(await link.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid')
     await page.keyboard.press('Enter')
-    await expect(page).toHaveURL(/#\/mathematics$/)
+    await expect(page).toHaveURL(/#\/mathematics\/overview$/)
   })
 
   test('featured explorations (on Discover) use supported deep links', async ({ page }) => {
@@ -250,7 +250,7 @@ test('Back and Forward move between Home and explorers', async ({ page }) => {
   await page.goForward()
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
   await openSubject(page, 'physics')
-  await expect(page.getByRole('heading', { level: 1, name: SUBJECT_HEADINGS.physics })).toBeAttached()
+  await expect(page.getByRole('heading', { level: 1, name: 'Explore physics' })).toBeAttached()
   await page.goBack()
   await expect(homeTitle(page)).toBeVisible()
   await page.goBack()
@@ -310,7 +310,7 @@ test.describe('Home design and exploration flow', () => {
 
   test('each subject card opens a real destination', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('.subject-card.is-mathematics .subject-card-action')).toHaveAttribute('href', /#\/mathematics$/)
+    await expect(page.locator('.subject-card.is-mathematics .subject-card-action')).toHaveAttribute('href', /#\/mathematics\/overview$/)
     await page.locator('.subject-card.is-anatomy .subject-card-action').click()
     await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Anatomy')
   })
