@@ -630,8 +630,16 @@ its own box (found by an automated sweep of 30 pages at six widths).
 
 ### Chemistry destinations
 
-Chemistry is organised as a reference, not a course. A tab row under the breadcrumb
-(`nav` named *Chemistry*, the current tab marked `aria-current="page"`) has six destinations:
+Chemistry is organised as a reference, not a course, and has its own header (local to Chemistry;
+there is still no global header): a thin breadcrumb row (**← Home** › Chemistry › …), then the
+**Chemistry** brand (it opens the Overview), six destination tabs with icons (`nav` named
+*Chemistry*; the current tab is underlined and marked `aria-current="page"`), a compact **Search**
+that opens the Overview's results for the query (`cq`; Back returns), and on model pages the
+layout and Present controls. The Overview leaves the header search out, since it has its own large
+one. On phones the brand and search share a row and the tabs scroll sideways on their own row,
+with the current tab scrolled into view; Present is icon-only there.
+
+The six destinations:
 
 | Tab | Address | What it holds |
 | --- | --- | --- |

@@ -106,3 +106,24 @@ test('common questions lead to the content that answers them', async ({ page }) 
   await q('How do I calculate a dilution?').click()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dilution')
 })
+
+test('Chemistry’s header: brand, tabs with the current one marked, and a search that opens results', async ({ page }) => {
+  await page.goto('/?csec=periodic&el=26#/chemistry')
+  const tabs = page.getByRole('navigation', { name: 'Chemistry' })
+  await expect(tabs.getByRole('link')).toHaveText(['Overview', 'Elements', 'Molecules', 'Topics', 'Visualizations', 'Tools'])
+  await expect(tabs.getByRole('link', { name: 'Elements' })).toHaveAttribute('aria-current', 'page')
+  // The header search opens the Overview's results; Back returns to the page.
+  const search = page.getByRole('search', { name: 'Search chemistry' }).getByRole('searchbox', { name: 'Search chemistry' })
+  await search.fill('molarity')
+  await search.press('Enter')
+  await expect(page).toHaveURL(/cq=molarity/)
+  await expect(results(page).first().locator('.chem-result-title')).toHaveText('Molarity')
+  await expect(box(page)).toHaveValue('molarity')
+  // The Overview has its own large search, so the header does not repeat it.
+  await expect(page.getByRole('search', { name: 'Search chemistry' })).toHaveCount(0)
+  await page.goBack()
+  await expect(page.locator('#element-heading')).toHaveText('Iron')
+  // The brand leads to the Overview.
+  await page.getByRole('link', { name: 'Chemistry Explorer: Overview' }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Explore the world of chemistry.')
+})

@@ -8820,7 +8820,6 @@ html.ws-focus .chem-stage :is(.optics-svg,
 .topic-nav-item[aria-pressed='true'] { border-left-color: var(--color-accent); background: var(--color-accent-soft); }
 .topic-nav-label { font-weight: 600; }
 .topic-nav-blurb { font-size: var(--text-sm); color: var(--color-text-muted); }
-.chem-mobile-topic { margin: 0; padding: 0 var(--space-1); }
 
 /* ---------- Homepage design (from public/img/STEM Explorer home and chemistry pages.png) ---------- */
 body { background: var(--color-bg); color: var(--color-text); font-size: var(--text-base); line-height: 1.55; }
@@ -8929,16 +8928,50 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 .cell-compare { grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .table-scroll { max-width: 100%; overflow-x: auto; }
 
-/* Chemistry's six destinations: a small tab row in the subject bar (local navigation, not a header). */
-.chem-nav { flex: 1 1 auto; min-width: 0; overflow-x: auto; }
-.chem-nav ul { display: flex; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.chem-nav-link { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 8px; color: var(--color-text-muted); font-size: 0.9375rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
-.chem-nav-link:hover { color: var(--color-text); background: var(--color-surface-hover); }
-.chem-nav-link[aria-current='page'] { color: var(--color-accent-strong); background: var(--color-accent-soft); }
-.chem-nav-link:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 1px; }
-/* The tab row sits on its own line under the breadcrumb, so the breadcrumb is never squeezed. */
-.subject-bar:has(.chem-nav) { flex-wrap: wrap; row-gap: 4px; }
-.chem-nav { flex-basis: 100%; order: 2; }
+/* ---------- Chemistry's own header (local to Chemistry; there is no global header) ----------
+   A thin breadcrumb row, then the brand, the six destination tabs (current one underlined), a
+   compact search and, on model pages, the layout controls. */
+.subject-bar.chem-bar { display: block; padding: 0; border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+.chem-bar-top { display: flex; align-items: center; min-height: 30px; padding: 6px var(--space-5) 0; }
+.chem-bar-top .crumbs ol { font-size: 0.8125rem; }
+.chem-bar-main { display: flex; align-items: center; gap: var(--space-4); min-height: 54px; padding: 0 var(--space-5); }
+.chem-brand { display: inline-flex; align-items: center; gap: 10px; flex: none; color: var(--color-text); font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; text-decoration: none; border-radius: 8px; }
+.chem-brand:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.chem-brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--color-accent-soft); color: var(--color-accent-strong); }
+.chem-brand:hover .chem-brand-mark { background: var(--color-accent); color: #fff; }
+.chem-nav { flex: 1 1 auto; align-self: stretch; min-width: 0; }
+.chem-nav ul { display: flex; gap: 2px; height: 100%; margin: 0; padding: 0; list-style: none; overflow-x: auto; scrollbar-width: none; }
+.chem-nav ul::-webkit-scrollbar { display: none; }
+.chem-nav li { display: flex; }
+.chem-nav-link { position: relative; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 12px; color: var(--color-text-muted); font-size: 0.9375rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.chem-nav-link svg { opacity: 0.75; }
+.chem-nav-link::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: transparent; }
+.chem-nav-link:hover { color: var(--color-text); }
+.chem-nav-link:hover::after { background: var(--color-border-strong); }
+.chem-nav-link[aria-current='page'] { color: var(--color-accent-strong); }
+.chem-nav-link[aria-current='page'] svg { opacity: 1; }
+.chem-nav-link[aria-current='page']::after { background: var(--color-accent); }
+.chem-nav-link:focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; border-radius: 8px; }
+.chem-bar-actions { display: flex; align-items: center; gap: var(--space-2); margin-left: auto; flex: none; }
+.chem-bar-search { position: relative; display: flex; align-items: center; }
+.chem-bar-search-icon { position: absolute; left: 11px; color: var(--color-text-subtle); pointer-events: none; }
+.chem-bar-search input { width: 210px; height: 36px; padding: 0 12px 0 32px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-bg); color: var(--color-text); font: inherit; font-size: 0.875rem; }
+.chem-bar-search input:hover { border-color: var(--color-border-strong); }
+.chem-bar-search input:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 1px; background: var(--color-surface); }
+@media (max-width: 1180px) { .chem-bar-search input { width: 160px; } }
+/* Phones and small tablets: brand and actions on one row, tabs on their own scrolling row. */
+@media (max-width: 899px) {
+  .chem-bar-top { padding: 6px var(--space-4) 0; }
+  .chem-bar-main { flex-wrap: wrap; gap: 0 var(--space-3); padding: 4px var(--space-4) 0; }
+  .chem-bar-search input { width: min(46vw, 200px); }
+  .chem-nav { order: 3; flex-basis: 100%; margin: 0 calc(-1 * var(--space-4)); padding: 0 var(--space-2); }
+  .chem-nav ul { mask-image: linear-gradient(to right, #000 88%, transparent); }
+  .chem-nav-link { padding: 0 10px; }
+  /* Present is icon-only here so the search and it share the brand's row. */
+  .chem-bar-actions .present-toggle { min-width: 36px; justify-content: center; }
+  .chem-bar-actions .present-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .chem-bar-search input { width: min(40vw, 200px); }
+}
 
 /* Workspaces without a left panel (Elements, Atomic structure, Bonding): stage and details only. */
 @media (min-width: 900px) {

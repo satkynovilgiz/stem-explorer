@@ -7,7 +7,7 @@ import { useLocationSearch } from '../lib/location'
 import { moduleHref, rememberModuleState } from '../lib/moduleContext'
 import { restoreLayout, toggleFocus, toggleSide, usePeek, useWorkspace } from '../lib/workspace'
 import { AppLink } from './AppLink'
-import { ChemNav } from './ChemNav'
+import { ChemHeaderSearch, ChemNav } from './ChemNav'
 import { SubjectIcon } from './SubjectIcon'
 
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
@@ -52,87 +52,130 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
     requestAnimationFrame(() => triggerRef.current?.focus())
   }
 
-  return (
-    <div className="subject-bar">
-      <nav aria-label="Breadcrumb" className="crumbs">
-        <ol>
+  const crumbs = (
+    <nav aria-label="Breadcrumb" className="crumbs">
+      <ol>
+        <li>
+          <a href="#/home" className="crumb-home">
+            <ArrowLeft size={15} aria-hidden="true" />
+            Home
+          </a>
+          <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
+        </li>
+        {subject === 'chemistry' ? (
+          // Chemistry: the subject name always leads back to its Overview; the tab row marks the destination.
           <li>
-            <a href="#/home" className="crumb-home">
-              <ArrowLeft size={15} aria-hidden="true" />
-              Home
-            </a>
+            <AppLink href="?csec=topics#/chemistry" className="crumb-subject is-chemistry" aria-current={isChemTopics ? 'page' : undefined}>
+              <SubjectIcon subject={subject} size={14} />
+              Chemistry
+            </AppLink>
+            {!isChemTopics && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
+          </li>
+        ) : (
+          <li>
+            <span className={`crumb-subject is-${subject}`}>
+              <SubjectIcon subject={subject} size={14} />
+              {subjectName(subject)}
+            </span>
             <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
           </li>
-          {subject === 'chemistry' ? (
-            // Chemistry: the subject name always leads back to its Overview; the tab row marks the destination.
-            <li>
-              <AppLink href="?csec=topics#/chemistry" className="crumb-subject is-chemistry" aria-current={isChemTopics ? 'page' : undefined}>
-                <SubjectIcon subject={subject} size={14} />
-                Chemistry
-              </AppLink>
-              {!isChemTopics && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
-            </li>
-          ) : (
-            <li>
-              <span className={`crumb-subject is-${subject}`}>
-                <SubjectIcon subject={subject} size={14} />
-                {subjectName(subject)}
-              </span>
-              <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
-            </li>
-          )}
-          {!isChemTopics && (
-            <li>
-              <span className="crumb-module" aria-current={topic ? undefined : 'page'}>
-                {module.name}
-              </span>
-              {topic && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
-            </li>
-          )}
-          {topic && (
-            <li>
-              <span className="crumb-topic" aria-current="page">
-                {topic}
-              </span>
-            </li>
-          )}
-        </ol>
-      </nav>
-      {hasPanels && <div className="workspace-controls" role="group" aria-label="Workspace layout">
-        {hasLeft && (
-          <button type="button" className="tool-button bordered" data-ws-toggle="left" aria-pressed={leftShown} title="Left panel ( [ )" onClick={() => toggleSide('left')}>
-            <PanelLeft size={15} aria-hidden="true" />
-            <span>{ws.focus ? 'Controls' : 'Left panel'}</span>
-          </button>
         )}
-        <button type="button" className="tool-button bordered" data-ws-toggle="right" aria-pressed={rightShown} title="Right panel ( ] )" onClick={() => toggleSide('right')}>
-          <PanelRight size={15} aria-hidden="true" />
-          <span>{ws.focus ? 'Details' : 'Right panel'}</span>
-        </button>
-        <button type="button" className="tool-button bordered" aria-pressed={ws.focus} title="Focus mode ( f )" onClick={toggleFocus}>
-          {ws.focus ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />}
-          <span>Focus mode</span>
-        </button>
-        {changed && (
-          <button type="button" className="tool-button bordered workspace-restore" onClick={restoreLayout}>
-            <span>Show all panels</span>
-          </button>
+        {!isChemTopics && (
+          <li>
+            <span className="crumb-module" aria-current={topic ? undefined : 'page'}>
+              {module.name}
+            </span>
+            {topic && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
+          </li>
         )}
-      </div>}
-      {subject === 'chemistry' && <ChemNav moduleId={module.id} />}
-      {/* Chemistry's destinations are the tab row; other subjects use the topic drawer. */}
-      {subject !== 'chemistry' && (
-        <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
-          <ListTree size={15} aria-hidden="true" />
-          <span>All {subjectName(subject).toLowerCase()} topics</span>
+        {topic && (
+          <li>
+            <span className="crumb-topic" aria-current="page">
+              {topic}
+            </span>
+          </li>
+        )}
+      </ol>
+    </nav>
+  )
+
+  const layoutControls = hasPanels && (
+    <div className="workspace-controls" role="group" aria-label="Workspace layout">
+      {hasLeft && (
+        <button
+          type="button"
+          className="tool-button bordered"
+          data-ws-toggle="left"
+          aria-pressed={leftShown}
+          title="Left panel ( [ )"
+          onClick={() => toggleSide('left')}
+        >
+          <PanelLeft size={15} aria-hidden="true" />
+          <span>{ws.focus ? 'Controls' : 'Left panel'}</span>
         </button>
       )}
-      {onPresent && hasPanels && (
-        <button type="button" className="tool-button bordered present-toggle" onClick={onPresent}>
-          <Presentation size={15} aria-hidden="true" />
-          <span>Present</span>
+      <button
+        type="button"
+        className="tool-button bordered"
+        data-ws-toggle="right"
+        aria-pressed={rightShown}
+        title="Right panel ( ] )"
+        onClick={() => toggleSide('right')}
+      >
+        <PanelRight size={15} aria-hidden="true" />
+        <span>{ws.focus ? 'Details' : 'Right panel'}</span>
+      </button>
+      <button type="button" className="tool-button bordered" aria-pressed={ws.focus} title="Focus mode ( f )" onClick={toggleFocus}>
+        {ws.focus ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />}
+        <span>Focus mode</span>
+      </button>
+      {changed && (
+        <button type="button" className="tool-button bordered workspace-restore" onClick={restoreLayout}>
+          <span>Show all panels</span>
         </button>
       )}
+    </div>
+  )
+  const present = onPresent && hasPanels && (
+    <button type="button" className="tool-button bordered present-toggle" onClick={onPresent}>
+      <Presentation size={15} aria-hidden="true" />
+      <span>Present</span>
+    </button>
+  )
+
+  // Chemistry has its own header: a thin breadcrumb row, then the brand, the six destination tabs,
+  // a compact search (the Overview has its own large one) and, on model pages, layout controls.
+  if (subject === 'chemistry')
+    return (
+      <div className="subject-bar chem-bar">
+        <div className="chem-bar-top">{crumbs}</div>
+        <div className="chem-bar-main">
+          <AppLink href="?csec=topics#/chemistry" className="chem-brand" aria-label="Chemistry Explorer: Overview">
+            <span className="chem-brand-mark">
+              <SubjectIcon subject="chemistry" size={18} />
+            </span>
+            <span className="chem-brand-name">Chemistry</span>
+          </AppLink>
+          <ChemNav moduleId={module.id} />
+          <div className="chem-bar-actions">
+            {!isChemTopics && <ChemHeaderSearch />}
+            {layoutControls}
+            {present}
+          </div>
+        </div>
+      </div>
+    )
+
+  return (
+    <div className="subject-bar">
+      {crumbs}
+      {layoutControls}
+      {/* Other subjects list their modules and topics in a drawer. */}
+      <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+        <ListTree size={15} aria-hidden="true" />
+        <span>All {subjectName(subject).toLowerCase()} topics</span>
+      </button>
+      {present}
       {open && <TopicDrawer subject={subject} current={module} onClose={close} />}
     </div>
   )
@@ -203,14 +246,21 @@ function TopicDrawer({ subject, current, onClose }: { subject: SubjectId; curren
         <label className="topic-search">
           <Search size={15} aria-hidden="true" />
           <span className="visually-hidden">Filter modules and topics</span>
-          <input type="search" placeholder={`Filter ${subjectName(subject).toLowerCase()} topics…`} ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input
+            type="search"
+            placeholder={`Filter ${subjectName(subject).toLowerCase()} topics…`}
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </label>
         <p className="visually-hidden" role="status">
           {query ? `${count} module${count === 1 ? '' : 's'} match` : ''}
         </p>
         {groups.length === 0 ? (
           <p className="muted small topic-empty">
-            No {subjectName(subject).toLowerCase()} topic matches “{query}”. <AppLink href={`?q=${encodeURIComponent(query)}#/search`}>Search all subjects for “{query}”</AppLink>.
+            No {subjectName(subject).toLowerCase()} topic matches “{query}”.{' '}
+            <AppLink href={`?q=${encodeURIComponent(query)}#/search`}>Search all subjects for “{query}”</AppLink>.
           </p>
         ) : (
           groups.map((g) => (
@@ -227,7 +277,11 @@ function TopicDrawer({ subject, current, onClose }: { subject: SubjectId; curren
                     <li key={m.id} className={`topic-module${here ? ' is-current' : ''}`}>
                       <AppLink href={target.href} className="topic-module-link" aria-current={here ? 'page' : undefined} onClick={onClose}>
                         <span className="topic-module-name">{m.name}</span>
-                        {here ? <span className="topic-badge">You are here</span> : target.remembered && <span className="topic-badge is-muted">Where you left it</span>}
+                        {here ? (
+                          <span className="topic-badge">You are here</span>
+                        ) : (
+                          target.remembered && <span className="topic-badge is-muted">Where you left it</span>
+                        )}
                       </AppLink>
                       <p className="topic-module-summary">{m.summary}</p>
                       {topics.length > 0 && (

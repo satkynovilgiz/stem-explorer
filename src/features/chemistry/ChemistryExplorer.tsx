@@ -296,9 +296,6 @@ export function ChemistryExplorer() {
     return (
       <div className="chem chem--mobile">
         {announcer}
-        <p className="chem-mobile-topic">
-          <span className="muted small">Topic:</span> <strong>{SECTION_LABEL[section]}</strong> <span className="muted small">(change it with the tabs above)</span>
-        </p>
         <div className="chem-stage">{stage}</div>
         {section === 'molecules' && activityPanel}
         {guidePanel}
