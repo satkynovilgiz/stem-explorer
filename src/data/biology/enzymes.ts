@@ -136,6 +136,28 @@ export const INVESTIGATIONS: readonly Investigation[] = [
   },
 ]
 
+/**
+ * The [S] an investigation sets for Km of set A, or why it can't run. [S] is never clamped: an
+ * investigation whose target lies above the [S] limit is unavailable, so the lab never claims
+ * "[S] = 20 × Km" while showing a different concentration (and a shared link restores exactly
+ * the [S] that was set). The value is rounded to 6 significant figures so it survives typing.
+ */
+export function investigationTarget(inv: Investigation, km: number): { ok: true; s: number } | { ok: false; reason: string } {
+  const s = Number((inv.sOverKm * km).toPrecision(6))
+  if (checkValue('s', String(s)) === null) return { ok: true, s }
+  const maxKm = ENZYME_LIMITS.s.max / inv.sOverKm
+  return {
+    ok: false,
+    reason: `${inv.title} needs [S] = ${inv.sOverKm} × Km = ${fmt(inv.sOverKm * km)} mM, above this lab’s [S] limit of ${ENZYME_LIMITS.s.max} mM. Use Km ≤ ${fmt(maxKm)} mM for set A to run it.`,
+  }
+}
+
+/** True when [S] is the investigation's target for Km of set A (relative tolerance, for rounding). */
+export const isAtInvestigation = (inv: Investigation, st: EnzymeState) => {
+  const t = investigationTarget(inv, st.a.km)
+  return t.ok && Math.abs(st.s - t.s) <= 1e-9 * Math.max(1, t.s)
+}
+
 /** Three significant figures, without trailing zeros. */
 export function fmt(v: number): string {
   if (!Number.isFinite(v)) return '—'

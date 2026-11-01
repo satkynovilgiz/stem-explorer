@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { checkValue, curve, CYCLE, DEFAULT_ENZYME, ENZYME_LIMITS, fmt, fractionOfVmax, INVESTIGATIONS, niceMax, rate, sRange, substrateFor } from './enzymes'
+import { checkValue, curve, CYCLE, DEFAULT_ENZYME, ENZYME_LIMITS, fmt, fractionOfVmax, INVESTIGATIONS, investigationTarget, isAtInvestigation, niceMax, rate, sRange, substrateFor } from './enzymes'
+import { enzymeEntries, parseBiologySection } from '../../lib/urlState'
 
 const A = { vmax: 10, km: 2 }
 
@@ -83,5 +84,51 @@ describe('investigations and the cycle', () => {
   it('the catalytic cycle has the four named stages and says the enzyme is unchanged', () => {
     expect(CYCLE.map((c) => c.title)).toEqual(['Enzyme and substrate', 'Enzyme–substrate complex', 'Reaction at the active site', 'Products released'])
     expect(CYCLE[3].text).toContain('unchanged')
+  })
+})
+
+describe('investigations agree with the input limits and with links (review regression)', () => {
+  const link = (st: typeof DEFAULT_ENZYME) => parseBiologySection('?' + new URLSearchParams({ bsec: 'enzymes', ...enzymeEntries(st) }).toString())
+
+  it('the reviewed reproduction: Km = 10 mM makes Saturation unavailable instead of setting 200 mM', () => {
+    const sat = INVESTIGATIONS.find((i) => i.id === 'saturation')!
+    const t = investigationTarget(sat, 10)
+    expect(t.ok).toBe(false)
+    if (!t.ok) expect(t.reason).toMatch(/200 mM.*100 mM.*Km ≤ 5 mM/)
+  })
+
+  it('every investigation at every Km that allows it sets an [S] the input accepts and a link restores exactly', () => {
+    const kms = [ENZYME_LIMITS.km.min, 0.0123457, 1, 2, 3.3, 5, 9.99, 10, 50, ENZYME_LIMITS.km.max]
+    for (const inv of INVESTIGATIONS) {
+      for (const km of kms) {
+        const t = investigationTarget(inv, km)
+        const fits = inv.sOverKm * km <= ENZYME_LIMITS.s.max
+        expect(t.ok, `${inv.id} at Km ${km}`).toBe(fits)
+        if (!t.ok) continue
+        expect(checkValue('s', String(t.s))).toBeNull()
+        const st = { s: t.s, a: { vmax: 10, km }, b: null }
+        const back = link(st)
+        expect(back.invalid).toEqual([])
+        expect(back.enzyme).toEqual(st)
+        expect(rate(back.enzyme.s, back.enzyme.a)).toBe(rate(st.s, st.a))
+        expect(isAtInvestigation(inv, back.enzyme)).toBe(true)
+      }
+    }
+  })
+
+  it('at the maximum Km (100 mM) Low and Half-maximal run; Saturation explains why it cannot', () => {
+    const max = ENZYME_LIMITS.km.max
+    expect(investigationTarget(INVESTIGATIONS[0], max)).toEqual({ ok: true, s: 10 })
+    expect(investigationTarget(INVESTIGATIONS[1], max)).toEqual({ ok: true, s: 100 })
+    expect(investigationTarget(INVESTIGATIONS[2], max).ok).toBe(false)
+    expect(investigationTarget(INVESTIGATIONS[2], 5)).toEqual({ ok: true, s: 100 })
+  })
+})
+
+describe('saved enzyme explorations keep the same settings', () => {
+  it('canonicalize keeps an investigation state unchanged', async () => {
+    const { canonicalize } = await import('../../lib/explorations')
+    const params = { bsec: 'enzymes', ...enzymeEntries({ s: 100, a: { vmax: 10, km: 5 }, b: { vmax: 3.3, km: 0.0123457 } }) }
+    expect(canonicalize('biology', params)?.params).toMatchObject(params)
   })
 })

@@ -11,6 +11,8 @@ import {
   ENZYME_LIMITS,
   fmt,
   INVESTIGATIONS,
+  investigationTarget,
+  isAtInvestigation,
   niceMax,
   rate,
   sRange,
@@ -293,7 +295,8 @@ function Substitution({ name, p, s }: { name: string; p: KineticParams; s: numbe
 export function EnzymeView({ st, onState, shareParams }: { st: EnzymeState; onState: (s: EnzymeState) => void; shareParams: Record<string, string> }) {
   const id = useId()
   const [investigation, setInvestigation] = useState<Investigation | null>(null)
-  const active = investigation && Math.abs(st.s - investigation.sOverKm * st.a.km) < 1e-9 ? investigation : null
+  const active = investigation && isAtInvestigation(investigation, st) ? investigation : null
+  const unavailable = INVESTIGATIONS.map((inv) => ({ inv, t: investigationTarget(inv, st.a.km) })).filter((x) => !x.t.ok)
   const set = (patch: Partial<EnzymeState>) => onState({ ...st, ...patch })
   return (
     <div className="enz-lab">
@@ -306,21 +309,32 @@ export function EnzymeView({ st, onState, shareParams }: { st: EnzymeState; onSt
         <p className="inline-note">Illustrative parameter values, not measurements of a real enzyme. Units: [S] and Km in mM; v and Vmax in µM/s.</p>
 
         <div className="enz-investigations" role="group" aria-label="Investigations">
-          {INVESTIGATIONS.map((inv) => (
-            <button
-              key={inv.id}
-              type="button"
-              className="tool-button bordered"
-              aria-pressed={active?.id === inv.id}
-              onClick={() => {
-                setInvestigation(inv)
-                set({ s: Number((inv.sOverKm * st.a.km).toPrecision(6)) })
-              }}
-            >
-              {inv.title}
-            </button>
-          ))}
+          {INVESTIGATIONS.map((inv) => {
+            const t = investigationTarget(inv, st.a.km)
+            return (
+              <button
+                key={inv.id}
+                type="button"
+                className="tool-button bordered"
+                aria-pressed={active?.id === inv.id}
+                disabled={!t.ok}
+                aria-describedby={t.ok ? undefined : `${id}-unavail`}
+                onClick={() => {
+                  if (!t.ok) return
+                  setInvestigation(inv)
+                  set({ s: t.s })
+                }}
+              >
+                {inv.title}
+              </button>
+            )
+          })}
         </div>
+        {unavailable.length > 0 && (
+          <p id={`${id}-unavail`} className="inline-note small" data-testid="enz-unavailable">
+            {unavailable.map((x) => (!x.t.ok ? x.t.reason : '')).join(' ')}
+          </p>
+        )}
         {active && (
           <div className="enz-investigation" role="status">
             <p className="small">

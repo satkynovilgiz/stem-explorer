@@ -7,7 +7,14 @@ import { clampTime, DEFAULT_MOTION, defaultParams, getMotion, MAX_DT, MIN_DT, MO
  */
 export const MOTION_URL_KEYS = ['mo', 'mx0', 'mv', 'mv0', 'ma', 'my0', 'mA', 'mw', 'mt', 'mdt', 'mex'] as const
 
-const num = (raw: string) => (/^[-+]?(\d+\.?\d*|\.\d+)$/.test(raw.trim()) ? Number(raw) : Number.NaN)
+const num = (raw: string) => (/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(raw.trim()) ? Number(raw) : Number.NaN)
+
+/**
+ * Links written before values were stored at full precision rounded the time to 3 decimals, so a
+ * landing time of 1.190603… s was stored as 1.191 s, just past the end of the motion. A time at
+ * most this far past the end is read as the end; anything further is rejected.
+ */
+export const LEGACY_TIME_TOLERANCE = 0.0005
 
 export function parseMotionState(search: string): { state: MotionState; invalid: string[] } {
   const q = new URLSearchParams(search)
@@ -35,7 +42,7 @@ export function parseMotionState(search: string): { state: MotionState; invalid:
   const rt = q.get('mt')
   if (rt !== null) {
     const v = num(rt)
-    if (Number.isFinite(v) && v >= 0 && v <= def.tEnd(params) + 1e-9) t = Math.min(v, def.tEnd(params))
+    if (Number.isFinite(v) && v >= 0 && v <= def.tEnd(params) + LEGACY_TIME_TOLERANCE) t = Math.min(v, def.tEnd(params))
     else invalid.push('mt')
   }
   let dt = DEFAULT_MOTION.dt
@@ -51,14 +58,19 @@ export function parseMotionState(search: string): { state: MotionState; invalid:
   return { state: { motion, params, t: clampTime(def, params, t), dt, view }, invalid: [...new Set(invalid)] }
 }
 
-const r = (v: number, d = 3) => String(Number(v.toFixed(d)))
+/*
+ * Stored values are the shortest strings that read back as the same number (String(v)), so a
+ * link reopens exactly the state it was made from: y₀ = 0.001 m stays 0.001, and a landing time
+ * stays the landing time. Display rounding (fmt) is separate and never written to links.
+ */
+const r = (v: number) => String(Object.is(v, -0) ? 0 : v)
 
 export function motionEntries(st: MotionState): Record<string, string> {
   const def = getMotion(st.motion)
   return {
     msec: 'motion',
     mo: st.motion,
-    ...Object.fromEntries(def.params.map((s) => [s.url, r(st.params[s.key], 2)])),
+    ...Object.fromEntries(def.params.map((s) => [s.url, r(st.params[s.key])])),
     mt: r(st.t),
     mdt: r(st.dt),
     mex: st.view,

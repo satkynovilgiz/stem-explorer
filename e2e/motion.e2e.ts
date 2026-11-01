@@ -99,3 +99,28 @@ test('older Mathematics links still open their sections', async ({ page }) => {
   await page.goto('/?msec=motion&mo=nope#/mathematics')
   await expect(heading(page)).toContainText('Constant acceleration')
 })
+
+test('regression: a throw that has landed (y₀ = 1, v₀ = 5) and a tiny y₀ survive Copy link exactly', async ({ page, context }) => {
+  await page.goto('/?msec=motion&mo=vertical-throw&my0=1&mv0=5&mt=0&mdt=0.5&mex=phys#/mathematics')
+  const slider = page.getByRole('slider', { name: 'Current time t (s)' })
+  await slider.focus()
+  await page.keyboard.press('End')
+  await expect(heading(page)).toHaveText('Vertical throw · t = 1.19 s')
+  await expect.poll(() => Number(params(page).get('mt'))).toBeCloseTo(1.190603502, 9)
+  await page.getByRole('button', { name: 'Copy link' }).click()
+  const copied = await page.evaluate(() => navigator.clipboard.readText())
+  const reopened = await context.newPage()
+  await reopened.goto(copied)
+  await expect(heading(reopened)).toHaveText('Vertical throw · t = 1.19 s')
+  await expect(reopened.getByRole('button', { name: 'Landed' })).toBeVisible()
+  expect(new URL(reopened.url()).searchParams.get('mt')).toBe(new URL(copied).searchParams.get('mt'))
+
+  // A link from before the fix (time rounded to 1.191 s) opens at the landing, not at t = 1 s.
+  await reopened.goto('/?msec=motion&mo=vertical-throw&my0=1&mv0=5&mt=1.191&mdt=0.5&mex=phys#/mathematics')
+  await expect(heading(reopened)).toHaveText('Vertical throw · t = 1.19 s')
+
+  await reopened.goto('/?msec=motion&mo=vertical-throw&my0=0.001&mv0=0&mt=0.01&mdt=0.5&mex=phys#/mathematics')
+  await expect.poll(() => new URL(reopened.url()).searchParams.get('my0')).toBe('0.001')
+  await reopened.getByRole('button', { name: 'Copy link' }).click()
+  expect(new URL(await reopened.evaluate(() => navigator.clipboard.readText())).searchParams.get('my0')).toBe('0.001')
+})

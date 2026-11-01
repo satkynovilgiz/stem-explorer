@@ -2782,7 +2782,30 @@ e2e/                            Playwright browser tests
 
 ## Fixed review findings
 
-Second review (this release):
+Third review (share-link regressions):
+- **A. Enzyme Saturation above the [S] limit.** With Km = 10 mM, *Saturation* set [S] = 20 × Km =
+  200 mM, but the [S] input and the link parser accept 0–100 mM, so a copied link reopened with a
+  different [S]. The limits stay as they were (illustrative units: [S] 0–100 mM, Km 0.01–100 mM).
+  Each investigation now computes its target [S] first (`investigationTarget` in
+  `src/data/biology/enzymes.ts`): if the target is inside the [S] range it sets exactly that value
+  (6 significant figures, so it survives typing and links); otherwise the button is **disabled** and
+  a note says why and what to change (*Saturation needs [S] = 20 × Km = 200 mM, above this lab’s
+  [S] limit of 100 mM. Use Km ≤ 5 mM for set A to run it.*). Km is never changed and [S] is never
+  clamped behind the investigation's back. At the maximum Km (100 mM) *Low* (10 mM) and
+  *Half-maximal* (100 mM) still run. Unit tests cover every investigation at ten Km values
+  including both limits; an e2e test copies the link at Km = 5 mM, reopens it and compares the
+  table.
+- **B. Motion links rounded valid states.** Parameters were written with 2 decimals and the time
+  with 3, so y₀ = 0.001 m became 0 and a landing time of 1.190603502 s became 1.191 s, which the
+  parser rejected (it is after the landing) and replaced with t = 1 s. Links now store each value
+  as the shortest string that reads back as the same number (`String(v)`, exponent notation
+  accepted), and display rounding (`fmt`) is never written to links. Links made before the fix that
+  stored a landing time rounded to 3 decimals (at most 0.0005 s past the end) open at the landing;
+  times further past the end are still rejected and reported. Saved explorations and collections
+  go through the same parse → serialize path (`canonicalize`), and unit tests check that it is
+  lossless for these states and for every parameter and Δt boundary of every motion.
+
+Second review:
 - **Optics critical angle.** With n₁ = 1.52, n₂ = 1 and θ₁ = 41.14° (θc ≈ 41.1395104°), the lab
   suppressed total internal reflection inside a 0.005° window (half the slider step) and drew a
   transmitted ray at 90°. Classification now uses sin θ₂ with a floating-point-only tolerance,
