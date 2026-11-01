@@ -47,6 +47,23 @@ export const KIND_LABELS: Record<SearchKind, string> = {
   term: 'Glossary terms',
 }
 
+/** What opening a result gives you, in one short label (shown on every result). */
+export const KIND_BADGE: Record<SearchKind, string> = {
+  subject: 'Subject',
+  structure: '3D structure',
+  cell: '3D structure',
+  element: 'Periodic table',
+  molecule: '3D molecule',
+  reaction: 'Interactive lab',
+  section: 'Interactive lab',
+  process: 'Interactive lab',
+  lab: 'Interactive lab',
+  function: 'Interactive graph',
+  surface: '3D surface',
+  tool: 'Interactive tool',
+  term: 'Glossary term',
+}
+
 /** One searchable item. Text comes from the existing subject data, not a copy of it. */
 export interface SearchItem {
   id: string

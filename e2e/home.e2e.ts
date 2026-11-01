@@ -48,9 +48,6 @@ test.describe('Home page', () => {
     const welcome = page.locator('section', { has: page.getByRole('heading', { name: /New here\?/ }) })
     await expect(welcome).toContainText('How exploring works')
     await expect(page.getByRole('button', { name: 'How it works' })).toHaveCount(0)
-    await page.getByRole('button', { name: 'Browse subjects' }).click()
-    await expect(page.getByRole('heading', { name: 'Explore subjects', exact: true })).toBeInViewport()
-
     // A starting point opens the chemistry activity introduction.
     await welcome.getByRole('link', { name: /Measure the H–O–H angle/ }).click()
     await expect(page.locator('.activity')).toContainText('Start activity')
@@ -113,7 +110,7 @@ test.describe('Home search', () => {
   test('opens a heart structure with the keyboard', async ({ page }) => {
     await page.goto('/')
     await search(page).fill('mitral')
-    await expect(page.getByRole('status').filter({ hasText: /result/ })).toHaveText('1 result')
+    await expect(page.getByRole('status').filter({ hasText: /result/ })).toHaveText('1 explorer result')
     await page.keyboard.press('Tab')
     await expect(page.getByRole('button', { name: 'Clear search' })).toBeFocused()
     await page.keyboard.press('Tab')
@@ -269,14 +266,14 @@ test('deep links to every subject still open directly', async ({ page }) => {
   await expect(page.locator('#math-heading')).toContainText('Elliptic paraboloid')
 })
 
-test('reduced motion: transitions are effectively off and Browse subjects jumps instead of gliding', async ({ page }) => {
+test('reduced motion: transitions are effectively off and Start exploring jumps instead of gliding', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const duration = await page.locator('.investigation').first().evaluate((el) => getComputedStyle(el).transitionDuration)
   expect(parseFloat(duration)).toBeLessThan(0.001)
-  await page.getByRole('button', { name: 'Browse subjects' }).click()
-  // No smooth scrolling: the subjects heading is in view straight away.
-  await expect(page.getByRole('heading', { name: 'Explore subjects', exact: true })).toBeInViewport({ timeout: 500 })
+  await page.getByRole('button', { name: 'Start exploring' }).click()
+  // No smooth scrolling: the investigations heading is in view straight away.
+  await expect(page.getByRole('heading', { name: 'Start an investigation', exact: true })).toBeInViewport({ timeout: 500 })
 })
 
 test.describe('Home motion and featured content', () => {
@@ -385,7 +382,7 @@ test.describe('Home design and exploration flow', () => {
     await expect(section.getByRole('link', { name: /Path · 6 steps.*How breathing works/ })).toHaveAttribute('href', '#/collections')
     // "N modules" equals the module links on the subject cards.
     const modules = await page.locator('.subject-module').count()
-    await expect(page.getByRole('list', { name: 'What is here' })).toContainText(`${modules} modules`)
+    await expect(page.getByRole('list', { name: 'What is here' })).toContainText(`${modules} interactive modules`)
     await section.getByRole('link', { name: /Compare 30° and 60° launches/ }).click()
     await expect(page).toHaveURL(/#\/physics$/)
     await expect(page.locator('.activity')).toContainText('Start activity')
@@ -416,7 +413,7 @@ test.describe('Home design and exploration flow', () => {
     const cta = page.getByRole('button', { name: 'Start exploring' })
     await cta.focus()
     await page.keyboard.press('Tab')
-    await expect(page.getByRole('button', { name: 'Browse subjects' })).toBeFocused()
+    await expect(page.getByRole('link', { name: 'Browse reference library' })).toBeFocused()
     const action = page.locator('.subject-card.is-biology .subject-card-action')
     await action.focus()
     expect(await action.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid')

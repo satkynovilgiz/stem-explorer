@@ -1,9 +1,12 @@
 import { Search, X } from 'lucide-react'
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { formulaParts } from '../../lib/chemistry'
 import { subjectName } from '../../lib/explorations'
-import { nameShowsFormula, searchAll } from '../../lib/searchIndex'
+import { KIND_BADGE, nameShowsFormula, searchAll } from '../../lib/searchIndex'
+import { ENTRY_TYPE_LABELS, entryHref, FORMULA_KIND_LABELS, type ManifestRow } from '../../reference/types'
+import { searchManifest } from '../reference/search'
+import { loadManifest } from '../reference/useManifest'
 import { searchUrl } from '../../lib/searchUrl'
 import { SEARCH_EXAMPLES as EXAMPLES } from './content'
 
@@ -15,6 +18,22 @@ export function HomeSearch() {
   const all = searchAll(query)
   const results = all.slice(0, 12)
   const trimmed = query.trim()
+  // The reference index loads the first time someone types, not with the page.
+  const [refRows, setRefRows] = useState<readonly ManifestRow[] | null>(null)
+  const [refFailed, setRefFailed] = useState(false)
+  useEffect(() => {
+    if (!trimmed || refRows) return
+    let live = true
+    loadManifest().then(
+      (rows) => live && setRefRows(rows),
+      () => live && setRefFailed(true),
+    )
+    return () => {
+      live = false
+    }
+  }, [trimmed, refRows])
+  const refAll = trimmed && refRows ? searchManifest(refRows, trimmed) : []
+  const refResults = refAll.slice(0, 5)
 
   return (
     <div className="home-search" role="search">
@@ -65,7 +84,11 @@ export function HomeSearch() {
         </div>
       )}
       <p id={`${id}-status`} className="search-status" role="status">
-        {trimmed ? (all.length ? `${all.length} result${all.length === 1 ? '' : 's'}${all.length > results.length ? `, showing the first ${results.length}` : ''}` : '') : ''}
+        {trimmed
+          ? [all.length ? `${all.length} explorer result${all.length === 1 ? '' : 's'}${all.length > results.length ? `, showing the first ${results.length}` : ''}` : '', refAll.length ? `${refAll.length} reference ${refAll.length === 1 ? 'entry' : 'entries'}` : '']
+              .filter(Boolean)
+              .join('; ')
+          : ''}
       </p>
       {trimmed && results.length > 0 && (
         <ul className="search-results" aria-label="Search results">
@@ -82,7 +105,10 @@ export function HomeSearch() {
                       </span>
                     )}
                   </span>
-                  <span className={`subject-chip is-${r.subject}`}>{subjectName(r.subject)}</span>
+                  <span className="search-result-badges">
+                    <span className="result-kind">{KIND_BADGE[r.kind]}</span>
+                    <span className={`subject-chip is-${r.subject}`}>{subjectName(r.subject)}</span>
+                  </span>
                 </span>
                 <span className="search-result-desc">{r.description}</span>
               </AppLink>
@@ -90,17 +116,42 @@ export function HomeSearch() {
           ))}
         </ul>
       )}
+      {trimmed && refResults.length > 0 && (
+        <>
+          <h3 className="search-subhead">Reference entries</h3>
+          <ul className="search-results" aria-label="Reference entries">
+            {refResults.map((r) => (
+              <li key={r.id}>
+                <AppLink href={entryHref(r)} className="search-result">
+                  <span className="search-result-head">
+                    <span className="search-result-name">{r.title}</span>
+                    <span className="search-result-badges">
+                      <span className="result-kind is-reference">Reference · {r.kind ? FORMULA_KIND_LABELS[r.kind] : ENTRY_TYPE_LABELS[r.type]}</span>
+                      <span className={`subject-chip is-${r.subject}`}>{subjectName(r.subject)}</span>
+                    </span>
+                  </span>
+                  <span className="search-result-desc">{r.summary}</span>
+                </AppLink>
+              </li>
+            ))}
+          </ul>
+          <AppLink href={`?rq=${encodeURIComponent(trimmed)}#/reference`} className="search-all-link">
+            See all {refAll.length} reference {refAll.length === 1 ? 'entry' : 'entries'} for “{trimmed}”
+          </AppLink>
+        </>
+      )}
+      {trimmed && refFailed && <p className="muted small">Reference entries could not be loaded; explorer results are still shown.</p>}
       {trimmed && all.length > 0 && (
         <AppLink href={`${searchUrl({ q: trimmed, subject: null, kind: null })}#/search`} className="search-all-link">
           See all {all.length} result{all.length === 1 ? '' : 's'}, grouped by subject with filters
         </AppLink>
       )}
-      {trimmed && results.length === 0 && (
+      {trimmed && results.length === 0 && refResults.length === 0 && (
         <div className="empty-state">
           <p>Nothing matches “{trimmed}”.</p>
           <p className="muted">
             Search covers body structures, elements, molecules, cell structures, biology processes, physics labs, functions,
-            surfaces, vector tools and the glossary. Try “benzene”, “ribosome”, “femur”, “Fe” or “derivative”.
+            surfaces, vector tools, the glossary and the reference library. Try “benzene”, “ribosome”, “femur”, “Fe” or “derivative”.
           </p>
         </div>
       )}

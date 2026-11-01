@@ -1793,14 +1793,15 @@ not mount a WebGL canvas and does not load the Three.js chunk.
 Home is laid out top to bottom (redesigned in the homepage milestone; before-and-after
 screenshots at 390, 820 and 1440 px were compared for review, but they are not stored in the
 repository):
-- **Hero:** a two-line headline and a short explanation.
+- **Hero:** a two-line headline and one sentence saying what the product is (interactive models and
+  a sourced reference library for the five subjects).
   - **Start exploring** (the primary, filled button) moves focus to *Start an investigation*. It
     jumps instead of gliding under reduced motion.
-  - **Browse subjects** moves focus to the subject cards. Returning visitors also get **How it
-    works**.
-  - A line of facts (*5 subjects · 27 modules · 5 guided activities · 4 starter paths*) is computed
-    from the topic map, the activity list and the starter collections. Nothing about visitors is
-    shown or counted.
+  - **Browse reference library** opens `#/reference`. Returning visitors also get **How it works**.
+  - A line of facts (*5 subjects · 28 interactive modules · N reference entries · 5 guided
+    activities · 4 starter paths*) is computed from the topic map, the generated reference counts
+    (`src/reference/generated/counts.json`, qualifying entries only), the activity list and the
+    starter collections. Nothing about visitors is shown or counted.
 - **Hero illustration:** a small decorative SVG beside the text: a cell outline, a bent three-atom
   molecule and a wave. It is hidden from assistive technology, and below 720 px it is left out so
   the text and search come first.
@@ -1811,8 +1812,9 @@ repository):
     chemistry guided activity and its step count, the heart cutaway, and the first starter path,
     with names and step counts read from the data) and how exploring works.
   - Returning visitors get a compact **Continue exploring** strip of recent visits instead.
-- **Explore subjects:** five cards in a responsive grid (3 + 2 on a desktop, 2 columns on a
-  tablet, 1 on a phone). Each card has:
+- **Explore subjects:** five cards in a responsive grid (3 + 2 on a desktop, with the last two
+  cards wider so the row has no gap; 2 columns on a tablet with the fifth card full width; 1 on a
+  phone). Each card also links to its subject's reference entries with the real count. Each card has:
   - an illustration band labelled as a simplified preview;
   - the subject, its module count, a title and a one-line summary;
   - every module as a link (each link's accessible name includes what the module contains);
@@ -1958,6 +1960,28 @@ writes, so tabs cannot set each other off. The only automatic write is the recen
 made once per distinct view shown in that tab.
 
 ## Exploration notebook
+### Homepage additions (reference release)
+
+Below the subject cards, in this order:
+- **Human body atlas preview:** a flat, decorative SVG figure (no WebGL; the 3D atlas loads only
+  when opened) beside the atlas's coverage in words: the number of system layers and drawn
+  structures, and one link per system with its drawn-structure count, each opening the atlas at
+  that system (`?asys=<system>`). It says the atlas is schematic.
+- **Start an investigation** (unchanged).
+- **Connections between subjects:** six curated links from `src/data/related.ts`, each labelled
+  *Same mathematics*, *Real connection* or *Analogy only*, with both ends as links.
+- **Reference library:** the total and the counts by type and by subject from the generated
+  counts, each subject linking to the filtered library. Hidden if the library is empty.
+- Questions, interests and saved explorations (unchanged), then **Sources and model limits**:
+  where content comes from, what the models leave out, and that automated checks are not an expert
+  review.
+
+**Search on Home** now also shows up to five **reference entries**, labelled *Reference · Equation*
+(or the entry type) so they can't be confused with labs. Every explorer result carries a kind badge
+(*Interactive lab*, *3D structure*, *3D molecule*, *Glossary term*, …). The reference index is
+fetched the first time someone types, not when the page loads, and if it fails to load the explorer
+results still show with a note.
+
 
 **Add note** (next to Copy link and Save exploration in every explorer) opens an inline editor
 with a title (suggested from the view) and plain-text observations. Nothing is stored until
@@ -2841,7 +2865,6 @@ Also fixed during the review:
 - On phones, the Anatomy colour legend could cover the *Inferior* orientation label. Labels under
   the legend are moved above it or hidden.
 
-## Search, related topics and presentation
 ## Reference library
 
 `#/reference` is a library of reference entries shared by all five subjects;
@@ -2897,6 +2920,7 @@ sources. Printing opens every section and prints source URLs.
 after it has been fetched and read; the text is written for the app and paraphrases the source.
 
 
+## Search, related topics and presentation
 ### Global search
 
 **Search** (top bar, `#/search`, or *See all results* on Home) runs locally over an index built

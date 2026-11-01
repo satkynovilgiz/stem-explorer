@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, ChevronDown, Compass, ExternalLink, FlaskConical, HelpCircle, Link2, ListOrdered, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
+import { ArrowRight, BookOpen, Library, ChevronDown, Compass, ExternalLink, FlaskConical, HelpCircle, Link2, ListOrdered, MousePointerClick, Move3d, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SubjectIcon } from '../../components/SubjectIcon'
@@ -15,6 +15,8 @@ import { SavedPanel } from './SavedPanel'
 import { HeroIllustration } from './HeroIllustration'
 import { InterestStarts } from './HomeSections'
 import { SubjectArt } from './SubjectArt'
+import { REFERENCE_COUNTS, REFERENCE_TOTAL } from '../../reference/counts'
+import { AtlasPreview, Connections, LibraryTeaser, SourcesNote } from './HomeShowcase'
 
 const ORDER: SubjectId[] = SUBJECTS.map((s) => s.id)
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
@@ -94,7 +96,8 @@ const FIRST_PATH = CURATED_COLLECTIONS[0]
 /** Counts shown under the hero, all derived from the project's data (nothing about visitors). */
 const FACTS = [
   { value: SUBJECTS.length, label: 'subjects' },
-  { value: SUBJECTS.reduce((n, s) => n + modulesOf(s.id).length, 0), label: 'modules' },
+  { value: SUBJECTS.reduce((n, s) => n + modulesOf(s.id).length, 0), label: 'interactive modules' },
+  ...(REFERENCE_TOTAL > 0 ? [{ value: REFERENCE_TOTAL, label: 'reference entries' }] : []),
   { value: ACTIVITIES.length, label: 'guided activities' },
   { value: CURATED_COLLECTIONS.length, label: 'starter paths' },
 ]
@@ -254,17 +257,18 @@ export function Home() {
             <span className="home-title-sub">See how it works.</span>
           </h1>
           <p className="home-lead">
-            Hands-on explorers for anatomy, chemistry, physics, mathematics and biology. Rotate a model or change a number, and
-            see what happens. Short explanations cite their sources.
+            Interactive models and a sourced reference library for anatomy, chemistry, physics, mathematics and biology: change a
+            value or turn a model, and read why it behaves that way.
           </p>
           <div className="home-actions">
             <button type="button" className="button home-cta" onClick={() => jump(investigationsRef.current)}>
               Start exploring
               <ArrowRight size={16} aria-hidden="true" />
             </button>
-            <button type="button" className="tool-button bordered" onClick={() => jump(subjectsRef.current)}>
-              <span>Browse subjects</span>
-            </button>
+            <AppLink href="#/reference" className="tool-button bordered home-cta-secondary">
+              <Library size={15} aria-hidden="true" />
+              <span>Browse reference library</span>
+            </AppLink>
             {!firstVisit && (
               <button type="button" className="tool-button bordered" aria-expanded={guideOpen} aria-controls="home-guide" onClick={() => setGuideOpen((v) => !v)}>
                 <BookOpen size={15} aria-hidden="true" />
@@ -329,6 +333,11 @@ export function Home() {
                     ))}
                   </ul>
                 </div>
+                {REFERENCE_COUNTS[id].total > 0 && (
+                  <AppLink className="subject-card-ref" href={`?rs=${id}#/reference`}>
+                    {REFERENCE_COUNTS[id].total} reference {REFERENCE_COUNTS[id].total === 1 ? 'entry' : 'entries'}
+                  </AppLink>
+                )}
                 <AppLink className="subject-card-action" href={modules[0].href}>
                   Open {modules[0].name.replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase())}
                   <ArrowRight size={16} aria-hidden="true" />
@@ -340,13 +349,21 @@ export function Home() {
         <p className="muted small">Card illustrations are simplified previews, not the scientific models.</p>
       </section>
 
+      <AtlasPreview />
+
       <Investigations sectionRef={investigationsRef} />
+
+      <Connections />
+
+      <LibraryTeaser />
 
       <QuestionLinks />
 
       <InterestStarts />
 
       <SavedPanel saved={library.saved} savedError={library.savedError} onMessage={setMessage} />
+
+      <SourcesNote />
 
       <footer className="home-footer">
         <nav aria-label="Subjects (footer)">
