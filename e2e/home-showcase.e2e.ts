@@ -9,7 +9,9 @@ test('hero follows the design: one heading, one sentence, search; the library co
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Science, made clearer.')
   await expect(page.locator('.home-lead').first()).toHaveText('Explore a model. Understand an idea. Try it yourself.')
+  await page.goto('/#/discover')
   for (const [subject, x] of Object.entries(c)) await expect(page.locator(`.library-subject.is-${subject} .library-subject-count`)).toHaveText(String(x.total))
+  await page.goto('/')
   await page.getByRole('navigation', { name: 'Library and saved work' }).getByRole('link', { name: /Reference library/ }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Reference library' })).toBeVisible()
 })
@@ -29,8 +31,8 @@ test('home search shows reference entries labelled apart from labs, loading the 
   await expect(page.getByRole('searchbox', { name: 'Search the reference library' })).toHaveValue('enzyme')
 })
 
-test('the body atlas preview opens the atlas at a system without loading 3D on the homepage', async ({ page }) => {
-  await page.goto('/')
+test('the body atlas preview (on Discover) opens the atlas at a system without loading 3D there', async ({ page }) => {
+  await page.goto('/#/discover')
   const preview = page.getByRole('region', { name: 'Explore the body system by system' })
   await expect(preview).toContainText('schematic')
   await expect(page.locator('canvas')).toHaveCount(0)
@@ -39,8 +41,8 @@ test('the body atlas preview opens the atlas at a system without loading 3D on t
   await expect(page.getByRole('navigation', { name: 'Atlas level' })).toContainText('Respiratory')
 })
 
-test('connections say what kind of link they are and open both ends; sources and limits are explained', async ({ page }) => {
-  await page.goto('/')
+test('connections (on Discover) say what kind of link they are and open both ends; sources and limits are explained', async ({ page }) => {
+  await page.goto('/#/discover')
   const connections = page.getByRole('region', { name: 'Connections between subjects' })
   await expect(connections.locator('.connection')).toHaveCount(6)
   await expect(connections.locator('.connection-kind', { hasText: 'Analogy only' })).toHaveCount(1)

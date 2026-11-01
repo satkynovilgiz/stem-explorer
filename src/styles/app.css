@@ -8864,3 +8864,6 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 .workspace-controls .tool-button:not(.workspace-restore) span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .workspace-controls .tool-button { min-width: 36px; justify-content: center; }
 .subject-bar { background: var(--color-bg); }
+
+/* The subject bar is an in-content row, not a full-width toolbar. */
+.subject-bar { border-bottom: 0; background: transparent; min-height: 0; }

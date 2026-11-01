@@ -12,8 +12,8 @@ async function start(page: Page) {
   await inPanel(page, 'Start activity').click()
 }
 
-test('Chemistry: from Home, measure the H–O–H angle, then exit back to the previous view', async ({ page }) => {
-  await page.goto('/?molecule=benzene&view=space-filling#/home')
+test('Chemistry: from Discover, measure the H–O–H angle, then exit back to the previous view', async ({ page }) => {
+  await page.goto('/?molecule=benzene&view=space-filling#/discover')
   await page.getByRole('region', { name: 'Start an investigation' }).getByRole('link', { name: /Measure the H–O–H angle in water/ }).click()
   await expect(page).toHaveURL(/#\/chemistry$/)
   await waitForViewport(page)

@@ -18,6 +18,7 @@ import { useNavigationGeneration } from './lib/location'
 const GlossaryPage = lazy(() => import('./features/glossary/GlossaryPage').then((m) => ({ default: m.GlossaryPage })))
 const SearchPage = lazy(() => import('./features/search/SearchPage').then((m) => ({ default: m.SearchPage })))
 const CollectionsPage = lazy(() => import('./features/collections/CollectionsPage').then((m) => ({ default: m.CollectionsPage })))
+const DiscoverPage = lazy(() => import('./features/home/Discover').then((m) => ({ default: m.DiscoverPage })))
 const ReferencePage = lazy(() => import('./features/reference/ReferencePage').then((m) => ({ default: m.ReferencePage })))
 const NotebookPage = lazy(() => import('./features/notebook/NotebookPage').then((m) => ({ default: m.NotebookPage })))
 const pageLoading = <p className="muted small panel">Loading…</p>
@@ -101,7 +102,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : route === 'collections' ? 'Collections · STEM Explorer' : route === 'search' ? 'Search · STEM Explorer' : route === 'reference' ? document.title : 'STEM Explorer'
+    document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : route === 'collections' ? 'Collections · STEM Explorer' : route === 'search' ? 'Search · STEM Explorer' : route === 'reference' || route === 'discover' ? document.title : 'STEM Explorer'
   }, [subjectName, route])
 
   return (
@@ -120,10 +121,8 @@ export default function App() {
             <AnatomyExplorer />
           </>
         ) : route === 'chemistry' ? (
-          <>
-            <h1 className="visually-hidden">Chemistry Explorer</h1>
-            <ChemistryExplorer />
-          </>
+          // Chemistry pages give their own H1 (the topics page, a reading page or a calculator title).
+          <ChemistryExplorer />
         ) : route === 'physics' ? (
           <>
             <h1 className="visually-hidden">Physics Explorer: projectile motion lab</h1>
@@ -150,6 +149,10 @@ export default function App() {
         ) : route === 'collections' ? (
           <Suspense fallback={pageLoading}>
             <CollectionsPage />
+          </Suspense>
+        ) : route === 'discover' ? (
+          <Suspense fallback={pageLoading}>
+            <DiscoverPage />
           </Suspense>
         ) : route === 'reference' ? (
           <Suspense fallback={pageLoading}>

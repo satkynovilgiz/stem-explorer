@@ -8,7 +8,7 @@ test('Home → Chemistry opens “What are you working on?” with only groups t
   await page.goto('/')
   await page.locator('.subject-card.is-chemistry .subject-card-action').click()
   await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
-  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('All topics')
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Chemistry topics')
   await expect(page.getByRole('heading', { name: 'What are you working on?' })).toBeVisible()
   const groups = page.locator('.chem-group')
   expect(await groups.count()).toBeGreaterThanOrEqual(4)

@@ -301,7 +301,7 @@ function GroupPage({ group, items, onBack }: { group: (typeof CHEM_GROUPS)[numbe
   return (
     <section className="chem-group-page" aria-labelledby="chem-group-title">
       <button type="button" className="chem-back" onClick={onBack}>
-        <ArrowLeft size={16} aria-hidden="true" /> All chemistry topics
+        <ArrowLeft size={16} aria-hidden="true" /> Chemistry topics
       </button>
       <h2 id="chem-group-title" className="chem-group-page-title">
         {ICONS[group.icon]} {group.title}

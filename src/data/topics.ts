@@ -111,7 +111,7 @@ export const MODULES: readonly TopicModule[] = [
   {
     id: 'chemistry.topics',
     subject: 'chemistry',
-    name: 'All topics',
+    name: 'Chemistry topics',
     summary: 'Search Chemistry, browse topic groups and common questions',
     href: linkTo('chemistry', { csec: 'topics' }),
     topics: [],

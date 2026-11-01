@@ -111,8 +111,8 @@ test('thin lens: real and virtual images, sign convention, image at infinity, di
   await expect(page.locator('.optics-stage')).toContainText('Static ray diagram')
 })
 
-test('the Home lens question opens the thin-lens lab; invalid links are corrected', async ({ page }) => {
-  await page.goto('/')
+test('the lens question (on Discover) opens the thin-lens lab; invalid links are corrected', async ({ page }) => {
+  await page.goto('/#/discover')
   await page.getByRole('link', { name: /How does a lens form an image\?/ }).click()
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).locator('[aria-current="page"]')).toHaveText('Thin lens')
   await expect(readout(page, 'Image', true)).toContainText('real, inverted')

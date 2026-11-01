@@ -233,9 +233,12 @@ export function ChemistryExplorer() {
 
   // One polite live region for meaningful changes only (never per animation frame).
   const announcer = (
-    <p className="visually-hidden" role="status" aria-live="polite">
-      {state.announcement}
-    </p>
+    <>
+      {section !== 'topics' && <h1 className="visually-hidden">Chemistry: {SECTION_LABEL[section]}</h1>}
+      <p className="visually-hidden" role="status" aria-live="polite">
+        {state.announcement}
+      </p>
+    </>
   )
 
   // The Chemistry home page is a reading page: no side panels, the same on phones and desktops.

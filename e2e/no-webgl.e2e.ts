@@ -67,9 +67,9 @@ test('Anatomy keeps the list, explanations, sources and tour without WebGL', asy
 test('Home works without WebGL and still opens explorers', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()
-  // Five subject cards (2D images, no WebGL) plus the featured exploration's drawing.
+  // Five subject cards (2D images, no WebGL); the featured drawing moved to Discover.
   await expect(page.locator('.subject-card-img')).toHaveCount(5)
-  await expect(page.locator('.subject-art')).toHaveCount(1)
+  await expect(page.locator('canvas')).toHaveCount(0)
   await page.getByRole('searchbox', { name: 'Search everything you can explore' }).fill('aorta')
   await page.getByRole('list', { name: 'Search results' }).getByRole('link', { name: /Aorta/ }).first().click()
   await waitForViewport(page)

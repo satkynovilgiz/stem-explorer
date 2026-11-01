@@ -2047,6 +2047,25 @@ writes, so tabs cannot set each other off. The only automatic write is the recen
 made once per distinct view shown in that tab.
 
 ## Exploration notebook
+### Home and Discover (chemistry usability rebuild)
+
+Home answers one question, *What would you like to explore?*: the title and one sentence, a
+prominent search, five subject cards (Chemistry first and largest), a compact *Your study space*
+(saved explorations, reference library, search all subjects, glossary, collections, notebook and
+*Discover activities and connections*), *Continue exploring* only when there is history, your saved
+explorations, and a short footer.
+
+Everything that used to fill the rest of Home now lives on **Discover** (`#/discover`), unchanged:
+the first-visit starting points and *How exploring works*, guided activities, starter paths, more
+starting points, questions, interests, the body-atlas overview, cross-subject connections, the
+reference library in numbers, and *Sources and model limits* (the footer links there).
+
+Navigation inside subjects stays in the page: a small breadcrumb starting with **← Home**. In
+Chemistry the way back to its topics is always labelled **Chemistry topics** (the breadcrumb, the
+topic sidebar and the group pages); Chemistry has no topic drawer because its topics are a page.
+Layout (left/right panel, focus mode) and **Present** controls appear only on model workspaces, not
+on Chemistry's topic page, reading pages or calculators. Every page has exactly one H1.
+
 ### Homepage additions (reference release)
 
 Below the subject cards, in this order:
@@ -3173,7 +3192,33 @@ how it is drawn (individual, group or container), with what is omitted.
   tested. Tests check behaviour and agreement with the cited values. They do not establish
   scientific accuracy.
 
+## Student testing (Chemistry)
+
+The chemistry redesign responds to feedback from one chemistry student (hard explanations, hard to
+find information, cluttered interface, an overwhelming header, the colours). **It has not yet been
+tested with that student or any other**, so nothing here is user-validated.
+`docs/student-testing-guide.md` has a short, neutral session: five tasks (find what molarity
+means; work out a concentration; find out why water is bent; work out a dilution; find C2H6O and
+return to the search), the same five questions after each, and how to record what happens without
+coaching. Links to test: Home <https://stem-explorer-nine.vercel.app/>, Chemistry
+<https://stem-explorer-nine.vercel.app/?csec=topics#/chemistry>, Molarity
+<https://stem-explorer-nine.vercel.app/#/reference/chemistry/molarity>.
+
+Remaining limitations of the redesign:
+- Automated tests check that pages load, links work, numbers are right and layouts fit phones;
+  they cannot show that explanations are understandable.
+- Only Chemistry's content was rewritten for students; the other subjects have the new layout,
+  colours and navigation but their original explanations.
+- Physics, Mathematics, Biology and Anatomy 3D views keep dark backgrounds inside the light page.
+- Card illustrations are small crops of the design mockup; the original artwork would be sharper.
+- Chemistry has 17 student entries; acids, bases, gases and energy are introductory only.
+
 ## Known issues
+
+- `mobile.e2e.ts` *on a phone, the breadcrumb fits and the topic drawer navigates between modules*
+  occasionally fails its final Back step in emulated-phone Chrome (Back stays on Breathing). A trace
+  shows the drawer adds exactly one history entry, so the app's history is correct; CI's single
+  retry passes it. The cause in the test harness is not yet found.
 
 - **`THREE.Clock` warning.** The console shows `THREE.Clock: This module has been deprecated. Please
   use THREE.Timer instead.` once per 3D view mount, in every 3D subject.

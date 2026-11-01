@@ -37,8 +37,11 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
   const leftShown = ws.focus ? peek === 'left' : !ws.hideLeft
   const rightShown = ws.focus ? peek === 'right' : !ws.hideRight
   const changed = ws.focus || ws.hideLeft || ws.hideRight
-  // The Chemistry home page is a single reading column: no side panels to show or hide.
-  const hasPanels = module.id !== 'chemistry.topics'
+  // Layout and presentation controls belong to model workspaces. Chemistry's topic page, reading
+  // pages and calculators are single columns, so they have none.
+  const CHEM_WORKSPACES = ['chemistry.molecules', 'chemistry.periodic', 'chemistry.atomic', 'chemistry.bonding']
+  const hasPanels = subject !== 'chemistry' || CHEM_WORKSPACES.includes(module.id)
+  const isChemTopics = module.id === 'chemistry.topics'
 
   const close = () => {
     setOpen(false)
@@ -57,26 +60,32 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
             </a>
             <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
           </li>
-          <li>
-            {subject === 'chemistry' ? (
-              <AppLink href="?csec=topics#/chemistry" className={`crumb-subject is-${subject}`}>
+          {subject === 'chemistry' ? (
+            // Chemistry: one consistent way back to its topics, written the same everywhere.
+            <li>
+              <AppLink href="?csec=topics#/chemistry" className="crumb-subject is-chemistry" aria-current={isChemTopics ? 'page' : undefined}>
                 <SubjectIcon subject={subject} size={14} />
-                {subjectName(subject)}
+                Chemistry topics
               </AppLink>
-            ) : (
+              {!isChemTopics && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
+            </li>
+          ) : (
+            <li>
               <span className={`crumb-subject is-${subject}`}>
                 <SubjectIcon subject={subject} size={14} />
                 {subjectName(subject)}
               </span>
-            )}
-            <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
-          </li>
-          <li>
-            <span className="crumb-module" aria-current={topic ? undefined : 'page'}>
-              {module.name}
-            </span>
-            {topic && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
-          </li>
+              <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
+            </li>
+          )}
+          {!isChemTopics && (
+            <li>
+              <span className="crumb-module" aria-current={topic ? undefined : 'page'}>
+                {module.name}
+              </span>
+              {topic && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
+            </li>
+          )}
           {topic && (
             <li>
               <span className="crumb-topic" aria-current="page">
@@ -105,11 +114,14 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
           </button>
         )}
       </div>}
-      <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
-        <ListTree size={15} aria-hidden="true" />
-        <span>All {subjectName(subject).toLowerCase()} topics</span>
-      </button>
-      {onPresent && (
+      {/* Chemistry's topics are a page (Chemistry topics, in the breadcrumb); other subjects use the drawer. */}
+      {subject !== 'chemistry' && (
+        <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+          <ListTree size={15} aria-hidden="true" />
+          <span>All {subjectName(subject).toLowerCase()} topics</span>
+        </button>
+      )}
+      {onPresent && hasPanels && (
         <button type="button" className="tool-button bordered present-toggle" onClick={onPresent}>
           <Presentation size={15} aria-hidden="true" />
           <span>Present</span>

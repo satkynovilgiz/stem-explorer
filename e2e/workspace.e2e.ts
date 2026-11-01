@@ -97,7 +97,7 @@ test('Home: five subject cards, interest starting points, and recent items with 
   await expect(glance.locator('.subject-card')).toHaveCount(5)
   await glance.locator('.subject-card.is-physics .subject-card-action').click()
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Physics')
-  await page.goBack()
+  await page.goto('/#/discover')
   const interests = page.getByRole('region', { name: 'Starting points by interest' })
   await expect(interests).toContainText('Grouped by topic, not by level')
   await interests.getByRole('link', { name: /Cross two pea plants/ }).click()

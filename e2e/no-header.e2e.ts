@@ -58,13 +58,10 @@ test('Chemistry: breadcrumb, local topic sidebar (collapsible), deep links and B
   await expect(toggle).toContainText('Periodic table')
   await page.reload()
   await expect(page.getByRole('navigation', { name: 'Chemistry topics' }).getByRole('button', { name: /Show the topic list/ })).toHaveAttribute('aria-expanded', 'false')
-  // The topic drawer lists only Chemistry.
-  await page.getByRole('button', { name: 'All chemistry topics' }).click()
-  const drawer = page.getByRole('dialog', { name: 'Chemistry topics' })
-  await expect(drawer.locator('.topic-group')).toHaveCount(1)
-  await page.keyboard.press('Escape')
-  await expect(drawer).toBeHidden()
-  await expect(page.getByRole('button', { name: 'All chemistry topics' })).toBeFocused()
+  // Chemistry topics is one consistent link back to the topics page (no drawer in Chemistry).
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Chemistry topics' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^All \w+ topics$/ })).toHaveCount(0)
 })
 
 test('older deep links in every subject still open their exact state', async ({ page }) => {

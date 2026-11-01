@@ -3,7 +3,7 @@ import { expect, test, waitForViewport, goHome, openSubject } from './fixtures.t
 
 const SUBJECT_HEADINGS = {
   anatomy: 'Anatomy Explorer: body atlas and heart',
-  chemistry: 'Chemistry Explorer',
+  chemistry: 'Chemistry',
   biology: 'Biology Explorer: cells, DNA, division and energy',
   physics: 'Physics Explorer: projectile motion lab',
   mathematics: 'Mathematics Explorer: interactive 3D surfaces',
@@ -43,19 +43,22 @@ test.describe('Home page', () => {
     }
   })
 
-  test('first visit shows a welcome panel with starting points; returning visitors get Continue exploring', async ({ page }) => {
+  test('Home keeps one start (search and subjects); starting points are on Discover; returning visitors get Continue exploring', async ({ page }) => {
     await page.goto('/')
+    // Home: no welcome panel or long lists; Discover has them.
+    await expect(page.getByRole('heading', { name: /New here\?/ })).toHaveCount(0)
+    await expect(page.getByRole('region', { name: 'Start an investigation' })).toHaveCount(0)
+    await page.getByRole('navigation', { name: 'Library and saved work' }).getByRole('link', { name: /Discover/ }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Discover' })).toBeVisible()
     const welcome = page.locator('section', { has: page.getByRole('heading', { name: /New here\?/ }) })
     await expect(welcome).toContainText('How exploring works')
-    // A starting point opens the chemistry activity introduction.
     await welcome.getByRole('link', { name: /Measure the H–O–H angle/ }).click()
     await expect(page.locator('.activity')).toContainText('Start activity')
-    // After a visit, the welcome panel gives way to Continue exploring.
     await expect.poll(() => page.evaluate(() => localStorage.getItem('stem-explorer:recent'))).not.toBeNull()
     await goHome(page)
-    await expect(page.getByRole('heading', { name: /New here\?/ })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Continue exploring' })).toBeVisible()
   })
+
 
   test('subject cards: one sentence each, a clear destination, and keyboard access', async ({ page }) => {
     await page.goto('/')
@@ -70,8 +73,8 @@ test.describe('Home page', () => {
     await expect(page).toHaveURL(/#\/mathematics$/)
   })
 
-  test('featured explorations use supported deep links', async ({ page }) => {
-    await page.goto('/')
+  test('featured explorations (on Discover) use supported deep links', async ({ page }) => {
+    await page.goto('/#/discover')
     await page.getByRole('link', { name: /Explore the Golgi apparatus/ }).click()
     await expect(page).toHaveURL(/\?structure=golgi&cell=cutaway#\/biology$/)
     await expect(page.locator('#structure-heading')).toHaveText('Golgi apparatus')
@@ -84,7 +87,7 @@ test.describe('Home page', () => {
   test('only working links in the footer', async ({ page, baseURL }) => {
     await page.goto('/')
     const hrefs = await page.locator('.home-footer a').evaluateAll((as) => as.map((a) => a.getAttribute('href')))
-    expect(hrefs).toEqual(['#/chemistry', '#/anatomy', '#/biology', '#/physics', '#/mathematics', 'https://github.com/satkynovilgiz/stem-explorer'])
+    expect(hrefs).toEqual(['#/chemistry', '#/anatomy', '#/biology', '#/physics', '#/mathematics', '#/discover', 'https://github.com/satkynovilgiz/stem-explorer'])
     expect(baseURL).toBeTruthy()
   })
 })
@@ -267,9 +270,10 @@ test('deep links to every subject still open directly', async ({ page }) => {
 
 test('reduced motion: transitions are effectively off', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/')
+  await page.goto('/#/discover')
   const duration = await page.locator('.investigation').first().evaluate((el) => getComputedStyle(el).transitionDuration)
   expect(parseFloat(duration)).toBeLessThan(0.001)
+  await page.goto('/')
   expect(await page.locator('.subject-card').first().evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
 })
 
@@ -285,7 +289,7 @@ test.describe('Home motion and featured content', () => {
     await expect(page.locator('.search-results')).toContainText('Benzene')
     await page.getByRole('button', { name: 'Search all subjects' }).click()
     await expect(page).toHaveURL(/q=benz.*#\/search$/)
-    await page.goBack()
+    await page.goto('/#/discover')
     await page.locator('.spotlight').click()
     await expect(page.locator('#math-heading')).toContainText('saddle', { ignoreCase: true })
     expect(new URL(page.url()).searchParams.get('surface')).toBe('saddle')
@@ -294,8 +298,8 @@ test.describe('Home motion and featured content', () => {
 })
 
 test.describe('Home design and exploration flow', () => {
-  test('investigations list real activities and starter paths from the catalog', async ({ page }) => {
-    await page.goto('/')
+  test('investigations list real activities and starter paths from the catalog (on Discover)', async ({ page }) => {
+    await page.goto('/#/discover')
     const section = page.getByRole('region', { name: 'Start an investigation' })
     await expect(section.locator('.investigation-grid').first().getByRole('link')).toHaveCount(5)
     await expect(section.getByRole('link', { name: /Path · 6 steps.*How breathing works/ })).toHaveAttribute('href', '#/collections')
