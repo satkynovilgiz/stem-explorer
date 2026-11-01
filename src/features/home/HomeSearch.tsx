@@ -11,6 +11,9 @@ import { loadManifest } from '../reference/useManifest'
 import { searchUrl } from '../../lib/searchUrl'
 
 /** Plain input + result list (no custom autocomplete): Tab moves through results, Enter opens one. */
+/** Example searches that each return real results. */
+const TRY = ['heart', 'molarity', 'photosynthesis', 'DNA', 'projectile'] as const
+
 export function HomeSearch() {
   const id = useId()
   const [query, setQuery] = useState('')
@@ -69,6 +72,16 @@ export function HomeSearch() {
           <Search size={18} aria-hidden="true" />
         </button>
       </form>
+      {!trimmed && (
+        <p className="home-try">
+          <span className="muted">Try:</span>
+          {TRY.map((t) => (
+            <button key={t} type="button" className="home-try-chip" onClick={() => (setQuery(t), inputRef.current?.focus())}>
+              {t}
+            </button>
+          ))}
+        </p>
+      )}
       <p id={`${id}-status`} className="search-status" role="status">
         {trimmed
           ? [all.length ? `${all.length} explorer result${all.length === 1 ? '' : 's'}${all.length > results.length ? `, showing the first ${results.length}` : ''}` : '', refAll.length ? `${refAll.length} reference ${refAll.length === 1 ? 'entry' : 'entries'}` : '']

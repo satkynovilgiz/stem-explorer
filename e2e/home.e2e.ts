@@ -327,11 +327,16 @@ test.describe('Home design and exploration flow', () => {
     await expect(page.locator('canvas')).toHaveCount(0)
   })
 
-  test('keyboard order: the search comes first, then the Chemistry card, with a visible focus ring', async ({ page }) => {
+  test('keyboard order: the search comes first, then the examples, then the Chemistry card, with a visible focus ring', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('searchbox', { name: 'Search everything you can explore' }).focus()
     await page.keyboard.press('Tab')
     await expect(page.getByRole('button', { name: 'Search all subjects' })).toBeFocused()
+    // Then the five example searches, in reading order.
+    for (const t of ['heart', 'molarity', 'photosynthesis', 'DNA', 'projectile']) {
+      await page.keyboard.press('Tab')
+      await expect(page.getByRole('button', { name: t, exact: true })).toBeFocused()
+    }
     await page.keyboard.press('Tab')
     const chem = page.locator('.subject-card.is-chemistry .subject-card-action')
     await expect(chem).toBeFocused()
@@ -339,3 +344,27 @@ test.describe('Home design and exploration flow', () => {
   })
 })
 
+
+test('Home motion: the hero animates, cards reveal on scroll, examples fill the search; reduced motion keeps everything still', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()
+  // The atom is decorative and its electrons travel their orbits.
+  await expect(page.locator('.hero-atom')).toHaveAttribute('aria-hidden', 'true')
+  await expect(page.locator('.hero-atom animateMotion')).toHaveCount(3)
+  // Cards below the fold rise in as they are scrolled to.
+  const maths = page.locator('.subject-card.is-mathematics')
+  await maths.scrollIntoViewIfNeeded()
+  await expect(maths).toHaveClass(/is-in/)
+  await expect.poll(() => maths.evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
+  // An example search fills the box and shows results.
+  await page.getByRole('button', { name: 'photosynthesis', exact: true }).click()
+  await expect(page.getByRole('searchbox', { name: 'Search everything you can explore' })).toHaveValue('photosynthesis')
+  await expect(page.locator('.search-results')).toContainText('Photosynthesis')
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.reload()
+  await expect(page.locator('.home.has-motion')).toHaveCount(0)
+  await expect(page.locator('.hero-atom animateMotion')).toHaveCount(0)
+  expect(await page.locator('.ht-word > span').first().evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
+  expect(await maths.evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
+})

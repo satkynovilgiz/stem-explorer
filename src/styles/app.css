@@ -8979,3 +8979,68 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
   html.ws-hide-right .chem.chem--no-left,
   html.ws-focus .chem.chem--no-left { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- Home: motion design ----------
+   The hero atom, word-by-word title, staggered entrance, and scroll reveal. Only transform,
+   translate and opacity animate. With reduced motion everything is shown still and in place. */
+.home--design .home-hero { position: relative; isolation: isolate; }
+.hero-atom { position: absolute; z-index: -1; top: 50%; right: -40px; width: min(420px, 42vw); aspect-ratio: 1; translate: 0 -54%; pointer-events: none; }
+.hero-atom-svg { position: relative; width: 100%; height: 100%; overflow: visible; }
+.hero-glow { position: absolute; inset: 12%; border-radius: 50%; background: radial-gradient(circle at 40% 40%, rgb(95 179 166 / 0.32), rgb(231 207 160 / 0.22) 45%, transparent 70%); filter: blur(24px); }
+.hero-orbit { fill: none; stroke: #1d6f66; stroke-opacity: 0.28; stroke-width: 1.5; }
+.hero-electron { filter: drop-shadow(0 0 6px rgb(29 111 102 / 0.55)); }
+.ht-word { display: inline-block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; vertical-align: bottom; }
+.ht-word > span { display: inline-block; }
+.ht-accent-wrap { position: relative; overflow: visible; }
+.ht-accent { background: linear-gradient(100deg, #13544c 0%, #1d8a7c 40%, #57b8a8 50%, #1d8a7c 60%, #13544c 100%); background-size: 250% 100%; background-position: 0% 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
+.ht-underline { position: absolute; left: 2%; right: 4%; bottom: -0.06em; width: 94%; height: 0.24em; overflow: visible; }
+.ht-underline path { fill: none; stroke: #e0b765; stroke-width: 5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.home-try { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: var(--space-3) 0 0; font-size: 0.875rem; }
+.home-try-chip { min-height: 32px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-weight: 600; cursor: pointer; transition: border-color 0.2s, background-color 0.2s, translate 0.2s; }
+.home-try-chip:hover { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.home-try-chip:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+@media (max-width: 720px) {
+  .hero-atom { top: -60px; right: -90px; width: 210px; translate: none; opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Entrance: the eyebrow, then each title word rises out of its mask, then the lead and search. */
+  .hero-in { animation: hero-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) both; }
+  .ht-word > span { animation: word-rise 0.8s cubic-bezier(0.2, 0.75, 0.15, 1) var(--d, 0ms) both; }
+  .ht-accent { animation: word-rise 0.8s cubic-bezier(0.2, 0.75, 0.15, 1) var(--d, 0ms) both, accent-sweep 1.6s ease-in-out 1s both; }
+  .ht-underline path { stroke-dasharray: 320; stroke-dashoffset: 320; animation: draw 0.9s cubic-bezier(0.6, 0, 0.2, 1) 0.95s forwards; }
+  .hero-atom { animation: hero-fade 1.2s ease-out 0.2s both; }
+  .hero-glow { animation: glow-drift 9s ease-in-out infinite alternate; }
+  .hero-nucleus { transform-box: fill-box; transform-origin: center; animation: nucleus-pulse 3.2s ease-in-out infinite; }
+  .home-try-chip:hover { translate: 0 -1px; }
+
+  /* Scroll reveal (Home adds .has-motion only when it can reveal; nothing stays hidden otherwise). */
+  .home.has-motion [data-reveal] { opacity: 0; translate: 0 22px; transition: opacity 0.7s ease, translate 0.8s cubic-bezier(0.2, 0.75, 0.15, 1); transition-delay: calc(var(--i, 0) * 90ms); }
+  .home.has-motion [data-reveal].is-in { opacity: 1; translate: 0 0; }
+
+  /* Cards: lift on hover, the picture drifts; Chemistry's molecule floats. */
+  .subject-tiles > li.is-in { transition: opacity 0.7s ease, translate 0.35s cubic-bezier(0.2, 0.75, 0.15, 1), box-shadow 0.3s ease; transition-delay: 0s; }
+  .home.has-motion .subject-tiles > li.is-in:hover,
+  .home.has-motion .subject-tiles > li.is-in:focus-within { translate: 0 -4px; }
+  .home:not(.has-motion) .subject-tiles > li:hover { translate: 0 -4px; }
+  .subject-tiles > li { transition: translate 0.35s cubic-bezier(0.2, 0.75, 0.15, 1), box-shadow 0.3s ease; }
+  .subject-tiles .subject-card-img { transition: scale 0.6s cubic-bezier(0.2, 0.75, 0.15, 1), translate 0.6s cubic-bezier(0.2, 0.75, 0.15, 1); transform-origin: right center; }
+  .subject-tiles .subject-card:hover .subject-card-img { scale: 1.05; translate: -6px 0; }
+  .subject-tiles .is-chemistry .subject-card-img { animation: float 6s ease-in-out infinite; }
+  .subject-card-button svg { transition: translate 0.25s ease; }
+  .subject-card:hover .subject-card-button svg { translate: 4px 0; }
+  .study-card { transition: translate 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
+  .study-card:hover { translate: 0 -2px; }
+}
+
+@keyframes hero-rise { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
+@keyframes word-rise { from { translate: 0 105%; } to { translate: 0 0; } }
+@keyframes accent-sweep { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes hero-fade { from { opacity: 0; scale: 0.92; } to { opacity: 1; scale: 1; } }
+@keyframes glow-drift { from { translate: -4% 3%; scale: 1; } to { translate: 5% -4%; scale: 1.08; } }
+@keyframes nucleus-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
+@keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+/* The hero atom may hang past the edge on narrow screens; it is clipped, never scrolled to. */
+.home--design { overflow-x: clip; }
+@media print { .home.has-motion [data-reveal] { opacity: 1 !important; translate: none !important; } }

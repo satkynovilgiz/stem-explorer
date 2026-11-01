@@ -48,6 +48,15 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   sections (atlas preview, investigations, connections, reference counts, questions, saved
   explorations, sources) follow under *More to explore*. The hero animation, the facts line and
   the module chips on the cards were removed; the modules are listed inside each subject.
+- **Home motion** (`src/features/home/HeroAtom.tsx`, end of `app.css`): a decorative atom beside
+  the title (three tilted orbits; electrons travel them with SVG `animateMotion`; the nucleus
+  pulses gently over a drifting glow); the title rises word by word, *clearer.* gets a teal
+  gradient sweep and a hand-drawn gold underline; the lead and search follow. Under the search,
+  **Try:** chips (*heart, molarity, photosynthesis, DNA, projectile*, each checked to return
+  results) fill the search. Subject cards and the study space rise in as they scroll into view
+  (IntersectionObserver), cards lift on hover and their pictures drift; the Chemistry molecule
+  floats. Only transform/translate/opacity animate. With `prefers-reduced-motion: reduce`
+  nothing moves: no entrance, no reveal (nothing is hidden), and the electrons are drawn still.
 - **Card illustrations** (`public/img/design/*.webp`) are cropped from the mockup, so they are
   small (about 150–320 px wide) and can look soft on high-density screens; replacing them with the
   original artwork is a drop-in change. They are decorative (`alt=""`) and are not scientific

@@ -1,10 +1,11 @@
 import { ArrowRight, BookA, Bookmark, BookOpen, Compass, ExternalLink, ListOrdered, NotebookPen, Search, X } from 'lucide-react'
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SUBJECTS, type SubjectId } from '../../data/subjects'
 import { modulesOf } from '../../data/topics'
 import { useExplorationLibrary } from '../../lib/useExplorationLibrary'
 import { SUBJECT_CARDS } from './content'
+import { HeroAtom } from './HeroAtom'
 import { HomeSearch } from './HomeSearch'
 import { RecentStrip } from './RecentStrip'
 import { SavedPanel } from './SavedPanel'
@@ -20,12 +21,39 @@ const scrollBehavior = (): ScrollBehavior =>
 const CHEMISTRY_HOME = '?csec=topics#/chemistry'
 
 /**
+ * Scroll reveal: elements marked `data-reveal` rise in as they enter the viewport. Only when motion
+ * is allowed and IntersectionObserver exists; otherwise nothing is ever hidden.
+ */
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const root = ref.current
+    if (!root || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    root.classList.add('has-motion')
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue
+          e.target.classList.add('is-in')
+          io.unobserve(e.target)
+        }
+      },
+      { rootMargin: '0px 0px -6% 0px' },
+    )
+    root.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+  return ref
+}
+
+/**
  * Home answers one question: what would you like to explore? Search, five subjects, your study
  * space, recent visits and saved explorations. Everything else lives on Discover (#/discover).
  */
 export function Home() {
   const library = useExplorationLibrary()
   const [message, setMessage] = useState('')
+  const revealRef = useReveal()
 
   const jump = (el: HTMLElement | null) => {
     el?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
@@ -33,26 +61,47 @@ export function Home() {
   }
 
   return (
-    <div className={`home home--design${message ? ' has-toast' : ''}`}>
+    <div ref={revealRef} className={`home home--design${message ? ' has-toast' : ''}`}>
       <section className="home-hero" aria-labelledby="home-title">
-        <p className="home-eyebrow">STEM Explorer</p>
+        <HeroAtom />
+        <p className="home-eyebrow hero-in" style={{ '--d': '0ms' } as CSSProperties}>
+          STEM Explorer
+        </p>
+        {/* Each word rises out of its own mask; the accent word gets a gradient sweep and an underline. */}
         <h1 id="home-title" className="home-title">
-          Science, made clearer.
+          <span className="ht-word">
+            <span style={{ '--d': '80ms' } as CSSProperties}>Science,</span>
+          </span>{' '}
+          <span className="ht-word">
+            <span style={{ '--d': '200ms' } as CSSProperties}>made</span>
+          </span>{' '}
+          <span className="ht-word ht-accent-wrap">
+            <span className="ht-accent" style={{ '--d': '320ms' } as CSSProperties}>
+              clearer.
+            </span>
+            <svg className="ht-underline" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <path d="M4 14 C 70 4, 150 4, 296 11" />
+            </svg>
+          </span>
         </h1>
-        <p className="home-lead">Explore a model. Understand an idea. Try it yourself.</p>
-        <HomeSearch />
+        <p className="home-lead hero-in" style={{ '--d': '520ms' } as CSSProperties}>
+          Explore a model. Understand an idea. Try it yourself.
+        </p>
+        <div className="hero-in" style={{ '--d': '660ms' } as CSSProperties}>
+          <HomeSearch />
+        </div>
       </section>
 
       <section className="home-section" aria-labelledby="subjects-heading">
-        <h2 id="subjects-heading" className="home-h2">
+        <h2 id="subjects-heading" className="home-h2" data-reveal>
           Choose a subject
         </h2>
         <ul className="subject-cards subject-tiles">
-          {ORDER.map((id) => {
+          {ORDER.map((id, i) => {
             const card = SUBJECT_CARDS[id]
             const href = id === 'chemistry' ? CHEMISTRY_HOME : modulesOf(id)[0].href
             return (
-              <li key={id} className={`subject-card is-${id}`}>
+              <li key={id} className={`subject-card is-${id}`} data-reveal style={{ '--i': i } as CSSProperties}>
                 <AppLink className="subject-card-action" href={href}>
                   <span className="subject-card-text">
                     <span className="subject-card-title">{subjectName(id)}</span>
@@ -71,7 +120,7 @@ export function Home() {
         </ul>
       </section>
 
-      <nav className="home-section study-space" aria-label="Library and saved work">
+      <nav className="home-section study-space" aria-label="Library and saved work" data-reveal>
         <h2 className="home-h2">Your study space</h2>
         <ul className="study-main">
           <li>
