@@ -35,6 +35,12 @@ export interface ActivityDef<S> {
   sources: ActivitySource[]
   /** Link that opens the explorer where the activity runs (default `#/<subject>`). */
   entryHref?: string
+  /**
+   * Used instead of `#/<subject>` only when the address holds none of the subject's own state, so a
+   * view the reader already has open is kept (and restored on Exit), while a fresh visit still opens
+   * the right explorer. Chemistry needs it: a bare `#/chemistry` is its home page, not the viewer.
+   */
+  freshHref?: string
 }
 
 /** Activities listed on Home (entry points into the explorers). */

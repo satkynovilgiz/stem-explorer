@@ -78,7 +78,7 @@ test('Home works without WebGL and still opens explorers', async ({ page }) => {
 })
 
 test('activities adapt honestly without WebGL instead of requiring the 3D view', async ({ page }) => {
-  await page.goto('/#/chemistry')
+  await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
   await page.locator('.activity-launch').click()
   await page.locator('.activity').getByRole('button', { name: 'Start activity' }).click()
@@ -112,7 +112,7 @@ test('guides and the glossary work without WebGL', async ({ page }) => {
 })
 
 test('the periodic table works without WebGL', async ({ page }) => {
-  await page.goto('/#/chemistry')
+  await page.goto('/?molecule=water#/chemistry')
   await page.getByRole('button', { name: 'Periodic table' }).click()
   await page.getByRole('button', { name: 'Carbon, C, atomic number 6' }).click()
   await expect(page.locator('#element-heading')).toHaveText('Carbon')

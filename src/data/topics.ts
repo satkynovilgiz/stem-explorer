@@ -109,6 +109,16 @@ export const MODULES: readonly TopicModule[] = [
     },
   },
   {
+    id: 'chemistry.topics',
+    subject: 'chemistry',
+    name: 'All topics',
+    summary: 'Search Chemistry, browse topic groups and common questions',
+    href: linkTo('chemistry', { csec: 'topics' }),
+    topics: [],
+    matches: (s) => parseChemistrySection(s).section === 'topics',
+    current: () => null,
+  },
+  {
     id: 'chemistry.periodic',
     subject: 'chemistry',
     name: 'Periodic table',

@@ -204,7 +204,7 @@ test('leaving for another subject mid-activity exits cleanly without touching th
 })
 
 test('the panel collapses and expands from the keyboard', async ({ page }) => {
-  await page.goto('/#/chemistry')
+  await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
   await start(page)
   const toggle = panel(page).locator('.activity-toggle')

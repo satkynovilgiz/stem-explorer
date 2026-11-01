@@ -3,7 +3,7 @@ import { expect, test, waitForViewport } from './fixtures.ts'
 
 const cell = (page: Page, name: string) => page.locator('.ptable-cell', { has: page.locator('.ptable-sym', { hasText: new RegExp(`^${name}$`) }) })
 const open = async (page: Page) => {
-  await page.goto('/#/chemistry')
+  await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
   await page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Periodic table' }).click()
   await expect(page.locator('.ptable-cell')).toHaveCount(118)

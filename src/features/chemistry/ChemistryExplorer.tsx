@@ -31,9 +31,11 @@ const BondingPanel = lazy(() => import('./bonding/Bonding').then((m) => ({ defau
 const ReactionLab = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionLab })))
 const ReactionPanel = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionPanel })))
 const SolutionsLab = lazy(() => import('./solutions/SolutionsLab').then((m) => ({ default: m.SolutionsLab })))
+const ChemistryHome = lazy(() => import('./home/ChemistryHome').then((m) => ({ default: m.ChemistryHome })))
 const SolutionsPanel = lazy(() => import('./solutions/SolutionsLab').then((m) => ({ default: m.SolutionsPanel })))
 
 const SECTION_LABEL: Record<ChemistrySection, string> = {
+  topics: 'Chemistry home',
   periodic: 'Periodic table',
   atomic: 'Atomic structure',
   molecules: 'Molecules',
@@ -235,6 +237,17 @@ export function ChemistryExplorer() {
       {state.announcement}
     </p>
   )
+
+  // The Chemistry home page is a reading page: no side panels, the same on phones and desktops.
+  if (section === 'topics')
+    return (
+      <div className="chem-landing">
+        {announcer}
+        <Suspense fallback={loading}>
+          <ChemistryHome />
+        </Suspense>
+      </div>
+    )
 
   if (isMobile) {
     return (

@@ -90,10 +90,19 @@ function GuideSteps() {
 }
 
 const CHEMISTRY_START = ACTIVITIES.find((a) => a.subject === 'chemistry')!
+
+/** Where an activity's link goes: its own link, the subject (keeping its state), or a fresh start. */
+function activityHref(a: (typeof ACTIVITIES)[number]): string {
+  if (a.entryHref) return a.entryHref
+  // Chemistry keeps a viewer state only when a molecule is open and the home page is not the section.
+  const q = new URLSearchParams(window.location.search)
+  const hasState = a.subject === 'chemistry' ? q.has('molecule') && q.get('csec') !== 'topics' : true
+  return !hasState && a.freshHref ? a.freshHref : `#/${a.subject}`
+}
 const FIRST_PATH = CURATED_COLLECTIONS[0]
 
-/** Chemistry's card opens the subject itself (its landing page from Stage 3 on). */
-const CHEMISTRY_HOME = '#/chemistry'
+/** Chemistry's card opens the Chemistry home page ("What are you working on?"). */
+const CHEMISTRY_HOME = '?csec=topics#/chemistry'
 
 /** First visit (no history and nothing saved): concrete starting points and how exploring works. */
 function WelcomePanel() {
@@ -103,7 +112,7 @@ function WelcomePanel() {
         <Sparkles size={18} aria-hidden="true" /> New here? Start with one of these
       </h2>
       <div className="welcome-starts">
-        <AppLink href={CHEMISTRY_START.entryHref ?? '#/chemistry'} className="welcome-start is-chemistry" onClick={() => requestActivity('chemistry')}>
+        <AppLink href={activityHref(CHEMISTRY_START)} className="welcome-start is-chemistry" onClick={() => requestActivity('chemistry')}>
           <span className="welcome-start-kind">Guided activity · {CHEMISTRY_START.steps.length} steps</span>
           <span className="welcome-start-title">{CHEMISTRY_START.title}</span>
         </AppLink>
@@ -175,7 +184,7 @@ function Investigations({ sectionRef }: { sectionRef: React.RefObject<HTMLElemen
       <ul className="investigation-grid">
         {ACTIVITIES.map((a) => (
           <li key={a.id}>
-            <AppLink href={a.entryHref ?? `#/${a.subject}`} className={`investigation is-${a.subject}`} onClick={() => requestActivity(a.subject)}>
+            <AppLink href={activityHref(a)} className={`investigation is-${a.subject}`} onClick={() => requestActivity(a.subject)}>
               <span className="investigation-kind">
                 <SubjectIcon subject={a.subject} size={14} /> {subjectName(a.subject)} · {a.steps.length} steps
               </span>

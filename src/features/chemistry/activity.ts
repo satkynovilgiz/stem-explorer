@@ -21,6 +21,8 @@ export const CHEMISTRY_ACTIVITY: ActivityDef<ChemistryState> = {
   id: 'water-angle',
   subject: 'chemistry',
   title: 'Measure the H–O–H angle in water',
+  // A molecule already open is kept; with no chemistry state, open the viewer (a bare #/chemistry is the Chemistry home page).
+  freshHref: '?molecule=water#/chemistry',
   goal: 'Measure water’s bond angle and see why the molecule is bent rather than straight.',
   setup: 'Water opens in ball-and-stick view with the Inspect tool and no atoms picked, so all three atoms are easy to click.',
   changes: (s) => [

@@ -607,6 +607,37 @@ older link and saved exploration opens as before. Other sections add `csec=perio
 plus `el=<1–118>` for the selected element. Invalid values are rejected by the same parser that
 validates saved entries.
 
+### Chemistry home: finding things
+
+`?csec=topics#/chemistry` (also any Chemistry address with no molecule or section, such as a bare
+`#/chemistry`) is the **Chemistry home page**, asking *What are you working on?*. Every older link
+names a molecule or a section and opens exactly as before. Home's Chemistry card, the
+breadcrumb's *Chemistry* and the topic sidebar's *Chemistry home* lead here.
+
+- **Search** (*Search chemistry topics, formulas, molecules…*) covers Chemistry by default; an
+  *All subjects* option searches everything. It matches names, formulas however they are typed
+  (`H2O`, `h2o`, `H₂O`; `CO2`; `C2H6O` or `C2H5OH` for ethanol), element symbols (`Fe` finds iron,
+  not fermium), synonyms (*concentration* finds the molarity calculator), equations typed
+  differently (`C1V1=C2V2`, `C₁V₁ = C₂V₂`) and question wording (*how do I calculate a dilution*).
+  An exact name, formula or symbol ranks first.
+- **Results** show a title, one sentence and a label: **Topic**, **Formula**, **Molecule** or
+  **Calculator**, plus whether it is to *Learn*, *Explore* or *Calculate*. A label filter shows only
+  one kind. An empty result explains what to try, with *Clear the search* and *Search all subjects
+  instead*.
+- **The query, scope, filter and open group are kept in the address** (`cq`, `cs`, `cf`, `cg`), so
+  Back from a result returns to the same results.
+- **Groups**: Atoms & elements, Bonds & shapes, Moles & reactions, Solutions, Acids & bases, Gases &
+  energy. A group is shown only when it has real content; its page lists that content under
+  *Learn* (explanations), *Explore* (interactive models) and *Calculate* (tools). Gases & energy
+  links the Physics Boyle's-law lab, labelled as a Physics lab.
+- **Common questions** (*How do I calculate molarity?*, *How do I balance an equation?*, *Why is
+  water bent?*, *What is a mole?*, *How do I calculate a dilution?*) each go to the explanation when
+  one exists, otherwise to the working tool, and a question with no answer in the app is not shown.
+- The index is built from the existing data (`src/features/chemistry/home/chemIndex.ts`): the
+  modules, 12 molecules, the reactions, chemistry glossary terms, all elements and the reference
+  library's chemistry entries. Unit tests cover the search cases above; every result link is
+  checked to open a valid state.
+
 ### Molecules
 
 | Molecule | Formula | Geometry shown |

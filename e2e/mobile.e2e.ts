@@ -442,3 +442,12 @@ test('phones: no header; ← Home is in the breadcrumb; the chemistry topic draw
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Periodic table')
   await expectNoHorizontalOverflow(page)
 })
+
+test('phones: the Chemistry home page fits, search works and the groups stack', async ({ page }) => {
+  await page.goto('/?csec=topics#/chemistry')
+  await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+  await page.getByRole('searchbox', { name: 'Search chemistry topics, formulas, molecules' }).fill('water')
+  await expect(page.locator('.chem-result').first()).toContainText('Water')
+  await expectNoHorizontalOverflow(page)
+})

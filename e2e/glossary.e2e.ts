@@ -11,7 +11,8 @@ test('every explorer has the same About this explorer panel, with terms that exp
     ['mathematics', 'Saddle point'],
     ['anatomy', 'Organ system'],
   ] as const) {
-    await page.goto(`/#/${subject}`)
+    // Chemistry's bare address is its home page; the explorer panel is in the molecule viewer.
+    await page.goto(subject === 'chemistry' ? '/?molecule=water#/chemistry' : `/#/${subject}`)
     await waitForViewport(page)
     const toggle = guide(page).locator('.guide-toggle')
     await expect(toggle).toHaveAttribute('aria-expanded', 'false')

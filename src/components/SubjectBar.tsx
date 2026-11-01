@@ -37,6 +37,8 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
   const leftShown = ws.focus ? peek === 'left' : !ws.hideLeft
   const rightShown = ws.focus ? peek === 'right' : !ws.hideRight
   const changed = ws.focus || ws.hideLeft || ws.hideRight
+  // The Chemistry home page is a single reading column: no side panels to show or hide.
+  const hasPanels = module.id !== 'chemistry.topics'
 
   const close = () => {
     setOpen(false)
@@ -56,10 +58,17 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
             <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
           </li>
           <li>
-            <span className={`crumb-subject is-${subject}`}>
-              <SubjectIcon subject={subject} size={14} />
-              {subjectName(subject)}
-            </span>
+            {subject === 'chemistry' ? (
+              <AppLink href="?csec=topics#/chemistry" className={`crumb-subject is-${subject}`}>
+                <SubjectIcon subject={subject} size={14} />
+                {subjectName(subject)}
+              </AppLink>
+            ) : (
+              <span className={`crumb-subject is-${subject}`}>
+                <SubjectIcon subject={subject} size={14} />
+                {subjectName(subject)}
+              </span>
+            )}
             <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
           </li>
           <li>
@@ -77,7 +86,7 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
           )}
         </ol>
       </nav>
-      <div className="workspace-controls" role="group" aria-label="Workspace layout">
+      {hasPanels && <div className="workspace-controls" role="group" aria-label="Workspace layout">
         <button type="button" className="tool-button bordered" data-ws-toggle="left" aria-pressed={leftShown} title="Left panel ( [ )" onClick={() => toggleSide('left')}>
           <PanelLeft size={15} aria-hidden="true" />
           <span>{ws.focus ? 'Controls' : 'Left panel'}</span>
@@ -95,7 +104,7 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
             <span>Show all panels</span>
           </button>
         )}
-      </div>
+      </div>}
       <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <ListTree size={15} aria-hidden="true" />
         <span>All {subjectName(subject).toLowerCase()} topics</span>

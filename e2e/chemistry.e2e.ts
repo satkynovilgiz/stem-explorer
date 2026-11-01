@@ -26,7 +26,7 @@ test('Chemistry ignores Biology parameters and falls back on invalid values', as
 })
 
 test('selects all twelve molecules', async ({ page }) => {
-  await page.goto('/#/chemistry')
+  await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
   const atoms: Record<string, number> = {
     Water: 3, 'Carbon dioxide': 3, Methane: 5, Ammonia: 4, Ethanol: 9, Benzene: 12,
@@ -73,7 +73,9 @@ test('Copy link copies a Chemistry-only link from the current origin', async ({ 
 test('all five subjects are live; none is a Coming soon page', async ({ page }) => {
   for (const subject of ['anatomy', 'chemistry', 'physics', 'mathematics', 'biology']) {
     await page.goto(`/#/${subject}`)
-    await waitForViewport(page)
+    // Chemistry opens on its home page (no 3D view); the others open a lab with one.
+    if (subject === 'chemistry') await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
+    else await waitForViewport(page)
     await expect(page.locator('#coming-soon-title')).toHaveCount(0)
   }
 })
