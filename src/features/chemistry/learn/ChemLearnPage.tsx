@@ -17,7 +17,7 @@ export function ChemLearnPage() {
         <div className="ref-state" role="alert">
           <h1 className="ref-state-title">No explanation was named in this link</h1>
           <p>
-            Go to <AppLink href="?csec=topics#/chemistry">Chemistry topics</AppLink> to find one.
+            Go to the <AppLink href="?csec=contents#/chemistry">Chemistry topics</AppLink> to find one.
           </p>
         </div>
       </div>

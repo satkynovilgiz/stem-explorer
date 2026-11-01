@@ -38,32 +38,26 @@ test('Chemistry is the first subject card; each card opens its subject and ← H
   }
 })
 
-test('Chemistry: breadcrumb, local topic sidebar (collapsible), deep links and Back/Forward', async ({ page }) => {
+test('Chemistry: breadcrumb, the six-destination tab row, deep links and Back/Forward', async ({ page }) => {
   await page.goto('/?csec=solutions&smode=molarity#/chemistry')
   const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' })
   await expect(crumbs.getByRole('link', { name: 'Home' })).toBeVisible()
-  await expect(crumbs).toContainText('Chemistry')
   await expect(crumbs).toContainText('Solutions and dilution')
-  // Calculators are single columns; the topic sidebar belongs to the model workspaces.
-  await expect(page.getByRole('navigation', { name: 'Chemistry topics' })).toHaveCount(0)
+  const tabs = page.getByRole('navigation', { name: 'Chemistry' })
+  await expect(tabs.getByRole('link')).toHaveText(['Overview', 'Elements', 'Molecules', 'Topics', 'Visualizations', 'Tools'])
+  // The current destination is marked: a calculator is under Tools.
+  await expect(tabs.getByRole('link', { name: 'Tools' })).toHaveAttribute('aria-current', 'page')
   await page.goto('/?molecule=water#/chemistry')
-  const nav = page.getByRole('navigation', { name: 'Chemistry topics' })
-  await nav.getByRole('button', { name: /Periodic table/ }).click()
+  await expect(tabs.getByRole('link', { name: 'Molecules' })).toHaveAttribute('aria-current', 'page')
+  await tabs.getByRole('link', { name: 'Elements' }).click()
   await expect(crumbs).toContainText('Periodic table')
   await page.goBack()
-  await expect(crumbs).toContainText('Molecules')
+  await expect(page.locator('#molecule-heading')).toHaveText('Water')
   await page.goForward()
   await expect(crumbs).toContainText('Periodic table')
-  // Collapsing keeps the current topic in view and is remembered.
-  await nav.getByRole('button', { name: 'Hide the topic list' }).click()
-  const toggle = nav.getByRole('button', { name: 'Show the topic list (now: Periodic table)' })
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
-  await expect(toggle).toContainText('Periodic table')
-  await page.reload()
-  await expect(page.getByRole('navigation', { name: 'Chemistry topics' }).getByRole('button', { name: /Show the topic list/ })).toHaveAttribute('aria-expanded', 'false')
-  // Chemistry topics is one consistent link back to the topics page (no drawer in Chemistry).
-  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Chemistry topics' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
+  // The subject name leads back to the Overview; Chemistry has no topic drawer.
+  await crumbs.getByRole('link', { name: 'Chemistry', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Explore the world of chemistry.' })).toBeVisible()
   await expect(page.getByRole('button', { name: /^All \w+ topics$/ })).toHaveCount(0)
 })
 

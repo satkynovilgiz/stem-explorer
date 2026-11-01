@@ -7,6 +7,7 @@ import { useLocationSearch } from '../lib/location'
 import { moduleHref, rememberModuleState } from '../lib/moduleContext'
 import { restoreLayout, toggleFocus, toggleSide, usePeek, useWorkspace } from '../lib/workspace'
 import { AppLink } from './AppLink'
+import { ChemNav } from './ChemNav'
 import { SubjectIcon } from './SubjectIcon'
 
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
@@ -61,11 +62,11 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
             <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />
           </li>
           {subject === 'chemistry' ? (
-            // Chemistry: one consistent way back to its topics, written the same everywhere.
+            // Chemistry: the subject name always leads back to its Overview; the tab row marks the destination.
             <li>
               <AppLink href="?csec=topics#/chemistry" className="crumb-subject is-chemistry" aria-current={isChemTopics ? 'page' : undefined}>
                 <SubjectIcon subject={subject} size={14} />
-                Chemistry topics
+                Chemistry
               </AppLink>
               {!isChemTopics && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
             </li>
@@ -114,7 +115,8 @@ export function SubjectBar({ subject, onPresent }: { subject: SubjectId; onPrese
           </button>
         )}
       </div>}
-      {/* Chemistry's topics are a page (Chemistry topics, in the breadcrumb); other subjects use the drawer. */}
+      {subject === 'chemistry' && <ChemNav moduleId={module.id} />}
+      {/* Chemistry's destinations are the tab row; other subjects use the topic drawer. */}
       {subject !== 'chemistry' && (
         <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
           <ListTree size={15} aria-hidden="true" />

@@ -54,8 +54,8 @@ export function withChemistryParams(search: string, state: ChemistryUrlState): s
 }
 
 /* Chemistry sections. Links without `csec` are molecule links, so every older link opens as before. */
-export type ChemistrySection = 'topics' | 'learn' | 'periodic' | 'atomic' | 'molecules' | 'bonding' | 'reactions' | 'solutions'
-export const CHEMISTRY_SECTIONS: readonly ChemistrySection[] = ['topics', 'learn', 'periodic', 'atomic', 'molecules', 'bonding', 'reactions', 'solutions']
+export type ChemistrySection = 'topics' | 'contents' | 'library' | 'visual' | 'tools' | 'learn' | 'periodic' | 'atomic' | 'molecules' | 'bonding' | 'reactions' | 'solutions'
+export const CHEMISTRY_SECTIONS: readonly ChemistrySection[] = ['topics', 'contents', 'library', 'visual', 'tools', 'learn', 'periodic', 'atomic', 'molecules', 'bonding', 'reactions', 'solutions']
 /**
  * A Chemistry reading page: `?csec=learn&lt=<reference entry id>[&lf=example]`. `lf=example` opens
  * the page at its worked example. The id is checked for form here and for existence when the
@@ -88,7 +88,7 @@ export function parseChemistrySection(search: string): { section: ChemistrySecti
   const raw = q.get('csec')
   // No section and no molecule: the Chemistry home page. Molecule links (`molecule=`, `view=`) open as before.
   const bare = raw === null && !q.has('molecule') && !q.has('view')
-  const section: ChemistrySection = raw === 'topics' || raw === 'learn' || raw === 'periodic' || raw === 'atomic' || raw === 'bonding' || raw === 'reactions' || raw === 'solutions' ? raw : bare ? 'topics' : 'molecules'
+  const section: ChemistrySection = raw === 'topics' || raw === 'contents' || raw === 'library' || raw === 'visual' || raw === 'tools' || raw === 'learn' || raw === 'periodic' || raw === 'atomic' || raw === 'bonding' || raw === 'reactions' || raw === 'solutions' ? raw : bare ? 'topics' : 'molecules'
   if (raw !== null && section !== raw) invalid.push('csec')
   const el = q.get('el')
   const n = el !== null && /^\d{1,3}$/.test(el) ? Number(el) : NaN
@@ -102,7 +102,7 @@ export function parseChemistrySection(search: string): { section: ChemistrySecti
 
 export function chemistrySectionEntries(section: ChemistrySection, element: number, reaction: string = DEFAULT_REACTION): Record<string, string> {
   if (section === 'molecules') return {}
-  if (section === 'bonding' || section === 'solutions' || section === 'topics' || section === 'learn') return { csec: section }
+  if (section === 'bonding' || section === 'solutions' || section === 'topics' || section === 'contents' || section === 'library' || section === 'visual' || section === 'tools' || section === 'learn') return { csec: section }
   if (section === 'reactions') return { csec: 'reactions', rx: reaction }
   return { csec: section, el: String(element) }
 }
@@ -115,7 +115,7 @@ export function withChemistrySection(search: string, section: ChemistrySection, 
   q.delete('rx')
   // The solutions calculator and the Chemistry home page write their own keys; other sections drop them.
   if (section !== 'solutions') for (const k of SOLUTIONS_URL_KEYS) q.delete(k)
-  if (section !== 'topics') for (const k of CHEM_HOME_KEYS) q.delete(k)
+  if (section !== 'topics' && section !== 'contents' && section !== 'library') for (const k of CHEM_HOME_KEYS) q.delete(k)
   if (section !== 'learn') for (const k of CHEM_LEARN_KEYS) q.delete(k)
   for (const [k, v] of Object.entries(chemistrySectionEntries(section, element, reaction))) q.set(k, v)
   return `?${q.toString()}`

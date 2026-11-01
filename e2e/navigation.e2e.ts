@@ -32,18 +32,18 @@ test('the breadcrumb follows in-page changes, and module switches work with Back
   await expect(current(page)).toHaveText('Water')
   await page.locator('.molecule-card', { hasText: 'Benzene' }).click()
   await expect(current(page)).toHaveText('Benzene')
-  const modules = page.getByRole('group', { name: 'Chemistry section' })
-  await modules.getByRole('button', { name: 'Periodic table' }).click()
+  const tabs = page.getByRole('navigation', { name: 'Chemistry' })
+  await tabs.getByRole('link', { name: 'Elements' }).click()
   await expect(crumbs(page)).toContainText('Periodic table')
   await page.goBack()
   await expect(current(page)).toHaveText('Benzene')
-  await expect(modules.getByRole('button', { name: 'Molecules' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(tabs.getByRole('link', { name: 'Molecules' })).toHaveAttribute('aria-current', 'page')
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
   await page.goForward()
-  await expect(modules.getByRole('button', { name: 'Periodic table' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(tabs.getByRole('link', { name: 'Elements' })).toHaveAttribute('aria-current', 'page')
   expect(params(page).get('csec')).toBe('periodic')
   // Topic navigation is its own labelled landmark, apart from display controls.
-  await expect(page.getByRole('navigation', { name: 'Chemistry topics' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Chemistry' })).toBeVisible()
 })
 
 test('the topic drawer is searchable, keyboard operable and returns to where you left a module', async ({ page }) => {
@@ -87,7 +87,7 @@ test('the topic drawer is searchable, keyboard operable and returns to where you
   await expect(current(page)).toHaveText('DC circuits')
 })
 
-test('a topic found on the Chemistry topics page opens that exact state', async ({ page }) => {
+test('a topic found with Chemistry search opens that exact state', async ({ page }) => {
   await page.goto('/#/chemistry')
   await page.getByRole('searchbox', { name: 'Search chemistry topics, formulas, molecules' }).fill('iron')
   await page.locator('.chem-result', { hasText: 'Iron (Fe)' }).click()

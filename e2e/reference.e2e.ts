@@ -91,8 +91,9 @@ test('student layout: molarity reads simple words first, a step-by-step example,
 })
 
 test('Chemistry home: the questions now open explanations, and every group has content', async ({ page }) => {
+  await page.goto('/?csec=contents#/chemistry')
+  await expect(page.locator('.chem-chapter')).toHaveCount(6)
   await page.goto('/?csec=topics#/chemistry')
-  await expect(page.locator('.chem-group')).toHaveCount(6)
   await page.getByRole('link', { name: 'What is a mole?', exact: true }).click()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('What is a mole?')
   await page.goBack()

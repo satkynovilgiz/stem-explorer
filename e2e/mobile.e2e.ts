@@ -168,9 +168,8 @@ test('About this explorer and the glossary fit a phone', async ({ page }) => {
 
 test('periodic table scrolls inside its own panel on a phone; the page does not', async ({ page }) => {
   await page.goto('/#/chemistry')
-  // Chemistry's topics are a page: pick a group, then the destination.
-  await page.locator('.chem-group', { hasText: 'Atoms & elements' }).tap()
-  await page.locator('.chem-result', { hasText: 'Periodic table' }).first().tap()
+  // Chemistry's destinations are tabs: Elements is the periodic table.
+  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Elements' }).tap()
   await expect(page.locator('.ptable-cell')).toHaveCount(118)
   await expectNoHorizontalOverflow(page)
   const [scrollWidth, clientWidth] = await page.locator('.ptable-scroll').evaluate((e) => [e.scrollWidth, e.clientWidth])
@@ -220,9 +219,9 @@ test('Chemistry sections fit a phone: atomic structure and bonding tables withou
   await page.goto('/?csec=atomic&el=26#/chemistry')
   await expect(page.locator('.atom-svg')).toBeVisible()
   await expectNoHorizontalOverflow(page)
-  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Chemistry topics' }).tap()
-  await page.locator('.chem-group', { hasText: 'Bonds & shapes' }).tap()
-  await page.locator('.chem-result', { hasText: 'Bonding and molecular shape' }).first().tap()
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Chemistry', exact: true }).tap()
+  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Topics' }).tap()
+  await page.locator('.chem-topic-link', { hasText: 'Ionic and covalent bonding lab' }).tap()
   await expect(page.locator('.bonding-view')).toContainText('Ionic bonding')
   await expectNoHorizontalOverflow(page)
 })
@@ -425,17 +424,16 @@ test('derivatives and motion fit a phone without horizontal scrolling', async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('phones: no header; ← Home and Chemistry topics are in the breadcrumb; changing topic is a deliberate step', async ({ page }) => {
+test('phones: no header; ← Home and Chemistry are in the breadcrumb; changing topic is a deliberate step', async ({ page }) => {
   await page.goto('/?csec=solutions#/chemistry')
   await expect(page.locator('header.topnav')).toHaveCount(0)
   const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' })
   await expect(crumbs.getByRole('link', { name: 'Home' })).toBeVisible()
   // No wall of topic controls on the page itself.
   await expect(page.locator('.topic-nav')).toHaveCount(0)
-  await crumbs.getByRole('link', { name: 'Chemistry topics' }).tap()
+  await crumbs.getByRole('link', { name: 'Chemistry', exact: true }).tap()
   await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
-  await page.locator('.chem-group', { hasText: 'Atoms & elements' }).tap()
-  await page.locator('.chem-result', { hasText: 'Periodic table' }).first().tap()
+  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Elements' }).tap()
   await expect(crumbs).toContainText('Periodic table')
   await expectNoHorizontalOverflow(page)
 })
@@ -445,6 +443,6 @@ test('phones: the Chemistry home page fits, search works and the groups stack', 
   await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
   await expectNoHorizontalOverflow(page)
   await page.getByRole('searchbox', { name: 'Search chemistry topics, formulas, molecules' }).fill('water')
-  await expect(page.locator('.chem-result').first()).toContainText('Water')
+  await expect(page.locator('.chem-result').first()).toContainText(/water/i)
   await expectNoHorizontalOverflow(page)
 })

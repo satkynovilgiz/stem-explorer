@@ -1,4 +1,7 @@
-import type { ChemGroupId, ChemLabel } from './chemIndex'
+import type { ChemGroupId } from './chemIndex'
+
+/** What a result lets you do; the search filter shows one kind. */
+export type ResultFilter = 'read' | 'calculate' | 'explore'
 
 /*
  * Chemistry home state in the address: `cq` query, `cs=all` to search every subject, `cf` label
@@ -7,12 +10,14 @@ import type { ChemGroupId, ChemLabel } from './chemIndex'
 export interface HomeState {
   q: string
   scope: 'chemistry' | 'all'
-  label: ChemLabel | null
+  label: ResultFilter | null
   group: ChemGroupId | null
 }
 
 export const HOME_KEYS = ['cq', 'cs', 'cf', 'cg'] as const
-const LABELS: readonly ChemLabel[] = ['Topic', 'Formula', 'Molecule', 'Calculator']
+const FILTERS: readonly ResultFilter[] = ['read', 'calculate', 'explore']
+/** Filter values from links made before results were grouped by what they let you do. */
+const LEGACY: Record<string, ResultFilter> = { Topic: 'read', Formula: 'read', Molecule: 'explore', Calculator: 'calculate' }
 const GROUPS: readonly ChemGroupId[] = ['atoms', 'bonds', 'moles', 'solutions', 'acids', 'gases']
 
 export function parseHomeState(search: string): HomeState {
@@ -22,7 +27,7 @@ export function parseHomeState(search: string): HomeState {
   return {
     q: (p.get('cq') ?? '').slice(0, 120),
     scope: p.get('cs') === 'all' ? 'all' : 'chemistry',
-    label: label && (LABELS as readonly string[]).includes(label) ? (label as ChemLabel) : null,
+    label: label && (FILTERS as readonly string[]).includes(label) ? (label as ResultFilter) : label && LEGACY[label] ? LEGACY[label] : null,
     group: group && (GROUPS as readonly string[]).includes(group) ? (group as ChemGroupId) : null,
   }
 }

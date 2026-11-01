@@ -4,20 +4,37 @@ import { expect, test } from './fixtures.ts'
 const box = (page: Page) => page.getByRole('searchbox', { name: 'Search chemistry topics, formulas, molecules' })
 const results = (page: Page) => page.locator('.chem-result')
 
-test('Home → Chemistry opens “What are you working on?” with only groups that have content', async ({ page }) => {
+test('Home → Chemistry opens a table of contents, then elements, then molecules; every topic opens a real page', async ({ page }) => {
   await page.goto('/')
   await page.locator('.subject-card.is-chemistry .subject-card-action').click()
   await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
-  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Chemistry topics')
-  await expect(page.getByRole('heading', { name: 'What are you working on?' })).toBeVisible()
-  const groups = page.locator('.chem-group')
-  expect(await groups.count()).toBeGreaterThanOrEqual(4)
-  for (const name of await groups.locator('.chem-group-title').allTextContents()) {
-    await page.locator('.chem-group', { hasText: name }).click()
-    // Each group page lists real destinations under Learn, Explore or Calculate.
-    await expect(page.locator('.chem-group-page .chem-result').first()).toBeVisible()
-    await page.locator('.chem-back').click()
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Chemistry')
+  // The Overview: explore, periodic table, featured molecules, topics, tools, questions.
+  await expect(page.locator('.chem-home .chem-h2')).toHaveText(['Explore chemistry', 'Periodic table', 'Featured molecules', 'Browse topics', 'Tools', 'Common questions'])
+  // Every element outside the lanthanoid and actinoid rows, each a link.
+  expect(await page.locator('.ptable-mini-cell').count()).toBe(118 - 30)
+  // Topics: the table of contents, chapters in learning order.
+  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Topics' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Topics' })).toBeVisible()
+  await expect(page.locator('.chem-chapter-title')).toHaveText([/Atoms & elements/, /Bonds & shapes/, /Moles & reactions/, /Solutions/, /Acids & bases/, /Gases & energy/])
+  // Every topic in the contents opens a page with a heading (no empty destinations).
+  const hrefs = await page.locator('.chem-topic-link').evaluateAll((as) => as.map((a) => a.getAttribute('href')!))
+  expect(hrefs.length).toBeGreaterThanOrEqual(20)
+  for (const href of hrefs) {
+    await page.goto(`/${href}`)
+    await expect(page.locator('h1'), href).toHaveCount(1)
+    await expect(page.locator('.ref-state[role="alert"]'), href).toHaveCount(0)
   }
+  // Elements and molecules open the periodic table and the 3D viewer.
+  await page.goto('/#/chemistry')
+  await page.getByRole('link', { name: 'Iron, Fe, atomic number 26' }).click()
+  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Iron')
+  await page.goBack()
+  await page.locator('.chem-molecule-card', { hasText: 'Benzene' }).click()
+  await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
+  // Older group links still open a group page.
+  await page.goto('/?csec=topics&cg=solutions#/chemistry')
+  await expect(page.locator('.chem-group-page .chem-result').first()).toBeVisible()
   // A bare #/chemistry also opens this page; molecule links still open molecules.
   await page.goto('/#/chemistry')
   await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
@@ -28,8 +45,9 @@ test('Home → Chemistry opens “What are you working on?” with only groups t
 test('search finds formulas however they are typed, labels each result, and filters by label', async ({ page }) => {
   await page.goto('/?csec=topics#/chemistry')
   for (const [q, title] of [
-    ['H2O', 'Water (H₂O)'],
-    ['H₂O', 'Water (H₂O)'],
+    // Water is a topic: its explanation and its 3D model in one result.
+    ['H2O', 'Why is water bent?'],
+    ['H₂O', 'Why is water bent?'],
     ['co2', 'Carbon dioxide (CO₂)'],
     ['C2H6O', 'Ethanol (C₂H₆O)'],
     ['molarity', 'Molarity'],
@@ -38,21 +56,24 @@ test('search finds formulas however they are typed, labels each result, and filt
     await expect(results(page).first().locator('.chem-result-title'), q).toHaveText(title)
   }
   await box(page).fill('concentration')
-  await expect(results(page).filter({ hasText: 'Molarity calculator' })).toHaveCount(1)
+  // Molarity is a topic: its explanation and calculator in one result.
+  await expect(results(page).filter({ hasText: 'Molarity' }).first()).toBeVisible()
   await expect(results(page).first().locator('.chem-badge')).toHaveText(/Topic|Formula|Molecule|Calculator/)
-  await page.getByRole('group', { name: 'Show only' }).getByRole('button', { name: /^Calculator/ }).click()
-  for (const badge of await results(page).locator('.chem-badge').allTextContents()) expect(badge).toBe('Calculator')
+  await page.getByRole('group', { name: 'Show only' }).getByRole('button', { name: /^Calculators/ }).click()
+  // Every remaining result leads to a calculator.
+  for (const text of await results(page).allTextContents()) expect(text).toMatch(/Use calculator|Calculator/)
 })
 
 test('the query and filter survive opening a result and coming back', async ({ page }) => {
   await page.goto('/?csec=topics#/chemistry')
   await box(page).fill('dilution')
-  await page.getByRole('group', { name: 'Show only' }).getByRole('button', { name: /^Calculator/ }).click()
-  await results(page).filter({ hasText: 'Dilution calculator' }).click()
-  await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Solutions and dilution')
+  await page.getByRole('group', { name: 'Show only' }).getByRole('button', { name: /^Calculators/ }).click()
+  // The Dilution topic offers distinct actions; open its calculator.
+  await results(page).filter({ hasText: 'Dilution' }).getByRole('link', { name: 'Use calculator' }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dilution calculator')
   await page.goBack()
   await expect(box(page)).toHaveValue('dilution')
-  await expect(page.getByRole('group', { name: 'Show only' }).getByRole('button', { name: /^Calculator/ })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('group', { name: 'Show only' }).getByRole('button', { name: /^Calculators/ })).toHaveAttribute('aria-pressed', 'true')
 })
 
 test('empty results explain what to try and clear; “All subjects” searches everything', async ({ page }) => {
@@ -61,7 +82,7 @@ test('empty results explain what to try and clear; “All subjects” searches e
   await expect(page.locator('.chem-empty')).toContainText('Nothing matches “zzqx”')
   await page.getByRole('button', { name: 'Clear the search' }).click()
   await expect(box(page)).toHaveValue('')
-  await expect(page.getByRole('heading', { name: 'What are you working on?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Explore chemistry' })).toBeVisible()
   await box(page).fill('mitral')
   await page.getByLabel('All subjects').check()
   await expect(results(page).first()).toContainText('Mitral valve')

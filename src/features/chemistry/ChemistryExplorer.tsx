@@ -17,7 +17,6 @@ import { InfoPanel } from './InfoPanel'
 import { MeasurementPanel } from './MeasurementPanel'
 import { MoleculeLibrary } from './MoleculeLibrary'
 import { MoleculeViewer } from './MoleculeViewer'
-import { ChemistryTopicNav } from './ChemistryTopicNav'
 import { SceneControls } from './SceneControls'
 import { chemistryReducer, initialChemistryState } from './state'
 
@@ -35,10 +34,15 @@ const ReactionShare = lazy(() => import('./reactions/ReactionLab').then((m) => (
 const ReactionPanel = lazy(() => import('./reactions/ReactionLab').then((m) => ({ default: m.ReactionPanel })))
 const SolutionsLab = lazy(() => import('./solutions/SolutionsLab').then((m) => ({ default: m.SolutionsLab })))
 const ChemLearnPage = lazy(() => import('./learn/ChemLearnPage').then((m) => ({ default: m.ChemLearnPage })))
+const DestinationPage = lazy(() => import('./home/DestinationPage').then((m) => ({ default: m.DestinationPage })))
 const ChemistryHome = lazy(() => import('./home/ChemistryHome').then((m) => ({ default: m.ChemistryHome })))
 
 const SECTION_LABEL: Record<ChemistrySection, string> = {
-  topics: 'Chemistry topics',
+  topics: 'Overview',
+  contents: 'Topics',
+  library: 'Molecules',
+  visual: 'Visualizations',
+  tools: 'Tools',
   learn: 'Explanation',
   periodic: 'Periodic table',
   atomic: 'Atomic structure',
@@ -114,7 +118,6 @@ export function ChemistryExplorer() {
   }
   const pickAtom = (atomId: string) => dispatch({ type: 'pickAtom', atomId })
 
-  const topicNav = <ChemistryTopicNav section={section} onSection={goSection} />
   const loading = <p className="muted small panel">Loading {SECTION_LABEL[section].toLowerCase()}…</p>
   const elementsView = (
     <Suspense fallback={loading}>
@@ -244,12 +247,12 @@ export function ChemistryExplorer() {
   )
 
   // The Chemistry home page is a reading page: no side panels, the same on phones and desktops.
-  if (section === 'topics')
+  if (section === 'topics' || section === 'contents' || section === 'library' || section === 'visual' || section === 'tools')
     return (
       <div className="chem-landing">
         {announcer}
         <Suspense fallback={loading}>
-          <ChemistryHome />
+          {section === 'visual' || section === 'tools' ? <DestinationPage kind={section} /> : <ChemistryHome page={section === 'contents' ? 'contents' : section === 'library' ? 'library' : 'overview'} />}
         </Suspense>
       </div>
     )
@@ -317,7 +320,6 @@ export function ChemistryExplorer() {
     <div className="chem">
       {announcer}
       <aside className="chem-side chem-side--left">
-        {topicNav}
         {section === 'molecules' && library}
       </aside>
       <div className="chem-stage">{stage}</div>

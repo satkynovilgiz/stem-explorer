@@ -3865,6 +3865,7 @@ button {
 .ptable-swatch.is-d { --block: #8db4ff; }
 .ptable-swatch.is-f { --block: #a99cf0; }
 
+
 /* ---------- Biology: cell comparison ---------- */
 
 .cell-compare {
@@ -8887,3 +8888,12 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 /* Wide tables scroll inside their own box; grid columns may shrink below a table's width. */
 .cell-compare { grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .table-scroll { max-width: 100%; overflow-x: auto; }
+
+/* Chemistry's six destinations: a small tab row in the subject bar (local navigation, not a header). */
+.chem-nav { flex: 1 1 auto; min-width: 0; overflow-x: auto; }
+.chem-nav ul { display: flex; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.chem-nav-link { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 8px; color: var(--color-text-muted); font-size: 0.9375rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.chem-nav-link:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.chem-nav-link[aria-current='page'] { color: var(--color-accent-strong); background: var(--color-accent-soft); }
+.chem-nav-link:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 1px; }
+@media (max-width: 899px) { .chem-nav { flex-basis: 100%; order: 2; } }

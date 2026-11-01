@@ -136,7 +136,7 @@ test('SVG lab export keeps its own text, the caption and a complete link', async
 
 test('a view with no picture explains why it cannot be exported, and stays as it was', async ({ page }) => {
   await page.goto('/?csec=bonding#/chemistry')
-  await expect(page.getByRole('group', { name: 'Chemistry section' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Chemistry' })).toBeVisible()
   await present(page)
   await page.getByRole('button', { name: 'Export PNG' }).click()
   await expect(page.getByRole('alert')).toContainText('This view is made of text and tables rather than one picture')

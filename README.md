@@ -15,8 +15,8 @@ bar starts with **← Home**, shows where you are (*Home › Chemistry › Solut
 has **All ⟨subject⟩ topics** (a drawer listing only that subject's modules and topics; Escape
 closes it and returns focus) and *Present*. Other pages (search, reference, glossary, notebook,
 collections) have a **← Home** link at the top. Other subjects are reached from Home and from
-search; the `/` shortcut still opens search. Chemistry adds a collapsible **topic sidebar** on
-desktop (remembered on this browser); on phones the drawer does that job. All five subjects are implemented:
+search; the `/` shortcut still opens search. Chemistry replaces the drawer with a row of six
+destination tabs (see *Chemistry destinations*). All five subjects are implemented:
 - **Anatomy Explorer:** a schematic whole-body atlas with eleven organ-system layers, skeletal and
   muscular detail with elbow and knee demonstrations, organ-system tours and close-ups, and a
   detailed heart module with a blood-flow tour.
@@ -628,29 +628,46 @@ Every older link (`csec=solutions`, `csec=reactions`, molecule links) opens the 
 model as before. The Biology cell page no longer scrolls sideways: its comparison table scrolls in
 its own box (found by an automated sweep of 30 pages at six widths).
 
-### Chemistry home: finding things
+### Chemistry destinations
 
-`?csec=topics#/chemistry` (also any Chemistry address with no molecule or section, such as a bare
-`#/chemistry`) is the **Chemistry home page**, asking *What are you working on?*. Every older link
-names a molecule or a section and opens exactly as before. Home's Chemistry card, the
-breadcrumb's *Chemistry* and the topic sidebar's *Chemistry home* lead here.
+Chemistry is organised as a reference, not a course. A tab row under the breadcrumb
+(`nav` named *Chemistry*, the current tab marked `aria-current="page"`) has six destinations:
+
+| Tab | Address | What it holds |
+| --- | --- | --- |
+| **Overview** | `?csec=topics` (also a bare `#/chemistry`) | *Explore the world of chemistry.*: search, the four ways in, a periodic-table preview (every element outside the f-block rows is a link), featured molecules, topic chapters, tools and common questions |
+| **Elements** | `?csec=periodic` | the periodic table |
+| **Molecules** | `?csec=library` | every molecule in the viewer, with formula, filterable by name |
+| **Topics** | `?csec=contents` | the table of contents: six chapters, each topic tagged *Read*, *Calculator* or *Explore* |
+| **Visualizations** | `?csec=visual` | the interactive models (molecule viewer, atomic structure, periodic table, bonding and shape; the Physics gas lab and Biology enzyme model, labelled with their subject) |
+| **Tools** | `?csec=tools` | molarity, dilution, equation balancing and stoichiometry, each with what it takes and gives |
+
+Workspaces stay under their tab: a molecule under Molecules, atomic structure and bonding under
+Visualizations, the calculators under Tools, explanations under Topics. Every older address
+(molecule links, `csec=periodic|atomic|bonding|solutions|reactions|learn`, `cg=<group>`) opens as
+before. The topic sidebar is gone; the Topics tab does its job on every screen width.
+
+### Chemistry search
 
 - **Search** (*Search chemistry topics, formulas, molecules…*) covers Chemistry by default; an
   *All subjects* option searches everything. It matches names, formulas however they are typed
   (`H2O`, `h2o`, `H₂O`; `CO2`; `C2H6O` or `C2H5OH` for ethanol), element symbols (`Fe` finds iron,
   not fermium), synonyms (*concentration* finds the molarity calculator), equations typed
   differently (`C1V1=C2V2`, `C₁V₁ = C₂V₂`) and question wording (*how do I calculate a dilution*).
-  An exact name, formula or symbol ranks first.
-- **Results** show a title, one sentence and a label: **Topic**, **Formula**, **Molecule** or
-  **Calculator**, plus whether it is to *Learn*, *Explore* or *Calculate*. A label filter shows only
-  one kind. An empty result explains what to try, with *Clear the search* and *Search all subjects
+  An exact name, formula or symbol ranks first. Words are matched whole (with plurals folded), so
+  *mole* no longer matches *molecule*.
+- **Topics come first.** A search for a core idea (*mole*, *molarity*, *dilution*, *balancing*,
+  *water*) returns one topic result with its actions side by side (*Read explanation*, *See worked
+  example*, *Use calculator*, *Explore model*) instead of four near-duplicate rows
+  (`src/features/chemistry/home/topicSearch.ts`). Other results show a title, one sentence and a
+  label (**Formula**, **Molecule**, **Calculator**…). *Show only* filters to **Explanations**,
+  **Calculators** or **Models**. An empty result explains what to try, with *Clear the search* and *Search all subjects
   instead*.
 - **The query, scope, filter and open group are kept in the address** (`cq`, `cs`, `cf`, `cg`), so
   Back from a result returns to the same results.
-- **Groups**: Atoms & elements, Bonds & shapes, Moles & reactions, Solutions, Acids & bases, Gases &
-  energy. A group is shown only when it has real content; its page lists that content under
-  *Learn* (explanations), *Explore* (interactive models) and *Calculate* (tools). Gases & energy
-  links the Physics Boyle's-law lab, labelled as a Physics lab.
+- **Chapters**: Atoms & elements, Bonds & shapes, Moles & reactions, Solutions, Acids & bases, Gases &
+  energy (`src/features/chemistry/home/contents.ts`). A chapter is shown only when it has real
+  content. Older group links (`cg=solutions`) still open a group page.
 - **Common questions** (*How do I calculate molarity?*, *How do I balance an equation?*, *Why is
   water bent?*, *What is a mole?*, *How do I calculate a dilution?*) each go to the explanation when
   one exists, otherwise to the working tool, and a question with no answer in the app is not shown.

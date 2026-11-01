@@ -5,7 +5,7 @@ const cell = (page: Page, name: string) => page.locator('.ptable-cell', { has: p
 const open = async (page: Page) => {
   await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
-  await page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Periodic table' }).click()
+  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Elements' }).click()
   await expect(page.locator('.ptable-cell')).toHaveCount(118)
 }
 
@@ -67,7 +67,7 @@ test('opens a molecule containing the element, and the molecule tools still work
   await page.getByRole('button', { name: 'Nitrogen, N, atomic number 7' }).click()
   await page.getByRole('button', { name: 'Open Ammonia' }).click()
   await expect(page.locator('#molecule-heading')).toHaveText('Ammonia')
-  await expect(page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Molecules' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Molecules' })).toHaveAttribute('aria-current', 'page')
   await waitForViewport(page)
   await page.getByRole('button', { name: 'Distance', exact: true }).click()
   await page.locator('.measure-panel .chip').filter({ hasText: /^\d?N1$/ }).click()

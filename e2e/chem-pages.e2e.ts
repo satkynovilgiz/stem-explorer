@@ -43,9 +43,8 @@ test('Save… groups the saving actions; Escape closes it and returns focus', as
   await expect(page.locator('.save-status')).toContainText('Saved on this browser')
 })
 
-test('“See a worked example” opens the explanation at its worked example, visibly', async ({ page }) => {
-  await page.goto('/?csec=topics#/chemistry')
-  await page.getByRole('link', { name: /See a worked example/ }).click()
+test('a worked-example link opens the explanation at its worked example, visibly', async ({ page }) => {
+  await page.goto('/?csec=learn&lt=molarity&lf=example#/chemistry')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Molarity')
   const example = page.locator('#worked-example')
   await expect(example).toHaveAttribute('open', '')

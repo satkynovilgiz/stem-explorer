@@ -111,7 +111,8 @@ test('chemistry sections: atomic structure, bonding, and backward-compatible lin
   await page.reload()
   await expect(atom).toHaveText('Neon (Ne)')
 
-  await page.getByRole('group', { name: 'Chemistry section' }).getByRole('button', { name: 'Bonding and geometry' }).click()
+  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Visualizations' }).click()
+  await page.locator('.chem-dest', { hasText: 'Bonding and molecular shape' }).click()
   const bonding = page.locator('.bonding-view')
   await expect(bonding).toContainText('Metallic bonding')
   await expect(bonding).toContainText('No — bonding extends through the crystal')
