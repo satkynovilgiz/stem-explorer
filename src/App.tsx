@@ -12,11 +12,12 @@ import { MathematicsExplorer } from './features/mathematics/MathematicsExplorer'
 import { Home } from './features/home/Home'
 import { PhysicsExplorer } from './features/physics/PhysicsExplorer'
 import { navigateTo, routeFromHash, useHash, useRoute } from './lib/hooks'
-import { isOverviewHash } from './lib/overviewRoute'
+import { isCalculatorsHash, isOverviewHash } from './lib/overviewRoute'
 import { useNavigationGeneration } from './lib/location'
 
 // Pages reached from the top bar only; they load on first visit.
 const SubjectOverview = lazy(() => import('./features/subjects/SubjectOverview').then((m) => ({ default: m.SubjectOverview })))
+const SubjectCalculators = lazy(() => import('./features/calculators/SubjectCalculators').then((m) => ({ default: m.SubjectCalculators })))
 const GlossaryPage = lazy(() => import('./features/glossary/GlossaryPage').then((m) => ({ default: m.GlossaryPage })))
 const SearchPage = lazy(() => import('./features/search/SearchPage').then((m) => ({ default: m.SearchPage })))
 const CollectionsPage = lazy(() => import('./features/collections/CollectionsPage').then((m) => ({ default: m.CollectionsPage })))
@@ -30,8 +31,12 @@ const routeFromLocation = () => routeFromHash(window.location.hash)
 
 export default function App() {
   const route = useRoute()
-  // Anatomy, Biology, Physics and Mathematics have an overview at #/<subject>/overview.
-  const overview = isOverviewHash(useHash()) && isSubjectId(route) && route !== 'chemistry' ? route : null
+  // Anatomy, Biology, Physics and Mathematics have an overview at #/<subject>/overview and
+  // calculators at #/<subject>/calculators (Chemistry's are on its Tools page).
+  const hash = useHash()
+  const subPageSubject = isSubjectId(route) && route !== 'chemistry' ? route : null
+  const overview = subPageSubject && isOverviewHash(hash) ? subPageSubject : null
+  const calculators = subPageSubject && isCalculatorsHash(hash) ? subPageSubject : null
   const subjectName = SUBJECTS.find((s) => s.id === route)?.name
   // Presentation mode belongs to one explorer visit: leaving the route ends it.
   const [presenting, setPresenting] = useState<string | null>(null)
@@ -118,10 +123,14 @@ export default function App() {
       {helpOpen && <KeyboardHelp onClose={() => setHelpOpen(false)} />}
       <main id="main" className="main" tabIndex={-1} key={isSubjectId(route) ? `${route}:${generation}` : route}>
         {/* No global header: subjects carry their own local navigation; other pages a link back Home. */}
-        {isSubjectId(route) ? <SubjectBar subject={route} overview={Boolean(overview)} onPresent={() => setPresenting(route)} /> : route !== 'home' && <HomeLink />}
+        {isSubjectId(route) ? <SubjectBar subject={route} overview={Boolean(overview)} calculators={Boolean(calculators)} onPresent={() => setPresenting(route)} /> : route !== 'home' && <HomeLink />}
         {overview ? (
           <Suspense fallback={pageLoading}>
             <SubjectOverview subject={overview} />
+          </Suspense>
+        ) : calculators ? (
+          <Suspense fallback={pageLoading}>
+            <SubjectCalculators subject={calculators} />
           </Suspense>
         ) : route === 'anatomy' ? (
           <>

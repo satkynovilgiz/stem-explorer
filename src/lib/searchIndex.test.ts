@@ -29,7 +29,8 @@ describe('search index', () => {
 
   it('links only to valid, relative routes', () => {
     for (const item of SEARCH_INDEX.filter((i) => i.id.startsWith('term:'))) expect(item.href).toMatch(/^\?term=[a-z0-9-]+#\/glossary$/)
-    for (const item of SEARCH_INDEX.filter((i) => !i.id.startsWith('term:'))) {
+    for (const item of SEARCH_INDEX.filter((i) => i.id.startsWith('calc:'))) expect(item.href).toMatch(/^\?(csec=tools&)?calc=[a-z-]+#\/(chemistry|[a-z]+\/calculators)$/)
+    for (const item of SEARCH_INDEX.filter((i) => !i.id.startsWith('term:') && !i.id.startsWith('calc:'))) {
       expect(item.href).toMatch(/^(\?[^#]*)?#\/[a-z]+$/)
       const { subject, params } = parse(item.href)
       expect(canonicalize(subject, params), item.href).not.toBeNull()
@@ -52,6 +53,15 @@ describe('searchAll', () => {
     expect(searchAll('derivative').some((r) => r.id === 'function:sine')).toBe(true)
     expect(searchAll('determinant')[0]).toMatchObject({ id: 'tool:vectors' })
     expect(searchAll('prokaryote')[0]).toMatchObject({ id: 'cell:bacterium' })
+  })
+
+  it('finds every subject’s calculators, after a model that matches as well', () => {
+    expect(searchAll('BMI')[0]).toMatchObject({ id: 'calc:bmi', href: '?calc=bmi#/anatomy/calculators' })
+    expect(searchAll('molar mass')[0]).toMatchObject({ id: 'calc:molar-mass', href: '?csec=tools&calc=molar-mass#/chemistry' })
+    expect(searchAll('hardy weinberg')[0]).toMatchObject({ id: 'calc:hardy-weinberg' })
+    expect(searchAll('standard deviation').map((r) => r.id)).toContain('calc:statistics')
+    const wave = searchAll('wavelength').map((r) => r.id)
+    expect(wave.indexOf('experiment:wave')).toBeLessThan(wave.indexOf('calc:wave-speed'))
   })
 
   it('matches synonyms and plain plurals', () => {

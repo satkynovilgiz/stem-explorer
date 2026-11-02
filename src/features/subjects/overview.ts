@@ -7,13 +7,20 @@ export type OverviewSubject = Exclude<SubjectId, 'chemistry'>
 export const OVERVIEW_SUBJECTS: readonly OverviewSubject[] = ['anatomy', 'biology', 'physics', 'mathematics']
 export const isOverviewSubject = (s: SubjectId): s is OverviewSubject => s !== 'chemistry'
 
-
 /** One sentence for a first-year college student: what the subject covers here. */
 export const OVERVIEW_LEADS: Record<OverviewSubject, string> = {
   anatomy: 'Find any structure of the human body, see where it is in 3D, and read what it does, with sources.',
   biology: 'Cells, DNA, cell division, inheritance and the energy processes of life, as models you can explore step by step.',
   physics: 'Six labs for motion, oscillation, circuits, waves, optics and gases: change the inputs and watch the equations at work.',
   mathematics: 'Functions, 3D surfaces, statistics, motion and vectors you can graph, rotate and measure.',
+}
+
+/** The search box's hint: what students look for in the subject, short enough for a phone. */
+export const OVERVIEW_PLACEHOLDERS: Record<OverviewSubject, string> = {
+  anatomy: 'Search anatomy: an organ, bone or muscle',
+  biology: 'Search biology: an organelle or process',
+  physics: 'Search physics: a law, lab or quantity',
+  mathematics: 'Search mathematics: a function or graph',
 }
 
 /**
@@ -51,8 +58,9 @@ export const OVERVIEW_QUESTIONS: Record<OverviewSubject, readonly { q: string; s
   ],
 }
 
+/** The model that answers a question (calculators have their own section on the overview). */
 export const answerFor = (s: OverviewSubject, search: string): SearchItem | undefined =>
-  searchAll(search, { subject: s }).find((i) => i.kind !== 'subject' && i.kind !== 'term')
+  searchAll(search, { subject: s }).find((i) => i.kind !== 'subject' && i.kind !== 'term' && !i.id.startsWith('calc:'))
 
 const queryOf = (href: string) => (href.startsWith('?') ? href.slice(0, href.indexOf('#') < 0 ? undefined : href.indexOf('#')) : '')
 

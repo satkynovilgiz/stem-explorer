@@ -1,14 +1,16 @@
 import '../../styles/chemistry-home.css'
-import { ArrowRight, BookOpen, ChevronRight, Search, X } from 'lucide-react'
+import { ArrowRight, BookOpen, Calculator, ChevronRight, Search, X } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
 import { SubjectIcon } from '../../components/SubjectIcon'
 import { SUBJECTS } from '../../data/subjects'
+import { calculatorsOf } from '../../calc'
+import { calculatorsHref } from '../../lib/overviewRoute'
 import { KIND_BADGE, searchAll, type SearchItem } from '../../lib/searchIndex'
 import { entryHref, ENTRY_TYPE_LABELS, type ManifestRow } from '../../reference/types'
 import { searchManifest } from '../reference/search'
 import { loadManifest } from '../reference/useManifest'
-import { answerFor, moduleContents, OVERVIEW_LEADS, OVERVIEW_QUESTIONS, overviewModules, type OverviewSubject } from './overview'
+import { answerFor, moduleContents, OVERVIEW_LEADS, OVERVIEW_PLACEHOLDERS, OVERVIEW_QUESTIONS, overviewModules, type OverviewSubject } from './overview'
 
 const SHOWN = 5
 
@@ -75,7 +77,7 @@ export function SubjectOverview({ subject }: { subject: OverviewSubject }) {
             ref={inputRef}
             id={`${id}-q`}
             type="search"
-            placeholder={`Search ${name.toLowerCase()}: a structure, process, lab or term`}
+            placeholder={OVERVIEW_PLACEHOLDERS[subject]}
             autoComplete="off"
             spellCheck={false}
             value={q}
@@ -182,6 +184,27 @@ export function SubjectOverview({ subject }: { subject: OverviewSubject }) {
               </ul>
             </section>
           )}
+
+          <section aria-labelledby={`${id}-calc`}>
+            <div className="chem-section-head">
+              <h2 id={`${id}-calc`} className="chem-h2">
+                Calculators
+              </h2>
+              <AppLink href={calculatorsHref(subject)} className="chem-text-link">
+                All calculators <ArrowRight size={15} aria-hidden="true" />
+              </AppLink>
+            </div>
+            <ul className="chem-tool-list">
+              {calculatorsOf(subject).map((c) => (
+                <li key={c.id}>
+                  <AppLink href={calculatorsHref(subject, c.id)} className="chem-tool-link">
+                    <Calculator size={18} aria-hidden="true" />
+                    <span>{c.title}</span>
+                  </AppLink>
+                </li>
+              ))}
+            </ul>
+          </section>
 
           {refRows && refRows.length > 0 && (
             <section aria-labelledby={`${id}-ref`}>

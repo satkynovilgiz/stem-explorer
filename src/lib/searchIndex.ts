@@ -14,6 +14,8 @@ import { SURFACES } from '../math/surfaces'
 import { normalize } from './chemistry'
 import { hrefFor } from './explorations'
 import { atlasLink, linkTo } from './links'
+import { calculatorsHref } from './overviewRoute'
+import { CALCULATORS } from '../calc'
 
 /** What kind of thing a result is; used for grouping and the type filter. */
 export type SearchKind =
@@ -412,6 +414,17 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     terms: [s.formula, '3d surface', 'tangent plane', 'cross-section'],
   })),
 
+  // Calculators in every subject (after the labs, so equal matches open the model first).
+  ...CALCULATORS.map((c) => ({
+    id: `calc:${c.id}`,
+    name: `${c.title} calculator`,
+    subject: c.subject,
+    kind: 'tool' as const,
+    description: `Calculator. ${c.summary}`,
+    href: calculatorsHref(c.subject, c.id),
+    terms: [c.formula, ...c.keywords],
+  })),
+
   // Glossary definitions, ranked after explorer content (see searchAll).
   ...GLOSSARY.map((g) => ({
     id: `term:${g.id}`,
@@ -465,11 +478,15 @@ function scoreItem(item: SearchItem, qs: string[]): number {
 }
 
 const isTerm = (item: SearchItem) => (item.kind === 'term' ? 1 : 0)
+const isCalculator = (item: SearchItem) => (item.id.startsWith('calc:') ? 1 : 0)
+/** A calculator's long name ("Wave speed, frequency and wavelength") mentions many words; one of them counts like a synonym. */
+const adjusted = (item: SearchItem, score: number) => (isCalculator(item) && score === 2 ? 1.5 : score)
 
 /**
  * Case-insensitive search over names and terms, optionally filtered by subject and kind. Unicode
  * subscripts match plain digits ("H₂O" and "h2o"). Ranked: explorer content before glossary terms;
- * then exact name, name prefix, name contains, exact synonym, other terms; then by name.
+ * then exact name, name prefix, name contains, exact synonym, other terms; models before calculators
+ * that match as well; then by name.
  */
 /** True when the name already shows the formula, e.g. "Oxygen (O₂)". */
 export const nameShowsFormula = (item: SearchItem) => Boolean(item.formula && normalize(item.name).includes(normalize(item.formula)))
@@ -482,11 +499,11 @@ export function searchAll(query: string, filters: SearchFilters = {}): SearchIte
   for (const item of SEARCH_INDEX) {
     if (filters.subject && item.subject !== filters.subject) continue
     if (filters.kind && item.kind !== filters.kind) continue
-    const score = scoreItem(item, qs)
+    const score = adjusted(item, scoreItem(item, qs))
     if (score) scored.push({ item, score })
   }
   return scored
-    .sort((a, b) => isTerm(a.item) - isTerm(b.item) || b.score - a.score || a.item.name.localeCompare(b.item.name))
+    .sort((a, b) => isTerm(a.item) - isTerm(b.item) || b.score - a.score || isCalculator(a.item) - isCalculator(b.item) || a.item.name.localeCompare(b.item.name))
     .map((s) => s.item)
 }
 

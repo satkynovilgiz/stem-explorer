@@ -19,10 +19,33 @@ search; the `/` shortcut still opens search. Chemistry replaces the drawer with 
 destination tabs (see *Chemistry destinations*).
 
 **Every subject has the same header** (still local to the subject): a thin breadcrumb row, the
-subject brand (it opens the subject's Overview), tabs for the Overview and each section, a compact
+subject brand (it opens the subject's Overview), tabs for the Overview, each section and
+**Calculators**, a compact
 **Search** box, and on model pages the layout and Present controls. Anatomy, Biology, Physics and
 Mathematics keep the *All ⟨subject⟩ topics* drawer; their tabs have a full-width row because they
 have up to eight sections.
+
+**Calculators in every subject** (`#/anatomy/calculators`, `#/biology/calculators`,
+`#/physics/calculators`, `#/mathematics/calculators`; Chemistry's are on its **Tools** page;
+logic in `src/calc/`, page in `src/features/calculators/`). 21 calculators, chosen for first-year
+college work:
+
+| Subject | Calculators |
+| --- | --- |
+| Chemistry | molar mass of any formula (CIAAW standard atomic weights for all 84 elements that have one; grams → moles → particles), pH/pOH/[H₃O⁺]/[OH⁻] from any one of them, ideal gas law (solve for P, V, n or T) |
+| Physics | constant acceleration, projectile range and flight time (from a height), Ohm's law and power, wave speed, thin lens (image position, magnification, real/virtual) |
+| Mathematics | quadratic equation (real, repeated or complex roots; vertex), line through two points, mean/median/standard deviation (sample and population), 3D vectors (dot and cross product, angle) |
+| Biology | microscope magnification and real size, Hardy–Weinberg equilibrium, Michaelis–Menten rate, exponential population growth and doubling time |
+| Anatomy and physiology | BMI with the WHO adult categories, cardiac output, mean arterial pressure, minute and alveolar ventilation, body surface area (Mosteller) |
+
+Each opens on a worked example and shows the formula, every step with units, the answer, what it
+assumes, its source (an OpenStax section, CIAAW, WHO or the original paper) and a link to the model
+in the app that shows the same idea. Inputs are typed as text, so a half-typed number is never
+changed under the cursor; a value that cannot be used is explained (“The current must be greater
+than zero”). The open calculator is kept in the address (`calc=`), so a link or a reload reopens it.
+Every calculator is in the search index (“BMI”, “molar mass”, “standard deviation”), after any model
+that matches as well, and each subject's Overview lists its calculators. The physiology calculators
+say they are for learning, not diagnosis.
 
 **Subject Overviews** (`#/anatomy/overview`, `#/biology/overview`, `#/physics/overview`,
 `#/mathematics/overview`; `src/features/subjects/`) are where Home's subject cards now lead. Each has
@@ -674,7 +697,7 @@ The six destinations:
 | **Molecules** | `?csec=library` | every molecule in the viewer, with formula, filterable by name |
 | **Topics** | `?csec=contents` | the table of contents: six chapters, each topic tagged *Read*, *Calculator* or *Explore* |
 | **Visualizations** | `?csec=visual` | the interactive models (molecule viewer, atomic structure, periodic table, bonding and shape; the Physics gas lab and Biology enzyme model, labelled with their subject) |
-| **Tools** | `?csec=tools` | molarity, dilution, equation balancing and stoichiometry, each with what it takes and gives |
+| **Tools** | `?csec=tools` | the calculators (molar mass, pH and pOH, ideal gas law; `calc=` opens one), then molarity, dilution, equation balancing and stoichiometry, each with what it takes and gives |
 
 Workspaces stay under their tab: a molecule under Molecules, atomic structure and bonding under
 Visualizations, the calculators under Tools, explanations under Topics. Every older address
@@ -2603,7 +2626,8 @@ How the URL is kept up to date:
 | `src/data/collections.test.ts` | The four starter collections; every step already canonical (opens unchanged); every connection states its limits and cites registered sources; no progress or score wording. |
 | `src/lib/notebookBackup.test.ts` | Export/import round trip without IDs; the notebook and saved-exploration formats recognising each other; duplicates, invalid notes and the limit; text kept as text; nothing written when the plan changed or the write fails; 100 maximum-length notes of ASCII, Cyrillic, CJK, emoji and escaped text exported and imported into an empty notebook; emoji never split, lone surrogates replaced; a finite input limit. |
 | `src/lib/noteDrafts.test.ts` | Draft round trip with its exploration snapshot, never touching saved notes; scopes kept apart; older drafts without a snapshot; malformed drafts and unknown versions ignored; quota, refused and unavailable storage reported. |
-| `src/lib/searchIndex.test.ts` | Every subject, atlas and heart structure, element, molecule, cell model and structure, process, lab, function, section and surface is indexed with a deep link that its subject's parser accepts; atlas links turn on the structure's layer and reproductive links carry their configuration; symbols, synonyms and plurals; subject and type filters; grouping in subject order; formula normalization; ranking; empty and unmatched queries. |
+| `src/calc/calculators.test.ts` | Every calculator: a unique id, at least three per subject, registered sources, a worked example that calculates with no NaN, an empty field that asks for a value, and links that open existing sections. Number reading (signs, decimals, e-notation) and formatting (significant figures without padding, × 10ⁿ). Textbook answers: molar masses of H₂O, glucose, NaCl and Ca(OH)₂ (exact sums), unreadable formulas and elements without a standard weight, weights matching the reactions lab; pH/pOH both ways and neutrality; 22.41 L for a mole at 0 °C and 1 atm; kinematics, a 45° projectile, Ohm's law, wave speed, thin-lens real, virtual and no-image cases; quadratic real, repeated and complex roots; statistics with sample and population SD; dot and cross products and perpendicular vectors; vertical and horizontal lines; Hardy–Weinberg with counts; half of Vmax at Km; doubling and halving times; magnification both ways; BMI and every WHO cut-off; cardiac output, MAP, ventilation and BSA. |
+| `src/lib/searchIndex.test.ts` | Every subject, atlas and heart structure, element, molecule, cell model and structure, process, lab, function, section, surface and calculator is indexed with a deep link that its subject's parser accepts; atlas links turn on the structure's layer and reproductive links carry their configuration; symbols, synonyms and plurals; subject and type filters; grouping in subject order; formula normalization; ranking; empty and unmatched queries. |
 | `src/data/related.test.ts` | Every cross-subject relation joins existing items in different subjects, cites registered sources and states its limits; the circulation–circuit link is an analogy with its failure stated; topics read from explorer URLs; both directions resolve; views without a link get none. |
 | `src/data/inventory.test.ts` | The README content inventory matches the counts in the data. |
 | `src/lib/explorationStore.test.ts` | Saving with schema version and relative route only; dedupe by canonical state; rename and remove; titles trimmed and capped; the saved limit; recent visits deduped and capped at six; Clear history leaving saved entries; malformed JSON, unknown versions and invalid parameters ignored. Storage reliability: failed reads vs empty lists, damaged lists never overwritten, quota and other write failures leaving data readable and unchanged, removing the last entry under quota, newer-version entries preserved, failed history clears, and the storage-event filter. |
@@ -2891,6 +2915,7 @@ the production build:
   and saving and reopening a section.
 - `review.e2e.ts`: numeric fields that must not change values on focus and blur, off-grid shared
   values snapped and rewritten, and a sweep of boundary URLs for `NaN`, `Infinity` or `undefined`.
+- `calculators.e2e.ts`: each subject's Calculators tab (current tab, breadcrumb, H1, the first calculator open on its worked example with steps and a source); typing recalculates and the main answer is announced; a refused value explains itself and *Back to the example* restores it; the open calculator survives a reload; an Overview link opens one calculator; Chemistry's Tools page computes the molar mass of Ca(OH)₂ and rejects an unknown symbol; on a phone, no horizontal overflow on the calculator pages and the Chemistry Overview, and every calculator name in view.
 - `mobile.e2e.ts` (390 × 844):
   - all five subjects with no horizontal overflow and a prominent viewport;
   - touch targets of at least 40 px, the tab workflow, and normal page scrolling;
@@ -3271,8 +3296,8 @@ Counted from the data; a unit test (`src/data/inventory.test.ts`) fails if this 
 | Glossary terms | 83 |
 | Cross-subject relations | 14 |
 | Starter collections | 4 |
-| Registered sources | 145 |
-| Search index entries | 552 |
+| Registered sources | 157 |
+| Search index entries | 573 |
 
 The atlas's own inventory (*Body atlas → What is included*) lists every structure by system and
 how it is drawn (individual, group or container), with what is omitted.

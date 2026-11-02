@@ -1,5 +1,5 @@
 /* Chemistry home page (design mockup, screen 02). */
-.chem-home { width: min(1000px, 100%); margin: 0 auto; padding: var(--space-4) var(--space-5) var(--space-8); display: grid; gap: var(--space-6); }
+.chem-home { width: min(1000px, 100%); margin: 0 auto; padding: var(--space-4) var(--space-5) var(--space-8); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
 .chem-home-head { position: relative; display: flex; align-items: center; min-height: 150px; }
 .chem-home-title-wrap { position: relative; z-index: 1; }
 .chem-home-title { margin: 0 0 var(--space-2); font-size: clamp(2.6rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.035em; line-height: 1; }

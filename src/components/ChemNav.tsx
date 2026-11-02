@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { navigateTo } from '../lib/hooks'
 import { modulesOf } from '../data/topics'
 import type { SubjectId } from '../data/subjects'
-import { overviewHref } from '../lib/overviewRoute'
+import { calculatorsHref, overviewHref } from '../lib/overviewRoute'
 import { AppLink } from './AppLink'
 
 /*
@@ -71,16 +71,20 @@ export function ChemHeaderSearch() {
   )
 }
 
-/** Other subjects' tabs: their Overview, then each section (module) in the app's order. */
-export function SubjectNav({ subject, name, moduleId, overview }: { subject: SubjectId; name: string; moduleId: string; overview: boolean }) {
+/** Other subjects' tabs: their Overview, each section (module) in the app's order, then Calculators. */
+export function SubjectNav({ subject, name, moduleId, overview, calculators = false }: { subject: SubjectId; name: string; moduleId: string; overview: boolean; calculators?: boolean }) {
   const listRef = useRef<HTMLUListElement>(null)
   useEffect(() => {
     const list = listRef.current
     const current = list?.querySelector<HTMLElement>('[aria-current="page"]')
     if (!list || !current || list.scrollWidth <= list.clientWidth) return
     list.scrollLeft = current.offsetLeft - (list.clientWidth - current.offsetWidth) / 2
-  }, [moduleId, overview])
-  const tabs = [{ id: 'overview', label: 'Overview', href: overviewHref(subject), here: overview }, ...modulesOf(subject).map((m) => ({ id: m.id, label: m.name, href: m.href, here: !overview && m.id === moduleId }))]
+  }, [moduleId, overview, calculators])
+  const tabs = [
+    { id: 'overview', label: 'Overview', href: overviewHref(subject), here: overview },
+    ...modulesOf(subject).map((m) => ({ id: m.id, label: m.name, href: m.href, here: !overview && !calculators && m.id === moduleId })),
+    { id: 'calculators', label: 'Calculators', href: calculatorsHref(subject), here: calculators },
+  ]
   return (
     <nav className="chem-nav" aria-label={name}>
       <ul ref={listRef}>
@@ -88,6 +92,7 @@ export function SubjectNav({ subject, name, moduleId, overview }: { subject: Sub
           <li key={t.id}>
             <AppLink href={t.href} className="chem-nav-link" aria-current={t.here ? 'page' : undefined}>
               {t.id === 'overview' && <Compass size={16} aria-hidden="true" />}
+              {t.id === 'calculators' && <Calculator size={16} aria-hidden="true" />}
               {t.label}
             </AppLink>
           </li>

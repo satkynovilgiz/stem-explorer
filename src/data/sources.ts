@@ -487,4 +487,52 @@ export const SOURCES: Record<string, SourceRef> = {
     label: 'OpenStax Calculus Volume 3 — 4.7 Maxima/Minima Problems',
     url: 'https://openstax.org/books/calculus-volume-3/pages/4-7-maxima-minima-problems',
   },
+  'chem-3-1': {
+    label: 'OpenStax Chemistry 2e — 3.1 Formula Mass and the Mole Concept',
+    url: 'https://openstax.org/books/chemistry-2e/pages/3-1-formula-mass-and-the-mole-concept',
+  },
+  'chem-14-2': {
+    label: 'OpenStax Chemistry 2e — 14.2 pH and pOH',
+    url: 'https://openstax.org/books/chemistry-2e/pages/14-2-ph-and-poh',
+  },
+  'up1-3-4': {
+    label: 'OpenStax University Physics Volume 1 — 3.4 Motion with Constant Acceleration',
+    url: 'https://openstax.org/books/university-physics-volume-1/pages/3-4-motion-with-constant-acceleration',
+  },
+  'alg-2-5': {
+    label: 'OpenStax College Algebra 2e — 2.5 Quadratic Equations',
+    url: 'https://openstax.org/books/college-algebra-2e/pages/2-5-quadratic-equations',
+  },
+  'calc3-2-2': {
+    label: 'OpenStax Calculus Volume 3 — 2.2 Vectors in Three Dimensions',
+    url: 'https://openstax.org/books/calculus-volume-3/pages/2-2-vectors-in-three-dimensions',
+  },
+  'bio-4-1': {
+    label: 'OpenStax Biology 2e — 4.1 Studying Cells',
+    url: 'https://openstax.org/books/biology-2e/pages/4-1-studying-cells',
+  },
+  'bio-19-1': {
+    label: 'OpenStax Biology 2e — 19.1 Population Evolution (Hardy–Weinberg principle)',
+    url: 'https://openstax.org/books/biology-2e/pages/19-1-population-evolution',
+  },
+  'bio-45-3': {
+    label: 'OpenStax Biology 2e — 45.3 Environmental Limits to Population Growth',
+    url: 'https://openstax.org/books/biology-2e/pages/45-3-environmental-limits-to-population-growth',
+  },
+  'ap-19-4': {
+    label: 'OpenStax Anatomy and Physiology 2e — 19.4 Cardiac Physiology',
+    url: 'https://openstax.org/books/anatomy-and-physiology-2e/pages/19-4-cardiac-physiology',
+  },
+  'who-bmi': {
+    label: 'World Health Organization — Body mass index (BMI): adult cut-offs',
+    url: 'https://www.who.int/data/gho/data/themes/topics/topic-details/GHO/body-mass-index',
+  },
+  'who-obesity': {
+    label: 'World Health Organization — Obesity and overweight (fact sheet)',
+    url: 'https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight',
+  },
+  'mosteller-1987': {
+    label: 'Mosteller, R. D. (1987). Simplified calculation of body-surface area. N. Engl. J. Med. 317, 1098',
+    url: 'https://doi.org/10.1056/NEJM198710223171717',
+  },
 }

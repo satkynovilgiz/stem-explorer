@@ -18,9 +18,9 @@ for (const s of SUBJECTS) {
     const tabs = page.getByRole('navigation', { name: s.name })
     await expect(tabs.getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
     await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: s.name })).toHaveAttribute('aria-current', 'page')
-    // Contents: one entry per section, each opening that section.
+    // Contents: one entry per section, each opening that section (the tabs add Overview and Calculators).
     const chapters = page.locator('.subj-chapter')
-    expect(await chapters.count()).toBe(await tabs.getByRole('link').count() - 1)
+    expect(await chapters.count()).toBe(await tabs.getByRole('link').count() - 2)
     // A common question opens real content.
     await page.getByRole('link', { name: s.question }).click()
     await expect(page.locator('main')).toContainText(s.answer)

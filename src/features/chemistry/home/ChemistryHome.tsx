@@ -2,6 +2,8 @@ import '../../../styles/chemistry-home.css'
 import { ArrowLeft, ArrowRight, Atom, BookOpen, Box, Calculator, Cloud, Droplet, FlaskConical, Grid3x3, Hexagon, Search, TestTubeDiagonal, X } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AppLink } from '../../../components/AppLink'
+import { calculatorsOf } from '../../../calc'
+import { calculatorsHref } from '../../../lib/overviewRoute'
 import { ELEMENTS } from '../../../data/chemistry/periodicTable'
 import { MOLECULES } from '../../../data/chemistry/molecules'
 import { subjectName } from '../../../lib/explorations'
@@ -301,7 +303,7 @@ function Overview({ items }: { items: readonly ChemItem[] }) {
           </AppLink>
         </div>
         <ul className="chem-tool-list">
-          {TOOLS.map((t) => (
+          {[...calculatorsOf('chemistry').map((c) => ({ title: c.title, href: calculatorsHref('chemistry', c.id) })), ...TOOLS].map((t) => (
             <li key={t.href}>
               <AppLink href={t.href} className="chem-tool-link">
                 <Calculator size={18} aria-hidden="true" />

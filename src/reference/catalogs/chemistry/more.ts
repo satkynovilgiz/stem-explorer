@@ -26,7 +26,7 @@ export const MORE: ReferenceEntry[] = [
     explanation: [
       'The colours follow a common convention (CPK colours, as used by the Jmol viewer). They are labels for the elements, not the real colour of atoms: atoms have no colour of their own.',
       'Double and triple bonds are drawn as two or three parallel sticks. In ball-and-stick view the spheres are drawn smaller than real atoms so the bonds stay visible; in space-filling view their sizes follow van der Waals radii, which describe how closely molecules can approach each other rather than a hard edge.',
-      'The atom positions come from experimental measurements (NIST CCCBDB), so measured bond lengths and angles are real values for an isolated molecule.',
+      'The atom positions of the 12 small molecules come from experimental measurements (NIST CCCBDB), so their bond lengths and angles are real values for an isolated molecule. The 15 everyday and biological molecules use computed shapes from PubChem (a force-field model), and each says so.',
     ],
     conditions: ['A model is a still picture: real molecules vibrate and rotate, and electrons are spread out in clouds that the model does not show.'],
     modelLimitations: ['Lone pairs, charges and electron clouds are not drawn; the shape explanations describe them in words.', 'Stick thickness and the starting viewing angle are drawing choices.'],

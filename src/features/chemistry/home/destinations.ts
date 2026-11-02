@@ -19,7 +19,7 @@ export const VISUALIZATIONS: readonly Destination[] = [
     href: '?molecule=water&view=ball-and-stick#/chemistry',
     text: 'Turn a molecule in 3D and measure its bond lengths and bond angles.',
     inputs: '27 molecules (12 measured, 15 computed) · ball-and-stick or space-filling · distance and angle tools',
-    note: 'Geometries are experimental (NIST CCCBDB); atom colours are a labelling convention.',
+    note: 'Each molecule says where its shape comes from: measured (NIST CCCBDB) or computed (PubChem3D). Atom colours are a labelling convention.',
   },
   {
     title: 'Atomic structure',
@@ -31,9 +31,9 @@ export const VISUALIZATIONS: readonly Destination[] = [
   {
     title: 'Periodic table',
     href: '?csec=periodic#/chemistry',
-    text: 'All 118 elements by group and period, with each element’s category and atomic number.',
-    inputs: 'Select any element',
-    note: 'Property trends (electronegativity, radius…) are not shown yet.',
+    text: 'All 118 elements by group and period. Colour the table by a property to see its trend, and compare elements side by side.',
+    inputs: 'Any element · colour by 7 properties (electronegativity, radius, ionization energy…) · compare up to 4 elements',
+    note: 'Property values from PubChem; where PubChem has no value, the table says so.',
   },
   {
     title: 'Bonding and molecular shape',

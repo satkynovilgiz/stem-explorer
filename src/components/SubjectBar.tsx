@@ -19,7 +19,7 @@ const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
  * subjects are reached from Home and from search. Each explorer's own toolbar holds its display
  * controls.
  */
-export function SubjectBar({ subject, overview = false, onPresent }: { subject: SubjectId; overview?: boolean; onPresent?: () => void }) {
+export function SubjectBar({ subject, overview = false, calculators = false, onPresent }: { subject: SubjectId; overview?: boolean; calculators?: boolean; onPresent?: () => void }) {
   const search = useLocationSearch()
   const { module, topic } = locate(subject, search)
   const [open, setOpen] = useState(false)
@@ -42,7 +42,7 @@ export function SubjectBar({ subject, overview = false, onPresent }: { subject: 
   // Layout and presentation controls belong to model workspaces. Chemistry's topic page, reading
   // pages and calculators are single columns, so they have none.
   const CHEM_WORKSPACES = ['chemistry.molecules', 'chemistry.periodic', 'chemistry.atomic', 'chemistry.bonding']
-  const hasPanels = !overview && (subject !== 'chemistry' || CHEM_WORKSPACES.includes(module.id))
+  const hasPanels = !overview && !calculators && (subject !== 'chemistry' || CHEM_WORKSPACES.includes(module.id))
   const isChemTopics = module.id === 'chemistry.topics'
   // The subject's own landing page: Chemistry's Overview, or another subject's #/<subject>/overview.
   const atOverview = subject === 'chemistry' ? isChemTopics : overview
@@ -85,15 +85,23 @@ export function SubjectBar({ subject, overview = false, onPresent }: { subject: 
             {!overview && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
           </li>
         )}
-        {!atOverview && (
+        {calculators ? (
           <li>
-            <span className="crumb-module" aria-current={topic ? undefined : 'page'}>
-              {module.name}
+            <span className="crumb-module" aria-current="page">
+              Calculators
             </span>
-            {topic && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
           </li>
+        ) : (
+          !atOverview && (
+            <li>
+              <span className="crumb-module" aria-current={topic ? undefined : 'page'}>
+                {module.name}
+              </span>
+              {topic && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
+            </li>
+          )
         )}
-        {topic && !atOverview && (
+        {topic && !atOverview && !calculators && (
           <li>
             <span className="crumb-topic" aria-current="page">
               {topic}
@@ -161,7 +169,7 @@ export function SubjectBar({ subject, overview = false, onPresent }: { subject: 
           </span>
           <span className="chem-brand-name">{name}</span>
         </AppLink>
-        {subject === 'chemistry' ? <ChemNav moduleId={module.id} /> : <SubjectNav subject={subject} name={name} moduleId={module.id} overview={overview} />}
+        {subject === 'chemistry' ? <ChemNav moduleId={module.id} /> : <SubjectNav subject={subject} name={name} moduleId={module.id} overview={overview} calculators={calculators} />}
         <div className="chem-bar-actions">
           {!atOverview && (subject === 'chemistry' ? <ChemHeaderSearch /> : <SubjectHeaderSearch subject={subject} name={name} />)}
           {subject !== 'chemistry' && (
