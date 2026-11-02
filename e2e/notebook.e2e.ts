@@ -61,7 +61,9 @@ test('unsaved changes: Cancel asks first, and a draft left behind is offered bac
 
   // Leave the explorer without saving, then come back.
   await openSubject(page, 'physics')
+  // Home's Biology card opens the Overview; the Cells tab returns to the explorer.
   await openSubject(page, 'biology')
+  await page.getByRole('navigation', { name: 'Biology' }).getByRole('link', { name: 'Cells' }).click()
   await expect(page.locator('.note-waiting')).toContainText('You have an unsaved Biology note draft')
   await page.getByRole('button', { name: 'Add note' }).click()
   await expect(page.locator('.note-restore')).toContainText('unsaved note draft')
