@@ -1,5 +1,5 @@
 import { ArrowLeft, ChevronRight, ListTree, Maximize2, Minimize2, PanelLeft, PanelRight, Presentation, Search, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { locate, MODULES, type TopicModule } from '../data/topics'
 import { SUBJECTS, type SubjectId } from '../data/subjects'
 import { normalize } from '../lib/chemistry'
@@ -24,6 +24,24 @@ export function SubjectBar({ subject, overview = false, calculators = false, onP
   const { module, topic } = locate(subject, search)
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const barRef = useRef<HTMLDivElement>(null)
+  // The bar's height depends on the subject and the window, and the workspace below is sized from it.
+  useLayoutEffect(() => {
+    const bar = barRef.current
+    if (!bar) return
+    const root = document.documentElement
+    const measure = () => {
+      const height = bar.getBoundingClientRect().height
+      if (height > 0) root.style.setProperty('--subject-bar-height', `${height}px`)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(bar)
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty('--subject-bar-height')
+    }
+  }, [])
 
   useEffect(() => {
     rememberModuleState(subject, search)
@@ -160,7 +178,7 @@ export function SubjectBar({ subject, overview = false, calculators = false, onP
   // Overview), the destination tabs, a compact search (the Overview has its own large one) and, on
   // model pages, layout controls. Other subjects keep the drawer listing their modules and topics.
   return (
-    <div className={`subject-bar chem-bar is-${subject}`}>
+    <div ref={barRef} className={`subject-bar chem-bar is-${subject}`}>
       <div className="chem-bar-top">{crumbs}</div>
       <div className="chem-bar-main">
         <AppLink href={overviewHref(subject)} className="chem-brand" aria-label={`${name} Explorer: Overview`}>

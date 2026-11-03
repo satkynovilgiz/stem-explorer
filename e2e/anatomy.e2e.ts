@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test'
+import { differentPixels } from './png.ts'
 import { canvasShot, expect, parkMouse, pressed, search, stableCanvasShot, test, visibleLabels, waitForViewport, switchSubject } from './fixtures.ts'
 
 const item = (page: Page, name: string) =>
@@ -79,7 +80,8 @@ test('Isolate, Show all, Focus and Reset camera', async ({ page }) => {
   await page.locator('.header-actions').getByRole('button', { name: 'Clear selection' }).click()
   await page.getByRole('button', { name: 'Reset camera' }).click()
   await parkMouse(page)
-  await expect.poll(async () => (await canvasShot(page, true)).equals(initial), { timeout: 8000 }).toBe(true)
+  // The camera is back: rounding may leave a stray pixel, while a wrong view would change thousands.
+  await expect.poll(async () => differentPixels(await canvasShot(page, true), initial), { timeout: 8000 }).toBeLessThanOrEqual(20)
 })
 
 test('Labels toggle keeps the selection and orientation labels', async ({ page }) => {

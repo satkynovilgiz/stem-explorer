@@ -30,7 +30,7 @@
 /* Formulas and steps use the text font: its subscripts and superscripts (v₀, x², 10⁻⁷) sit properly. */
 .calc-panel code { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
 
-.calc-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-3); margin: 0; }
+.calc-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3); margin: 0; }
 .calc-field { display: grid; gap: var(--space-1); min-width: 0; margin: 0; padding: 0; border: 0; }
 .calc-field.is-wide, .calc-choice { grid-column: 1 / -1; }
 .calc-choice .segmented { flex-wrap: wrap; max-width: 100%; }

@@ -28,6 +28,17 @@ export interface Png {
   rgba: Uint8Array
 }
 
+/** How many pixels differ at all between two same-sized PNG images. */
+export function differentPixels(a: Uint8Array, b: Uint8Array): number {
+  const [first, second] = [decodePng(a), decodePng(b)]
+  if (first.width !== second.width || first.height !== second.height) return Infinity
+  let count = 0
+  for (let i = 0; i < first.rgba.length; i += 4) {
+    if (first.rgba[i] !== second.rgba[i] || first.rgba[i + 1] !== second.rgba[i + 1] || first.rgba[i + 2] !== second.rgba[i + 2]) count++
+  }
+  return count
+}
+
 export function decodePng(bytes: Uint8Array): Png {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   let at = 8

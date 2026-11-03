@@ -238,6 +238,8 @@ button {
 }
 
 .chem-side {
+  /* Positioned so hidden screen-reader text stays inside the scrolling panel and cannot stretch the page. */
+  position: relative;
   min-height: 0;
   overflow-y: auto;
   border: 1px solid var(--color-border);
@@ -248,6 +250,7 @@ button {
 }
 
 .chem-stage {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -858,8 +861,11 @@ button {
 
 .control-group {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .control-group + .control-group {
@@ -1853,6 +1859,7 @@ button {
 
 .playback-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
 }
 
@@ -2425,17 +2432,29 @@ button {
   list-style: none;
 }
 
+/* A 14 px dot in a 24 px target. */
 .tour-dot {
-  width: 14px;
-  height: 14px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  border: 1px solid var(--color-border-strong);
+  border: 0;
   border-radius: 50%;
-  background: var(--color-bg);
+  background: none;
   cursor: pointer;
 }
 
-.tour-dot.is-current {
+.tour-dot::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-bg);
+}
+
+.tour-dot.is-current::before {
   border-color: var(--color-accent);
   background: var(--color-accent);
 }
@@ -2520,7 +2539,7 @@ button {
     bottom: var(--space-3);
   }
 
-  .tour-dot {
+  .tour-dot::before {
     width: 22px;
     height: 22px;
   }
@@ -3665,6 +3684,8 @@ button {
 }
 
 .ptable-scroll {
+  /* Never squeezed by the column around it: every row of the table stays visible, and .ptable scrolls. */
+  flex: none;
   container-type: inline-size;
   overflow-x: auto;
   padding-bottom: var(--space-2);
@@ -9023,8 +9044,8 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 .chem-bar-search input:hover { border-color: var(--color-border-strong); }
 .chem-bar-search input:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 1px; background: var(--color-surface); }
 @media (max-width: 1180px) { .chem-bar-search input { width: 160px; } }
-/* Phones and small tablets: brand and actions on one row, tabs on their own scrolling row. */
-@media (max-width: 899px) {
+/* Phones, tablets and small windows: brand and actions on one row, tabs on their own row. */
+@media (max-width: 1180px) {
   .chem-bar-top { padding: 6px var(--space-4) 0; }
   .chem-bar-main { flex-wrap: wrap; gap: 0 var(--space-3); padding: 4px var(--space-4) 0; }
   .chem-bar-search input { width: min(46vw, 200px); }
@@ -9123,3 +9144,55 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 .chem-bar:not(.is-chemistry) .chem-bar-main { flex-wrap: wrap; row-gap: 0; }
 .chem-bar:not(.is-chemistry) .chem-nav { order: 3; flex-basis: 100%; }
 .chem-bar:not(.is-chemistry) .chem-bar-main { padding-top: 6px; }
+
+/* ---------- Small screens and touch ---------- */
+
+/* Long controls stay inside their panel on the narrowest phones. */
+select { max-width: 100%; }
+
+@media (max-width: 360px) {
+  .segmented--modes .segmented-option { padding-inline: var(--space-2); }
+  .segmented { max-width: 100%; flex-wrap: wrap; }
+}
+
+/* Where the window is short, the header scrolls away and leaves the room to the content. */
+@media (max-width: 899px) and (max-height: 700px), (max-height: 500px) {
+  .subject-bar { position: static; }
+}
+
+/* A phone held sideways can be wide enough for the three columns: the page scrolls instead of crushing them. */
+@media (min-width: 900px) and (max-height: 620px) {
+  html:not(.is-presenting) .app.has-subject-bar .chem:not(.chem--mobile) { height: auto; min-height: 0; grid-template-rows: 560px; }
+}
+
+/* Targets at least 24 px, the WCAG 2.2 AA minimum. */
+.crumbs a { display: inline-flex; align-items: center; min-height: 24px; }
+
+/* Long content in the middle column scrolls there, beside its panels, not with the whole page. */
+@media (min-width: 900px) {
+  html:not(.is-presenting) .chem:not(.chem--mobile) > .chem-stage { overflow-y: auto; }
+}
+
+@media (pointer: coarse) {
+  .relation-link { min-height: 24px; padding-block: 3px; }
+  .collection-item-title { display: inline-flex; align-items: center; min-height: 24px; }
+  .panel-resizer { width: 28px; }
+  .panel-resizer--left { right: calc(var(--space-4) / -2 - 14px); }
+  .panel-resizer--right { left: calc(var(--space-4) / -2 - 14px); }
+  input[type='range'] { min-height: 24px; }
+  details > summary { min-height: 32px; }
+}
+
+/* The limb table needs its three columns: on the narrowest phones it scrolls sideways in its own box. */
+.limb-compare { overflow-x: auto; }
+
+/* The statistics column scrolls: its rows keep their full height instead of sliding over each other. */
+.stat-stage { grid-auto-rows: max-content; }
+
+/* In a narrow middle column the heart's legend moves off the title badge. */
+@media (min-width: 900px) {
+  .chem:not(.chem--mobile) .viewport { container-type: inline-size; }
+  @container (max-width: 560px) {
+    .heart-legend { top: auto; bottom: 44px; }
+  }
+}
