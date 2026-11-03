@@ -9,6 +9,7 @@ import { useRecordVisit } from '../../../lib/useExplorationLibrary'
 import { defaultFnParams, FUNCTIONS, getFunction, integrate, plotSegments, secantSlope, type FunctionId } from '../../../math/functions'
 import { formatCoefficient } from '../../../math/surfaces'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { SidePanel } from '../../../components/SidePanel'
 
 const fmt = (v: number) => formatCoefficient(v).text
 const W = 560
@@ -290,15 +291,15 @@ export function FunctionsLab({ sectionSwitch, guidePanel }: { sectionSwitch: Rea
   }
   return (
     <div className="chem">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {sectionSwitch}
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         <section className="panel info">{calculus}</section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

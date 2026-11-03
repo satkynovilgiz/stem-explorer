@@ -84,6 +84,8 @@
   --subject-bar-height: 44px;
   --panel-left: 280px;
   --panel-right: 360px;
+  --panel-min: 200px;
+  --stage-min: 280px;
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0, 0, 1);

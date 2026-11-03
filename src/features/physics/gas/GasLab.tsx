@@ -11,6 +11,7 @@ import { mulberry32 } from '../../../lib/random'
 import { useRecordVisit } from '../../../lib/useExplorationLibrary'
 import { boyle, DEFAULT_GAS, formatSig, gasInputProblem, GAS_KEYS, GAS_SPECS, GAS_TEMPERATURE, isotherm, kPaToAtm, kPaToTorr, R_KPA_L, type GasKey, type GasParams } from '../../../physics/gas'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { SidePanel } from '../../../components/SidePanel'
 
 const V_MAX = GAS_SPECS.v2.max
 /** The same 40 dots every time: they stand for "the same amount of gas", not for real molecules. */
@@ -339,15 +340,15 @@ export function GasLab({ experimentSwitch, guidePanel }: { experimentSwitch: Rea
   }
   return (
     <div className="chem physics">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {experimentSwitch}
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         <section className="panel info">{values}</section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

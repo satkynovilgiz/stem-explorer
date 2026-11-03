@@ -24,6 +24,7 @@ import {
   type RefractionResult,
 } from '../../../physics/optics'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { SidePanel } from '../../../components/SidePanel'
 
 const DEG = Math.PI / 180
 const fmtAngle = (a: number) => `${a.toFixed(2)}°`
@@ -515,16 +516,16 @@ export function OpticsLab({ experimentSwitch, guidePanel }: { experimentSwitch: 
   }
   return (
     <div className="chem physics">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {experimentSwitch}
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         {values}
         {about}
-      </aside>
+      </SidePanel>
     </div>
   )
 }

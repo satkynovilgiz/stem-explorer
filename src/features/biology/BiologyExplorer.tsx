@@ -18,6 +18,7 @@ import { CellToolbar } from './CellToolbar'
 import { biologyReducer, initialBiologyState } from './state'
 import { StructureDetails } from './StructureDetails'
 import { StructureList } from './StructureList'
+import { SidePanel } from '../../components/SidePanel'
 
 // Three.js is loaded on demand so the list and descriptions render immediately.
 const CellScene = lazy(() => import('./scene/CellScene'))
@@ -304,7 +305,7 @@ export function BiologyExplorer() {
   return (
     <div className="chem">
       {announcer}
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         <div className="section-switch-wrap">{sectionSwitch}</div>
         {section === 'cells' ? (
           <>
@@ -328,14 +329,14 @@ export function BiologyExplorer() {
                 : 'Photosynthesis and cellular respiration, linked to the chloroplast and mitochondrion.'}
           </p>
         )}
-      </aside>
+      </SidePanel>
       <Suspense fallback={loading}>
         <div className={`chem-stage${section !== 'cells' ? ' process-stage' : ''}`}>{section === 'cells' ? viewer : processStage}</div>
-        <aside className="chem-side chem-side--right">
+        <SidePanel side="right">
           {section === 'cells' && activityPanel}
           {guidePanel}
           {section === 'cells' ? details : processPanel}
-        </aside>
+        </SidePanel>
       </Suspense>
     </div>
   )

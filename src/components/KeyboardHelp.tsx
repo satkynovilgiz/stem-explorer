@@ -48,7 +48,7 @@ export function KeyboardHelp({ onClose }: { onClose: () => void }) {
       </table>
       <p className="small muted">
         Shortcuts never fire while you type in a field, and not with Ctrl, ⌘ or Alt held. Tab and Shift+Tab move between controls; Enter and Space activate buttons; arrow keys
-        move within the periodic table and sliders.
+        move within the periodic table and sliders, and resize a panel when its divider has focus.
       </p>
     </dialog>
   )

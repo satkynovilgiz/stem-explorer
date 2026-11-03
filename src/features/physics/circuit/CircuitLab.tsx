@@ -19,6 +19,7 @@ import {
   type CircuitSolution,
 } from '../../../physics/circuit'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { SidePanel } from '../../../components/SidePanel'
 
 type P = readonly [number, number]
 
@@ -364,16 +365,16 @@ export function CircuitLab({ experimentSwitch, guidePanel }: { experimentSwitch:
   }
   return (
     <div className="chem physics">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {experimentSwitch}
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         <section className="panel info">{values}</section>
         <section className="panel info">{about}</section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

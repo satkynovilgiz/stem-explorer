@@ -13,6 +13,7 @@ import { createClock } from '../clock'
 import { PlaybackBar } from '../PlaybackBar'
 import { EnergyBars, SpringAbout, SpringGraph, SpringReadouts, SpringSummary } from './SpringPanels'
 import { initialSpringState, springReducer, springTimeEffect, type SpringAction } from './springState'
+import { SidePanel } from '../../../components/SidePanel'
 
 const SpringScene = lazy(() => import('./scene/SpringScene'))
 
@@ -202,16 +203,16 @@ export function SpringLab({ experimentSwitch, guidePanel }: { experimentSwitch: 
   return (
     <div className="chem physics">
       {announcer}
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         <div className="section-switch-wrap">{experimentSwitch}</div>
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage physics-stage">
         {viewer}
         {playback}
         {graph}
       </div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         <section className="panel info" aria-labelledby="spring-heading">
           <header className="info-header">
@@ -232,7 +233,7 @@ export function SpringLab({ experimentSwitch, guidePanel }: { experimentSwitch: 
             ]}
           />
         </section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

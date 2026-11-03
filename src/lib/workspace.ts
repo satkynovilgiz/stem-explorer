@@ -11,17 +11,46 @@ export interface WorkspacePrefs {
   hideRight: boolean
   /** Both panels hidden; either can be opened over the stage temporarily (peek). */
   focus: boolean
+  /** Panel widths in pixels, set by dragging a panel's divider; null keeps the default width. */
+  leftWidth: number | null
+  rightWidth: number | null
 }
 
-export const DEFAULT_WORKSPACE: WorkspacePrefs = { hideLeft: false, hideRight: false, focus: false }
+export const DEFAULT_WORKSPACE: WorkspacePrefs = { hideLeft: false, hideRight: false, focus: false, leftWidth: null, rightWidth: null }
+export const MIN_PANEL_WIDTH = 200
+export const MAX_PANEL_WIDTH = 640
+/** Matches --stage-min in tokens.css: the stage never gets narrower than this. */
+export const MIN_STAGE_WIDTH = 280
+export const PANEL_WIDTH_KEY = { left: 'leftWidth', right: 'rightWidth' } as const
 const KEY = 'stem-explorer:workspace'
 const EVENT = 'stem:workspace'
+
+export function clampPanelWidth(width: number, max = MAX_PANEL_WIDTH): number {
+  return Math.round(Math.min(max, Math.max(MIN_PANEL_WIDTH, width)))
+}
+
+function storedWidth(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? clampPanelWidth(value) : null
+}
+
+/** Applies a panel width to the layout; null returns to the default in the stylesheet. */
+export function setPanelWidthVar(side: Side, width: number | null) {
+  const style = document.documentElement.style
+  if (width === null) style.removeProperty(`--panel-${side}`)
+  else style.setProperty(`--panel-${side}`, `${width}px`)
+}
 
 function read(): WorkspacePrefs {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Partial<WorkspacePrefs> | null
     if (!raw || typeof raw !== 'object') return DEFAULT_WORKSPACE
-    return { hideLeft: raw.hideLeft === true, hideRight: raw.hideRight === true, focus: raw.focus === true }
+    return {
+      hideLeft: raw.hideLeft === true,
+      hideRight: raw.hideRight === true,
+      focus: raw.focus === true,
+      leftWidth: storedWidth(raw.leftWidth),
+      rightWidth: storedWidth(raw.rightWidth),
+    }
   } catch {
     return DEFAULT_WORKSPACE
   }
@@ -142,8 +171,8 @@ export function toggleFocus() {
   setWorkspace({ focus: !w.focus })
 }
 
-/** Restore the normal layout: both panels visible, Focus off. */
+/** Restore the normal layout: both panels visible, Focus off. Widths the user dragged are kept. */
 export function restoreLayout() {
   setPeek(null)
-  setWorkspace({ ...DEFAULT_WORKSPACE })
+  setWorkspace({ hideLeft: false, hideRight: false, focus: false })
 }

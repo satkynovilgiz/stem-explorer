@@ -21,6 +21,7 @@ import { RelationPanel, WhereIsIt } from './WherePanels'
 import { findRelationExploration } from '../../../data/anatomy/atlas/relationships'
 import { atlasReducer, atlasShareState, DEFAULT_OPACITY, initialAtlasState, VIEW_TEXT, type AtlasState } from './atlasState'
 import { drawnStructures } from './visibility'
+import { SidePanel } from '../../../components/SidePanel'
 
 // Three.js loads on demand; the list, details, layers and inventory work without it.
 const AtlasScene = lazy(() => import('./scene/AtlasScene'))
@@ -342,20 +343,20 @@ export function AtlasExplorer({ moduleSwitch, onOpenHeart }: { moduleSwitch: Rea
     <div className="chem anatomy atlas">
       {announcer}
       {layerNote}
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {moduleSwitch}
         {where}
         {navigator}
-      </aside>
+      </SidePanel>
       <div className="chem-stage physics-stage">
         {viewer}
         {tourBar}
       </div>
-      <aside ref={rightPanel} className="chem-side chem-side--right">
+      <SidePanel side="right" ref={rightPanel}>
         {guidePanel}
         {state.relation && relations}
         {closeUpPanel ?? details}
-      </aside>
+      </SidePanel>
     </div>
   )
 }

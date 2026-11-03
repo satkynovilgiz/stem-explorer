@@ -230,7 +230,8 @@ button {
 
 .chem {
   display: grid;
-  grid-template-columns: var(--panel-left) minmax(0, 1fr) var(--panel-right);
+  position: relative;
+  grid-template-columns: minmax(var(--panel-min), var(--panel-left)) minmax(var(--stage-min), 1fr) minmax(var(--panel-min), var(--panel-right));
   gap: var(--space-4);
   height: calc(100dvh - var(--nav-height));
   padding: var(--space-4);
@@ -6971,11 +6972,11 @@ tr.is-sum td {
 
 @media (min-width: 900px) {
   html.ws-hide-left .chem:not(.chem--mobile) {
-    grid-template-columns: minmax(0, 1fr) var(--panel-right);
+    grid-template-columns: minmax(var(--stage-min), 1fr) minmax(var(--panel-min), var(--panel-right));
   }
 
   html.ws-hide-right .chem:not(.chem--mobile) {
-    grid-template-columns: var(--panel-left) minmax(0, 1fr);
+    grid-template-columns: minmax(var(--panel-min), var(--panel-left)) minmax(var(--stage-min), 1fr);
   }
 
   html.ws-hide-left.ws-hide-right .chem:not(.chem--mobile),
@@ -7011,6 +7012,69 @@ html.ws-focus.ws-peek-right .chem:not(.chem--mobile) > .chem-side--right {
 
   .chem:not(.chem--mobile) > .chem-side {
     animation: panel-in 160ms var(--ease);
+  }
+}
+
+/* The divider sits in the gap beside its panel. It is placed in the panel's own grid column, so it
+   follows the panel however the window or the other panel changes the layout. */
+.panel-resizer {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  bottom: 0;
+  grid-row: 1;
+  width: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.panel-resizer--left {
+  grid-column: 1 / 2;
+  right: calc(var(--space-4) / -2 - 7px);
+}
+
+.panel-resizer--right {
+  grid-column: -2 / -1;
+  left: calc(var(--space-4) / -2 - 7px);
+}
+
+.panel-resizer::before {
+  content: '';
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+  background: var(--color-border-strong);
+  transition: height 120ms var(--ease), background-color 120ms var(--ease);
+}
+
+.panel-resizer:hover::before,
+.panel-resizer:focus-visible::before,
+html.is-resizing-panels .panel-resizer:active::before {
+  height: 100%;
+  background: var(--color-accent);
+}
+
+html.is-resizing-panels,
+html.is-resizing-panels * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+/* A divider only exists next to a panel that is showing in the normal layout. */
+html.is-presenting .panel-resizer,
+html.ws-focus .panel-resizer,
+html.ws-hide-left .panel-resizer--left,
+html.ws-hide-right .panel-resizer--right {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .panel-resizer {
+    display: none;
   }
 }
 
@@ -8975,7 +9039,7 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 
 /* Workspaces without a left panel (Elements, Atomic structure, Bonding): stage and details only. */
 @media (min-width: 900px) {
-  .chem.chem--no-left { grid-template-columns: minmax(0, 1fr) var(--panel-right); }
+  .chem.chem--no-left { grid-template-columns: minmax(var(--stage-min), 1fr) minmax(var(--panel-min), var(--panel-right)); }
   html.ws-hide-right .chem.chem--no-left,
   html.ws-focus .chem.chem--no-left { grid-template-columns: minmax(0, 1fr); }
 }

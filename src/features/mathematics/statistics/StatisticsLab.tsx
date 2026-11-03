@@ -25,6 +25,7 @@ import {
   type Summary,
 } from '../../../math/statistics'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { SidePanel } from '../../../components/SidePanel'
 
 /* ---------- Charts ---------- */
 
@@ -535,15 +536,15 @@ export function StatisticsLab({ sectionSwitch, guidePanel }: { sectionSwitch: Re
   }
   return (
     <div className="chem">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {sectionSwitch}
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         <section className="panel info">{results}</section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

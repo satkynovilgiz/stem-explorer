@@ -15,6 +15,7 @@ import { ComparePanel } from './ComparePanel'
 import { HEART_COLORS } from './colors'
 import { HeartToolbar, PartDetails, PartList, TourBar } from './HeartPanels'
 import { anatomyReducer, anatomyShareState, initialAnatomyState } from './state'
+import { SidePanel } from '../../components/SidePanel'
 
 // Three.js loads on demand; the list, details and tour work without it.
 const HeartScene = lazy(() => import('./scene/HeartScene'))
@@ -216,19 +217,19 @@ export function HeartExplorer({ moduleSwitch }: { moduleSwitch?: ReactNode }) {
   return (
     <div className="chem anatomy">
       {announcer}
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {moduleSwitch}
         {list}
-      </aside>
+      </SidePanel>
       <div className="chem-stage physics-stage">
         {viewer}
         {tour}
       </div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {activityPanel}
         {guidePanel}
         {details}
-      </aside>
+      </SidePanel>
     </div>
   )
 }

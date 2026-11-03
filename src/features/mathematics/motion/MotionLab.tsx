@@ -29,6 +29,7 @@ import {
   type Secant,
 } from '../../../math/motion'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { SidePanel } from '../../../components/SidePanel'
 
 /* ---------- Labels: the same quantities in mathematical or physical words ---------- */
 
@@ -600,15 +601,15 @@ export function MotionLab({ sectionSwitch, guidePanel }: { sectionSwitch: ReactN
   }
   return (
     <div className="chem">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {sectionSwitch}
         {setup}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         {explain}
-      </aside>
+      </SidePanel>
     </div>
   )
 }

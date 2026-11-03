@@ -1,8 +1,8 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { PresentationBar } from './components/PresentationBar'
 import { SubjectBar } from './components/SubjectBar'
 import { KeyboardHelp } from './components/KeyboardHelp'
-import { getPeek, isTypingTarget, setPeek, toggleFocus, toggleSide, usePeek, useWorkspace } from './lib/workspace'
+import { getPeek, isTypingTarget, setPanelWidthVar, setPeek, toggleFocus, toggleSide, usePeek, useWorkspace } from './lib/workspace'
 import { HomeLink } from './components/HomeLink'
 import { isSubjectId, SUBJECTS } from './data/subjects'
 import { AnatomyExplorer } from './features/anatomy/AnatomyExplorer'
@@ -67,6 +67,12 @@ export default function App() {
     root.classList.toggle('ws-peek-left', inExplorer && workspace.focus && peek === 'left')
     root.classList.toggle('ws-peek-right', inExplorer && workspace.focus && peek === 'right')
   }, [inExplorer, workspace, peek])
+
+  // Dragged panel widths; before paint, so a reload does not show the default width first.
+  useLayoutEffect(() => {
+    setPanelWidthVar('left', inExplorer ? workspace.leftWidth : null)
+    setPanelWidthVar('right', inExplorer ? workspace.rightWidth : null)
+  }, [inExplorer, workspace.leftWidth, workspace.rightWidth])
 
   // Single-key shortcuts: never while typing, never with Ctrl/⌘/Alt, never when another dialog is open.
   useEffect(() => {

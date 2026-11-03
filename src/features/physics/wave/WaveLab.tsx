@@ -8,6 +8,7 @@ import { parseWaveParams, waveParamEntries, withLabParams } from '../../../lib/l
 import { useRecordVisit } from '../../../lib/useExplorationLibrary'
 import { DEFAULT_WAVE, deriveWave, displacement, mediumVelocity, sample, WAVE_DOMAIN, WAVE_KEYS, WAVE_SPECS, type WaveKey, type WaveParams } from '../../../physics/wave'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { SidePanel } from '../../../components/SidePanel'
 
 const f3 = (v: number) => (Math.abs(v) < 0.0005 ? '0.000' : v.toFixed(3)).replace('-', '−')
 
@@ -273,15 +274,15 @@ export function WaveLab({ experimentSwitch, guidePanel }: { experimentSwitch: Re
   }
   return (
     <div className="chem physics">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {experimentSwitch}
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         <section className="panel info">{values}</section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

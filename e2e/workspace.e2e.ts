@@ -24,6 +24,52 @@ test('panels hide and show, the choice survives reload, and it never enters the 
   expect(await page.evaluate(() => localStorage.getItem('stem-explorer:workspace'))).toContain('"hideLeft":false')
 })
 
+test('dragging a divider resizes a panel, is remembered, and can be reset', async ({ page }) => {
+  await page.goto('/?experiment=optics#/physics')
+  const width = async (side: 'left' | 'right') => (await page.locator(`.chem-side--${side}`).boundingBox())!.width
+  const drag = async (side: 'left' | 'right', by: number) => {
+    const box = (await page.locator(`.panel-resizer--${side}`).boundingBox())!
+    const [x, y] = [box.x + box.width / 2, box.y + box.height / 2]
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x + by / 2, y)
+    await page.mouse.move(x + by, y)
+    await page.mouse.up()
+  }
+  const [left0, right0] = [await width('left'), await width('right')]
+  const stage0 = (await page.locator('.chem-stage').boundingBox())!.width
+
+  await drag('left', 100)
+  expect(Math.abs((await width('left')) - (left0 + 100))).toBeLessThanOrEqual(1)
+  await drag('right', 60) // Rightwards makes the right panel smaller.
+  expect(Math.abs((await width('right')) - (right0 - 60))).toBeLessThanOrEqual(1)
+  expect(Math.abs((await page.locator('.chem-stage').boundingBox())!.width - (stage0 - 40))).toBeLessThanOrEqual(2)
+  expect(page.url()).not.toMatch(/width/i)
+
+  await page.reload()
+  expect(Math.abs((await width('left')) - (left0 + 100))).toBeLessThanOrEqual(1)
+
+  // Limits: a panel stops at its minimum, and the stage always keeps its room.
+  await drag('left', -900)
+  expect(await width('left')).toBe(200)
+  await drag('right', -900)
+  expect((await page.locator('.chem-stage').boundingBox())!.width).toBeGreaterThanOrEqual(279)
+
+  // The keyboard works too, and a divider leaves with its hidden panel.
+  const divider = page.getByRole('separator', { name: 'Resize left panel' })
+  await divider.focus()
+  await page.keyboard.press('ArrowRight')
+  await expect.poll(() => width('left')).toBe(224)
+  await expect(divider).toHaveAttribute('aria-valuenow', '224')
+  await layout(page).getByRole('button', { name: 'Left panel' }).click()
+  await expect(divider).toBeHidden()
+  await layout(page).getByRole('button', { name: 'Show all panels' }).click()
+
+  // Double-clicking returns to the default width.
+  await divider.dblclick()
+  await expect.poll(() => width('left')).toBe(left0)
+})
+
 test('Focus mode enlarges the visual, keeps controls reachable as an overlay, and Esc closes it', async ({ page }) => {
   await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)

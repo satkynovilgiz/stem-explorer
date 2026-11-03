@@ -8,6 +8,7 @@ import { DEFAULT_VECTORS, K_RANGE, MAT_RANGE, parseVectorsState, VEC_RANGE, vect
 import { useRecordVisit } from '../../../lib/useExplorationLibrary'
 import { add, angleBetween, apply, collapse, det, dot, inverse, norm, PRESETS, scale, type Mat2, type Vec2 } from '../../../math/linear'
 import { SourceLinks } from '../../guide/SourceLinks'
+import { SidePanel } from '../../../components/SidePanel'
 
 const S = 380
 const SPAN = 12 // −6 … 6
@@ -252,15 +253,15 @@ export function VectorsLab({ sectionSwitch, guidePanel }: { sectionSwitch: React
   }
   return (
     <div className="chem">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {sectionSwitch}
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guidePanel}
         <section className="panel info">{results}</section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

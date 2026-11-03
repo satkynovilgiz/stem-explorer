@@ -18,6 +18,7 @@ import { FormulaPanel, LocalSlope, ParameterPanel, PointInspector, SliceControls
 import type { MathView } from './scene/SurfaceScene'
 import { SliceGraph } from './SliceGraph'
 import { initialMathState, mathReducer } from './state'
+import { SidePanel } from '../../components/SidePanel'
 
 // Three.js loads on demand; formulas, inspection and the cross-section graph work without it.
 const SurfaceScene = lazy(() => import('./scene/SurfaceScene'))
@@ -293,18 +294,18 @@ function SurfacesExplorer({ sectionSwitch }: { sectionSwitch: ReactNode }) {
   return (
     <div className="chem mathematics">
       {announcer}
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {sectionSwitch}
         <div className="panel math-left">
           {library}
           {parameters}
         </div>
-      </aside>
+      </SidePanel>
       <div className="chem-stage physics-stage">
         {viewer}
         {graph}
       </div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {activityPanel}
         {guidePanel}
         <section className="panel info" aria-labelledby="math-heading">
@@ -327,7 +328,7 @@ function SurfacesExplorer({ sectionSwitch }: { sectionSwitch: ReactNode }) {
             ]}
           />
         </section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

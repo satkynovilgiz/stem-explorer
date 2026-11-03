@@ -32,6 +32,7 @@ import { sceneBounds, vectorScales } from './sceneMath'
 import { SceneToolbar } from './SceneToolbar'
 import { initialPhysicsState, physicsReducer, timeEffect, type PhysicsAction } from './state'
 import { TimeGraph } from './TimeGraph'
+import { SidePanel } from '../../components/SidePanel'
 
 // Three.js is loaded on demand; controls, readouts and graphs work without it.
 const PhysicsScene = lazy(() => import('./scene/PhysicsScene'))
@@ -343,16 +344,16 @@ function ProjectileLab({ experimentSwitch }: { experimentSwitch: ReactNode }) {
   return (
     <div className="chem physics">
       {announcer}
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         <div className="section-switch-wrap">{experimentSwitch}</div>
         {inputs}
-      </aside>
+      </SidePanel>
       <div className="chem-stage physics-stage">
         {viewer}
         {playback}
         {graphs}
       </div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {activityPanel}
         {guidePanel}
         <section className="panel info" aria-labelledby="physics-heading">
@@ -379,7 +380,7 @@ function ProjectileLab({ experimentSwitch }: { experimentSwitch: ReactNode }) {
             ]}
           />
         </section>
-      </aside>
+      </SidePanel>
     </div>
   )
 }

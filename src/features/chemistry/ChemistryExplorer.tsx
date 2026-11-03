@@ -19,6 +19,7 @@ import { MoleculeLibrary } from './MoleculeLibrary'
 import { MoleculeViewer } from './MoleculeViewer'
 import { SceneControls } from './SceneControls'
 import { chemistryReducer, initialChemistryState } from './state'
+import { SidePanel } from '../../components/SidePanel'
 
 type MobileTab = 'details' | 'library'
 
@@ -317,13 +318,13 @@ export function ChemistryExplorer() {
     // Only Molecules has a left panel (the molecule library); the other workspaces use two columns.
     <div className={section === 'molecules' ? 'chem' : 'chem chem--no-left'}>
       {announcer}
-      {section === 'molecules' && <aside className="chem-side chem-side--left">{library}</aside>}
+      {section === 'molecules' && <SidePanel side="left">{library}</SidePanel>}
       <div className="chem-stage">{stage}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {section === 'molecules' && activityPanel}
         {guidePanel}
         {details}
-      </aside>
+      </SidePanel>
     </div>
   )
 }

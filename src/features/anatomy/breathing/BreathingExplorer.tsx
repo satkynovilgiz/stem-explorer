@@ -11,6 +11,7 @@ import { useRecordVisit } from '../../../lib/useExplorationLibrary'
 import { breathingParamEntries, DEFAULT_BREATHING, parseBreathingParams, withAtlasParams, type BreathingUrlState } from '../../../lib/urlState'
 import { SourceLinks } from '../../guide/SourceLinks'
 import { SubjectGuidePanel } from '../../guide/SubjectGuidePanel'
+import { SidePanel } from '../../../components/SidePanel'
 
 const GAS_LAB_LINK = linkTo('physics', { experiment: 'gas', gp: '101.3', gv1: '2', gv2: '2.2' })
 
@@ -321,15 +322,15 @@ export function BreathingExplorer({ moduleSwitch }: { moduleSwitch: ReactNode })
   }
   return (
     <div className="chem">
-      <aside className="chem-side chem-side--left">
+      <SidePanel side="left">
         {moduleSwitch}
         {controls}
-      </aside>
+      </SidePanel>
       <div className="chem-stage process-stage">{view}</div>
-      <aside className="chem-side chem-side--right">
+      <SidePanel side="right">
         {guide}
         {explain}
-      </aside>
+      </SidePanel>
     </div>
   )
 }
