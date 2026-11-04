@@ -174,20 +174,22 @@ export function SubjectBar({ subject, overview = false, calculators = false, onP
     </button>
   )
 
-  // Every subject has its own header: a thin breadcrumb row, then the brand (it opens the subject's
-  // Overview), the destination tabs, a compact search (the Overview has its own large one) and, on
-  // model pages, layout controls. Other subjects keep the drawer listing their modules and topics.
+  // Every subject has its own two-row header. First row: the subject's mark, the breadcrumb above
+  // its name (which opens the Overview), a compact search (the Overview has its own large one) and,
+  // on model pages, layout controls. Second row: the destination tabs. Other subjects keep the
+  // drawer listing their modules and topics.
   return (
     <div ref={barRef} className={`subject-bar chem-bar is-${subject}`}>
-      <div className="chem-bar-top">{crumbs}</div>
       <div className="chem-bar-main">
-        <AppLink href={overviewHref(subject)} className="chem-brand" aria-label={`${name} Explorer: Overview`}>
-          <span className="chem-brand-mark">
-            <SubjectIcon subject={subject} size={18} />
-          </span>
-          <span className="chem-brand-name">{name}</span>
-        </AppLink>
-        {subject === 'chemistry' ? <ChemNav moduleId={module.id} /> : <SubjectNav subject={subject} name={name} moduleId={module.id} overview={overview} calculators={calculators} />}
+        <span className="chem-brand-mark" aria-hidden="true">
+          <SubjectIcon subject={subject} size={22} />
+        </span>
+        <div className="chem-bar-title">
+          {crumbs}
+          <AppLink href={overviewHref(subject)} className="chem-brand" aria-label={`${name} Explorer: Overview`}>
+            <span className="chem-brand-name">{name}</span>
+          </AppLink>
+        </div>
         <div className="chem-bar-actions">
           {!atOverview && (subject === 'chemistry' ? <ChemHeaderSearch /> : <SubjectHeaderSearch subject={subject} name={name} />)}
           {subject !== 'chemistry' && (
@@ -200,6 +202,7 @@ export function SubjectBar({ subject, overview = false, calculators = false, onP
           {present}
         </div>
       </div>
+      {subject === 'chemistry' ? <ChemNav moduleId={module.id} /> : <SubjectNav subject={subject} name={name} moduleId={module.id} overview={overview} calculators={calculators} />}
       {open && <TopicDrawer subject={subject} current={module} onClose={close} />}
     </div>
   )

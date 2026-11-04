@@ -9013,49 +9013,77 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 .cell-compare { grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .table-scroll { max-width: 100%; overflow-x: auto; }
 
-/* ---------- Chemistry's own header (local to Chemistry; there is no global header) ----------
-   A thin breadcrumb row, then the brand, the six destination tabs (current one underlined), a
-   compact search and, on model pages, the layout controls. */
-.subject-bar.chem-bar { display: block; padding: 0; border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
-.chem-bar-top { display: flex; align-items: center; min-height: 30px; padding: 6px var(--space-5) 0; }
-.chem-bar-top .crumbs ol { font-size: 0.8125rem; }
-.chem-bar-main { display: flex; align-items: center; gap: var(--space-4); min-height: 54px; padding: 0 var(--space-5); }
-.chem-brand { display: inline-flex; align-items: center; gap: 10px; flex: none; color: var(--color-text); font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; text-decoration: none; border-radius: 8px; }
+/* ---------- Each subject's own header (there is no global header) ----------
+   Two rows on the subject's colour: the mark, breadcrumb over name, search and controls; then the
+   destination tabs as pills (the current one filled). White on each subject colour is at least
+   5.79:1. Redefining the accent here gives buttons and focus rings the subject's colour too. */
+.subject-bar.is-anatomy { --sb: var(--subject-anatomy); }
+.subject-bar.is-chemistry { --sb: var(--subject-chemistry); }
+.subject-bar.is-biology { --sb: var(--subject-biology); }
+.subject-bar.is-physics { --sb: var(--subject-physics); }
+.subject-bar.is-mathematics { --sb: var(--subject-mathematics); }
+.subject-bar.chem-bar {
+  --color-accent: var(--sb);
+  --color-accent-strong: var(--sb);
+  --color-accent-soft: color-mix(in srgb, var(--sb) 9%, transparent);
+  --color-accent-border: color-mix(in srgb, var(--sb) 35%, transparent);
+  --color-focus: var(--sb);
+  position: relative;
+  z-index: 5;
+  display: block;
+  padding: 0 0 2px;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--sb) 9%, var(--color-surface)), var(--color-surface) 55%);
+  box-shadow: 0 6px 18px -14px rgb(19 32 31 / 0.35);
+}
+.chem-bar-main { display: flex; align-items: center; gap: 12px; padding: 6px var(--space-5) 2px; }
+.chem-brand-mark { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 13px; background: linear-gradient(145deg, color-mix(in srgb, var(--sb) 82%, #fff), var(--sb)); color: #fff; box-shadow: 0 4px 12px -5px var(--sb); }
+.chem-brand-mark svg { color: inherit; }
+.chem-bar-title { display: grid; gap: 1px; flex: 0 1 auto; min-width: 0; }
+.chem-bar-title .crumbs ol { font-size: 0.75rem; }
+.chem-bar-title .crumb-subject svg { display: none; }
+.chem-brand { justify-self: start; color: var(--color-text); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; text-decoration: none; border-radius: 6px; }
+.chem-brand:hover { color: var(--sb); }
 .chem-brand:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
-.chem-brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--color-accent-soft); color: var(--color-accent-strong); }
-.chem-brand:hover .chem-brand-mark { background: var(--color-accent); color: #fff; }
-.chem-nav { flex: 1 1 auto; align-self: stretch; min-width: 0; }
-.chem-nav ul { display: flex; gap: 2px; height: 100%; margin: 0; padding: 0; list-style: none; overflow-x: auto; scrollbar-width: none; }
+.chem-nav { min-width: 0; padding: 0 calc(var(--space-5) - 4px); }
+.chem-nav ul { display: flex; gap: 2px; margin: 0; padding: 0; list-style: none; overflow-x: auto; scrollbar-width: none; }
 .chem-nav ul::-webkit-scrollbar { display: none; }
-.chem-nav li { display: flex; }
-.chem-nav-link { position: relative; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 12px; color: var(--color-text-muted); font-size: 0.9375rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.chem-nav li { display: flex; flex: none; }
+/* The link keeps a 44 px target; the visible pill is painted inside it. */
+.chem-nav-link { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; color: var(--color-text-muted); font-size: 0.9375rem; font-weight: 600; text-decoration: none; white-space: nowrap; transition: color var(--duration) ease; }
 .chem-nav-link svg { opacity: 0.75; }
-.chem-nav-link::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: transparent; }
+.chem-nav-link::after { content: ''; position: absolute; inset: 4px 2px; z-index: -1; border-radius: 999px; background: transparent; transition: background-color var(--duration) ease; }
 .chem-nav-link:hover { color: var(--color-text); }
-.chem-nav-link:hover::after { background: var(--color-border-strong); }
-.chem-nav-link[aria-current='page'] { color: var(--color-accent-strong); }
+.chem-nav-link:hover::after { background: color-mix(in srgb, var(--sb) 10%, transparent); }
+.chem-nav-link[aria-current='page'] { color: #fff; }
 .chem-nav-link[aria-current='page'] svg { opacity: 1; }
-.chem-nav-link[aria-current='page']::after { background: var(--color-accent); }
-.chem-nav-link:focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; border-radius: 8px; }
+.chem-nav-link[aria-current='page']::after { background: var(--sb); box-shadow: 0 3px 10px -5px var(--sb); }
+.chem-nav-link:focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; border-radius: 999px; }
 .chem-bar-actions { display: flex; align-items: center; gap: var(--space-2); margin-left: auto; flex: none; }
+.chem-bar-actions .tool-button { min-height: 38px; border-radius: 11px; background: var(--color-surface); }
+.chem-bar-actions .tool-button[aria-pressed='true'] { background: var(--color-accent-soft); color: var(--sb); border-color: var(--color-accent-border); }
 .chem-bar-search { position: relative; display: flex; align-items: center; }
-.chem-bar-search-icon { position: absolute; left: 11px; color: var(--color-text-subtle); pointer-events: none; }
-.chem-bar-search input { width: 210px; height: 36px; padding: 0 12px 0 32px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-bg); color: var(--color-text); font: inherit; font-size: 0.875rem; }
+.chem-bar-search-icon { position: absolute; left: 12px; color: var(--color-text-subtle); pointer-events: none; }
+.chem-bar-search input { width: 220px; height: 38px; padding: 0 14px 0 34px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 0.875rem; transition: border-color var(--duration) ease; }
 .chem-bar-search input:hover { border-color: var(--color-border-strong); }
-.chem-bar-search input:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 1px; background: var(--color-surface); }
-@media (max-width: 1180px) { .chem-bar-search input { width: 160px; } }
-/* Phones, tablets and small windows: brand and actions on one row, tabs on their own row. */
+.chem-bar-search input:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 1px; }
+/* Phones, tablets and small windows: the tabs scroll sideways, and Present is icon-only. */
 @media (max-width: 1180px) {
-  .chem-bar-top { padding: 6px var(--space-4) 0; }
-  .chem-bar-main { flex-wrap: wrap; gap: 0 var(--space-3); padding: 4px var(--space-4) 0; }
-  .chem-bar-search input { width: min(46vw, 200px); }
-  .chem-nav { order: 3; flex-basis: 100%; margin: 0 calc(-1 * var(--space-4)); padding: 0 var(--space-2); }
-  .chem-nav ul { mask-image: linear-gradient(to right, #000 88%, transparent); }
-  .chem-nav-link { padding: 0 10px; }
-  /* Present is icon-only here so the search and it share the brand's row. */
-  .chem-bar-actions .present-toggle { min-width: 36px; justify-content: center; }
+  .chem-bar-main { padding: 6px var(--space-4) 2px; }
+  .chem-bar-search input { width: min(34vw, 200px); }
+  .chem-nav { padding: 0 calc(var(--space-4) - 4px); }
+  .chem-nav ul { mask-image: linear-gradient(to right, #000 92%, transparent); }
+  .chem-bar-actions .present-toggle { min-width: 38px; justify-content: center; }
   .chem-bar-actions .present-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .chem-bar-search input { width: min(40vw, 200px); }
+}
+/* Phones: the search and buttons take a full row of their own, the search filling it. */
+@media (max-width: 640px) {
+  .chem-bar-main { flex-wrap: wrap; gap: 8px 10px; }
+  .chem-bar-title { flex: 1 1 0; }
+  .chem-bar-actions { flex: 1 0 100%; margin-left: 0; }
+  .chem-bar-actions:empty { display: none; }
+  .chem-bar-search { flex: 1 1 auto; min-width: 0; }
+  .chem-bar-search input { width: 100%; }
 }
 
 /* Workspaces without a left panel (Elements, Atomic structure, Bonding): stage and details only. */
@@ -9131,19 +9159,10 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 @media print { .home.has-motion [data-reveal] { opacity: 1 !important; translate: none !important; } }
 .info-kind { margin: 4px 0 0; font-size: var(--text-xs); }
 
-/* Each subject's brand mark in its own colour. */
-.chem-bar.is-anatomy .chem-brand-mark { color: var(--subject-anatomy); }
-.chem-bar.is-biology .chem-brand-mark { color: var(--subject-biology); }
-.chem-bar.is-physics .chem-brand-mark { color: var(--subject-physics); }
-.chem-bar.is-mathematics .chem-brand-mark { color: var(--subject-mathematics); }
 @media (max-width: 899px) {
   .chem-bar-actions .topics-toggle { min-width: 36px; justify-content: center; }
   .chem-bar-actions .topics-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
-/* Other subjects have more sections than Chemistry: their tabs get a full-width row under the brand. */
-.chem-bar:not(.is-chemistry) .chem-bar-main { flex-wrap: wrap; row-gap: 0; }
-.chem-bar:not(.is-chemistry) .chem-nav { order: 3; flex-basis: 100%; }
-.chem-bar:not(.is-chemistry) .chem-bar-main { padding-top: 6px; }
 
 /* ---------- Small screens and touch ---------- */
 
