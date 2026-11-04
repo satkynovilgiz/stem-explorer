@@ -14,6 +14,7 @@ describe('ideal DC circuits: analytic reference cases', () => {
     expect(s.resistors.reduce((a, r) => a + r.voltage, 0)).toBeCloseTo(12, 12)
   })
 
+  
   it('parallel: each branch has the full voltage, currents add, 1/R_eq = Σ 1/R', () => {
     const p = c({ arrangement: 'parallel-2', emf: 10, r1: 100, r2: 100 })
     expect(p.equivalent).toBeCloseTo(50, 12)

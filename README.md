@@ -114,6 +114,7 @@ The look follows a design mockup supplied by the project owner (kept locally, no
 
 ## Setup and commands
 
+
 ```bash
 npm install          # install dependencies (uses package-lock.json)
 npm run dev          # start the dev server at http://localhost:5173/
@@ -2183,7 +2184,6 @@ library only for events about `stem-explorer:saved`, `stem-explorer:recent`, or 
 writes, so tabs cannot set each other off. The only automatic write is the recent-visit record,
 made once per distinct view shown in that tab.
 
-## Exploration notebook
 ### Home and Discover (chemistry usability rebuild)
 
 Home answers one question, *What would you like to explore?*: the title and one sentence, a
@@ -2225,6 +2225,7 @@ Below the subject cards, in this order:
 fetched the first time someone types, not when the page loads, and if it fails to load the explorer
 results still show with a note.
 
+## Exploration notebook
 
 **Add note** (next to Copy link and Save exploration in every explorer) opens an inline editor
 with a title (suggested from the view) and plain-text observations. Nothing is stored until
@@ -3179,8 +3180,8 @@ sources. Printing opens every section and prints source URLs.
 **Sources.** `src/reference/sources.ts` extends the app's source registry. A page is added only
 after it has been fetched and read; the text is written for the app and paraphrases the source.
 
-
 ## Search, related topics and presentation
+
 ### Global search
 
 **Search** (`#/search`: *Search all subjects* on Home, the `/` shortcut, or *See all results* in Home's search) runs locally over an index built
