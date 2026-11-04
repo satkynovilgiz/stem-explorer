@@ -97,6 +97,13 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   (IntersectionObserver), cards lift on hover and their pictures drift; the Chemistry molecule
   floats. Only transform/translate/opacity animate. With `prefers-reduced-motion: reduce`
   nothing moves: no entrance, no reveal (nothing is hidden), and the electrons are drawn still.
+- **Subject openings** (`src/features/subjects/SubjectIntro.tsx`, `subject-intro.css`): opening a
+  subject from elsewhere in the app plays a 1.7 s themed animation with the subject's name: water
+  forming at its 104.5° angle (Chemistry), a beating heart and ECG trace (Anatomy), a turning DNA
+  helix (Biology), a projectile on its parabola (Physics), a curve drawn across axes
+  (Mathematics). It is decorative: hidden from screen readers, and clicks pass through it. It does
+  not play on a reload or shared link, between tabs of a subject, or with
+  `prefers-reduced-motion: reduce`.
 - **Card illustrations** (`public/img/design/*.webp`) are cropped from the mockup, so they are
   small (about 150–320 px wide) and can look soft on high-density screens; replacing them with the
   original artwork is a drop-in change. They are decorative (`alt=""`) and are not scientific

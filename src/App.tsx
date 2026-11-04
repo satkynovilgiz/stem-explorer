@@ -11,6 +11,8 @@ import { ChemistryExplorer } from './features/chemistry/ChemistryExplorer'
 import { MathematicsExplorer } from './features/mathematics/MathematicsExplorer'
 import { Home } from './features/home/Home'
 import { PhysicsExplorer } from './features/physics/PhysicsExplorer'
+import { SubjectIntro } from './features/subjects/SubjectIntro'
+import { useSubjectIntro } from './features/subjects/useSubjectIntro'
 import { navigateTo, routeFromHash, useHash, useRoute } from './lib/hooks'
 import { isCalculatorsHash, isOverviewHash } from './lib/overviewRoute'
 import { useNavigationGeneration } from './lib/location'
@@ -54,6 +56,7 @@ export default function App() {
   const workspace = useWorkspace()
   const peek = usePeek()
   const inExplorer = isSubjectId(route)
+  const intro = useSubjectIntro(route)
 
   // A peeking panel belongs to one explorer visit.
   useEffect(() => setPeek(null), [route])
@@ -127,6 +130,8 @@ export default function App() {
       </a>
       {isPresenting && isSubjectId(route) && <PresentationBar subject={route} onExit={exitPresentation} />}
       {helpOpen && <KeyboardHelp onClose={() => setHelpOpen(false)} />}
+      {/* Outside <main>, which remounts on navigation; keyed so a new subject restarts the animation. */}
+      {intro && <SubjectIntro key={intro} subject={intro} />}
       <main id="main" className="main" tabIndex={-1} key={isSubjectId(route) ? `${route}:${generation}` : route}>
         {/* No global header: subjects carry their own local navigation; other pages a link back Home. */}
         {isSubjectId(route) ? <SubjectBar subject={route} overview={Boolean(overview)} calculators={Boolean(calculators)} onPresent={() => setPresenting(route)} /> : route !== 'home' && <HomeLink />}
