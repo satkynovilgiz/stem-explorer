@@ -136,6 +136,8 @@ test.describe('Chemistry navigation', () => {
         await expect(page.locator('.chem-rail')).toBeVisible()
         // After lazy pages have appeared: the search box once overflowed only then.
         await page.waitForLoadState('networkidle')
+        // A wider font, as on Linux: a title once overflowed in CI but not on a Mac.
+        await page.addStyleTag({ content: '* { font-family: Verdana, "DejaVu Sans", sans-serif !important }' })
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth), `${url} at ${width}`).toBeLessThanOrEqual(0)
       }
     }

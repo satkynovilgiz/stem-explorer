@@ -253,3 +253,7 @@
 .chem-home { grid-template-columns: minmax(0, 1fr); }
 .chem-search, .chem-search-box { min-width: 0; }
 .chem-search-box input { min-width: 0; width: 100%; }
+
+/* A long one-word title must fit beside the strip on the smallest phones, in any font. */
+.chem-home-title-wrap { min-width: 0; }
+@media (max-width: 640px) { .chem-home-title { font-size: clamp(1.75rem, 8vw, 2.25rem); overflow-wrap: anywhere; } }
