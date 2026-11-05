@@ -229,3 +229,27 @@
 .subj-home .chem-badge { justify-self: start; }
 .subj-home .chem-home-foot { display: block; line-height: 1.6; }
 .subj-home .chem-home-foot svg { vertical-align: -3px; margin-right: 4px; }
+
+/* ---------- Search-first Chemistry overview and destinations ---------- */
+.chem-home.is-overview { gap: var(--space-5); }
+.chem-home.is-overview .chem-home-head { min-height: 0; justify-content: space-between; gap: var(--space-4); }
+.chem-home.is-overview .chem-home-title { font-size: clamp(1.75rem, 3.6vw, 2.5rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; max-width: none; }
+.chem-home.is-overview .chem-home-title-wrap { max-width: none; }
+.chem-eyebrow { margin: 0 0 var(--space-1); color: var(--color-accent-strong); font-size: var(--text-sm); font-weight: 600; }
+.chem-water-art { flex: none; width: 96px; height: auto; }
+.chem-water-art line { stroke: var(--color-border-strong); stroke-width: 6; }
+.chem-water-art .is-o { fill: var(--color-accent); opacity: 0.85; }
+.chem-water-art .is-h { fill: var(--tint-chemistry); stroke: var(--color-border-strong); stroke-width: 1.5; }
+.chem-examples { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; }
+.chem-examples .home-try-chip { min-height: 44px; }
+.chem-scope-link { margin: 0; }
+.chem-scope-link .chem-text-link { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; }
+.chem-link-button { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+.chem-home.is-overview .chem-explore-card { transition: border-color var(--duration) ease, translate var(--duration) ease; }
+.chem-home.is-overview .chem-explore-card:hover { translate: 0 -1px; }
+@media (max-width: 640px) { .chem-water-art { display: none; } }
+
+/* The page's one column may not grow past the screen, whatever its search box wants. */
+.chem-home { grid-template-columns: minmax(0, 1fr); }
+.chem-search, .chem-search-box { min-width: 0; }
+.chem-search-box input { min-width: 0; width: 100%; }

@@ -92,8 +92,8 @@ test.describe('Subject intro', () => {
     await page.goto('/')
     await open(page, 'chemistry')
     await expect(intro(page)).toBeVisible()
-    await page.locator('.chem-nav-link', { hasText: 'Elements' }).click()
-    await expect(page.locator('.chem-nav-link[aria-current="page"]')).toHaveText('Elements')
+    await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Periodic table' }).click()
+    await expect(page).toHaveURL(/csec=periodic/)
     await expect(intro(page)).toHaveCount(0)
   })
 

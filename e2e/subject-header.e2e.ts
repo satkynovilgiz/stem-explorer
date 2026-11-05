@@ -2,7 +2,6 @@ import { expect, test } from './fixtures.ts'
 
 const SUBJECTS = [
   ['anatomy', 'rgb(168, 71, 58)'],
-  ['chemistry', 'rgb(11, 107, 95)'],
   ['biology', 'rgb(99, 74, 168)'],
   ['physics', 'rgb(45, 92, 168)'],
   ['mathematics', 'rgb(138, 90, 0)'],

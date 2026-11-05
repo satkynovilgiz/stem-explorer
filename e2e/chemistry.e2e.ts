@@ -74,7 +74,7 @@ test('all five subjects are live; none is a Coming soon page', async ({ page }) 
   for (const subject of ['anatomy', 'chemistry', 'physics', 'mathematics', 'biology']) {
     await page.goto(`/#/${subject}`)
     // Chemistry opens on its home page (no 3D view); the others open a lab with one.
-    if (subject === 'chemistry') await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
+    if (subject === 'chemistry') await expect(page.getByRole('heading', { level: 1, name: 'What would you like to understand?' })).toBeVisible()
     else await waitForViewport(page)
     await expect(page.locator('#coming-soon-title')).toHaveCount(0)
   }
@@ -111,8 +111,7 @@ test('chemistry sections: atomic structure, bonding, and backward-compatible lin
   await page.reload()
   await expect(atom).toHaveText('Neon (Ne)')
 
-  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Visualizations' }).click()
-  await page.locator('.chem-dest', { hasText: 'Bonding and molecular shape' }).click()
+  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Bonds' }).click()
   const bonding = page.locator('.bonding-view')
   await expect(bonding).toContainText('Metallic bonding')
   await expect(bonding).toContainText('No — bonding extends through the crystal')

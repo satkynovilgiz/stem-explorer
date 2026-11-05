@@ -11,10 +11,13 @@ export interface Destination {
   inputs: string
   /** Its main simplification, or where it lives if outside Chemistry. */
   note: string
+  /** The heading it appears under on Molecules and atoms. */
+  group?: 'Molecules' | 'Atoms' | 'Bonds' | 'In other subjects'
 }
 
 export const VISUALIZATIONS: readonly Destination[] = [
   {
+    group: 'Molecules',
     title: 'Molecule viewer',
     href: '?molecule=water&view=ball-and-stick#/chemistry',
     text: 'Turn a molecule in 3D and measure its bond lengths and bond angles.',
@@ -22,6 +25,7 @@ export const VISUALIZATIONS: readonly Destination[] = [
     note: 'Each molecule says where its shape comes from: experimental (NIST CCCBDB) or computed (PubChem3D). Atom colours are a labelling convention.',
   },
   {
+    group: 'Atoms',
     title: 'Atomic structure',
     href: '?csec=atomic&el=6#/chemistry',
     text: 'See the protons, neutrons and electrons of any element, and how isotopes differ.',
@@ -36,6 +40,7 @@ export const VISUALIZATIONS: readonly Destination[] = [
     note: 'Property values from PubChem; where PubChem has no value, the table says so.',
   },
   {
+    group: 'Bonds',
     title: 'Bonding and molecular shape',
     href: '?csec=bonding#/chemistry',
     text: 'Compare ionic and covalent bonding and see how electron pairs set a molecule’s shape.',
@@ -43,6 +48,7 @@ export const VISUALIZATIONS: readonly Destination[] = [
     note: 'The VSEPR shapes are idealised; real bond angles are in the molecule viewer.',
   },
   {
+    group: 'In other subjects',
     title: 'Gas pressure and volume (Boyle’s law)',
     href: '?experiment=gas#/physics',
     text: 'Squeeze a gas at constant temperature and watch pressure and volume change together.',
@@ -50,6 +56,7 @@ export const VISUALIZATIONS: readonly Destination[] = [
     note: 'A Physics lab; it models an ideal gas.',
   },
   {
+    group: 'In other subjects',
     title: 'Enzyme catalysis and reaction rate',
     href: '?bsec=enzymes#/biology',
     text: 'How an enzyme speeds a reaction, and how the rate depends on substrate concentration.',

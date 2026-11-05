@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test } from './fixtures.ts'
+import { expect, test, chemMenu, chemCurrent } from './fixtures.ts'
 
 const box = (page: Page) => page.getByRole('searchbox', { name: 'Search chemistry topics, formulas, molecules' })
 const results = (page: Page) => page.locator('.chem-result')
@@ -7,15 +7,13 @@ const results = (page: Page) => page.locator('.chem-result')
 test('Home → Chemistry opens a table of contents, then elements, then molecules; every topic opens a real page', async ({ page }) => {
   await page.goto('/')
   await page.locator('.subject-card.is-chemistry .subject-card-action').click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'What would you like to understand?' })).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Chemistry')
-  // The Overview: explore, periodic table, featured molecules, topics, tools, questions.
-  await expect(page.locator('.chem-home .chem-h2')).toHaveText(['Explore chemistry', 'Periodic table', 'Featured molecules', 'Browse topics', 'Tools', 'Common questions'])
-  // Every element outside the lanthanoid and actinoid rows, each a link.
-  expect(await page.locator('.ptable-mini-cell').count()).toBe(118 - 30)
+  // The Overview: search first, then destinations and common questions.
+  await expect(page.locator('.chem-home .chem-h2')).toHaveText(['Common questions'])
   // Topics: the table of contents, chapters in learning order.
-  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Topics' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Topics' })).toBeVisible()
+  await (await chemMenu(page)).getByRole('link', { name: 'Learn', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Learn' })).toBeVisible()
   await expect(page.locator('.chem-chapter-title')).toHaveText([/Atoms & elements/, /Bonds & shapes/, /Moles & reactions/, /Solutions/, /Acids & bases/, /Gases & energy/])
   // Every topic in the contents opens a page with a heading (no empty destinations).
   const hrefs = await page.locator('.chem-topic-link').evaluateAll((as) => as.map((a) => a.getAttribute('href')!))
@@ -26,10 +24,11 @@ test('Home → Chemistry opens a table of contents, then elements, then molecule
     await expect(page.locator('.ref-state[role="alert"]'), href).toHaveCount(0)
   }
   // Elements and molecules open the periodic table and the 3D viewer.
-  await page.goto('/#/chemistry')
-  await page.getByRole('link', { name: 'Iron, Fe, atomic number 26' }).click()
+  await page.goto('/?csec=periodic#/chemistry')
+  await page.getByRole('searchbox').first().fill('Iron')
+  await page.getByRole('button', { name: /Iron/ }).first().click()
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Iron')
-  await page.goBack()
+  await page.goto('/?csec=library#/chemistry')
   await page.locator('.chem-molecule-card', { hasText: 'Benzene' }).click()
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
   // Older group links still open a group page.
@@ -37,7 +36,7 @@ test('Home → Chemistry opens a table of contents, then elements, then molecule
   await expect(page.locator('.chem-group-page .chem-result').first()).toBeVisible()
   // A bare #/chemistry also opens this page; molecule links still open molecules.
   await page.goto('/#/chemistry')
-  await expect(page.getByRole('heading', { level: 1, name: 'Chemistry' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'What would you like to understand?' })).toBeVisible()
   await page.goto('/?molecule=benzene#/chemistry')
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
 })
@@ -82,9 +81,9 @@ test('empty results explain what to try and clear; “All subjects” searches e
   await expect(page.locator('.chem-empty')).toContainText('Nothing matches “zzqx”')
   await page.getByRole('button', { name: 'Clear the search' }).click()
   await expect(box(page)).toHaveValue('')
-  await expect(page.getByRole('heading', { name: 'Explore chemistry' })).toBeVisible()
-  await box(page).fill('mitral')
-  await page.getByLabel('All subjects').check()
+  await expect(page.getByRole('heading', { name: 'Common questions' })).toBeVisible()
+  // Links from when this page had a scope choice still search every subject.
+  await page.goto('/?csec=topics&cq=mitral&cs=all#/chemistry')
   await expect(results(page).first()).toContainText('Mitral valve')
   await expect(results(page).first().locator('.chem-badge')).toContainText('Anatomy')
 })
@@ -107,11 +106,10 @@ test('common questions lead to the content that answers them', async ({ page }) 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dilution')
 })
 
-test('Chemistry’s header: brand, tabs with the current one marked, and a search that opens results', async ({ page }) => {
+test('Chemistry’s side menu marks the current section; the header has a search, and a search that opens results', async ({ page }) => {
   await page.goto('/?csec=periodic&el=26#/chemistry')
-  const tabs = page.getByRole('navigation', { name: 'Chemistry' })
-  await expect(tabs.getByRole('link')).toHaveText(['Overview', 'Elements', 'Molecules', 'Topics', 'Visualizations', 'Tools'])
-  await expect(tabs.getByRole('link', { name: 'Elements' })).toHaveAttribute('aria-current', 'page')
+  await expect((await chemMenu(page)).getByRole('link')).toHaveText(['Learn', 'Calculators', 'Molecules', 'Atoms', 'Bonds', 'Periodic table'])
+  expect(await chemCurrent(page)).toBe('Periodic table')
   // The header search opens the Overview's results; Back returns to the page.
   const search = page.getByRole('search', { name: 'Search chemistry' }).getByRole('searchbox', { name: 'Search chemistry' })
   await search.fill('molarity')
@@ -125,5 +123,5 @@ test('Chemistry’s header: brand, tabs with the current one marked, and a searc
   await expect(page.locator('#element-heading')).toHaveText('Iron')
   // The brand leads to the Overview.
   await page.getByRole('link', { name: 'Chemistry Explorer: Overview' }).click()
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Explore the world of chemistry.')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('What would you like to understand?')
 })

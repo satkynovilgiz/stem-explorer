@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test } from './fixtures.ts'
+import { expect, test, chemMenu, chemCurrent } from './fixtures.ts'
 
 const answer = (page: Page) => page.locator('.calc-answers .is-main dd')
 const field = (page: Page, label: string | RegExp) => page.locator('.calc-form').getByLabel(label, { exact: typeof label === 'string' })
@@ -60,9 +60,9 @@ test('an overview links straight to one calculator', async ({ page }) => {
 
 test('Chemistry: calculators on the Tools page, molar mass of any formula', async ({ page }) => {
   await page.goto('/?csec=topics#/chemistry')
-  await page.locator('.chem-tool-list').getByRole('link', { name: 'Molar mass' }).click()
-  await expect(page.locator('h1')).toHaveText('Tools')
-  await expect(page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Tools' })).toHaveAttribute('aria-current', 'page')
+  await (await chemMenu(page)).getByRole('link', { name: 'Calculators', exact: true }).click()
+  await expect(page.locator('h1')).toHaveText('Calculators')
+  expect(await chemCurrent(page)).toBe('Calculators')
   await field(page, 'Formula').fill('Ca(OH)2')
   await field(page, /Sample mass/).fill('')
   await expect(answer(page)).toHaveText('74.09 g/mol')

@@ -1,11 +1,11 @@
 import type { Page } from '@playwright/test'
-import { expect, test, waitForViewport } from './fixtures.ts'
+import { expect, test, waitForViewport, chemMenu, chemCurrent } from './fixtures.ts'
 
 const cell = (page: Page, name: string) => page.locator('.ptable-cell', { has: page.locator('.ptable-sym', { hasText: new RegExp(`^${name}$`) }) })
 const open = async (page: Page) => {
   await page.goto('/?molecule=water#/chemistry')
   await waitForViewport(page)
-  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Elements' }).click()
+  await (await chemMenu(page)).getByRole('link', { name: 'Periodic table', exact: true }).click()
   await expect(page.locator('.ptable-cell')).toHaveCount(118)
 }
 
@@ -67,7 +67,7 @@ test('opens a molecule containing the element, and the molecule tools still work
   await page.getByRole('button', { name: 'Nitrogen, N, atomic number 7' }).click()
   await page.getByRole('button', { name: 'Open Ammonia' }).click()
   await expect(page.locator('#molecule-heading')).toHaveText('Ammonia')
-  await expect(page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Molecules' })).toHaveAttribute('aria-current', 'page')
+  expect(await chemCurrent(page)).toBe('Molecules')
   await waitForViewport(page)
   await page.getByRole('button', { name: 'Distance', exact: true }).click()
   await page.locator('.measure-panel .chip').filter({ hasText: /^\d?N1$/ }).click()

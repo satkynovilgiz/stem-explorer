@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test, waitForViewport } from './fixtures.ts'
+import { expect, test, waitForViewport, chemMenu, chemCurrent } from './fixtures.ts'
 
 const crumbs = (page: Page) => page.getByRole('navigation', { name: 'Breadcrumb' })
 const current = (page: Page) => crumbs(page).locator('[aria-current="page"]')
@@ -32,15 +32,14 @@ test('the breadcrumb follows in-page changes, and module switches work with Back
   await expect(current(page)).toHaveText('Water')
   await page.locator('.molecule-card', { hasText: 'Benzene' }).click()
   await expect(current(page)).toHaveText('Benzene')
-  const tabs = page.getByRole('navigation', { name: 'Chemistry' })
-  await tabs.getByRole('link', { name: 'Elements' }).click()
+  await (await chemMenu(page)).getByRole('link', { name: 'Periodic table', exact: true }).click()
   await expect(crumbs(page)).toContainText('Periodic table')
   await page.goBack()
   await expect(current(page)).toHaveText('Benzene')
-  await expect(tabs.getByRole('link', { name: 'Molecules' })).toHaveAttribute('aria-current', 'page')
+  expect(await chemCurrent(page)).toBe('Molecules')
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
   await page.goForward()
-  await expect(tabs.getByRole('link', { name: 'Elements' })).toHaveAttribute('aria-current', 'page')
+  expect(await chemCurrent(page)).toBe('Periodic table')
   expect(params(page).get('csec')).toBe('periodic')
   // Topic navigation is its own labelled landmark, apart from display controls.
   await expect(page.getByRole('navigation', { name: 'Chemistry' })).toBeVisible()
