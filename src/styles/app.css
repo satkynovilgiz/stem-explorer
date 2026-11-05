@@ -9221,3 +9221,8 @@ select { max-width: 100%; }
     .heart-legend { top: auto; bottom: 44px; }
   }
 }
+
+/* Home search: an explanation whose title matches comes before the models and tools. */
+.home-search-blocks { display: flex; flex-direction: column; gap: var(--space-2); }
+.home-search-blocks.is-explanation-first > .search-results[aria-label='Search results'] { order: 2; }
+.search-suggestions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); margin: var(--space-3) 0 0; }

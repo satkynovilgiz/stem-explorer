@@ -24,10 +24,10 @@ test('global search: grouped results open the real state; synonyms, plurals and 
   await page.goBack()
   await expect(box).toHaveValue('femur')
   await box.fill('Fe')
-  // Results are grouped by subject, so "Fe" also lists the femur under Anatomy; the element comes first in Chemistry.
-  const chemistry = page.locator('.search-subject', { has: page.locator('#results-chemistry') })
-  await expect(chemistry.locator('.search-result-name').first()).toHaveText('Iron')
-  await chemistry.locator('.search-result').first().click()
+  // Results are grouped by subject, so "Fe" also lists the femur under Anatomy; the exact symbol is the best match.
+  const best = page.getByRole('list', { name: 'Best matches' })
+  await expect(best.locator('.search-result-name').first()).toHaveText('Iron')
+  await best.locator('.search-result').first().click()
   await expect(page.locator('.periodic, .chem').first()).toBeVisible()
   expect(params(page).get('csec')).toBe('periodic')
   expect(params(page).get('el')).toBe('26')

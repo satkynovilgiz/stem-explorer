@@ -4,9 +4,11 @@ import { AppLink } from '../../components/AppLink'
 import { navigateTo } from '../../lib/hooks'
 import { formulaParts } from '../../lib/chemistry'
 import { subjectName } from '../../lib/explorations'
-import { KIND_BADGE, nameShowsFormula, searchAll } from '../../lib/searchIndex'
-import { ENTRY_TYPE_LABELS, entryHref, FORMULA_KIND_LABELS, type ManifestRow } from '../../reference/types'
-import { searchManifest } from '../reference/search'
+import { nameShowsFormula, searchAll } from '../../lib/searchIndex'
+import { resultTypeOf } from '../../lib/resultType'
+import { entryHref, type ManifestRow } from '../../reference/types'
+import { scoreRow, searchManifest } from '../reference/search'
+import { SearchSuggestions } from '../search/SearchSuggestions'
 import { loadManifest } from '../reference/useManifest'
 import { searchUrl } from '../../lib/searchUrl'
 
@@ -16,7 +18,16 @@ const TRY = ['heart', 'molarity', 'photosynthesis', 'DNA', 'projectile'] as cons
 
 export function HomeSearch() {
   const id = useId()
-  const [query, setQuery] = useState('')
+  // The query lives in the address (`hq`), so Back from a result returns to the same results.
+  const [query, setQueryState] = useState(() => new URLSearchParams(window.location.search).get('hq') ?? '')
+  const setQuery = (next: string) => {
+    setQueryState(next)
+    const params = new URLSearchParams(window.location.search)
+    if (next) params.set('hq', next)
+    else params.delete('hq')
+    const qs = params.toString()
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`)
+  }
   const inputRef = useRef<HTMLInputElement>(null)
   const all = searchAll(query)
   const results = all.slice(0, 12)
@@ -37,6 +48,8 @@ export function HomeSearch() {
   }, [trimmed, refRows])
   const refAll = trimmed && refRows ? searchManifest(refRows, trimmed) : []
   const refResults = refAll.slice(0, 5)
+  // An explanation whose title matches the question comes before the models and tools.
+  const explanationFirst = refResults.length > 0 && scoreRow(refResults[0], trimmed) >= 4
 
   return (
     <div className="home-search" role="search">
@@ -89,6 +102,7 @@ export function HomeSearch() {
               .join('; ')
           : ''}
       </p>
+      <div className={`home-search-blocks${explanationFirst ? ' is-explanation-first' : ''}`}>
       {trimmed && results.length > 0 && (
         <ul className="search-results" aria-label="Search results">
           {results.map((r) => (
@@ -105,7 +119,7 @@ export function HomeSearch() {
                     )}
                   </span>
                   <span className="search-result-badges">
-                    <span className="result-kind">{KIND_BADGE[r.kind]}</span>
+                    <span className="result-kind">{resultTypeOf(r)}</span>
                     <span className={`subject-chip is-${r.subject}`}>{subjectName(r.subject)}</span>
                   </span>
                 </span>
@@ -117,15 +131,15 @@ export function HomeSearch() {
       )}
       {trimmed && refResults.length > 0 && (
         <>
-          <h3 className="search-subhead">Reference entries</h3>
-          <ul className="search-results" aria-label="Reference entries">
+          <h3 className="search-subhead">Explanations</h3>
+          <ul className="search-results" aria-label="Explanations">
             {refResults.map((r) => (
               <li key={r.id}>
                 <AppLink href={entryHref(r)} className="search-result">
                   <span className="search-result-head">
                     <span className="search-result-name">{r.title}</span>
                     <span className="search-result-badges">
-                      <span className="result-kind is-reference">Reference · {r.kind ? FORMULA_KIND_LABELS[r.kind] : ENTRY_TYPE_LABELS[r.type]}</span>
+                      <span className="result-kind is-reference">Explanation</span>
                       <span className={`subject-chip is-${r.subject}`}>{subjectName(r.subject)}</span>
                     </span>
                   </span>
@@ -139,6 +153,8 @@ export function HomeSearch() {
           </AppLink>
         </>
       )}
+      </div>
+      {trimmed && all.length === 0 && refAll.length === 0 && refRows && <SearchSuggestions query={trimmed} onPick={setQuery} />}
       {trimmed && refFailed && <p className="muted small">Reference entries could not be loaded; explorer results are still shown.</p>}
       {trimmed && all.length > 0 && (
         <AppLink href={`${searchUrl({ q: trimmed, subject: null, kind: null })}#/search`} className="search-all-link">

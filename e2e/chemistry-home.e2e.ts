@@ -58,7 +58,7 @@ test('search finds formulas however they are typed, labels each result, and filt
   await box(page).fill('concentration')
   // Molarity is a topic: its explanation and calculator in one result.
   await expect(results(page).filter({ hasText: 'Molarity' }).first()).toBeVisible()
-  await expect(results(page).first().locator('.chem-badge')).toHaveText(/Topic|Formula|Molecule|Calculator/)
+  await expect(results(page).first().locator('.chem-badge')).toHaveText(/Explanation|Interactive model|Calculator/)
   await page.getByRole('group', { name: 'Show only' }).getByRole('button', { name: /^Calculators/ }).click()
   // Every remaining result leads to a calculator.
   for (const text of await results(page).allTextContents()) expect(text).toMatch(/Use calculator|Calculator/)

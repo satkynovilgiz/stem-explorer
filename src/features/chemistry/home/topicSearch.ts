@@ -1,4 +1,5 @@
 import { normalize } from '../../../lib/chemistry'
+import { contentWords, squash, words } from '../../../lib/queryMatch'
 import { learnHref } from '../../reference/route'
 import type { ChemItem } from './chemIndex'
 
@@ -65,7 +66,7 @@ export const TOPICS: readonly ChemTopic[] = [
       { kind: 'example', href: learnHref('dilution', 'example') },
       { kind: 'calculate', href: '?csec=solutions&st=dilution#/chemistry' },
     ],
-    terms: ['dilution', 'dilute', 'diluting', 'stock solution', 'how much water', 'add water', 'water to add', 'lower the concentration', 'make a solution weaker'],
+    terms: ['dilution', 'dilute', 'diluting', 'dilute a solution', 'stock solution', 'how much water', 'add water', 'water to add', 'lower the concentration', 'make a solution weaker'],
     ids: ['C1V1 = C2V2', 'M1V1 = M2V2'],
   },
   {
@@ -94,14 +95,6 @@ export const TOPICS: readonly ChemTopic[] = [
     ids: ['H2O'],
   },
 ]
-
-const STOP = new Set(['what', 'whats', 'is', 'are', 'a', 'an', 'the', 'how', 'do', 'does', 'did', 'i', 'to', 'of', 'in', 'on', 'for', 'why', 'can', 'you', 'my', 'me', 'much', 'many', 'and', 'or', 'with', 'about', 'please', 'explain', 'tell', 'mean', 'means'])
-/** Singular form for matching: "moles" → "mole", "molecules" → "molecule", "boxes" → "box", "properties" → "property". */
-const stem = (w: string) =>
-  w.length > 4 && w.endsWith('ies') ? `${w.slice(0, -3)}y` : w.length > 4 && /(ch|sh|x|z|ss)es$/.test(w) ? w.slice(0, -2) : w.length > 3 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w
-const words = (s: string) => normalize(s).replace(/[^\p{L}\p{N}/=]+/gu, ' ').trim().split(/\s+/).filter(Boolean)
-const squash = (s: string) => normalize(s).replace(/[\s·×*()]/g, '')
-const contentWords = (s: string) => words(s).filter((w) => !STOP.has(w)).map(stem)
 
 /** Score of one candidate for a query (0 = no match). */
 function score(c: { title: string; terms: readonly string[]; ids?: readonly string[] }, q: string): number {

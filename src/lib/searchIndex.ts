@@ -12,6 +12,7 @@ import { FUNCTIONS } from '../math/functions'
 import { PRESETS } from '../math/linear'
 import { SURFACES } from '../math/surfaces'
 import { normalize } from './chemistry'
+import { containsTerm, queryCore, startsWithTerm, wordScore, type WordFields } from './queryMatch'
 import { hrefFor } from './explorations'
 import { atlasLink, linkTo } from './links'
 import { calculatorsHref } from './overviewRoute'
@@ -65,6 +66,9 @@ export const KIND_BADGE: Record<SearchKind, string> = {
   tool: 'Interactive tool',
   term: 'Glossary term',
 }
+
+/** How students describe what the biceps does (see the biceps relationship in atlas/relationships.ts). */
+const ELBOW_FLEXOR_TERMS = ['bends the elbow', 'flexes the elbow', 'elbow flexor']
 
 /** One searchable item. Text comes from the existing subject data, not a copy of it. */
 export interface SearchItem {
@@ -121,7 +125,7 @@ export const SEARCH_INDEX: readonly SearchItem[] = [
     kind: 'structure' as const,
     description: `${getSystem(s.system).name} system${s.variant ? ` · shown with the ${VARIANT_TEXT[s.variant]} configuration` : ''}. ${s.description}`,
     href: atlasLink(s.id, s.system, s.variant),
-    terms: [...(s.aliases ?? []), getSystem(s.system).name, ...(s.alsoIn ?? []).map((x) => getSystem(x).name)],
+    terms: [...(s.aliases ?? []), getSystem(s.system).name, ...(s.alsoIn ?? []).map((x) => getSystem(x).name), ...(s.id.startsWith('biceps-brachii') ? ELBOW_FLEXOR_TERMS : [])],
   })),
   {
     id: 'section:solutions',
@@ -465,16 +469,23 @@ function scoreItem(item: SearchItem, qs: string[]): number {
     let score = 0
     // An element symbol typed exactly ("Fe", "O") counts as an exact match.
     if (name === q || formula === q || (item.kind === 'element' && terms[0] === q)) score = 4
-    else if (name.startsWith(q)) score = 3
-    else if (name.includes(q) || formula.includes(q)) score = 2
+    else if (startsWithTerm(name, q)) score = 3
+    else if (containsTerm(name, q) || containsTerm(formula, q)) score = 2
     else if (terms.some((t) => t === q)) score = 1.5
-    else if (q.length > 1 && terms.some((t) => t.includes(q))) score = 1
+    else if (q.length > 1 && terms.some((t) => containsTerm(t, q))) score = 1
     // Whole words in the description rank last, only for longer queries; compounds such as
     // "oxygen-rich" do not count, to avoid noise.
     else if (q.length >= 4 && item.kind !== 'term' && new RegExp(`\\b${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`).test(normalize(item.description))) score = 0.5
     best = Math.max(best, score)
   }
   return best
+}
+
+const FIELDS = new WeakMap<SearchItem, WordFields>()
+const wordFields = (item: SearchItem) => {
+  let f = FIELDS.get(item)
+  if (!f) FIELDS.set(item, (f = { name: item.name, terms: item.terms, description: item.description }))
+  return f
 }
 
 const isTerm = (item: SearchItem) => (item.kind === 'term' ? 1 : 0)
@@ -494,12 +505,15 @@ export const nameShowsFormula = (item: SearchItem) => Boolean(item.formula && no
 export function searchAll(query: string, filters: SearchFilters = {}): SearchItem[] {
   const q = normalize(query)
   if (!q) return []
-  const qs = variants(q)
+  // What was typed, and the same question without its question words ("where is the kidney").
+  const core = queryCore(query)
+  const qs = [...variants(q), ...(core && core !== q ? variants(core) : [])]
   const scored: ScoredResult[] = []
   for (const item of SEARCH_INDEX) {
     if (filters.subject && item.subject !== filters.subject) continue
     if (filters.kind && item.kind !== filters.kind) continue
-    const score = adjusted(item, scoreItem(item, qs))
+    // A question's words anywhere in the item rank below matches of the whole phrase (up to 0.9).
+    const score = adjusted(item, scoreItem(item, qs)) || (item.kind === 'subject' ? 0 : 0.9 * wordScore(query, wordFields(item)))
     if (score) scored.push({ item, score })
   }
   return scored
@@ -523,5 +537,8 @@ export function groupResults(results: readonly SearchItem[]): { subject: Subject
     }
   }).filter((g) => g.kinds.length > 0)
 }
+
+/** Every word of every result name: the spellings that no-result suggestions may offer. */
+export const searchVocabulary = (): string[] => SEARCH_INDEX.flatMap((i) => i.name.split(/[^\p{L}]+/u)).filter((w) => w.length >= 4)
 
 export const findSearchItem = (id: string) => SEARCH_INDEX.find((i) => i.id === id)

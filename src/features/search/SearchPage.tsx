@@ -7,10 +7,16 @@ import { formulaParts } from '../../lib/chemistry'
 import { subjectName } from '../../lib/explorations'
 import { findSearchItem, groupResults, nameShowsFormula, KIND_LABELS, SEARCH_INDEX, searchAll, type SearchItem, type SearchKind } from '../../lib/searchIndex'
 import { isKind, KINDS, parseSearchUrl, searchUrl, type SearchUrl } from '../../lib/searchUrl'
+import { resultTypeOf } from '../../lib/resultType'
+import { entryHref, type ManifestRow } from '../../reference/types'
 import { SEARCH_EXAMPLES } from '../home/content'
+import { searchManifest } from '../reference/search'
+import { loadManifest } from '../reference/useManifest'
+import { SearchSuggestions } from './SearchSuggestions'
 
 /** Results shown per group before "Show all". */
 const GROUP_PREVIEW = 8
+const BEST_MATCHES = 3
 
 function ResultFormula({ formula }: { formula: string }) {
   return (
@@ -53,11 +59,31 @@ function ResultItem({ item }: { item: SearchItem }) {
             {item.name}
             {item.formula && !nameShowsFormula(item) && <ResultFormula formula={item.formula} />}
           </span>
-          <span className={`subject-chip is-${item.subject}`}>{subjectName(item.subject)}</span>
+          <span className="search-result-badges">
+            <span className="result-kind">{resultTypeOf(item)}</span>
+            <span className={`subject-chip is-${item.subject}`}>{subjectName(item.subject)}</span>
+          </span>
         </span>
         <span className="search-result-desc">{item.description}</span>
       </AppLink>
       <RelatedLine item={item} />
+    </li>
+  )
+}
+
+function ExplanationItem({ row }: { row: ManifestRow }) {
+  return (
+    <li className="search-page-item">
+      <AppLink href={entryHref(row)} className="search-result">
+        <span className="search-result-head">
+          <span className="search-result-name">{row.title}</span>
+          <span className="search-result-badges">
+            <span className="result-kind is-reference">Explanation</span>
+            <span className={`subject-chip is-${row.subject}`}>{subjectName(row.subject)}</span>
+          </span>
+        </span>
+        <span className="search-result-desc">{row.summary}</span>
+      </AppLink>
     </li>
   )
 }
@@ -114,17 +140,38 @@ export function SearchPage() {
     inputRef.current?.focus()
   }, [])
 
+  // Explanations load the first time someone searches. The Type filter names kinds of explorer
+  // content, so choosing one hides them.
+  const [rows, setRows] = useState<readonly ManifestRow[] | null>(null)
   const trimmed = state.q.trim()
+  useEffect(() => {
+    if (!trimmed || rows) return
+    let live = true
+    loadManifest().then(
+      (r) => live && setRows(r),
+      () => live && setRows([]),
+    )
+    return () => {
+      live = false
+    }
+  }, [trimmed, rows])
+  const explanations = useMemo(() => {
+    if (!rows || !trimmed || state.kind) return []
+    return searchManifest(state.subject ? rows.filter((r) => r.subject === state.subject) : rows, trimmed)
+  }, [rows, trimmed, state.subject, state.kind])
   const results = useMemo(() => searchAll(state.q, { subject: state.subject, kind: state.kind }), [state])
   const unfiltered = useMemo(() => (state.subject || state.kind ? searchAll(state.q) : results), [state, results])
-  const groups = groupResults(results)
   const filtered = Boolean(state.subject || state.kind)
+  // The groups follow the app's subject order, so the most relevant results come first on their
+  // own (without a filter). They are not repeated below.
+  const best = !filtered && results.length > 1 ? results.slice(0, BEST_MATCHES) : []
+  const groups = groupResults(results.slice(best.length))
   const set = (patch: Partial<SearchUrl>) => setState((s) => ({ ...s, ...patch }))
 
   const status = !trimmed
     ? ''
-    : results.length
-      ? `${results.length} result${results.length === 1 ? '' : 's'}${filtered ? ` with the filters (${unfiltered.length} in all)` : ''}`
+    : results.length + explanations.length
+      ? `${results.length + explanations.length} result${results.length + explanations.length === 1 ? '' : 's'}${filtered ? ` with the filters (${unfiltered.length} models and tools in all)` : ''}`
       : filtered && unfiltered.length
         ? `No results with the filters; ${unfiltered.length} without them`
         : 'No results'
@@ -202,7 +249,7 @@ export function SearchPage() {
         </div>
       )}
 
-      {trimmed && results.length === 0 && (
+      {trimmed && results.length + explanations.length === 0 && (
         <div className="empty-state">
           {filtered && unfiltered.length > 0 ? (
             <>
@@ -218,9 +265,36 @@ export function SearchPage() {
             <>
               <p>Nothing matches “{trimmed}”.</p>
               <p className="muted">Check the spelling, try a shorter word, or a more common name (for example “windpipe” finds the trachea).</p>
+              <SearchSuggestions query={trimmed} onPick={(q) => set({ q })} />
             </>
           )}
         </div>
+      )}
+
+      {explanations.length > 0 && (
+        <section className="search-subject" aria-labelledby="results-explanations">
+          <h2 id="results-explanations" className="search-subject-title">
+            Explanations <span className="muted small">{explanations.length}</span>
+          </h2>
+          <ul className="search-results" aria-label="Explanations">
+            {explanations.slice(0, GROUP_PREVIEW).map((r) => (
+              <ExplanationItem key={r.id} row={r} />
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {best.length > 0 && (
+        <section className="search-subject" aria-labelledby="results-best">
+          <h2 id="results-best" className="search-subject-title">
+            Best matches
+          </h2>
+          <ul className="search-results" aria-label="Best matches">
+            {best.map((item) => (
+              <ResultItem key={item.id} item={item} />
+            ))}
+          </ul>
+        </section>
       )}
 
       {groups.map((g) => (

@@ -6,7 +6,9 @@ import { SubjectIcon } from '../../components/SubjectIcon'
 import { SUBJECTS } from '../../data/subjects'
 import { calculatorsOf } from '../../calc'
 import { calculatorsHref } from '../../lib/overviewRoute'
-import { KIND_BADGE, searchAll, type SearchItem } from '../../lib/searchIndex'
+import { searchAll, type SearchItem } from '../../lib/searchIndex'
+import { resultTypeOf } from '../../lib/resultType'
+import { SearchSuggestions } from '../search/SearchSuggestions'
 import { entryHref, ENTRY_TYPE_LABELS, type ManifestRow } from '../../reference/types'
 import { searchManifest } from '../reference/search'
 import { loadManifest } from '../reference/useManifest'
@@ -105,6 +107,7 @@ export function SubjectOverview({ subject }: { subject: OverviewSubject }) {
                 <strong>Nothing in {name} matches “{trimmed}”.</strong> Try a shorter word, or{' '}
                 <a href={`?q=${encodeURIComponent(trimmed)}#/search`}>search all subjects</a>.
               </p>
+              <SearchSuggestions query={trimmed} onPick={setQ} />
             </div>
           ) : (
             <ul className="chem-result-list">
@@ -113,7 +116,7 @@ export function SubjectOverview({ subject }: { subject: OverviewSubject }) {
                   <a href={entryHref(r)} className="chem-result">
                     <span className="chem-result-title">{r.title}</span>
                     <span className="chem-result-text">{r.summary}</span>
-                    <span className="chem-badge">Reference · {ENTRY_TYPE_LABELS[r.type]}</span>
+                    <span className="chem-badge">Explanation</span>
                   </a>
                 </li>
               ))}
@@ -240,7 +243,7 @@ function ResultLink({ item }: { item: SearchItem }) {
     <AppLink href={item.href} className="chem-result">
       <span className="chem-result-title">{item.name}</span>
       <span className="chem-result-text">{item.description}</span>
-      <span className="chem-badge">{KIND_BADGE[item.kind]}</span>
+      <span className="chem-badge">{resultTypeOf(item)}</span>
     </AppLink>
   )
 }

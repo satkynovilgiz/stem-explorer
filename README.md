@@ -104,6 +104,12 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   subject per browser session (`sessionStorage`). A direct link or reload counts as that subject's
   visit and never plays, so Back and Forward cannot play it either. Tab changes do not play it, and
   `prefers-reduced-motion` stops it, also when the preference changes while it runs.
+- **Student questions in search** (`src/lib/queryMatch.ts`, `resultType.ts`): every search reduces
+  a question to its content words with fixed rules (question words dropped, plurals made singular, a
+  short alias list), after first trying what was typed, so symbols such as I, He and pH survive.
+  "Mole" never matches "molecule", and terms of up to three letters must start a word. Results say
+  **Explanation**, **Calculator** or **Interactive model**, and Back restores the query and filters.
+  With no results, close spellings are offered to choose from; the query is never changed by itself.
 - **Subject headers** (`src/components/SubjectBar.tsx`, `app.css`): every subject has the same two
   rows on its own colour: the subject's mark, the breadcrumb above its name, search and controls,
   then the destination tabs as pills with the current one filled (white on each subject colour is
