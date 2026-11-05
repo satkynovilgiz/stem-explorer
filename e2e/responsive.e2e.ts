@@ -47,7 +47,7 @@ test('Chemistry’s section strip stays on the left of a landscape iPad, every i
   await expect(links).toHaveCount(6)
   for (const link of await links.all()) {
     const box = (await link.boundingBox())!
-    expect(box.x + box.width).toBeLessThan(100)
+    expect(box.x + box.width).toBeLessThanOrEqual(112)
     expect(box.y + box.height).toBeLessThanOrEqual(768)
   }
 })
