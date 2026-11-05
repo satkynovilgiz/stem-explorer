@@ -56,8 +56,10 @@ const SECTION_LABEL: Record<ChemistrySection, string> = {
 
 const URL_DEFAULTS = { moleculeId: DEFAULT_MOLECULE_ID, representation: 'ball-and-stick' } as const
 
+/** A link that opened a measuring tool keeps following it; choosing a tool never adds to the address. */
 function withMeasureTool(search: string, mode: string) {
   const params = new URLSearchParams(search)
+  if (!params.has('mtool')) return search
   if (mode === 'inspect') params.delete('mtool')
   else params.set('mtool', mode)
   return `?${params.toString()}`

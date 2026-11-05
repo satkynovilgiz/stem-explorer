@@ -9273,3 +9273,10 @@ select { max-width: 100%; }
 .ref-next .ref-link:first-of-type { border-color: var(--color-accent-border); }
 .ref-jump { display: inline-flex; align-items: center; min-height: 44px; margin-top: var(--space-1); }
 .measure-reported { margin: var(--space-2) 0 0; font-size: var(--text-sm); }
+
+/* Search results: labels drop under a long name on phones instead of being cut off. */
+.search-result-head { flex-wrap: wrap; }
+.search-result-badges { flex-shrink: 1; max-width: 100%; justify-content: start; }
+.search-page .search.home-search-box { position: relative; display: block; }
+.search-page .search.home-search-box .search-input { width: 100%; padding-right: 44px; box-sizing: border-box; }
+.search-page .search.home-search-box .search-clear { top: 50%; right: 8px; transform: translateY(-50%); }

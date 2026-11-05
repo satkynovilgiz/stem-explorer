@@ -69,4 +69,16 @@ test.describe('Search understands student questions', () => {
     await expect(page.getByRole('status')).toHaveText('No results')
     await expect(page.getByTestId('search-suggestions')).toHaveCount(0)
   })
+
+  test('on a small phone, result labels stay on screen and the clear button stays inside the box', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 })
+    await page.goto(`/?q=${encodeURIComponent('how do I add vectors')}#/search`)
+    const chip = page.locator('.search-result .subject-chip').first()
+    await expect(chip).toBeVisible()
+    const box = (await chip.boundingBox())!
+    expect(box.x + box.width).toBeLessThanOrEqual(320)
+    const input = (await page.getByRole('searchbox', { name: 'Search everything you can explore' }).boundingBox())!
+    const clear = (await page.getByRole('button', { name: 'Clear search' }).boundingBox())!
+    expect(clear.x + clear.width).toBeLessThanOrEqual(input.x + input.width)
+  })
 })
