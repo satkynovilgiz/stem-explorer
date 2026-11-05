@@ -21,6 +21,10 @@ test('Chemistry stays usable without WebGL', async ({ page }) => {
   await waitForViewport(page)
   await expect(page.locator('.viewport-message')).toContainText('3D view unavailable')
   await expect(page.locator('#molecule-heading')).toHaveText('Benzene')
+  // A compact message and the molecule as a flat drawing, not an empty panel.
+  expect((await page.locator('.viewport-message').boundingBox())!.height).toBeLessThan(200)
+  await expect(page.locator('.mol-diagram svg')).toHaveAttribute('aria-label', /Flat drawing of Benzene/)
+  await expect(page.locator('.mol-diagram')).toContainText('Experimental structure')
 })
 
 test('Physics keeps inputs, playback, readouts and graphs without WebGL', async ({ page }) => {
@@ -315,4 +319,10 @@ test('derivatives and motion need no WebGL: graphs, motion and readouts all work
   await expect(page.locator('canvas')).toHaveCount(0)
   await page.getByRole('button', { name: '+0.1 s' }).click()
   await expect(page.locator('#mo-heading')).toHaveText('Constant velocity · t = 2.1 s')
+})
+
+test('the water journey works without WebGL: a flat drawing with the reported angle', async ({ page }) => {
+  await page.goto('/?molecule=water&view=ball-and-stick&mtool=angle#/chemistry')
+  await expect(page.locator('.mol-diagram svg')).toBeVisible()
+  await expect(page.locator('.mol-diagram')).toContainText('H–O–H angle: 104.4776 °')
 })

@@ -36,7 +36,7 @@ export type Solved<T> = { ok: true; value: T } | Problem
 
 const bad = (reason: string): Problem => ({ ok: false, reason })
 
-function checkPositive(name: string, v: number, max: number, unit: string): Problem | null {
+export function checkPositive(name: string, v: number, max: number, unit: string): Problem | null {
   if (!Number.isFinite(v)) return bad(`Enter a number for the ${name}.`)
   if (v < 0) return bad(`The ${name} can't be negative.`)
   if (v === 0) return bad(name.includes('volume') ? `The ${name} must be greater than zero: a solution has to occupy some volume, and dividing by zero is undefined.` : `The ${name} must be greater than zero.`)

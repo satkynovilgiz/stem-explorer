@@ -1,7 +1,7 @@
 import { Check, Minus, Plus, RotateCcw, X } from 'lucide-react'
 import { useId, useMemo, useState, type ReactNode } from 'react'
 import { ShareActions } from '../../../components/ShareActions'
-import { checkBalance, chargeText, formatSig, isValidCoefficient, limitingReactant, molarMass, moleRatio, parseFormula, percentYield, type Equation, type Species } from '../../../chem/stoichiometry'
+import { sideCounts, checkBalance, chargeText, formatSig, isValidCoefficient, limitingReactant, molarMass, moleRatio, parseFormula, percentYield, type Equation, type Species } from '../../../chem/stoichiometry'
 import { ELEMENTS } from '../../../data/chemistry/elements'
 import { findReaction, REACTIONS, STATE_NAME, STATE_TEXT, TYPE_LABEL, TYPE_NOTE, WEIGHT_TEXT, WEIGHTS, type Reaction, type ReactionType } from '../../../data/chemistry/reactions'
 import { Formula } from '../Formula'
@@ -197,6 +197,33 @@ function BalanceTable({ equation, coefficients }: { equation: Equation; coeffici
 }
 
 const signed = (q: number) => (q > 0 ? `+${q}` : q < 0 ? `−${-q}` : '0')
+
+/** Where each count in the table comes from: a coefficient multiplies every atom in its formula. */
+function WhyCoefficientsWork({ equation, coefficients }: { equation: Equation; coefficients: readonly number[] }) {
+  const n = equation.reactants.length
+  const side = (species: readonly Species[], coeffs: readonly number[], element: string) =>
+    species
+      .map((s, i) => ({ s, c: coeffs[i], atoms: parseFormula(s.formula)[element] ?? 0 }))
+      .filter((x) => x.atoms > 0)
+      .map((x) => `${x.c} × ${x.atoms} in ${x.s.formula}`)
+      .join(' + ')
+  const elements = Object.keys(sideCounts([...equation.reactants, ...equation.products], [...coefficients]))
+  const left = sideCounts(equation.reactants, coefficients.slice(0, n))
+  const right = sideCounts(equation.products, coefficients.slice(n))
+  return (
+    <div className="rx-why" data-testid="why-coefficients">
+      <h4>Why coefficients work</h4>
+      <p>A coefficient multiplies every atom in its formula, so it changes how many atoms there are without changing which substance it is.</p>
+      <ul>
+        {elements.map((el) => (
+          <li key={el}>
+            <strong>{el}:</strong> {side(equation.reactants, coefficients.slice(0, n), el)} = {left[el] ?? 0} on the left; {side(equation.products, coefficients.slice(n), el)} = {right[el] ?? 0} on the right.
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 function StatusMark({ ok }: { ok: boolean }) {
   return ok ? (
@@ -520,6 +547,7 @@ function ReactionLabInner({ reaction, onReaction }: { reaction: Reaction; onReac
           </button>
         </div>
         <BalanceTable equation={reaction.equation} coefficients={coefficients} />
+        <WhyCoefficientsWork equation={reaction.equation} coefficients={coefficients} />
         <CoefficientVsSubscript reaction={reaction} />
         <h3 className="section-title">Step by step</h3>
         <ol className="rx-steps">
@@ -571,7 +599,7 @@ function ReactionLabInner({ reaction, onReaction }: { reaction: Reaction; onReac
 
       <section className="panel" aria-labelledby="rx-stoich">
         <h2 id="rx-stoich" className="panel-title">
-          Stoichiometry
+          Next: use the balanced equation to work out amounts
         </h2>
         <MolarMasses reaction={reaction} />
         <MoleCalculator reaction={reaction} />

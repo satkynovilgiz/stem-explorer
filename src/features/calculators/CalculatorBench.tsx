@@ -41,9 +41,19 @@ export function CalculatorBench({ subject }: { subject: SubjectId }) {
   )
 }
 
+/** `cv=formula:H2O,mass:5` opens the calculator with those inputs (a link from an explanation). */
+function presetFromUrl(calc: Calculator): Values {
+  const out: Record<string, string> = {}
+  for (const pair of (new URLSearchParams(window.location.search).get('cv') ?? '').split(',')) {
+    const i = pair.indexOf(':')
+    if (i > 0 && calc.fields.some((f) => f.id === pair.slice(0, i))) out[pair.slice(0, i)] = pair.slice(i + 1).slice(0, 40)
+  }
+  return out
+}
+
 function CalculatorPanel({ calc }: { calc: Calculator }) {
   const id = useId()
-  const [values, setValues] = useState<Values>(() => initialValues(calc))
+  const [values, setValues] = useState<Values>(() => ({ ...initialValues(calc), ...presetFromUrl(calc) }))
   const set = (k: string, v: string) => setValues((x) => ({ ...x, [k]: v }))
   const shown = calc.fields.filter((f) => f.showIf?.(values) ?? true)
   const result = calc.compute(values)
@@ -69,7 +79,7 @@ function CalculatorPanel({ calc }: { calc: Calculator }) {
 
       <form className="calc-form" onSubmit={(e) => e.preventDefault()}>
         {shown.map((f) => (
-          <FieldInput key={f.id} field={f} value={values[f.id] ?? ''} onChange={(v) => set(f.id, v)} />
+          <FieldInput key={f.id} field={f} value={values[f.id] ?? ''} onChange={(v) => set(f.id, v)} error={!result.ok && result.field === f.id ? result.reason : undefined} />
         ))}
       </form>
 
@@ -100,7 +110,15 @@ function CalculatorPanel({ calc }: { calc: Calculator }) {
           </>
         ) : (
           <p>
-            <strong>Can’t calculate:</strong> {result.reason}
+            {result.field ? (
+              <>
+                <strong>Can’t calculate yet.</strong> Fix the field marked above.
+              </>
+            ) : (
+              <>
+                <strong>Can’t calculate:</strong> {result.reason}
+              </>
+            )}
           </p>
         )}
       </div>
@@ -120,7 +138,7 @@ function CalculatorPanel({ calc }: { calc: Calculator }) {
   )
 }
 
-function FieldInput({ field, value, onChange }: { field: Field; value: string; onChange: (v: string) => void }) {
+function FieldInput({ field, value, onChange, error }: { field: Field; value: string; onChange: (v: string) => void; error?: string }) {
   const id = useId()
   if (field.kind === 'choice') {
     return (
@@ -151,7 +169,8 @@ function FieldInput({ field, value, onChange }: { field: Field; value: string; o
           autoCapitalize="off"
           spellCheck={false}
           value={value}
-          aria-describedby={field.kind === 'text' && field.hint ? `${id}-hint` : undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={[field.kind === 'text' && field.hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined}
           onChange={(e) => onChange(e.target.value)}
         />
         {field.kind === 'number' && field.unit && <span className="param-unit">{field.unit}</span>}
@@ -159,6 +178,11 @@ function FieldInput({ field, value, onChange }: { field: Field; value: string; o
       {field.kind === 'text' && field.hint && (
         <p id={`${id}-hint`} className="muted small calc-hint">
           {field.hint}
+        </p>
+      )}
+      {error && (
+        <p id={`${id}-error`} className="calc-field-error">
+          {error}
         </p>
       )}
     </div>

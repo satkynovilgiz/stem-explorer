@@ -36,7 +36,8 @@ test('typing recalculates, a bad value explains itself, and the example comes ba
   await expect(answer(page)).toHaveText('300 Ω')
   await expect(page.getByRole('status').filter({ hasText: 'Resistance' })).toHaveText('Resistance: 300 Ω')
   await field(page, 'Current I').fill('0')
-  await expect(page.locator('.calc-result')).toContainText('Can’t calculate: The current must be greater than zero.')
+  await expect(page.locator('.calc-field', { has: page.getByLabel('Current I', { exact: true }) })).toContainText('The current must be greater than zero.')
+  await expect(page.locator('.calc-result')).toContainText('Fix the field marked above')
   await page.getByRole('button', { name: 'Back to the example' }).click()
   await expect(answer(page)).toHaveText('0.12 A')
 })
@@ -67,7 +68,7 @@ test('Chemistry: calculators on the Tools page, molar mass of any formula', asyn
   await expect(answer(page)).toHaveText('74.09 g/mol')
   await expect(page.locator('.calc-panel .sol-steps')).toContainText('Ca: 1 × 40.078 g/mol')
   await field(page, 'Formula').fill('Xy')
-  await expect(page.locator('.calc-result')).toContainText('“Xy” is not an element symbol')
+  await expect(page.locator('.calc-field', { has: page.getByLabel('Formula', { exact: true }) })).toContainText('“Xy” is not an element symbol')
   // The existing tools are still listed below.
   await expect(page.getByRole('link', { name: /Molarity calculator/ })).toBeVisible()
 })

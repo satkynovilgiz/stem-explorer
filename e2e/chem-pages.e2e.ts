@@ -51,7 +51,7 @@ test('a worked-example link opens the explanation at its worked example, visibly
   await expect(example).toBeInViewport()
   await expect(example.locator('.ref-worked-q').first()).toHaveText('What is given?')
   // The reading page links to the calculator, and back.
-  await page.getByRole('link', { name: /Molarity calculator/ }).click()
+  await page.getByRole('link', { name: /Calculate a molarity/ }).click()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Molarity calculator')
   await page.getByRole('link', { name: /Read the explanation/ }).click()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Molarity')

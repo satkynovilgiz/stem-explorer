@@ -43,6 +43,11 @@ export function MeasurementPanel({ molecule, mode, selection, autoRotatePaused, 
               ? 'Pick two different atoms in the model or from the list below.'
               : 'Pick three atoms in order: end atom, vertex, end atom. The angle is measured at the vertex.'}
           </p>
+          {mode === 'angle' && molecule.parameters.filter((p) => p.unit === '°').slice(0, 1).map((p) => (
+            <p key={p.label} className="measure-reported">
+              Reported {p.label}: {p.value}°. Compare your measurement with it.
+            </p>
+          ))}
         </div>
         <div className="measure-actions">
           <button

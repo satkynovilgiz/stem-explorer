@@ -422,6 +422,8 @@ function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEnt
   const typeLabel = e.type === 'formula' ? FORMULA_KIND_LABELS[e.kind] : ENTRY_TYPE_LABELS[e.type]
   // Student-first layout when the entry has a plain-words summary (see types.ts).
   const student = Boolean(e.simple)
+  // Aliases include the questions students search for; only real names are "also called".
+  const names = (e.aliases ?? []).filter((a) => !/^(what|why|how|where|when|which)\b/i.test(a) && a.toLowerCase() !== e.title.toLowerCase())
   return (
     <article className={`ref-page ref-entry subject-${e.subject}${context === 'chemistry' ? ' is-learn' : ''}`} aria-labelledby="ref-title">
       {context === 'reference' && (
@@ -452,7 +454,7 @@ function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEnt
         <p className="ref-summary">
           <RichText text={e.summary} />
         </p>
-        {e.aliases?.length ? <p className="small muted">Also called: {e.aliases.join(', ')}</p> : null}
+        {names.length ? <p className="small muted">Also called: {names.join(', ')}</p> : null}
         {e.prerequisites?.length ? (
           <p className="small">
             Read first:{' '}
@@ -464,6 +466,11 @@ function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEnt
             ))}
           </p>
         ) : null}
+        {student && context === 'chemistry' && e.examples.length > 0 && (
+          <AppLink href={learnHref(e.id, 'example')} className="chem-text-link ref-jump">
+            See the worked example
+          </AppLink>
+        )}
         <div className="ref-actions">
           <CopyLinkButton
             getUrl={() => `${window.location.origin}${window.location.pathname}${context === 'chemistry' ? learnHref(e.id) : entryHref(e)}`}
@@ -527,7 +534,7 @@ function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEnt
             </Section>
           ) : null}
           {e.links?.length || (e.type === 'structure' && e.atlasIds?.length) ? (
-            <section className="ref-plain" aria-labelledby="ref-explore">
+            <section className="ref-plain ref-next" aria-labelledby="ref-explore">
               <h2 id="ref-explore" className="ref-plain-title">
                 Try it yourself
               </h2>
@@ -540,14 +547,9 @@ function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEnt
                 <RichText text={p} />
               </p>
             ))}
-            <h3 className="ref-sub">Conditions and limitations</h3>
-            <List items={e.conditions} />
-            {e.modelLimitations?.length ? (
-              <>
-                <h3 className="ref-sub">How the app’s model simplifies this</h3>
-                <List items={e.modelLimitations} />
-              </>
-            ) : null}
+          </Section>
+          <Section title="Limits of this explanation">
+            <List items={[...e.conditions, ...(e.modelLimitations ?? [])]} />
           </Section>
         </>
       ) : (
@@ -615,8 +617,8 @@ function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEnt
           })}
         </ul>
         <p className="small muted">
-          The text is written for this app and paraphrases the cited sources. Each entry passes an automated completeness check; that check does not establish
-          scientific accuracy, and no entry has been reviewed by a subject expert.
+          The text is written for this app and paraphrases the cited sources. Automated checks confirm that an entry is complete and that its example arithmetic
+          works; they do not establish scientific accuracy, and no entry has been reviewed by a subject expert.
         </p>
       </Section>
     </article>

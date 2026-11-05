@@ -5,14 +5,17 @@ import { AppLink } from '../../../components/AppLink'
 import { calculatorsOf } from '../../../calc'
 import { calculatorsHref } from '../../../lib/overviewRoute'
 import { ELEMENTS } from '../../../data/chemistry/periodicTable'
+import { STRUCTURE_KINDS } from '../../../data/chemistry/structureKinds'
 import { MOLECULES } from '../../../data/chemistry/molecules'
 import { subjectName } from '../../../lib/explorations'
 import { normalize } from '../../../lib/chemistry'
-import { KIND_BADGE, searchAll } from '../../../lib/searchIndex'
+import { searchAll } from '../../../lib/searchIndex'
+import { resultTypeOf, type ResultType } from '../../../lib/resultType'
+import { SearchSuggestions } from '../../search/SearchSuggestions'
 import type { ManifestRow } from '../../../reference/types'
 import { loadManifest } from '../../reference/useManifest'
 import { Formula } from '../Formula'
-import { baseItems, CHEM_GROUPS, referenceItems, ROLE_LABELS, type ChemItem, type ChemRole } from './chemIndex'
+import { baseItems, CHEM_GROUPS, referenceItems, ROLE_LABELS, type ChemItem, type ChemLabel, type ChemRole } from './chemIndex'
 import { availableChapters, CONTENTS_LABELS } from './contents'
 import { readHomeState, writeHomeState, type HomeState, type ResultFilter } from './homeState'
 import { CHEM_QUESTIONS } from './questions'
@@ -177,7 +180,7 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
             shown.length ? (
               <ResultList results={shown.slice(0, 40)} />
             ) : (
-              <Empty q={q} filtered={Boolean(st.label)} onClear={() => set({ q: '', label: null })} onAll={() => set({ scope: 'all', label: null })} />
+              <Empty q={q} filtered={Boolean(st.label)} onClear={() => set({ q: '', label: null })} onAll={() => set({ scope: 'all', label: null })} onPick={(next) => set({ q: next, label: null })} />
             )
           ) : allResults.length ? (
             <ul className="chem-result-list">
@@ -187,7 +190,7 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
                     <span className="chem-result-top">
                       <span className="chem-result-title">{r.name}</span>
                       <span className="chem-badge">
-                        {KIND_BADGE[r.kind]} · {subjectName(r.subject)}
+                        {resultTypeOf(r)} · {subjectName(r.subject)}
                       </span>
                     </span>
                     <span className="chem-result-text">{r.description}</span>
@@ -196,7 +199,7 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
               ))}
             </ul>
           ) : (
-            <Empty q={q} filtered={false} onClear={() => set({ q: '', label: null })} />
+            <Empty q={q} filtered={false} onClear={() => set({ q: '', label: null })} onPick={(next) => set({ q: next, label: null })} />
           )}
         </section>
       ) : group ? (
@@ -208,7 +211,7 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
       )}
 
       <p className="chem-home-foot">
-        <BookOpen size={18} aria-hidden="true" /> Explanations with sources, worked examples and clear definitions. Molecule geometries come from NIST measurements.
+        <BookOpen size={18} aria-hidden="true" /> Explanations with sources, worked examples and clear definitions. Each molecule says whether its shape is experimental (NIST CCCBDB) or computed (PubChem3D).
       </p>
     </div>
   )
@@ -418,9 +421,9 @@ function MoleculeSections({ list, q, onClear }: { list: typeof MOLECULES; q: str
       {measured.length > 0 && (
         <section className="chem-section" aria-labelledby="mol-measured">
           <h2 id="mol-measured" className="chem-h2">
-            Measured structures ({measured.length})
+            {STRUCTURE_KINDS.experimental.heading} ({measured.length})
           </h2>
-          <p className="chem-section-note">Atom positions from experiment (NIST CCCBDB), with the reported bond lengths and angles.</p>
+          <p className="chem-section-note">{STRUCTURE_KINDS.experimental.description}</p>
           <MoleculeGrid list={measured} q={q} onClear={onClear} />
         </section>
       )}
@@ -429,7 +432,7 @@ function MoleculeSections({ list, q, onClear }: { list: typeof MOLECULES; q: str
           <h2 id="mol-computed" className="chem-h2">
             Everyday and biological molecules ({computed.length})
           </h2>
-          <p className="chem-section-note">Computed 3D shapes from PubChem (a force-field model, not a measurement). Measure them with the Distance and Angle tools.</p>
+          <p className="chem-section-note">{STRUCTURE_KINDS.computed.description}</p>
           <MoleculeGrid list={computed} q={q} onClear={onClear} />
         </section>
       )}
@@ -482,7 +485,7 @@ function ResultList({ results }: { results: readonly SearchResult[] }) {
               <AppLink href={r.topic.actions[0].href} className="chem-result-title">
                 {r.topic.title}
               </AppLink>
-              <span className="chem-badge">Topic</span>
+              <span className="chem-badge">Explanation</span>
             </span>
             <span className="chem-result-text">{r.topic.sentence}</span>
             <span className="chem-result-actions">
@@ -498,7 +501,7 @@ function ResultList({ results }: { results: readonly SearchResult[] }) {
             <AppLink href={r.item.href} className="chem-result">
               <span className="chem-result-top">
                 <span className="chem-result-title">{r.item.title}</span>
-                <span className={`chem-badge is-${r.item.label.toLowerCase()}`}>{r.item.label}</span>
+                <span className={`chem-badge is-${r.item.label.toLowerCase()}`}>{CHEM_RESULT_TYPE[r.item.label]}</span>
               </span>
               <span className="chem-result-text">{r.item.sentence}</span>
               <span className="chem-result-role">{ROLE_LABELS[r.item.role]}</span>
@@ -510,13 +513,16 @@ function ResultList({ results }: { results: readonly SearchResult[] }) {
   )
 }
 
-function Empty({ q, filtered, onClear, onAll }: { q: string; filtered: boolean; onClear: () => void; onAll?: () => void }) {
+const CHEM_RESULT_TYPE: Record<ChemLabel, ResultType> = { Topic: 'Explanation', Formula: 'Explanation', Molecule: 'Interactive model', Calculator: 'Calculator' }
+
+function Empty({ q, filtered, onClear, onAll, onPick }: { q: string; filtered: boolean; onClear: () => void; onAll?: () => void; onPick: (q: string) => void }) {
   return (
     <div className="chem-empty" role="status">
       <p>
         <strong>Nothing matches “{q}”{filtered ? ' with this filter' : ''}.</strong>
       </p>
       <p>Try a topic (“mole”, “molarity”, “bond”), a formula (“H2O”) or a question (“how do I balance an equation”).</p>
+      <SearchSuggestions query={q} onPick={onPick} />
       <div className="chem-empty-actions">
         <button type="button" className="chem-button" onClick={onClear}>
           Clear the search

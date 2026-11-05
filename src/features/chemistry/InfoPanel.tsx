@@ -1,3 +1,4 @@
+import { STRUCTURE_KINDS } from '../../data/chemistry/structureKinds'
 import { ExternalLink, FlaskConical, Info } from 'lucide-react'
 import { useState } from 'react'
 import { ShareActions } from '../../components/ShareActions'
@@ -38,7 +39,7 @@ export function InfoPanel({ molecule, representation, mode, inspectedAtomId, onP
         <Formula formula={molecule.formula} className="info-formula" />
         <p className="info-kind">
           <span className={`kind-tag kind-${molecule.coordinates.kind}`}>
-            {molecule.coordinates.kind === 'computed' ? 'Computed structure (PubChem)' : 'Measured structure (NIST CCCBDB)'}
+            {STRUCTURE_KINDS[molecule.coordinates.kind].tag}
           </span>
         </p>
         <p className="info-summary">{molecule.summary}</p>

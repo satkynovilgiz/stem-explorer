@@ -97,13 +97,29 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   (IntersectionObserver), cards lift on hover and their pictures drift; the Chemistry molecule
   floats. Only transform/translate/opacity animate. With `prefers-reduced-motion: reduce`
   nothing moves: no entrance, no reveal (nothing is hidden), and the electrons are drawn still.
-- **Subject openings** (`src/features/subjects/SubjectIntro.tsx`, `subject-intro.css`): opening a
-  subject from elsewhere in the app plays a 1.7 s themed animation with the subject's name: water
-  forming at its 104.5° angle (Chemistry), a beating heart and ECG trace (Anatomy), a turning DNA
-  helix (Biology), a projectile on its parabola (Physics), a curve drawn across axes
-  (Mathematics). It is decorative: hidden from screen readers, and clicks pass through it. It does
-  not play on a reload or shared link, between tabs of a subject, or with
-  `prefers-reduced-motion: reduce`.
+- **Subject intros** (`src/features/subjects/SubjectIntro.tsx`, `useSubjectIntro.ts`,
+  `subject-intro.css`): a 1.5 s animation inside the header's subject mark (water forming at
+  104.5°, a heartbeat trace, a turning helix, a projectile on its parabola, a curve across axes).
+  Nothing is covered and nothing moves, so the page is usable at once. It plays at most once per
+  subject per browser session (`sessionStorage`). A direct link or reload counts as that subject's
+  visit and never plays, so Back and Forward cannot play it either. Tab changes do not play it, and
+  `prefers-reduced-motion` stops it, also when the preference changes while it runs.
+- **Student questions in search** (`src/lib/queryMatch.ts`, `resultType.ts`): every search reduces
+  a question to its content words with fixed rules (question words dropped, plurals made singular, a
+  short alias list), after first trying what was typed, so symbols such as I, He and pH survive.
+  "Mole" never matches "molecule", and terms of up to three letters must start a word. Results say
+  **Explanation**, **Calculator** or **Interactive model**, and Back restores the query and filters.
+  With no results, close spellings are offered to choose from; the query is never changed by itself.
+- **Chemistry student journeys**: each beginner explanation has a direct answer, terms, a worked
+  example, a common mistake, a next step and visible limits. The next step opens the matching task:
+  5 g of water in the molar-mass calculator (`cv=formula:H2O,mass:5`), the stock volume in the
+  dilution calculator, atom counts with the reason each one changes, or the water model with the
+  angle tool ready (`mtool=angle`). Calculators keep the formula and its meanings together, say what
+  a result means and explain a bad value beside its field.
+- **When 3D cannot run**: a compact message, and for molecules a flat drawing made from the same
+  coordinates, labelled by origin, with the reported bond lengths and angles. A tab left open across
+  a new deploy reloads itself once when a code file has gone (`src/lib/staleBuild.ts`), and otherwise
+  offers **Reload page**, because a page remembers a failed download and *Try again* cannot fix it.
 - **Subject headers** (`src/components/SubjectBar.tsx`, `app.css`): every subject has the same two
   rows on its own colour: the subject's mark, the breadcrumb above its name, search and controls,
   then the destination tabs as pills with the current one filled (white on each subject colour is

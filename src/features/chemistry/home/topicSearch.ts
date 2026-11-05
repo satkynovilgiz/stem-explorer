@@ -1,4 +1,5 @@
 import { normalize } from '../../../lib/chemistry'
+import { contentWords, squash, words } from '../../../lib/queryMatch'
 import { learnHref } from '../../reference/route'
 import type { ChemItem } from './chemIndex'
 
@@ -38,7 +39,7 @@ export const TOPICS: readonly ChemTopic[] = [
     actions: [
       { kind: 'read', href: learnHref('the-mole') },
       { kind: 'example', href: learnHref('the-mole', 'example') },
-      { kind: 'calculate', href: '?csec=reactions&rx=ammonia-synthesis#/chemistry' },
+      { kind: 'calculate', href: '?csec=tools&calc=molar-mass&cv=formula:H2O,mass:5#/chemistry' },
     ],
     terms: ['mole', 'moles', 'mol', 'what is a mole', 'avogadro', 'avogadro number', 'avogadro constant', 'amount of substance', 'mole ratio', 'stoichiometry'],
   },
@@ -65,7 +66,7 @@ export const TOPICS: readonly ChemTopic[] = [
       { kind: 'example', href: learnHref('dilution', 'example') },
       { kind: 'calculate', href: '?csec=solutions&st=dilution#/chemistry' },
     ],
-    terms: ['dilution', 'dilute', 'diluting', 'stock solution', 'how much water', 'add water', 'water to add', 'lower the concentration', 'make a solution weaker'],
+    terms: ['dilution', 'dilute', 'diluting', 'dilute a solution', 'stock solution', 'how much water', 'add water', 'water to add', 'lower the concentration', 'make a solution weaker'],
     ids: ['C1V1 = C2V2', 'M1V1 = M2V2'],
   },
   {
@@ -88,20 +89,12 @@ export const TOPICS: readonly ChemTopic[] = [
     actions: [
       { kind: 'read', href: learnHref('water') },
       { kind: 'example', href: learnHref('water', 'example') },
-      { kind: 'explore', href: '?molecule=water&view=ball-and-stick#/chemistry' },
+      { kind: 'explore', href: '?molecule=water&view=ball-and-stick&mtool=angle#/chemistry' },
     ],
     terms: ['water', 'why is water bent', 'bent', 'water shape', 'water molecule', 'lone pair', 'polar'],
     ids: ['H2O'],
   },
 ]
-
-const STOP = new Set(['what', 'whats', 'is', 'are', 'a', 'an', 'the', 'how', 'do', 'does', 'did', 'i', 'to', 'of', 'in', 'on', 'for', 'why', 'can', 'you', 'my', 'me', 'much', 'many', 'and', 'or', 'with', 'about', 'please', 'explain', 'tell', 'mean', 'means'])
-/** Singular form for matching: "moles" → "mole", "molecules" → "molecule", "boxes" → "box", "properties" → "property". */
-const stem = (w: string) =>
-  w.length > 4 && w.endsWith('ies') ? `${w.slice(0, -3)}y` : w.length > 4 && /(ch|sh|x|z|ss)es$/.test(w) ? w.slice(0, -2) : w.length > 3 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w
-const words = (s: string) => normalize(s).replace(/[^\p{L}\p{N}/=]+/gu, ' ').trim().split(/\s+/).filter(Boolean)
-const squash = (s: string) => normalize(s).replace(/[\s·×*()]/g, '')
-const contentWords = (s: string) => words(s).filter((w) => !STOP.has(w)).map(stem)
 
 /** Score of one candidate for a query (0 = no match). */
 function score(c: { title: string; terms: readonly string[]; ids?: readonly string[] }, q: string): number {
