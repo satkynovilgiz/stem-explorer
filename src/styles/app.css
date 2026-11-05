@@ -9331,3 +9331,52 @@ html.ws-focus .chem-shell, html.is-presenting .chem-shell { grid-template-column
 .chem-shell-main .calc-input { width: 100%; flex: 1 1 60px; }
 .chem-shell-main .calc-answers, .chem-shell-main .sol-steps { overflow-wrap: anywhere; }
 @media (max-width: 640px) { .chem-shell-main .calc-form { grid-template-columns: minmax(0, 1fr); } }
+
+/* Chemistry's strip, larger and easier to read, with a hover that responds. */
+.chem-shell { grid-template-columns: 112px minmax(0, 1fr); }
+.chem-rail ul { gap: 4px; padding: 8px; }
+.chem-rail-link { position: relative; gap: 6px; min-height: 76px; padding: 10px 4px; border-radius: 16px; color: var(--color-text); font-size: 0.875rem; }
+.chem-rail-link:hover { background: var(--color-accent-soft); color: var(--subject-chemistry); }
+.chem-rail-link::before { content: ''; position: absolute; left: -4px; top: 50%; width: 4px; height: 0; border-radius: 4px; background: var(--subject-chemistry); translate: 0 -50%; }
+.chem-rail-link:hover::before { height: 36px; }
+.chem-rail-link[aria-current='page'] { background: linear-gradient(150deg, #128a7a, var(--subject-chemistry)); box-shadow: 0 10px 20px -12px var(--subject-chemistry); }
+.chem-rail-link[aria-current='page']:hover { color: #fff; }
+.chem-rail-link[aria-current='page']::before { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .chem-rail-link { transition: background-color 0.18s ease, color 0.18s ease, translate 0.18s ease, box-shadow 0.18s ease; }
+  .chem-rail-link svg { transition: scale 0.22s cubic-bezier(0.3, 1.6, 0.5, 1), translate 0.22s cubic-bezier(0.3, 1.6, 0.5, 1); }
+  .chem-rail-link::before { transition: height 0.18s ease; }
+  .chem-rail-link:hover { translate: 2px 0; }
+  .chem-rail-link:hover svg { scale: 1.16; translate: 0 -2px; }
+  .chem-rail-link:active svg { scale: 0.96; }
+}
+@media (max-width: 640px) {
+  .chem-shell { grid-template-columns: 84px minmax(0, 1fr); }
+  .chem-rail ul { gap: 2px; padding: 4px; }
+  .chem-rail-link { min-height: 64px; padding: 8px 2px; font-size: 0.75rem; border-radius: 13px; }
+}
+@media (max-width: 640px) {
+  .chem-shell-main .sol-lab, .chem-shell-main .sol-tool, .chem-shell-main .sol-field, .chem-shell-main .sol-solve-for { min-width: 0; max-width: 100%; }
+  .chem-shell-main .sol-grid { grid-template-columns: minmax(0, 1fr); }
+  .chem-shell-main .sol-input { min-width: 0; flex: 1 1 60px; }
+}
+
+/* Chemistry's header: one row. ← Home as a button, then the subject once, then where you are. */
+.chem-bar.is-chemistry .chem-bar-main { min-height: 60px; padding-block: 6px; }
+.chem-bar.is-chemistry .chem-bar-title { flex: 1 1 0; display: block; }
+.chem-bar.is-chemistry .crumbs ol { flex-wrap: nowrap; align-items: center; gap: 6px; font-size: 0.9375rem; }
+.chem-bar.is-chemistry .crumb-home { min-height: 44px; padding: 0 14px 0 10px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); text-decoration: none; }
+.chem-bar.is-chemistry .crumb-home:hover { border-color: var(--subject-chemistry); background: var(--color-accent-soft); }
+.chem-bar.is-chemistry .crumb-home + .crumb-sep { display: none; }
+.chem-bar.is-chemistry .crumbs li:first-child { margin-right: 8px; }
+.chem-bar.is-chemistry .crumb-subject { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--color-text); font-size: 1.1875rem; font-weight: 700; letter-spacing: -0.015em; text-decoration: none; }
+.chem-bar.is-chemistry .crumb-subject:hover { color: var(--subject-chemistry); }
+.chem-bar.is-chemistry .crumb-subject .chem-brand-mark { width: 36px; height: 36px; border-radius: 11px; }
+.chem-bar.is-chemistry .crumb-subject svg { display: block; }
+.chem-bar.is-chemistry .crumb-module, .chem-bar.is-chemistry .crumb-topic { color: var(--color-text-muted); font-weight: 500; }
+@media (max-width: 640px) {
+  .chem-bar.is-chemistry .crumb-subject { gap: 6px; font-size: 1.0625rem; }
+  .chem-bar.is-chemistry .crumb-subject .chem-brand-mark { display: none; }
+  .chem-bar.is-chemistry .crumb-module { display: none; }
+  .chem-bar.is-chemistry .crumb-module + .crumb-sep { display: none; }
+}

@@ -38,10 +38,10 @@ test.describe('Subject intro', () => {
     await page.goto('/')
     await open(page, 'chemistry')
     await expect(intro(page)).toBeVisible()
-    const during = (await page.locator('.chem-brand').boundingBox())!
+    const during = (await page.locator('.crumb-subject').boundingBox())!
     const barDuring = (await page.locator('.subject-bar').boundingBox())!
     await expect(intro(page)).toHaveCount(0)
-    expect(await page.locator('.chem-brand').boundingBox()).toEqual(during)
+    expect(await page.locator('.crumb-subject').boundingBox()).toEqual(during)
     expect(await page.locator('.subject-bar').boundingBox()).toEqual(barDuring)
   })
 
