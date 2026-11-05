@@ -122,6 +122,6 @@ test('Chemistry’s side menu marks the current section; the header has a search
   await page.goBack()
   await expect(page.locator('#element-heading')).toHaveText('Iron')
   // The brand leads to the Overview.
-  await page.getByRole('link', { name: 'Chemistry Explorer: Overview' }).click()
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Chemistry', exact: true }).click()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('What would you like to understand?')
 })

@@ -29,7 +29,7 @@ export function ChemRail({ moduleId }: { moduleId: string }) {
           return (
             <li key={m.label}>
               <AppLink href={m.href} className="chem-rail-link" title={m.hint} aria-current={(m.modules as readonly string[]).includes(moduleId) ? 'page' : undefined}>
-                <Icon size={20} aria-hidden="true" />
+                <Icon size={26} strokeWidth={1.75} aria-hidden="true" />
                 {m.label}
               </AppLink>
             </li>

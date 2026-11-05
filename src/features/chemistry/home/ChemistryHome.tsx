@@ -17,6 +17,7 @@ import { availableChapters, CONTENTS_LABELS } from './contents'
 import { readHomeState, writeHomeState, type HomeState, type ResultFilter } from './homeState'
 import { CHEM_QUESTIONS } from './questions'
 import { ACTION_TEXT, searchTopics, type ActionKind, type SearchResult } from './topicSearch'
+import { ChemistryHeroArt } from './ChemistryHeroArt'
 import { CHEM_DESTINATIONS, CHEM_SEARCH_EXAMPLES, type ChemDestinationId } from './chemDestinations'
 
 const ICONS: Record<(typeof CHEM_GROUPS)[number]['icon'], ReactNode> = {
@@ -95,10 +96,10 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
       <header className="chem-home-head">
         <div className="chem-home-title-wrap">
           {page === 'overview' && <p className="chem-eyebrow">Chemistry</p>}
-          <h1 className="chem-home-title">{heading.title}</h1>
+          <h1 className="chem-home-title">{page === 'overview' ? <>What would you like to <span className="chem-hero-word">understand?</span></> : heading.title}</h1>
           <p className="chem-home-lead">{heading.lead}</p>
         </div>
-        {page === 'overview' && <WaterArt />}
+        {page === 'overview' && <ChemistryHeroArt />}
       </header>
 
       <form
@@ -233,19 +234,6 @@ const DESTINATION_ICONS: Record<ChemDestinationId, ReactNode> = {
   calculate: <Calculator size={22} aria-hidden="true" />,
   explore: <Box size={22} aria-hidden="true" />,
   periodic: <Grid3x3 size={22} aria-hidden="true" />,
-}
-
-/** A small decorative water molecule beside the introduction. */
-function WaterArt() {
-  return (
-    <svg className="chem-water-art" viewBox="0 0 120 90" aria-hidden="true" focusable="false">
-      <line x1="60" y1="32" x2="30" y2="58" />
-      <line x1="60" y1="32" x2="90" y2="58" />
-      <circle cx="30" cy="60" r="13" className="is-h" />
-      <circle cx="90" cy="60" r="13" className="is-h" />
-      <circle cx="60" cy="32" r="21" className="is-o" />
-    </svg>
-  )
 }
 
 function Overview({ items }: { items: readonly ChemItem[] }) {

@@ -12,6 +12,27 @@ test.describe('Chemistry navigation', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0)
   })
 
+  test('the header says Chemistry once, beside the way Home', async ({ page }) => {
+    for (const url of [OVERVIEW, '/?csec=solutions&st=molarity#/chemistry']) {
+      await page.goto(url)
+      const bar = page.locator('.subject-bar')
+      await expect(bar.getByText('Chemistry', { exact: true })).toHaveCount(1)
+      const home = (await bar.getByRole('link', { name: 'Home' }).boundingBox())!
+      const subject = (await bar.getByRole('link', { name: 'Chemistry', exact: true }).boundingBox())!
+      expect(home.height).toBeGreaterThanOrEqual(44)
+      // Side by side, on one row.
+      expect(Math.abs(home.y + home.height / 2 - (subject.y + subject.height / 2))).toBeLessThanOrEqual(2)
+    }
+  })
+
+  test('the strip is large enough to read and tap', async ({ page }) => {
+    await page.goto('/?csec=tools#/chemistry')
+    const link = (await chemMenu(page)).getByRole('link', { name: 'Molecules', exact: true })
+    const box = (await link.boundingBox())!
+    expect(box.height).toBeGreaterThanOrEqual(64)
+    expect(parseFloat(await link.evaluate((el) => getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(14)
+  })
+
   test('the strip works from the keyboard', async ({ page }) => {
     await page.goto('/?csec=tools#/chemistry')
     const link = (await chemMenu(page)).getByRole('link', { name: 'Molecules', exact: true })
@@ -79,6 +100,23 @@ test.describe('Chemistry navigation', () => {
     await expect(all).toHaveAttribute('href', /q=Balance%20an%20equation#\/search/)
   })
 
+  test('the home page panel keeps its words and search; its picture is decorative and stands still with reduced motion', async ({ page }) => {
+    await page.goto(OVERVIEW)
+    await expect(page.getByRole('heading', { level: 1, name: 'What would you like to understand?' })).toBeVisible()
+    await expect(page.getByText('Clear explanations, useful calculations, and interactive models.')).toBeVisible()
+    await expect(page.locator('.chem-hero-art')).toHaveAttribute('aria-hidden', 'true')
+    await expect(page.locator('.chem-hero-art animateMotion')).toHaveCount(3)
+    // The search stays usable on top of the panel's edge.
+    await page.getByRole('searchbox').first().click()
+    await expect(page.getByRole('searchbox').first()).toBeFocused()
+
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.reload()
+    await expect(page.locator('.chem-hero-art svg')).toBeVisible()
+    await expect(page.locator('.chem-hero-art animateMotion')).toHaveCount(0)
+    expect(await page.evaluate(() => document.querySelector('.chem-home')!.getAnimations({ subtree: true }).length)).toBe(0)
+  })
+
   test('search, open a result, Back: the query and results return', async ({ page }) => {
     await page.goto(OVERVIEW)
     await page.getByRole('searchbox').first().fill('water molecule')
@@ -131,7 +169,7 @@ test.describe('Chemistry navigation', () => {
   test('regression: with the strip, Chemistry pages do not scroll sideways on small phones', async ({ page }) => {
     for (const width of [320, 390]) {
       await page.setViewportSize({ width, height: 700 })
-      for (const url of ['/?molecule=water#/chemistry', '/?csec=periodic#/chemistry', '/?csec=atomic&el=6#/chemistry', '/?csec=bonding#/chemistry', '/?csec=reactions&rx=methane-combustion#/chemistry', '/?csec=tools#/chemistry', OVERVIEW]) {
+      for (const url of ['/?molecule=water#/chemistry', '/?csec=periodic#/chemistry', '/?csec=atomic&el=6#/chemistry', '/?csec=bonding#/chemistry', '/?csec=reactions&rx=methane-combustion#/chemistry', '/?csec=tools#/chemistry', '/?csec=solutions&st=molarity#/chemistry', '/?csec=solutions&st=dilution#/chemistry', '/?csec=contents#/chemistry', '/?csec=library#/chemistry', '/?csec=learn&lt=the-mole#/chemistry', OVERVIEW]) {
         await page.goto(url)
         await expect(page.locator('.chem-rail')).toBeVisible()
         // After lazy pages have appeared: the search box once overflowed only then.

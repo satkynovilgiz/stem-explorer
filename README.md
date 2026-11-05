@@ -127,6 +127,10 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   controls sit beside the model. The Overview is search-first: one search box, example searches, four
   destination cards and common questions. Results show on the page, and *Search all subjects* carries
   the query. Every older link still opens the same page.
+- **Chemistry home panel** (`features/chemistry/home/ChemistryHeroArt.tsx`): a tinted panel with a
+  water molecule at its real 104.5° angle, an atom with moving electrons and drifting formula chips,
+  with the search resting on its edge. The picture is decorative and hidden from screen readers, and
+  everything stands still with `prefers-reduced-motion`.
 - **Subject headers** (`src/components/SubjectBar.tsx`, `app.css`): every subject has the same two
   rows on its own colour: the subject's mark, the breadcrumb above its name, search and controls,
   then the destination tabs as pills with the current one filled (white on each subject colour is
