@@ -5,6 +5,7 @@ import { AppLink } from '../../../components/AppLink'
 import { calculatorsOf } from '../../../calc'
 import { calculatorsHref } from '../../../lib/overviewRoute'
 import { ELEMENTS } from '../../../data/chemistry/periodicTable'
+import { STRUCTURE_KINDS } from '../../../data/chemistry/structureKinds'
 import { MOLECULES } from '../../../data/chemistry/molecules'
 import { subjectName } from '../../../lib/explorations'
 import { normalize } from '../../../lib/chemistry'
@@ -208,7 +209,7 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
       )}
 
       <p className="chem-home-foot">
-        <BookOpen size={18} aria-hidden="true" /> Explanations with sources, worked examples and clear definitions. Molecule geometries come from NIST measurements.
+        <BookOpen size={18} aria-hidden="true" /> Explanations with sources, worked examples and clear definitions. Each molecule says whether its shape is experimental (NIST CCCBDB) or computed (PubChem3D).
       </p>
     </div>
   )
@@ -418,9 +419,9 @@ function MoleculeSections({ list, q, onClear }: { list: typeof MOLECULES; q: str
       {measured.length > 0 && (
         <section className="chem-section" aria-labelledby="mol-measured">
           <h2 id="mol-measured" className="chem-h2">
-            Measured structures ({measured.length})
+            {STRUCTURE_KINDS.experimental.heading} ({measured.length})
           </h2>
-          <p className="chem-section-note">Atom positions from experiment (NIST CCCBDB), with the reported bond lengths and angles.</p>
+          <p className="chem-section-note">{STRUCTURE_KINDS.experimental.description}</p>
           <MoleculeGrid list={measured} q={q} onClear={onClear} />
         </section>
       )}
@@ -429,7 +430,7 @@ function MoleculeSections({ list, q, onClear }: { list: typeof MOLECULES; q: str
           <h2 id="mol-computed" className="chem-h2">
             Everyday and biological molecules ({computed.length})
           </h2>
-          <p className="chem-section-note">Computed 3D shapes from PubChem (a force-field model, not a measurement). Measure them with the Distance and Angle tools.</p>
+          <p className="chem-section-note">{STRUCTURE_KINDS.computed.description}</p>
           <MoleculeGrid list={computed} q={q} onClear={onClear} />
         </section>
       )}

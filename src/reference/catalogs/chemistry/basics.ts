@@ -143,11 +143,12 @@ export const BASICS: ReferenceEntry[] = [
     title: 'What is a mole?',
     summary: 'The chemist’s counting unit: one mole is 6.022 × 10²³ particles.',
     simple:
-      'A mole is a number of particles, like “a dozen” means 12. One mole means 6.022 × 10²³ particles (atoms, molecules or ions). Atoms are so small that even a teaspoon of water contains far more than a mole’s worth of molecules.',
+      'A mole is a counting number, like “a dozen” means 12. One mole means 6.022 × 10²³ particles (atoms, molecules or ions). Molecules are so small that 5 g of water, roughly a teaspoon, is only about 0.28 mol, yet it still holds about 1.7 × 10²³ molecules.',
     why: 'Chemical equations count particles, but in the lab we weigh substances. The mole connects the two: it lets you turn a mass in grams into a number of particles, and back.',
     keyTerms: [
-      { term: 'Mole (mol)', meaning: 'the amount of substance containing exactly 6.02214076 × 10²³ particles' },
-      { term: 'Avogadro’s number (N_A)', meaning: '6.022 × 10²³ per mole, the number of particles in one mole' },
+      { term: 'Mole (mol)', meaning: 'the SI unit of amount of substance: exactly 6.02214076 × 10²³ of whichever particle you name' },
+      { term: 'Avogadro’s number (N_A)', meaning: 'the number of particles per mole: exactly 6.02214076 × 10²³ per mole, usually rounded to 6.022 × 10²³' },
+      { term: 'Molar mass', meaning: 'the mass of one mole of a substance, in g/mol' },
       { term: 'Particle', meaning: 'whatever is being counted: atoms, molecules or ions (always say which)' },
     ],
     aliases: ['mole', 'Avogadro constant', 'Avogadro number', 'amount of substance', 'what is a mole'],
@@ -156,12 +157,27 @@ export const BASICS: ReferenceEntry[] = [
     prerequisites: ['atoms-elements-molecules'],
     where: 'Every calculation of amounts in chemistry.',
     explanation: [
-      'The mole is defined so that a mole of an element has a mass in grams equal to its average atomic mass in atomic mass units. That makes the periodic table directly useful: one mole of carbon atoms has a mass of about 12.01 g.',
+      'The mole is defined by a fixed number of particles, not by a mass. A useful result is that the mass of one mole in grams has almost exactly the same number as the average atomic mass in atomic mass units, which makes the periodic table directly useful: one mole of carbon atoms has a mass of about 12.01 g.',
       'To convert between particles and moles, multiply or divide by Avogadro’s number: particles = moles × 6.022 × 10²³.',
     ],
-    conditions: ['Say what kind of particle you are counting: one mole of water molecules contains two moles of hydrogen atoms.'],
+    conditions: [
+      'Say what kind of particle you are counting: one mole of water molecules contains two moles of hydrogen atoms.',
+      'The teaspoon comparison is only a rough picture. It assumes a spoonful of about 5 mL and a density of about 1 g/mL; real spoonfuls vary.',
+    ],
     examples: [
       {
+        title: 'From grams to moles',
+        problem: 'How many moles of water are in 5 g of water (roughly a teaspoon), and how many molecules is that?',
+        given: ['mass of water: m = 5 g', 'molar mass of H₂O: M = 2 × 1.008 + 15.999 = 18.015 g/mol', 'Avogadro’s number: 6.022 × 10²³ molecules per mole'],
+        find: 'the amount of water, n, in moles, and the number of molecules, N',
+        relationship: '$n = m / M$, then $N = n \\times N_A$',
+        convert: 'None needed: the mass is in grams and the molar mass in g/mol.',
+        steps: ['$n = \\dfrac{5\\ \\text{g}}{18.015\\ \\text{g/mol}} \\approx 0.278\\ \\text{mol}$', '$N = 0.278\\ \\text{mol} \\times 6.022 \\times 10^{23}\\ \\text{mol}^{-1} \\approx 1.7 \\times 10^{23}$'],
+        answer: 'About 0.28 mol, or about 1.7 × 10²³ water molecules: much less than one mole. A whole mole of water is about 18 g.',
+        check: { value: 5 / 18.015, expected: 0.2775, unit: 'mol' },
+      },
+      {
+        title: 'From moles to molecules',
         problem: 'How many water molecules are in 2.00 mol of water?',
         given: ['amount of water: 2.00 mol', 'Avogadro’s number: 6.022 × 10²³ molecules per mole'],
         find: 'the number of water molecules',
@@ -177,7 +193,12 @@ export const BASICS: ReferenceEntry[] = [
       { id: 'molar-mass', why: 'Molar mass turns a mass in grams into moles.' },
       { id: 'mole-ratios', why: 'Equations relate substances in moles.' },
     ],
-    sources: [{ id: 'chem-3-1', locator: '§3.1 the mole and Avogadro’s number' }],
+    sources: [
+      { id: 'chem-3-1', locator: '§3.1 the mole and Avogadro’s number; one mole of water is about 18 g' },
+      { id: 'bipm-mole', locator: 'SI definition of the mole' },
+      { id: 'nist-avogadro', locator: 'exact value of the Avogadro constant' },
+      { id: 'chem-1-4', locator: 'Table 1.4 density of water, about 1.0 g/cm³' },
+    ],
     links: [{ label: 'Reactions and stoichiometry lab', href: '?csec=reactions#/chemistry', kind: 'tool' }],
   },
   {
@@ -286,7 +307,10 @@ export const BASICS: ReferenceEntry[] = [
       { id: 'reading-chemical-formulas', why: 'Counting atoms relies on subscripts and coefficients.' },
       { id: 'mole-ratios', why: 'A balanced equation gives the mole ratios.' },
     ],
-    sources: [{ id: 'chem-4-1', locator: '§4.1 balancing equations (combustion of methane)' }],
+    sources: [
+      { id: 'chem-4-1', locator: '§4.1 balancing equations (methane and oxygen); why subscripts must not change' },
+      { id: 'chem-4-2', locator: '§4.2 combustion reactions' },
+    ],
     links: [{ label: 'Balance it step by step', href: '?csec=reactions&rx=methane-combustion#/chemistry', kind: 'tool' }],
   },
   {

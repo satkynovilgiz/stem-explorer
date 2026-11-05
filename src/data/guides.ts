@@ -69,7 +69,7 @@ export const GUIDES: Record<SubjectId, SubjectGuide> = {
       'Atom colours follow the CPK convention and are labels, not real colours.',
     ],
     modelKinds: {
-      measured: ['Atom coordinates and reported bond lengths and angles of the 12 small molecules (experimental geometries, NIST CCCBDB)'],
+      measured: ['Atom coordinates and reported bond lengths and angles of the 12 small molecules (experimental measurements, NIST CCCBDB)'],
       computed: [
         'Atom coordinates of the 15 everyday and biological molecules (PubChem3D conformers, a force-field model)',
         'Distances and angles from the Distance and Angle tools, calculated from the coordinates',

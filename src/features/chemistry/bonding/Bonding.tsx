@@ -1,3 +1,4 @@
+import { STRUCTURE_KINDS } from '../../../data/chemistry/structureKinds'
 import { useId, useState } from 'react'
 import { ShareActions } from '../../../components/ShareActions'
 import { electronegativityOf } from '../../../data/chemistry/atomic'
@@ -85,7 +86,7 @@ export function BondingView({ onOpenMolecule }: { onOpenMolecule: (id: string) =
   return (
     <section className="panel bonding-view" aria-labelledby={`${id}-h`}>
       <h2 id={`${id}-h`} className="panel-title">
-        Bonding and geometry
+        Bonding and geometry <span className="kind-tag kind-schematic">{STRUCTURE_KINDS.illustrative.tag}</span>
       </h2>
       <div className="bond-cards">
         {BOND_TYPES.map((b) => (

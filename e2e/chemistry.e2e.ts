@@ -131,13 +131,13 @@ test('chemistry sections: atomic structure, bonding, and backward-compatible lin
 
 test('the computed molecules open, say they are computed, and can be measured', async ({ page }) => {
   await page.goto('/?csec=library#/chemistry')
-  await expect(page.getByRole('heading', { level: 2, name: 'Measured structures (12)' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'Experimental structures (12)' })).toBeVisible()
   await expect(page.getByRole('heading', { level: 2, name: 'Everyday and biological molecules (15)' })).toBeVisible()
   await page.locator('.chem-molecule-card', { hasText: 'Caffeine' }).click()
   await waitForViewport(page)
   await expect(page.locator('#molecule-heading')).toHaveText('Caffeine')
   await expect(page.locator('.data-table tfoot td')).toHaveText('24')
-  await expect(page.locator('.info-kind')).toHaveText('Computed structure (PubChem)')
+  await expect(page.locator('.info-kind')).toHaveText('Computed conformer (PubChem3D)')
   await page.getByRole('tab', { name: 'Structure' }).click()
   await expect(page.locator('.info')).toContainText('No measured bond lengths or angles are quoted')
   // The distance tool measures the computed model: a C=O bond near 1.22 Å.

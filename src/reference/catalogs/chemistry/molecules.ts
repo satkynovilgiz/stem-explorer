@@ -11,7 +11,7 @@ export const MOLECULES: ReferenceEntry[] = [
     summary: 'H₂O: a bent molecule whose polarity explains much of its behaviour as a liquid and a solvent.',
     simple:
       'A water molecule is one oxygen atom joined to two hydrogen atoms. It is bent like a wide V, not straight, because oxygen also has two pairs of electrons that are not shared, and they push the two hydrogens closer together.',
-    why: 'The bent shape makes water polar: one side slightly negative, the other slightly positive. That is why water dissolves salt and sugar so well and why it is the solvent of living cells.',
+    why: 'The bent shape makes water polar: one side slightly negative, the other slightly positive. Those charged ends attract ions, which helps water dissolve many ionic compounds such as table salt.',
     keyTerms: [
       { term: 'Lone pair', meaning: 'two outer electrons on an atom that are not shared in a bond' },
       { term: 'Bond angle', meaning: 'the angle between two bonds at the atom they share; about 104.5° for H–O–H' },
@@ -26,13 +26,13 @@ export const MOLECULES: ReferenceEntry[] = [
     bonding: 'Two polar O–H covalent bonds; oxygen also carries two lone pairs.',
     geometry: 'Four electron pairs around oxygen give a tetrahedral electron-pair geometry; with two of them lone pairs, the molecular structure is bent, with an H–O–H angle of 104.5°.',
     properties: [
-      { name: 'H–O–H bond angle', value: '104.5°', conditions: 'isolated molecule' },
+      { name: 'H–O–H bond angle', value: '104.5°', conditions: 'isolated molecule, experimental (rounded from 104.48°)' },
       { name: 'Polarity', value: 'polar: the bond dipoles do not cancel in the bent shape' },
     ],
-    relevance: 'Water is the solvent of living cells and of most laboratory solutions. Its polarity lets it dissolve ionic and polar substances.',
+    relevance: 'Many laboratory solutions are made in water, and its polarity helps it dissolve many ionic compounds.',
     explanation: [
       'Valence-shell electron-pair repulsion (VSEPR) predicts the shape: oxygen’s four electron pairs spread toward the corners of a tetrahedron. Lone pairs repel more strongly than bonding pairs, so the angle between the bonds closes from 109.5° to 104.5°.',
-      'Because the molecule is bent, the two O–H bond dipoles add to a net dipole pointing from the hydrogens toward the oxygen. A linear molecule with the same bonds, like CO₂ with C=O bonds, can be non-polar overall.',
+      'Because the molecule is bent, the two O–H bond dipoles add to a net dipole pointing from the hydrogens toward the oxygen. A linear molecule whose polar bonds point in exactly opposite directions, like CO₂, has no net dipole.',
     ],
     conditions: ['The 104.5° angle is for a single molecule; in liquid water and ice the molecules interact and the geometry fluctuates.'],
     examples: [
@@ -57,10 +57,14 @@ export const MOLECULES: ReferenceEntry[] = [
       { id: 'molecule-models', why: 'How to read the spheres, sticks and colours of the water model.' },
       { id: 'chemical-bonds', why: 'Water’s O–H bonds are polar covalent bonds.' },
     ],
-    sources: [{ id: 'chem-7-6', locator: '§7.6 Example 7.13 (water: tetrahedral electron pairs, bent, 104.5°); molecular polarity' }],
+    sources: [
+      { id: 'chem-7-6', locator: '§7.6 Example 7.13 (water: tetrahedral electron pairs, bent, 104.5°); lone-pair repulsion; molecular polarity' },
+      { id: 'cccbdb-water', locator: 'experimental geometry: O–H 0.958 Å, H–O–H 104.4776°' },
+      { id: 'chem-11-2', locator: '§11.2 ion-dipole attractions when ionic compounds dissolve in water' },
+    ],
     moleculeId: 'water',
     links: [{ label: 'Water in the molecule viewer', href: '?molecule=water#/chemistry', kind: '3d' }],
-    modelLimitations: ['The 3D viewer uses fixed illustrative coordinates; real molecules vibrate.'],
+    modelLimitations: ['The 3D viewer shows one fixed experimental geometry (NIST CCCBDB); real molecules vibrate. Lone pairs are described here but not drawn in the model.'],
   },
   {
     id: 'electron-pair-geometry',

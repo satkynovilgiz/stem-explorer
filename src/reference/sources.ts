@@ -40,6 +40,10 @@ export const LIBRARY_SOURCES: Record<string, SourceRef> = {
   'chem-5-1': openstax('chemistry-2e', '5-1-energy-basics', '5.1 Energy Basics'),
   'chem-14-1': openstax('chemistry-2e', '14-1-bronsted-lowry-acids-and-bases', '14.1 Brønsted-Lowry Acids and Bases'),
   'chem-14-2': openstax('chemistry-2e', '14-2-ph-and-poh', '14.2 pH and pOH'),
+  'chem-11-2': openstax('chemistry-2e', '11-2-electrolytes', '11.2 Electrolytes'),
+  'bipm-mole': { label: 'BIPM — SI base unit: mole', url: 'https://www.bipm.org/en/si-base-units/mole' },
+  'nist-avogadro': { label: 'NIST CODATA — Avogadro constant', url: 'https://physics.nist.gov/cgi-bin/cuu/Value?na' },
+  'cccbdb-water': { label: 'NIST CCCBDB — Experimental geometry of water', url: 'https://cccbdb.nist.gov/expgeom2x.asp?casno=7732185' },
   'jmol-colors': { label: 'Jmol — CPK element colours', url: 'https://jmol.sourceforge.net/jscolors/' },
 }
 

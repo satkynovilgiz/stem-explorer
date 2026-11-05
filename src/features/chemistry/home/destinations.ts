@@ -18,8 +18,8 @@ export const VISUALIZATIONS: readonly Destination[] = [
     title: 'Molecule viewer',
     href: '?molecule=water&view=ball-and-stick#/chemistry',
     text: 'Turn a molecule in 3D and measure its bond lengths and bond angles.',
-    inputs: '27 molecules (12 measured, 15 computed) · ball-and-stick or space-filling · distance and angle tools',
-    note: 'Each molecule says where its shape comes from: measured (NIST CCCBDB) or computed (PubChem3D). Atom colours are a labelling convention.',
+    inputs: '27 molecules (12 experimental, 15 computed) · ball-and-stick or space-filling · distance and angle tools',
+    note: 'Each molecule says where its shape comes from: experimental (NIST CCCBDB) or computed (PubChem3D). Atom colours are a labelling convention.',
   },
   {
     title: 'Atomic structure',

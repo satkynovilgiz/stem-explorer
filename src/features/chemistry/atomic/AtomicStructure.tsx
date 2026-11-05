@@ -1,3 +1,4 @@
+import { STRUCTURE_KINDS } from '../../../data/chemistry/structureKinds'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useId, useState } from 'react'
 import { ShareActions } from '../../../components/ShareActions'
@@ -145,7 +146,7 @@ export function AtomicStructureView({ z, onChange }: { z: number; onChange: (z: 
     <section className="panel atomic-view" aria-labelledby="atomic-view-heading">
       <div className="atomic-head">
         <h2 id="atomic-view-heading" className="panel-title">
-          Atomic structure
+          Atomic structure <span className="kind-tag kind-schematic">{STRUCTURE_KINDS.illustrative.tag}</span>
         </h2>
         <ElementPicker z={z} onChange={onChange} />
       </div>

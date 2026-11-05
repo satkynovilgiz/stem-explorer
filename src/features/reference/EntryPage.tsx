@@ -540,14 +540,9 @@ function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEnt
                 <RichText text={p} />
               </p>
             ))}
-            <h3 className="ref-sub">Conditions and limitations</h3>
-            <List items={e.conditions} />
-            {e.modelLimitations?.length ? (
-              <>
-                <h3 className="ref-sub">How the app’s model simplifies this</h3>
-                <List items={e.modelLimitations} />
-              </>
-            ) : null}
+          </Section>
+          <Section title="Limits of this explanation">
+            <List items={[...e.conditions, ...(e.modelLimitations ?? [])]} />
           </Section>
         </>
       ) : (
@@ -615,8 +610,8 @@ function EntryView({ entry: e, manifest, context, focus }: { entry: ReferenceEnt
           })}
         </ul>
         <p className="small muted">
-          The text is written for this app and paraphrases the cited sources. Each entry passes an automated completeness check; that check does not establish
-          scientific accuracy, and no entry has been reviewed by a subject expert.
+          The text is written for this app and paraphrases the cited sources. Automated checks confirm that an entry is complete and that its example arithmetic
+          works; they do not establish scientific accuracy, and no entry has been reviewed by a subject expert.
         </p>
       </Section>
     </article>

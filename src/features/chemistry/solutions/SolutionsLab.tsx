@@ -270,7 +270,7 @@ function DilutionTool({ form, onForm }: { form: DilutionForm; onForm: (f: Diluti
   )
 }
 
-/* ---------- Worked examples (OpenStax Chemistry 2e §3.3, verified in unit tests) ---------- */
+/* ---------- Worked examples (OpenStax Chemistry 2e §3.3; the arithmetic is recomputed in unit tests) ---------- */
 
 const EXAMPLES: readonly { id: string; label: string; textbook: string; state: SolutionsState }[] = [
   { id: '3.14', label: 'Example 3.14: 0.133 mol sucrose in 355 mL', textbook: '0.375 M', state: { ...DEFAULT_SOLUTIONS, tool: 'molarity' } },
