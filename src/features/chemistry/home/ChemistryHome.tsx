@@ -2,9 +2,6 @@ import '../../../styles/chemistry-home.css'
 import { ArrowLeft, ArrowRight, Atom, BookOpen, Box, Calculator, Cloud, Droplet, FlaskConical, Grid3x3, Hexagon, Search, TestTubeDiagonal, X } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AppLink } from '../../../components/AppLink'
-import { calculatorsOf } from '../../../calc'
-import { calculatorsHref } from '../../../lib/overviewRoute'
-import { ELEMENTS } from '../../../data/chemistry/periodicTable'
 import { STRUCTURE_KINDS } from '../../../data/chemistry/structureKinds'
 import { MOLECULES } from '../../../data/chemistry/molecules'
 import { subjectName } from '../../../lib/explorations'
@@ -20,7 +17,7 @@ import { availableChapters, CONTENTS_LABELS } from './contents'
 import { readHomeState, writeHomeState, type HomeState, type ResultFilter } from './homeState'
 import { CHEM_QUESTIONS } from './questions'
 import { ACTION_TEXT, searchTopics, type ActionKind, type SearchResult } from './topicSearch'
-import { TOOLS } from './destinations'
+import { CHEM_DESTINATIONS, CHEM_SEARCH_EXAMPLES, type ChemDestinationId } from './chemDestinations'
 
 const ICONS: Record<(typeof CHEM_GROUPS)[number]['icon'], ReactNode> = {
   atom: <Atom size={22} strokeWidth={1.75} aria-hidden="true" />,
@@ -30,14 +27,11 @@ const ICONS: Record<(typeof CHEM_GROUPS)[number]['icon'], ReactNode> = {
   beaker: <TestTubeDiagonal size={22} strokeWidth={1.75} aria-hidden="true" />,
   cloud: <Cloud size={22} strokeWidth={1.75} aria-hidden="true" />,
 }
-const img = (name: string) => `${import.meta.env.BASE_URL}img/design/${name}.webp`
 /** What opening a contents topic does, in words a student expects. */
 const ACTION_LABELS = { learn: 'Read', calculate: 'Calculator', explore: 'Explore' } as const
 const FILTER_TEXT: Record<ResultFilter, string> = { read: 'Explanations', calculate: 'Calculators', explore: 'Models' }
 const ACTION_TO_FILTER: Record<ActionKind, ResultFilter> = { read: 'read', example: 'read', calculate: 'calculate', explore: 'explore' }
 const ROLE_TO_FILTER: Record<ChemRole, ResultFilter> = { learn: 'read', calculate: 'calculate', explore: 'explore' }
-/** Molecules shown on the Overview (all 12 are on the Molecules page). */
-const FEATURED_MOLECULES = ['water', 'carbon-dioxide', 'methane', 'ammonia', 'ethanol', 'benzene']
 
 export type ChemPage = 'overview' | 'contents' | 'library'
 
@@ -93,17 +87,18 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
     page === 'library'
       ? { title: 'Molecules', lead: `${MOLECULES.length} molecules in 3D, from small gases to caffeine, aspirin and glucose. Search by name, formula or shape.`, placeholder: 'Search molecules by name or formula (e.g. H2O, caffeine)' }
       : page === 'contents'
-        ? { title: 'Topics', lead: 'Every chemistry topic, by chapter. Each one explains the idea, shows a worked example and links to a tool or model.', placeholder: 'Search topics, formulas, molecules…' }
-        : { title: 'Explore the world of chemistry.', lead: 'Discover elements, understand molecules, and visualize the structures and reactions that shape our world.', placeholder: 'Search chemistry topics, formulas, molecules…' }
+        ? { title: 'Learn', lead: 'Every chemistry topic, by chapter. Each one explains the idea, shows a worked example and links to a tool or model.', placeholder: 'Search topics, formulas, molecules…' }
+        : { title: 'What would you like to understand?', lead: 'Clear explanations, useful calculations, and interactive models.', placeholder: 'Search chemistry topics, formulas, molecules…' }
 
   return (
     <div className={`chem-home is-${page}`}>
       <header className="chem-home-head">
         <div className="chem-home-title-wrap">
+          {page === 'overview' && <p className="chem-eyebrow">Chemistry</p>}
           <h1 className="chem-home-title">{heading.title}</h1>
           <p className="chem-home-lead">{heading.lead}</p>
         </div>
-        {page === 'overview' && <img className="chem-home-art" src={img('chemistry-header')} alt="" />}
+        {page === 'overview' && <WaterArt />}
       </header>
 
       <form
@@ -138,16 +133,30 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
             <Search size={18} aria-hidden="true" />
           </button>
         </div>
-        {page !== 'library' && (
-          <fieldset className="chem-scope">
-            <legend className="visually-hidden">Search in</legend>
-            <label>
-              <input type="radio" name={`${id}-scope`} checked={st.scope === 'chemistry'} onChange={() => set({ scope: 'chemistry' })} /> Chemistry
-            </label>
-            <label>
-              <input type="radio" name={`${id}-scope`} checked={st.scope === 'all'} onChange={() => set({ scope: 'all', label: null })} /> All subjects
-            </label>
-          </fieldset>
+        {page === 'overview' && !st.q && (
+          <p className="chem-examples">
+            <span className="muted">Try:</span>
+            {CHEM_SEARCH_EXAMPLES.map((example) => (
+              <button key={example} type="button" className="home-try-chip" onClick={() => (set({ q: example, group: null }), inputRef.current?.focus())}>
+                {example}
+              </button>
+            ))}
+          </p>
+        )}
+        {page !== 'library' && q && st.scope === 'chemistry' && (
+          <p className="chem-scope-link">
+            <AppLink href={`?q=${encodeURIComponent(q)}#/search`} className="chem-text-link">
+              Search all subjects for “{q}” <ArrowRight size={15} aria-hidden="true" />
+            </AppLink>
+          </p>
+        )}
+        {st.scope === 'all' && (
+          // Links from before this page had one scope still open with every subject's results.
+          <p className="chem-scope-link">
+            <button type="button" className="chem-text-link chem-link-button" onClick={() => set({ scope: 'chemistry' })}>
+              Search only Chemistry
+            </button>
+          </p>
         )}
       </form>
 
@@ -219,103 +228,42 @@ export function ChemistryHome({ page = 'overview' }: { page?: ChemPage }) {
 
 /* ---------- Overview ---------- */
 
-const EXPLORE: { title: string; text: string; href: string; icon: ReactNode }[] = [
-  { title: 'Elements', text: 'All 118 elements in the periodic table, with atomic structure.', href: '?csec=periodic#/chemistry', icon: <Grid3x3 size={22} aria-hidden="true" /> },
-  { title: 'Molecules', text: `${MOLECULES.length} molecules in 3D: measure bond lengths and angles.`, href: '?csec=library#/chemistry', icon: <Hexagon size={22} aria-hidden="true" /> },
-  { title: 'Topics', text: 'Short explanations with worked examples, by chapter.', href: '?csec=contents#/chemistry', icon: <BookOpen size={22} aria-hidden="true" /> },
-  { title: 'Visualizations', text: 'Interactive models of atoms, bonds, molecules and gases.', href: '?csec=visual#/chemistry', icon: <Box size={22} aria-hidden="true" /> },
-]
+const DESTINATION_ICONS: Record<ChemDestinationId, ReactNode> = {
+  concepts: <BookOpen size={22} aria-hidden="true" />,
+  calculate: <Calculator size={22} aria-hidden="true" />,
+  explore: <Box size={22} aria-hidden="true" />,
+  periodic: <Grid3x3 size={22} aria-hidden="true" />,
+}
+
+/** A small decorative water molecule beside the introduction. */
+function WaterArt() {
+  return (
+    <svg className="chem-water-art" viewBox="0 0 120 90" aria-hidden="true" focusable="false">
+      <line x1="60" y1="32" x2="30" y2="58" />
+      <line x1="60" y1="32" x2="90" y2="58" />
+      <circle cx="30" cy="60" r="13" className="is-h" />
+      <circle cx="90" cy="60" r="13" className="is-h" />
+      <circle cx="60" cy="32" r="21" className="is-o" />
+    </svg>
+  )
+}
 
 function Overview({ items }: { items: readonly ChemItem[] }) {
   return (
     <>
-      <section aria-labelledby="chem-explore">
-        <h2 id="chem-explore" className="chem-h2">
-          Explore chemistry
-        </h2>
+      <nav aria-label="Where to go">
         <ul className="chem-explore">
-          {EXPLORE.map((e) => (
-            <li key={e.title}>
-              <AppLink href={e.href} className="chem-explore-card">
-                <span className="chem-explore-icon">{e.icon}</span>
-                <span className="chem-explore-title">{e.title}</span>
-                <span className="chem-explore-text">{e.text}</span>
+          {CHEM_DESTINATIONS.map((d) => (
+            <li key={d.id}>
+              <AppLink href={d.href} className="chem-explore-card">
+                <span className="chem-explore-icon">{DESTINATION_ICONS[d.id]}</span>
+                <span className="chem-explore-title">{d.title}</span>
+                <span className="chem-explore-text">{d.text}</span>
               </AppLink>
             </li>
           ))}
         </ul>
-      </section>
-
-      <section aria-labelledby="chem-ptable">
-        <div className="chem-section-head">
-          <h2 id="chem-ptable" className="chem-h2">
-            Periodic table
-          </h2>
-          <AppLink href="?csec=periodic#/chemistry" className="chem-text-link">
-            Open the periodic table <ArrowRight size={15} aria-hidden="true" />
-          </AppLink>
-        </div>
-        <PeriodicPreview />
-      </section>
-
-      <section aria-labelledby="chem-featured">
-        <div className="chem-section-head">
-          <h2 id="chem-featured" className="chem-h2">
-            Featured molecules
-          </h2>
-          <AppLink href="?csec=library#/chemistry" className="chem-text-link">
-            All molecules <ArrowRight size={15} aria-hidden="true" />
-          </AppLink>
-        </div>
-        <MoleculeGrid list={MOLECULES.filter((m) => FEATURED_MOLECULES.includes(m.id))} q="" onClear={() => undefined} />
-      </section>
-
-      <section aria-labelledby="chem-browse">
-        <div className="chem-section-head">
-          <h2 id="chem-browse" className="chem-h2">
-            Browse topics
-          </h2>
-          <AppLink href="?csec=contents#/chemistry" className="chem-text-link">
-            All topics <ArrowRight size={15} aria-hidden="true" />
-          </AppLink>
-        </div>
-        <ul className="chem-browse">
-          {availableChapters(items).map(({ chapter, items: list }) => (
-            <li key={chapter.id}>
-              <AppLink href={`?csec=contents#/chemistry`} className="chem-browse-link" onClick={() => sessionStorageSet('chem-chapter', chapter.id)}>
-                <span className="chem-browse-icon">{ICONS[CHEM_GROUPS.find((g) => g.id === chapter.id)!.icon]}</span>
-                <span>
-                  <span className="chem-browse-title">{chapter.title}</span>
-                  <span className="chem-browse-count">
-                    {list.length} {list.length === 1 ? 'topic' : 'topics'}
-                  </span>
-                </span>
-              </AppLink>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section aria-labelledby="chem-tools">
-        <div className="chem-section-head">
-          <h2 id="chem-tools" className="chem-h2">
-            Tools
-          </h2>
-          <AppLink href="?csec=tools#/chemistry" className="chem-text-link">
-            All tools <ArrowRight size={15} aria-hidden="true" />
-          </AppLink>
-        </div>
-        <ul className="chem-tool-list">
-          {[...calculatorsOf('chemistry').map((c) => ({ title: c.title, href: calculatorsHref('chemistry', c.id) })), ...TOOLS].map((t) => (
-            <li key={t.href}>
-              <AppLink href={t.href} className="chem-tool-link">
-                <Calculator size={18} aria-hidden="true" />
-                <span>{t.title}</span>
-              </AppLink>
-            </li>
-          ))}
-        </ul>
-      </section>
+      </nav>
 
       <section aria-labelledby="chem-questions">
         <h2 id="chem-questions" className="chem-h2">
@@ -333,33 +281,6 @@ function Overview({ items }: { items: readonly ChemItem[] }) {
         </ul>
       </section>
     </>
-  )
-}
-
-/** Remembers which chapter the reader picked on the Overview, so Topics can scroll to it. */
-const sessionStorageSet = (k: string, v: string) => {
-  try {
-    sessionStorage.setItem(k, v)
-  } catch {
-    // Not remembered when storage is unavailable; Topics still opens at the top.
-  }
-}
-
-/** A compact periodic table: every element in its place, coloured by category, each a link. */
-function PeriodicPreview() {
-  return (
-    <div className="ptable-mini-wrap">
-      <ol className="ptable-mini" aria-label="Periodic table preview: 118 elements">
-        {ELEMENTS.filter((e) => e.group !== null).map((e) => (
-          <li key={e.number} style={{ gridColumn: e.group!, gridRow: e.period }}>
-            <AppLink href={`?csec=periodic&el=${e.number}#/chemistry`} className={`ptable-mini-cell cat-${e.category.toLowerCase().replace(/\s+/g, '-')}`} aria-label={`${e.name}, ${e.symbol}, atomic number ${e.number}`} title={`${e.number} ${e.name}`}>
-              {e.symbol}
-            </AppLink>
-          </li>
-        ))}
-      </ol>
-      <p className="small muted">Lanthanoids and actinoids are shown in the full periodic table.</p>
-    </div>
   )
 }
 

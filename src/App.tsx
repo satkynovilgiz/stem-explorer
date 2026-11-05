@@ -146,7 +146,7 @@ export default function App() {
           </>
         ) : route === 'chemistry' ? (
           // Chemistry pages give their own H1 (the topics page, a reading page or a calculator title).
-          <ChemistryExplorer />
+          <ChemistryExplorer onPresent={() => setPresenting(route)} />
         ) : route === 'physics' ? (
           <>
             <h1 className="visually-hidden">Physics Explorer: projectile motion lab</h1>

@@ -102,6 +102,19 @@ export async function goHome(page: Page) {
   await page.locator('.crumb-home, .home-link').first().click()
 }
 
+/** Chemistry's section strip. */
+export async function chemMenu(page: Page) {
+  const nav = page.getByRole('navigation', { name: 'Chemistry' })
+  await expect(nav).toBeVisible()
+  return nav
+}
+
+/** The Chemistry section marked as the current page, or '' if none. */
+export async function chemCurrent(page: Page) {
+  const current = (await chemMenu(page)).locator('[aria-current="page"]')
+  return (await current.count()) ? ((await current.textContent()) ?? '').trim() : ''
+}
+
 /** Opens a subject the way a reader does without a header: Home, then the subject's card. */
 export async function openSubject(page: Page, subject: 'anatomy' | 'chemistry' | 'biology' | 'physics' | 'mathematics') {
   if (!/#\/(home)?$/.test(new URL(page.url()).hash || '#/')) await goHome(page)

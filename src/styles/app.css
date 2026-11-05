@@ -9280,3 +9280,49 @@ select { max-width: 100%; }
 .search-page .search.home-search-box { position: relative; display: block; }
 .search-page .search.home-search-box .search-input { width: 100%; padding-right: 44px; box-sizing: border-box; }
 .search-page .search.home-search-box .search-clear { top: 50%; right: 8px; transform: translateY(-50%); }
+
+/* ---------- Chemistry: controls beside the workspace, ---------- */
+.chem-workspace-bar { display: flex; flex: none; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--space-2); }
+
+/* Chemistry's slim section strip: always on the left, at every width. Hidden only in Focus mode and Present. */
+.chem-shell { display: grid; grid-template-columns: 84px minmax(0, 1fr); min-width: 0; }
+.chem-shell-main { min-width: 0; }
+.chem-rail { border-right: 1px solid var(--color-border); background: var(--color-surface); }
+.chem-rail ul { position: sticky; top: 0; display: grid; gap: 2px; margin: 0; padding: 6px; list-style: none; }
+.chem-rail-link { display: grid; justify-items: center; align-content: center; gap: 3px; min-height: 60px; padding: 6px 2px; border-radius: 11px; color: var(--color-text-muted); font-size: 0.75rem; font-weight: 600; line-height: 1.2; text-align: center; text-decoration: none; }
+.chem-rail-link svg { color: var(--subject-chemistry); }
+.chem-rail-link:hover { background: var(--color-accent-soft); color: var(--color-text); }
+.chem-rail-link:focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; }
+.chem-rail-link[aria-current='page'] { background: var(--subject-chemistry); color: #fff; }
+.chem-rail-link[aria-current='page'] svg { color: #fff; }
+html.ws-focus .chem-rail, html.is-presenting .chem-rail { display: none; }
+html.ws-focus .chem-shell, html.is-presenting .chem-shell { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 640px) {
+  .chem-shell { grid-template-columns: 72px minmax(0, 1fr); }
+  .chem-rail ul { padding: 4px; }
+}
+/* The strip narrows the page, so controls wrap instead of pushing it wider. */
+@media (max-width: 640px) {
+  .chem-shell { grid-template-columns: 76px minmax(0, 1fr); }
+  .chem-rail-link { font-size: 0.71875rem; }
+  .chem-shell-main .segmented { flex-wrap: wrap; }
+  .chem-shell-main .segmented-option { padding-inline: 8px; }
+}
+/* Small phones: with the strip beside it, content must shrink to fit. */
+.bonding-view { min-width: 0; }
+.bond-cards { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .bond-cards { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } }
+.chem-shell-main .sol-input-row { flex-wrap: wrap; min-width: 0; }
+.chem-shell-main .calc-field, .chem-shell-main .calc-form { min-width: 0; }
+.chem-shell-main .calc-input { min-width: 0; max-width: 100%; }
+@media (max-width: 360px) {
+  .chem-shell-main .chem-home { padding-inline: var(--space-2); }
+  .chem-shell-main .chem-chapter { min-width: 0; overflow-wrap: anywhere; }
+}
+.chem-shell-main .chem--mobile { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.chem-shell-main .chem--mobile > * { min-width: 0; max-width: 100%; }
+.en-pickers { flex-wrap: wrap; min-width: 0; }
+.en-pickers > *, .en-pickers .element-picker { min-width: 0; max-width: 100%; }
+.en-pickers select { min-width: 0; max-width: 100%; }
+/* Hidden captions stay inside the scrolling box, so a wide table cannot widen the page. */
+.table-scroll { position: relative; max-width: 100%; overflow-x: auto; }

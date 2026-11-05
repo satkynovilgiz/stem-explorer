@@ -1,3 +1,7 @@
+import { ChemRail } from '../../components/ChemNav'
+import { locate } from '../../data/topics'
+import { useLocationSearch } from '../../lib/location'
+import { WorkspaceControls } from '../../components/SubjectBar'
 import type { InteractionMode } from '../../lib/measurement'
 import { lazy, Suspense, useEffect, useReducer, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
@@ -76,7 +80,20 @@ function initFromUrl() {
   return { ...initialChemistryState(moleculeId, representation), mode: (mtool === 'angle' || mtool === 'distance' ? mtool : 'inspect') as InteractionMode }
 }
 
-export function ChemistryExplorer() {
+/** Chemistry: the slim section strip beside whichever page is open. */
+export function ChemistryExplorer({ onPresent }: { onPresent?: () => void }) {
+  const { module } = locate('chemistry', useLocationSearch())
+  return (
+    <div className="chem-shell">
+      <ChemRail moduleId={module.id} />
+      <div className="chem-shell-main">
+        <ChemistryPages onPresent={onPresent} />
+      </div>
+    </div>
+  )
+}
+
+function ChemistryPages({ onPresent }: { onPresent?: () => void }) {
   const [state, dispatch] = useReducer(chemistryReducer, undefined, initFromUrl)
   const [query, setQuery] = useState('')
   const [showLabels, setShowLabels] = useState(true)
@@ -248,6 +265,12 @@ export function ChemistryExplorer() {
   // Explore pages are model workspaces; Learn and Calculate pages are single reading columns.
   const isWorkspace = section === 'molecules' || section === 'periodic' || section === 'atomic' || section === 'bonding'
 
+  const workspaceBar = (
+    <div className="chem-workspace-bar">
+      <WorkspaceControls hasLeft={section === 'molecules'} onPresent={onPresent} />
+    </div>
+  )
+
   // One polite live region for meaningful changes only (never per animation frame).
   const announcer = (
     <>
@@ -309,7 +332,7 @@ export function ChemistryExplorer() {
     return (
       <div className="chem chem--mobile">
         {announcer}
-        <div className="chem-stage">{stage}</div>
+        <div className="chem-stage">{workspaceBar}{stage}</div>
         {section === 'molecules' && activityPanel}
         {guidePanel}
         <Tabs
@@ -331,7 +354,7 @@ export function ChemistryExplorer() {
     <div className={section === 'molecules' ? 'chem' : 'chem chem--no-left'}>
       {announcer}
       {section === 'molecules' && <SidePanel side="left">{library}</SidePanel>}
-      <div className="chem-stage">{stage}</div>
+      <div className="chem-stage">{workspaceBar}{stage}</div>
       <SidePanel side="right">
         {section === 'molecules' && activityPanel}
         {guidePanel}

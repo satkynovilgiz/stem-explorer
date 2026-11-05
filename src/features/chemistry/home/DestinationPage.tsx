@@ -2,12 +2,12 @@ import '../../../styles/chemistry-home.css'
 import { ArrowRight } from 'lucide-react'
 import { AppLink } from '../../../components/AppLink'
 import { CalculatorBench } from '../../calculators/CalculatorBench'
-import { TOOLS, VISUALIZATIONS } from './destinations'
+import { TOOLS, VISUALIZATIONS, type Destination } from './destinations'
 
-/** Visualizations (`csec=visual`) and Tools (`csec=tools`, with the calculators first): what exists, what each does, and its limits. */
-export function DestinationPage({ kind }: { kind: 'visual' | 'tools' }) {
-  const list = kind === 'visual' ? VISUALIZATIONS : TOOLS
-  const items = (
+const EXPLORE_GROUPS = ['Molecules', 'Atoms', 'Bonds', 'In other subjects'] as const
+
+function DestinationList({ list }: { list: readonly Destination[] }) {
+  return (
     <ul className="chem-dest-list">
       {list.map((d) => (
         <li key={d.href}>
@@ -25,35 +25,42 @@ export function DestinationPage({ kind }: { kind: 'visual' | 'tools' }) {
       ))}
     </ul>
   )
+}
+
+/** Molecules and atoms (`csec=visual`) and Calculators (`csec=tools`): what exists, what each does, and its limits. */
+export function DestinationPage({ kind }: { kind: 'visual' | 'tools' }) {
   return (
     <div className="chem-home">
       <header className="chem-home-head">
         <div className="chem-home-title-wrap">
-          <h1 className="chem-home-title">{kind === 'visual' ? 'Visualizations' : 'Tools'}</h1>
+          <h1 className="chem-home-title">{kind === 'visual' ? 'Molecules and atoms' : 'Calculators'}</h1>
           <p className="chem-home-lead">
-            {kind === 'visual'
-              ? 'Interactive models you can turn and change. Each says what it demonstrates and what it simplifies.'
-              : 'Calculators that show every step, with units and assumptions.'}
+            {kind === 'visual' ? 'Interactive models you can turn and change. Each says what it demonstrates and what it simplifies.' : 'Calculators that show every step, with units and assumptions.'}
           </p>
         </div>
       </header>
       {kind === 'tools' ? (
         <>
+          <section aria-labelledby="chem-more-tools">
+            <h2 id="chem-more-tools" className="chem-h2">
+              Solutions and equations
+            </h2>
+            <DestinationList list={TOOLS} />
+          </section>
           <section aria-labelledby="chem-calculators">
             <h2 id="chem-calculators" className="chem-h2">
-              Calculators
+              More calculators
             </h2>
             <CalculatorBench subject="chemistry" />
           </section>
-          <section aria-labelledby="chem-more-tools">
-            <h2 id="chem-more-tools" className="chem-h2">
-              Solution and reaction tools
-            </h2>
-            {items}
-          </section>
         </>
       ) : (
-        items
+        EXPLORE_GROUPS.map((group) => (
+          <section key={group} aria-label={group}>
+            <h2 className="chem-h2">{group}</h2>
+            <DestinationList list={VISUALIZATIONS.filter((d) => d.group === group)} />
+          </section>
+        ))
       )}
     </div>
   )

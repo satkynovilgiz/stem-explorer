@@ -1,4 +1,4 @@
-import { expect, test, waitForViewport } from './fixtures.ts'
+import { expect, test, waitForViewport, chemMenu } from './fixtures.ts'
 
 // This project launches Chrome with --disable-3d-apis, so WebGL is unavailable.
 
@@ -117,7 +117,7 @@ test('guides and the glossary work without WebGL', async ({ page }) => {
 
 test('the periodic table works without WebGL', async ({ page }) => {
   await page.goto('/?molecule=water#/chemistry')
-  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Elements' }).click()
+  await (await chemMenu(page)).getByRole('link', { name: 'Periodic table', exact: true }).click()
   await page.getByRole('button', { name: 'Carbon, C, atomic number 6' }).click()
   await expect(page.locator('#element-heading')).toHaveText('Carbon')
   await expect(page.getByRole('button', { name: 'Open Benzene' })).toBeVisible()
@@ -199,8 +199,7 @@ test('atlas tours and close-ups are fully usable as text without WebGL', async (
 test('atomic structure and bonding need no WebGL', async ({ page }) => {
   await page.goto('/?csec=atomic&el=1#/chemistry')
   await expect(page.locator('.info table')).toContainText('3 − 1 = 2')
-  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Visualizations' }).click()
-  await page.locator('.chem-dest', { hasText: 'Bonding and molecular shape' }).click()
+  await page.getByRole('navigation', { name: 'Chemistry' }).getByRole('link', { name: 'Bonds' }).click()
   await expect(page.locator('.bonding-view')).toContainText('Covalent network solid')
 })
 

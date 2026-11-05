@@ -3,7 +3,7 @@ import { expect, test, waitForViewport, goHome, openSubject } from './fixtures.t
 
 const SUBJECT_HEADINGS = {
   anatomy: 'Anatomy Explorer: body atlas and heart',
-  chemistry: 'Explore the world of chemistry',
+  chemistry: 'What would you like to understand?',
   biology: 'Biology Explorer: cells, DNA, division and energy',
   physics: 'Physics Explorer: projectile motion lab',
   mathematics: 'Mathematics Explorer: interactive 3D surfaces',

@@ -1,5 +1,5 @@
 import { ArrowLeft, ChevronRight, ListTree, Maximize2, Minimize2, PanelLeft, PanelRight, Presentation, Search, X } from 'lucide-react'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { locate, MODULES, type TopicModule } from '../data/topics'
 import { SUBJECTS, type SubjectId } from '../data/subjects'
 import { normalize } from '../lib/chemistry'
@@ -7,10 +7,14 @@ import { useLocationSearch } from '../lib/location'
 import { moduleHref, rememberModuleState } from '../lib/moduleContext'
 import { restoreLayout, toggleFocus, toggleSide, usePeek, useWorkspace } from '../lib/workspace'
 import { AppLink } from './AppLink'
-import { ChemHeaderSearch, ChemNav, SubjectHeaderSearch, SubjectNav } from './ChemNav'
+import { ChemHeaderSearch, SubjectHeaderSearch, SubjectNav } from './ChemNav'
+import { CHEM_PAGE_TITLES } from '../features/chemistry/home/chemDestinations'
 import { overviewHref } from '../lib/overviewRoute'
 import { SubjectIcon } from './SubjectIcon'
 import { SubjectIntro } from '../features/subjects/SubjectIntro'
+
+/** Chemistry pages with their own large search box do not need the compact one too. */
+const CHEM_OWN_SEARCH = ['chemistry.contents', 'chemistry.library']
 
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
 
@@ -20,13 +24,14 @@ const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
  * subjects are reached from Home and from search. Each explorer's own toolbar holds its display
  * controls.
  */
-export function SubjectBar({ subject, overview = false, calculators = false, intro = false, onPresent }: { subject: SubjectId; overview?: boolean; calculators?: boolean; intro?: boolean; onPresent?: () => void }) {
-  const search = useLocationSearch()
-  const { module, topic } = locate(subject, search)
-  const [open, setOpen] = useState(false)
-  const triggerRef = useRef<HTMLButtonElement>(null)
+export function SubjectBar(props: { subject: SubjectId; overview?: boolean; calculators?: boolean; intro?: boolean; onPresent?: () => void }) {
   const barRef = useRef<HTMLDivElement>(null)
-  // The bar's height depends on the subject and the window, and the workspace below is sized from it.
+  useBarHeight(barRef)
+  return <TwoRowBar {...props} barRef={barRef} />
+}
+
+/** The bar's height depends on the subject and the window, and the workspace below is sized from it. */
+function useBarHeight(barRef: RefObject<HTMLDivElement | null>) {
   useLayoutEffect(() => {
     const bar = barRef.current
     if (!bar) return
@@ -42,8 +47,71 @@ export function SubjectBar({ subject, overview = false, calculators = false, int
       observer.disconnect()
       root.style.removeProperty('--subject-bar-height')
     }
-  }, [])
+  }, [barRef])
+}
 
+/**
+ * Layout and presentation controls for a model workspace. Other subjects show them in the header;
+ * Chemistry shows them beside its workspace.
+ */
+export function WorkspaceControls({ hasLeft, onPresent }: { hasLeft: boolean; onPresent?: () => void }) {
+  const ws = useWorkspace()
+  const peek = usePeek()
+  const leftShown = ws.focus ? peek === 'left' : !ws.hideLeft
+  const rightShown = ws.focus ? peek === 'right' : !ws.hideRight
+  const changed = ws.focus || ws.hideLeft || ws.hideRight
+  return (
+    <>
+      <div className="workspace-controls" role="group" aria-label="Workspace layout">
+        {hasLeft && (
+          <button
+            type="button"
+            className="tool-button bordered"
+            data-ws-toggle="left"
+            aria-pressed={leftShown}
+            title="Left panel ( [ )"
+            onClick={() => toggleSide('left')}
+          >
+            <PanelLeft size={15} aria-hidden="true" />
+            <span>{ws.focus ? 'Controls' : 'Left panel'}</span>
+          </button>
+        )}
+        <button
+          type="button"
+          className="tool-button bordered"
+          data-ws-toggle="right"
+          aria-pressed={rightShown}
+          title="Right panel ( ] )"
+          onClick={() => toggleSide('right')}
+        >
+          <PanelRight size={15} aria-hidden="true" />
+          <span>{ws.focus ? 'Details' : 'Right panel'}</span>
+        </button>
+        <button type="button" className="tool-button bordered" aria-pressed={ws.focus} title="Focus mode ( f )" onClick={toggleFocus}>
+          {ws.focus ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />}
+          <span>Focus mode</span>
+        </button>
+        {changed && (
+          <button type="button" className="tool-button bordered workspace-restore" onClick={restoreLayout}>
+            <span>Show all panels</span>
+          </button>
+        )}
+      </div>
+      {onPresent && (
+        <button type="button" className="tool-button bordered present-toggle" onClick={onPresent}>
+          <Presentation size={15} aria-hidden="true" />
+          <span>Present</span>
+        </button>
+      )}
+    </>
+  )
+}
+
+function TwoRowBar({ subject, overview = false, calculators = false, intro = false, onPresent, barRef }: { subject: SubjectId; overview?: boolean; calculators?: boolean; intro?: boolean; onPresent?: () => void; barRef: RefObject<HTMLDivElement | null> }) {
+  const search = useLocationSearch()
+  const { module, topic } = locate(subject, search)
+  const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     rememberModuleState(subject, search)
   }, [subject, search])
@@ -53,11 +121,6 @@ export function SubjectBar({ subject, overview = false, calculators = false, int
     window.addEventListener('stem:open-topics', onOpen)
     return () => window.removeEventListener('stem:open-topics', onOpen)
   }, [])
-  const ws = useWorkspace()
-  const peek = usePeek()
-  const leftShown = ws.focus ? peek === 'left' : !ws.hideLeft
-  const rightShown = ws.focus ? peek === 'right' : !ws.hideRight
-  const changed = ws.focus || ws.hideLeft || ws.hideRight
   // Layout and presentation controls belong to model workspaces. Chemistry's topic page, reading
   // pages and calculators are single columns, so they have none.
   const CHEM_WORKSPACES = ['chemistry.molecules', 'chemistry.periodic', 'chemistry.atomic', 'chemistry.bonding']
@@ -114,7 +177,7 @@ export function SubjectBar({ subject, overview = false, calculators = false, int
           !atOverview && (
             <li>
               <span className="crumb-module" aria-current={topic ? undefined : 'page'}>
-                {module.name}
+                {subject === 'chemistry' ? CHEM_PAGE_TITLES[module.id] : module.name}
               </span>
               {topic && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
             </li>
@@ -129,50 +192,6 @@ export function SubjectBar({ subject, overview = false, calculators = false, int
         )}
       </ol>
     </nav>
-  )
-
-  const layoutControls = hasPanels && (
-    <div className="workspace-controls" role="group" aria-label="Workspace layout">
-      {hasLeft && (
-        <button
-          type="button"
-          className="tool-button bordered"
-          data-ws-toggle="left"
-          aria-pressed={leftShown}
-          title="Left panel ( [ )"
-          onClick={() => toggleSide('left')}
-        >
-          <PanelLeft size={15} aria-hidden="true" />
-          <span>{ws.focus ? 'Controls' : 'Left panel'}</span>
-        </button>
-      )}
-      <button
-        type="button"
-        className="tool-button bordered"
-        data-ws-toggle="right"
-        aria-pressed={rightShown}
-        title="Right panel ( ] )"
-        onClick={() => toggleSide('right')}
-      >
-        <PanelRight size={15} aria-hidden="true" />
-        <span>{ws.focus ? 'Details' : 'Right panel'}</span>
-      </button>
-      <button type="button" className="tool-button bordered" aria-pressed={ws.focus} title="Focus mode ( f )" onClick={toggleFocus}>
-        {ws.focus ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />}
-        <span>Focus mode</span>
-      </button>
-      {changed && (
-        <button type="button" className="tool-button bordered workspace-restore" onClick={restoreLayout}>
-          <span>Show all panels</span>
-        </button>
-      )}
-    </div>
-  )
-  const present = onPresent && hasPanels && (
-    <button type="button" className="tool-button bordered present-toggle" onClick={onPresent}>
-      <Presentation size={15} aria-hidden="true" />
-      <span>Present</span>
-    </button>
   )
 
   // Every subject has its own two-row header. First row: the subject's mark, the breadcrumb above
@@ -193,18 +212,18 @@ export function SubjectBar({ subject, overview = false, calculators = false, int
           </AppLink>
         </div>
         <div className="chem-bar-actions">
-          {!atOverview && (subject === 'chemistry' ? <ChemHeaderSearch /> : <SubjectHeaderSearch subject={subject} name={name} />)}
+          {!atOverview && (subject !== 'chemistry' ? <SubjectHeaderSearch subject={subject} name={name} /> : !CHEM_OWN_SEARCH.includes(module.id) && <ChemHeaderSearch />)}
           {subject !== 'chemistry' && (
             <button ref={triggerRef} type="button" className="tool-button bordered topics-toggle" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
               <ListTree size={15} aria-hidden="true" />
               <span>All {name.toLowerCase()} topics</span>
             </button>
           )}
-          {layoutControls}
-          {present}
+          {/* Chemistry keeps these beside its workspace. */}
+          {hasPanels && subject !== 'chemistry' && <WorkspaceControls hasLeft={hasLeft} onPresent={onPresent} />}
         </div>
       </div>
-      {subject === 'chemistry' ? <ChemNav moduleId={module.id} /> : <SubjectNav subject={subject} name={name} moduleId={module.id} overview={overview} calculators={calculators} />}
+      {subject !== 'chemistry' && <SubjectNav subject={subject} name={name} moduleId={module.id} overview={overview} calculators={calculators} />}
       {open && <TopicDrawer subject={subject} current={module} onClose={close} />}
     </div>
   )

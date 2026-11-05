@@ -1,4 +1,4 @@
-import { expect, goHome, test } from './fixtures.ts'
+import { expect, goHome, test, chemMenu, chemCurrent } from './fixtures.ts'
 
 const homeTitle = (page: import('@playwright/test').Page) => page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })
 
@@ -38,18 +38,17 @@ test('Chemistry is the first subject card; each card opens its subject and ← H
   }
 })
 
-test('Chemistry: breadcrumb, the six-destination tab row, deep links and Back/Forward', async ({ page }) => {
+test('Chemistry: breadcrumb, the side menu, deep links and Back/Forward', async ({ page }) => {
   await page.goto('/?csec=solutions&smode=molarity#/chemistry')
   const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' })
   await expect(crumbs.getByRole('link', { name: 'Home' })).toBeVisible()
   await expect(crumbs).toContainText('Solutions and dilution')
-  const tabs = page.getByRole('navigation', { name: 'Chemistry' })
-  await expect(tabs.getByRole('link')).toHaveText(['Overview', 'Elements', 'Molecules', 'Topics', 'Visualizations', 'Tools'])
-  // The current destination is marked: a calculator is under Tools.
-  await expect(tabs.getByRole('link', { name: 'Tools' })).toHaveAttribute('aria-current', 'page')
+  await expect((await chemMenu(page)).getByRole('link')).toHaveText(['Learn', 'Calculators', 'Molecules', 'Atoms', 'Bonds', 'Periodic table'])
+  // The current destination is marked: a calculator is under Calculators.
+  expect(await chemCurrent(page)).toBe('Calculators')
   await page.goto('/?molecule=water#/chemistry')
-  await expect(tabs.getByRole('link', { name: 'Molecules' })).toHaveAttribute('aria-current', 'page')
-  await tabs.getByRole('link', { name: 'Elements' }).click()
+  expect(await chemCurrent(page)).toBe('Molecules')
+  await (await chemMenu(page)).getByRole('link', { name: 'Periodic table', exact: true }).click()
   await expect(crumbs).toContainText('Periodic table')
   await page.goBack()
   await expect(page.locator('#molecule-heading')).toHaveText('Water')
@@ -57,7 +56,7 @@ test('Chemistry: breadcrumb, the six-destination tab row, deep links and Back/Fo
   await expect(crumbs).toContainText('Periodic table')
   // The subject name leads back to the Overview; Chemistry has no topic drawer.
   await crumbs.getByRole('link', { name: 'Chemistry', exact: true }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Explore the world of chemistry.' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'What would you like to understand?' })).toBeVisible()
   await expect(page.getByRole('button', { name: /^All \w+ topics$/ })).toHaveCount(0)
 })
 

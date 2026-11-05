@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test } from './fixtures.ts'
+import { expect, test, chemMenu } from './fixtures.ts'
 
 const overlapHeight = (page: Page, a: string, b: string) =>
   page.evaluate(
@@ -40,15 +40,16 @@ test('the statistics charts keep their height, with no text over them', async ({
   expect(await overlapHeight(page, '.stat-svg', '.stat-svg + p')).toBeLessThanOrEqual(0)
 })
 
-test('Chemistry tabs get their own row on a landscape iPad, all in view', async ({ page }) => {
+test('Chemistry’s section strip stays on the left of a landscape iPad, every item in view', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 })
   await page.goto('/?molecule=water#/chemistry')
-  const overview = page.locator('.chem-nav-link', { hasText: 'Overview' })
-  const tools = page.locator('.chem-nav-link', { hasText: 'Tools' })
-  const brand = (await page.locator('.chem-brand').boundingBox())!
-  expect((await overview.boundingBox())!.y).toBeGreaterThanOrEqual(brand.y + brand.height - 1)
-  const box = (await tools.boundingBox())!
-  expect(box.x + box.width).toBeLessThanOrEqual(1024)
+  const links = (await chemMenu(page)).getByRole('link')
+  await expect(links).toHaveCount(6)
+  for (const link of await links.all()) {
+    const box = (await link.boundingBox())!
+    expect(box.x + box.width).toBeLessThan(100)
+    expect(box.y + box.height).toBeLessThanOrEqual(768)
+  }
 })
 
 test('the smallest phones do not scroll sideways', async ({ page }) => {

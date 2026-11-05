@@ -109,7 +109,8 @@ export function BondingView({ onOpenMolecule }: { onOpenMolecule: (id: string) =
           When a single-molecule model does not apply
         </h3>
         <p className="small">{DISCRETE_MODEL_NOTE}</p>
-        <table className="compare-table">
+        <div className="table-scroll">
+          <table className="compare-table">
           <caption className="visually-hidden">Types of crystalline solid</caption>
           <thead>
             <tr>
@@ -130,6 +131,7 @@ export function BondingView({ onOpenMolecule }: { onOpenMolecule: (id: string) =
             ))}
           </tbody>
         </table>
+        </div>
         <p className="muted small">
           <SourceLinks ids={['chem-10-5', 'chem-7-1']} />
         </p>
@@ -144,7 +146,8 @@ export function BondingView({ onOpenMolecule }: { onOpenMolecule: (id: string) =
           polar when its bond dipoles do not cancel, which depends on both bond polarity and shape.
           <SourceLinks ids={['chem-7-6']} />
         </p>
-        <table className="compare-table">
+        <div className="table-scroll">
+          <table className="compare-table">
           <caption className="visually-hidden">Molecular shape and polarity</caption>
           <thead>
             <tr>
@@ -179,6 +182,7 @@ export function BondingView({ onOpenMolecule }: { onOpenMolecule: (id: string) =
             })}
           </tbody>
         </table>
+        </div>
       </section>
 
       <ElectronegativityCompare />

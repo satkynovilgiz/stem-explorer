@@ -120,6 +120,13 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   coordinates, labelled by origin, with the reported bond lengths and angles. A tab left open across
   a new deploy reloads itself once when a code file has gone (`src/lib/staleBuild.ts`), and otherwise
   offers **Reload page**, because a page remembers a failed download and *Try again* cannot fix it.
+- **Chemistry navigation** (`src/components/ChemNav.tsx`, `features/chemistry/home/chemDestinations.ts`):
+  a slim strip stays on the left of every Chemistry page, with an icon and word for six things
+  students know: Learn, Calculators, Molecules, Atoms, Bonds and Periodic table. It hides only in
+  Focus mode and Present. The header keeps the breadcrumb and a compact search; workspace and Present
+  controls sit beside the model. The Overview is search-first: one search box, example searches, four
+  destination cards and common questions. Results show on the page, and *Search all subjects* carries
+  the query. Every older link still opens the same page.
 - **Subject headers** (`src/components/SubjectBar.tsx`, `app.css`): every subject has the same two
   rows on its own colour: the subject's mark, the breadcrumb above its name, search and controls,
   then the destination tabs as pills with the current one filled (white on each subject colour is
