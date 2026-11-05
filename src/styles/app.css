@@ -9326,3 +9326,8 @@ html.ws-focus .chem-shell, html.is-presenting .chem-shell { grid-template-column
 .en-pickers select { min-width: 0; max-width: 100%; }
 /* Hidden captions stay inside the scrolling box, so a wide table cannot widen the page. */
 .table-scroll { position: relative; max-width: 100%; overflow-x: auto; }
+/* Small phones: calculators shrink to fit whatever font the device uses. */
+.chem-shell-main .calc-bench, .chem-shell-main .calc-panel, .chem-shell-main .calc-picker, .chem-shell-main .calc-result { min-width: 0; max-width: 100%; }
+.chem-shell-main .calc-input { width: 100%; flex: 1 1 60px; }
+.chem-shell-main .calc-answers, .chem-shell-main .sol-steps { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .chem-shell-main .calc-form { grid-template-columns: minmax(0, 1fr); } }
