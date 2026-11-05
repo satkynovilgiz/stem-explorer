@@ -103,8 +103,8 @@ function MolarityTool({ form, onForm }: { form: MolarityForm; onForm: (f: Molari
   }
   const unitV = volumeLabel(form.volumeUnit)
   const errors = {
-    amount: form.solveFor !== 'amount' ? fieldError('amount of solute', t.amount, parse(t.amount), LIMITS.amountMol, 'mol') : undefined,
-    volume: form.solveFor !== 'volume' ? fieldError('volume of solution', t.volume, parse(t.volume), LIMITS.volumeL, 'L') : undefined,
+    amount: form.solveFor !== 'amount' ? fieldError('amount of solute', t.amount, amountMol, LIMITS.amountMol, 'mol') : undefined,
+    volume: form.solveFor !== 'volume' ? fieldError('volume of solution', t.volume, volumeL, LIMITS.volumeL, 'L') : undefined,
     molarity: form.solveFor !== 'molarity' ? fieldError('molarity', t.molarity, parse(t.molarity), LIMITS.molarity, 'M') : undefined,
   }
   return (
@@ -238,7 +238,9 @@ function DilutionTool({ form, onForm }: { form: DilutionForm; onForm: (f: Diluti
     c2: ['final concentration C₂', LIMITS.molarity, 'M'],
     v2: ['final volume V₂', LIMITS.volumeL, 'L'],
   }
-  const errorOf = (k: keyof DilutionText) => (form.solveFor === k ? undefined : fieldError(names[k][0], t[k], parse(t[k]), names[k][1], names[k][2]))
+  // Volumes are checked in litres, as the limits are.
+  const inBaseUnit = (k: keyof DilutionText) => (k === 'v1' ? toLitres(parse(t.v1), form.v1Unit) : k === 'v2' ? toLitres(parse(t.v2), form.v2Unit) : parse(t[k]))
+  const errorOf = (k: keyof DilutionText) => (form.solveFor === k ? undefined : fieldError(names[k][0], t[k], inBaseUnit(k), names[k][1], names[k][2]))
   const atField = (Object.keys(names) as (keyof DilutionText)[]).some((k) => errorOf(k))
   const field = (k: keyof DilutionText, label: string) => {
     if (form.solveFor === k) return null

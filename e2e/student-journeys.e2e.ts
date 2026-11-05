@@ -31,6 +31,8 @@ test.describe('Chemistry student journeys', () => {
     await page.goto(learn('molarity'))
     await nextStep(page).getByRole('link', { name: /Calculate a molarity/ }).click()
     await expect(page.locator('.sol-formula')).toContainText('M = n / V')
+    // Regression: 355 mL was once compared with the 100 L limit before converting.
+    await expect(page.locator('.sol-field-error')).toHaveCount(0)
     await page.getByRole('textbox', { name: 'Amount of solute' }).fill('0.25')
     const volume = page.getByRole('textbox', { name: /Volume of solution/ })
     await volume.fill('500')
@@ -50,6 +52,7 @@ test.describe('Chemistry student journeys', () => {
     await page.goto(learn('dilution'))
     await nextStep(page).getByRole('link', { name: /stock volume/ }).click()
     await expect(page.locator('.sol-answer')).toContainText('12.5 mL')
+    await expect(page.locator('.sol-field-error')).toHaveCount(0)
     const meaning = page.locator('.sol-meaning')
     await expect(meaning).toContainText('Take 12.5 mL of the stock')
     await expect(meaning).toContainText('total volume of solution is 250 mL')
@@ -86,6 +89,10 @@ test.describe('Chemistry student journeys', () => {
   test('the older water link still opens with Inspect, and reading pages have no molecule list or activity', async ({ page }) => {
     await page.goto('/?molecule=water#/chemistry')
     await expect(page.getByRole('heading', { name: 'Measure angle' })).toHaveCount(0)
+    await expect(page).not.toHaveURL(/mtool/)
+    // Regression: choosing a tool by hand must leave shared-link addresses as they were.
+    await page.getByRole('button', { name: 'Angle', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Measure angle' })).toBeVisible()
     await expect(page).not.toHaveURL(/mtool/)
     for (const path of [learn('the-mole'), '/?csec=solutions&st=molarity#/chemistry', '/?csec=reactions&rx=methane-combustion#/chemistry']) {
       await page.goto(path)
