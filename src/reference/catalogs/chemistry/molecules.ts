@@ -63,7 +63,7 @@ export const MOLECULES: ReferenceEntry[] = [
       { id: 'chem-11-2', locator: '§11.2 ion-dipole attractions when ionic compounds dissolve in water' },
     ],
     moleculeId: 'water',
-    links: [{ label: 'Water in the molecule viewer', href: '?molecule=water#/chemistry', kind: '3d' }],
+    links: [{ label: 'Open the water model and measure the H–O–H angle', href: '?molecule=water&view=ball-and-stick&mtool=angle#/chemistry', kind: '3d' }],
     modelLimitations: ['The 3D viewer shows one fixed experimental geometry (NIST CCCBDB); real molecules vibrate. Lone pairs are described here but not drawn in the model.'],
   },
   {

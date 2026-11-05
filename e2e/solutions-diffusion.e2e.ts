@@ -33,7 +33,7 @@ test.describe('Solutions calculator', () => {
   test('zero and negative input are refused with a reason', async ({ page }) => {
     await page.goto('/?csec=solutions#/chemistry')
     await page.getByRole('textbox', { name: /^Volume of solution/ }).fill('0')
-    await expect(result(page)).toContainText('Can’t calculate: The volume of solution must be greater than zero')
+    await expect(page.locator('.sol-field', { has: page.getByRole('textbox', { name: /^Volume of solution/ }) })).toContainText('The volume of solution must be greater than zero')
     await page.getByRole('textbox', { name: /^Volume of solution/ }).fill('-5')
     await expect(result(page)).toContainText("can't be negative")
   })

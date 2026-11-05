@@ -110,6 +110,16 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   "Mole" never matches "molecule", and terms of up to three letters must start a word. Results say
   **Explanation**, **Calculator** or **Interactive model**, and Back restores the query and filters.
   With no results, close spellings are offered to choose from; the query is never changed by itself.
+- **Chemistry student journeys**: each beginner explanation has a direct answer, terms, a worked
+  example, a common mistake, a next step and visible limits. The next step opens the matching task:
+  5 g of water in the molar-mass calculator (`cv=formula:H2O,mass:5`), the stock volume in the
+  dilution calculator, atom counts with the reason each one changes, or the water model with the
+  angle tool ready (`mtool=angle`). Calculators keep the formula and its meanings together, say what
+  a result means and explain a bad value beside its field.
+- **When 3D cannot run**: a compact message, and for molecules a flat drawing made from the same
+  coordinates, labelled by origin, with the reported bond lengths and angles. A tab left open across
+  a new deploy reloads itself once when a code file has gone (`src/lib/staleBuild.ts`), and otherwise
+  offers **Reload page**, because a page remembers a failed download and *Try again* cannot fix it.
 - **Subject headers** (`src/components/SubjectBar.tsx`, `app.css`): every subject has the same two
   rows on its own colour: the subject's mark, the breadcrumb above its name, search and controls,
   then the destination tabs as pills with the current one filled (white on each subject colour is

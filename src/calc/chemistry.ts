@@ -24,12 +24,12 @@ export const molarMass: Calculator = {
   compute: (v: Values) =>
     solve(() => {
       const formula = (v.formula ?? '').replace(/\s+/g, '')
-      if (!formula) problem('Enter a formula, such as H2O or Ca(OH)2.')
+      if (!formula) problem('Enter a formula, such as H2O or Ca(OH)2.', 'formula')
       let counts: Record<string, number>
       try {
         counts = parseFormula(formula)
       } catch {
-        return problem('Could not read that formula. Write element symbols, each followed by its count (H2O, C6H12O6), with brackets for groups: Ca(OH)2.')
+        return problem('Could not read that formula. Write element symbols, each followed by its count (H2O, C6H12O6), with brackets for groups: Ca(OH)2.', 'formula')
       }
       // Sums in units of 10⁻⁵ g/mol (every CIAAW value has at most 5 decimals), so they are exact.
       const scaled = (w: string) => Math.round(Number(w) * 1e5)
@@ -38,7 +38,7 @@ export const molarMass: Calculator = {
       const parts: number[] = []
       for (const [el, n] of Object.entries(counts)) {
         const w = STANDARD_WEIGHTS[el]
-        if (!w) problem(findElement(el) ? `${el} has no standard atomic weight (it has no stable isotopes), so a molar mass cannot be given.` : `“${el}” is not an element symbol.`)
+        if (!w) problem(findElement(el) ? `${el} has no standard atomic weight (it has no stable isotopes), so a molar mass cannot be given.` : `“${el}” is not an element symbol.`, 'formula')
         parts.push(n * scaled(w))
         steps.push(`${el}: ${n} × ${w} g/mol = ${show(n * scaled(w), 3)} g/mol`)
       }
@@ -46,14 +46,16 @@ export const molarMass: Calculator = {
       const total = units / 1e5
       if (parts.length > 1) steps.push(`M = ${parts.map((u) => show(u, 3)).join(' + ')} = ${show(units, 3)} g/mol`)
       const answers = [{ label: 'Molar mass', value: `${show(units, 2)} g/mol` }]
+      let note: string | undefined
       if (!isBlank(v, 'mass')) {
         const m = read(v, 'mass', 'the sample mass')
         const n = m / total
+        note = `${fmt(m)} g is ${n === 1 ? 'exactly one mole' : n < 1 ? 'less than one mole' : 'more than one mole'}: one mole of this substance has a mass of ${show(units, 2)} g.`
         steps.push(`n = m / M = ${fmt(m)} g / ${show(units, 2)} g/mol = ${fmt(n)} mol`)
         steps.push(`Particles = n × Nₐ = ${fmt(n)} mol × 6.022 × 10²³ mol⁻¹ = ${fmt(n * AVOGADRO)}`)
         answers.push({ label: 'Amount', value: `${fmt(n)} mol` }, { label: 'Formula units (molecules)', value: fmt(n * AVOGADRO) })
       }
-      return { answers, steps }
+      return { answers, steps, note }
     }),
   assumptions: 'Uses CIAAW abridged standard atomic weights (natural isotope mixtures). Hydrates written with a dot (CuSO₄·5H₂O) are not read; add the water as (H2O)5.',
   sourceIds: ['chem-3-1', 'ciaaw-2024'],

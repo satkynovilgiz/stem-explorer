@@ -26,7 +26,7 @@ export interface Answer {
   label: string
   value: string
 }
-export type Outcome = { ok: true; answers: readonly Answer[]; steps: readonly string[]; note?: string } | { ok: false; reason: string }
+export type Outcome = { ok: true; answers: readonly Answer[]; steps: readonly string[]; note?: string } | { ok: false; reason: string; field?: string }
 
 export interface Calculator {
   id: string
@@ -47,11 +47,15 @@ export interface Calculator {
   keywords: readonly string[]
 }
 
-class InputProblem extends Error {}
+class InputProblem extends Error {
+  field?: string
+}
 
 /** Stops the calculation with a message for the student. */
-export function problem(reason: string): never {
-  throw new InputProblem(reason)
+export function problem(reason: string, field?: string): never {
+  const e = new InputProblem(reason)
+  e.field = field
+  throw e
 }
 
 /** Runs a calculation; an input problem becomes a message instead of an answer. */
@@ -59,7 +63,7 @@ export function solve(fn: () => { answers: Answer[]; steps: string[]; note?: str
   try {
     return { ok: true, ...fn() }
   } catch (e) {
-    if (e instanceof InputProblem) return { ok: false, reason: e.message }
+    if (e instanceof InputProblem) return { ok: false, reason: e.message, ...(e.field ? { field: e.field } : {}) }
     throw e
   }
 }
@@ -75,10 +79,10 @@ export const isBlank = (v: Values, id: string) => (v[id] ?? '').trim() === ''
 /** Reads a field as a number, or stops with a message saying what is wrong with it. */
 export function read(v: Values, id: string, label: string, rule: 'positive' | 'nonNegative' | 'any' | 'nonZero' = 'positive'): number {
   const n = parseNumber(v[id] ?? '')
-  if (!Number.isFinite(n)) problem(isBlank(v, id) ? `Enter ${label}.` : `${capital(label)} is not a number: use digits, a decimal point and, for powers of ten, e (6.02e23).`)
-  if (rule === 'positive' && n <= 0) problem(`${capital(label)} must be greater than zero.`)
-  if (rule === 'nonNegative' && n < 0) problem(`${capital(label)} cannot be negative.`)
-  if (rule === 'nonZero' && n === 0) problem(`${capital(label)} cannot be zero.`)
+  if (!Number.isFinite(n)) problem(isBlank(v, id) ? `Enter ${label}.` : `${capital(label)} is not a number: use digits, a decimal point and, for powers of ten, e (6.02e23).`, id)
+  if (rule === 'positive' && n <= 0) problem(`${capital(label)} must be greater than zero.`, id)
+  if (rule === 'nonNegative' && n < 0) problem(`${capital(label)} cannot be negative.`, id)
+  if (rule === 'nonZero' && n === 0) problem(`${capital(label)} cannot be zero.`, id)
   return n
 }
 

@@ -40,7 +40,7 @@ const visible = (el: Element) => {
 export function findStageVisual(root: ParentNode): HTMLCanvasElement | SVGSVGElement | null {
   const canvas = [...root.querySelectorAll('canvas')].find(visible)
   if (canvas) return canvas
-  const svgs = [...root.querySelectorAll<SVGSVGElement>('svg')].filter((s) => visible(s) && !s.closest('button'))
+  const svgs = [...root.querySelectorAll<SVGSVGElement>('svg')].filter((s) => visible(s) && !s.closest('button, .mol-diagram'))
   if (svgs.length === 0) return null
   const area = (s: SVGSVGElement) => {
     const r = s.getBoundingClientRect()

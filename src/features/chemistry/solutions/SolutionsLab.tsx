@@ -3,25 +3,68 @@ import { ArrowRight } from 'lucide-react'
 import { AppLink } from '../../../components/AppLink'
 import { ShareActions } from '../../../components/ShareActions'
 import { learnHref } from '../../reference/route'
-import { AMOUNT_UNITS, fromLitres, sig, solveDilution, solveMolarity, toLitres, toMol, VOLUME_UNITS, volumeLabel, type AmountUnit, type DilutionSolveFor, type MolaritySolveFor, type VolumeUnit } from '../../../chem/solutions'
+import { AMOUNT_UNITS, checkPositive, LIMITS, fromLitres, sig, solveDilution, solveMolarity, toLitres, toMol, VOLUME_UNITS, volumeLabel, type AmountUnit, type DilutionSolveFor, type MolaritySolveFor, type VolumeUnit } from '../../../chem/solutions'
 import { DEFAULT_SOLUTIONS, parseSolutionsState, solutionsEntries, withSolutionsParams, type DilutionForm, type MolarityForm, type SolutionsState, type SolutionsTool } from '../../../lib/solutionsUrl'
 import { SourceLinks } from '../../guide/SourceLinks'
 
 /* ---------- Small inputs ---------- */
 
 /** A number typed as text: only complete, positive numbers reach the calculation. */
-function NumberField({ label, value, onChange, unit, describedBy }: { label: string; value: string; onChange: (t: string) => void; unit?: React.ReactNode; describedBy?: string }) {
+function NumberField({ label, value, onChange, unit, describedBy, error }: { label: string; value: string; onChange: (t: string) => void; unit?: React.ReactNode; describedBy?: string; error?: string }) {
   const id = useId()
+  const errorId = `${id}-error`
   return (
     <div className="sol-field">
       <label htmlFor={id} className="param-label">
         {label}
       </label>
       <div className="sol-input-row">
-        <input id={id} className="param-input sol-input" type="text" inputMode="decimal" autoComplete="off" value={value} aria-describedby={describedBy} onChange={(e) => onChange(e.target.value)} />
+        <input id={id} className="param-input sol-input" type="text" inputMode="decimal" autoComplete="off" value={value} aria-invalid={error ? true : undefined} aria-describedby={[describedBy, error ? errorId : ''].filter(Boolean).join(' ') || undefined} onChange={(e) => onChange(e.target.value)} />
         {unit}
       </div>
+      {error && (
+        <p id={errorId} className="sol-field-error">
+          {error}
+        </p>
+      )}
     </div>
+  )
+}
+
+/** What is wrong with one field on its own, for the message beside it. */
+const fieldError = (name: string, text: string, value: number, max: number, unit: string) => {
+  if (text.trim() === '') return `Enter the ${name}.`
+  const problem = checkPositive(name, value, max, unit)
+  return problem ? problem.reason : undefined
+}
+
+/** The relationship, what each letter means and its unit, kept with the calculator. */
+function FormulaBlock({ formula, terms }: { formula: string; terms: readonly (readonly [string, string])[] }) {
+  return (
+    <div className="sol-formula">
+      <p className="sol-formula-eq">{formula}</p>
+      <dl>
+        {terms.map(([symbol, meaning]) => (
+          <div key={symbol} style={{ display: 'contents' }}>
+            <dt>{symbol}</dt>
+            <dd>{meaning}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  )
+}
+
+/** Beside a field a problem is explained there; screen readers also hear it in the status. */
+function ProblemNote({ reason, atField }: { reason: string; atField: boolean }) {
+  return atField ? (
+    <p>
+      <strong>Can’t calculate yet.</strong> Fix the field marked above.<span className="visually-hidden"> {reason}</span>
+    </p>
+  ) : (
+    <p>
+      <strong>Can’t calculate:</strong> {reason}
+    </p>
   )
 }
 
@@ -59,8 +102,21 @@ function MolarityTool({ form, onForm }: { form: MolarityForm; onForm: (f: Molari
     if (n > 0) onForm({ ...form, [k]: n })
   }
   const unitV = volumeLabel(form.volumeUnit)
+  const errors = {
+    amount: form.solveFor !== 'amount' ? fieldError('amount of solute', t.amount, parse(t.amount), LIMITS.amountMol, 'mol') : undefined,
+    volume: form.solveFor !== 'volume' ? fieldError('volume of solution', t.volume, parse(t.volume), LIMITS.volumeL, 'L') : undefined,
+    molarity: form.solveFor !== 'molarity' ? fieldError('molarity', t.molarity, parse(t.molarity), LIMITS.molarity, 'M') : undefined,
+  }
   return (
     <div className="sol-tool">
+      <FormulaBlock
+        formula="M = n / V"
+        terms={[
+          ['M', 'molarity, the concentration, in mol/L (written M)'],
+          ['n', 'amount of solute, in moles (mol)'],
+          ['V', 'volume of the whole solution after mixing, in litres (L)'],
+        ]}
+      />
       <fieldset className="sol-solve-for">
         <legend className="param-label">Solve for</legend>
         <div className="segmented" role="group" aria-label="Solve for">
@@ -84,6 +140,7 @@ function MolarityTool({ form, onForm }: { form: MolarityForm; onForm: (f: Molari
             value={t.amount}
             onChange={(v) => set('amount', v)}
             describedBy={statusId}
+            error={errors.amount}
             unit={<UnitSelect label="Amount unit" value={form.amountUnit} options={AMOUNT_UNITS} onChange={(u: AmountUnit) => onForm({ ...form, amountUnit: u })} />}
           />
         )}
@@ -93,10 +150,11 @@ function MolarityTool({ form, onForm }: { form: MolarityForm; onForm: (f: Molari
             value={t.volume}
             onChange={(v) => set('volume', v)}
             describedBy={statusId}
+            error={errors.volume}
             unit={<UnitSelect label="Volume unit" value={form.volumeUnit} options={VOLUME_UNITS} onChange={(u: VolumeUnit) => onForm({ ...form, volumeUnit: u })} />}
           />
         )}
-        {form.solveFor !== 'molarity' && <NumberField label="Molarity" value={t.molarity} onChange={(v) => set('molarity', v)} describedBy={statusId} unit={<span className="param-unit">M (mol/L)</span>} />}
+        {form.solveFor !== 'molarity' && <NumberField label="Molarity" value={t.molarity} onChange={(v) => set('molarity', v)} describedBy={statusId} error={errors.molarity} unit={<span className="param-unit">M (mol/L)</span>} />}
       </div>
 
       <div id={statusId} className={`sol-result${r.ok ? '' : ' is-problem'}`} role="status" aria-live="polite">
@@ -148,12 +206,13 @@ function MolarityTool({ form, onForm }: { form: MolarityForm; onForm: (f: Molari
                 )}
               </li>
             </ol>
+            <p className="sol-meaning">
+              Every litre of this solution contains {sig(r.value.molarity)} mol of solute, so {sig(r.value.volume)} L of it holds {sig(r.value.amount)} mol.
+            </p>
             <p className="muted small">Shown to 3 significant figures; the calculation keeps full precision.</p>
           </>
         ) : (
-          <p>
-            <strong>Can’t calculate:</strong> {r.reason}
-          </p>
+          <ProblemNote reason={r.reason} atField={Boolean(errors.amount || errors.volume || errors.molarity)} />
         )}
       </div>
     </div>
@@ -173,6 +232,14 @@ function DilutionTool({ form, onForm }: { form: DilutionForm; onForm: (f: Diluti
     const n = parse(v)
     if (n > 0) onForm({ ...form, [k]: n })
   }
+  const names: Record<keyof DilutionText, [string, number, string]> = {
+    c1: ['stock concentration C₁', LIMITS.molarity, 'M'],
+    v1: ['stock volume V₁', LIMITS.volumeL, 'L'],
+    c2: ['final concentration C₂', LIMITS.molarity, 'M'],
+    v2: ['final volume V₂', LIMITS.volumeL, 'L'],
+  }
+  const errorOf = (k: keyof DilutionText) => (form.solveFor === k ? undefined : fieldError(names[k][0], t[k], parse(t[k]), names[k][1], names[k][2]))
+  const atField = (Object.keys(names) as (keyof DilutionText)[]).some((k) => errorOf(k))
   const field = (k: keyof DilutionText, label: string) => {
     if (form.solveFor === k) return null
     const unitKey = k === 'v1' ? 'v1Unit' : k === 'v2' ? 'v2Unit' : null
@@ -183,6 +250,7 @@ function DilutionTool({ form, onForm }: { form: DilutionForm; onForm: (f: Diluti
         value={t[k]}
         onChange={(v) => set(k, v)}
         describedBy={statusId}
+        error={errorOf(k)}
         unit={unitKey ? <UnitSelect label={`${label} unit`} value={form[unitKey]} options={VOLUME_UNITS} onChange={(u: VolumeUnit) => onForm({ ...form, [unitKey]: u })} /> : <span className="param-unit">M</span>}
       />
     )
@@ -190,6 +258,15 @@ function DilutionTool({ form, onForm }: { form: DilutionForm; onForm: (f: Diluti
   const solvedUnit = form.solveFor === 'v1' ? form.v1Unit : form.v2Unit
   return (
     <div className="sol-tool">
+      <FormulaBlock
+        formula="C₁V₁ = C₂V₂"
+        terms={[
+          ['C₁', 'concentration of the stock solution, in mol/L (M)'],
+          ['V₁', 'volume of stock you measure out'],
+          ['C₂', 'concentration after diluting, in mol/L (M)'],
+          ['V₂', 'final total volume after adding solvent, not the solvent added'],
+        ]}
+      />
       <fieldset className="sol-solve-for">
         <legend className="param-label">Solve for</legend>
         <div className="segmented" role="group" aria-label="Solve for">
@@ -255,15 +332,14 @@ function DilutionTool({ form, onForm }: { form: DilutionForm; onForm: (f: Diluti
                 <code>Amount of solute n = C₁V₁ = C₂V₂ = {sig(r.value.amount)} mol (unchanged)</code>
               </li>
             </ol>
-            <p className="small">
-              Dilution factor V₂/V₁ = {sig(r.value.factor)}. Take {sig(fromLitres(r.value.v1, form.v1Unit))} {volumeLabel(form.v1Unit)} of the stock, then add solvent until the total volume
-              of solution is {sig(fromLitres(r.value.v2, form.v2Unit))} {volumeLabel(form.v2Unit)}.
+            <p className="sol-meaning">
+              Take {sig(fromLitres(r.value.v1, form.v1Unit))} {volumeLabel(form.v1Unit)} of the stock, then add solvent until the total volume of solution is {sig(fromLitres(r.value.v2, form.v2Unit))} {volumeLabel(form.v2Unit)}. That is about{' '}
+              {sig(fromLitres(r.value.v2 - r.value.v1, form.v2Unit), 4)} {volumeLabel(form.v2Unit)} of solvent, but fill to the final volume rather than measuring the solvent.
             </p>
+            <p className="small">Dilution factor V₂/V₁ = {sig(r.value.factor)}.</p>
           </>
         ) : (
-          <p>
-            <strong>Can’t calculate:</strong> {r.reason}
-          </p>
+          <ProblemNote reason={r.reason} atField={atField} />
         )}
       </div>
     </div>

@@ -1,3 +1,4 @@
+import type { InteractionMode } from '../../lib/measurement'
 import { lazy, Suspense, useEffect, useReducer, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { AppLink } from '../../components/AppLink'
@@ -55,13 +56,22 @@ const SECTION_LABEL: Record<ChemistrySection, string> = {
 
 const URL_DEFAULTS = { moleculeId: DEFAULT_MOLECULE_ID, representation: 'ball-and-stick' } as const
 
+function withMeasureTool(search: string, mode: string) {
+  const params = new URLSearchParams(search)
+  if (mode === 'inspect') params.delete('mtool')
+  else params.set('mtool', mode)
+  return `?${params.toString()}`
+}
+
 function initFromUrl() {
   const { moleculeId, representation } = parseChemistryParams(
     window.location.search,
     MOLECULES.map((m) => m.id),
     URL_DEFAULTS,
   )
-  return initialChemistryState(moleculeId, representation)
+  // `mtool=angle` or `mtool=distance` opens the model with that measuring tool ready.
+  const mtool = new URLSearchParams(window.location.search).get('mtool')
+  return { ...initialChemistryState(moleculeId, representation), mode: (mtool === 'angle' || mtool === 'distance' ? mtool : 'inspect') as InteractionMode }
 }
 
 export function ChemistryExplorer() {
@@ -84,11 +94,11 @@ export function ChemistryExplorer() {
   // Keep the address shareable: ?molecule=…&view=… (also replaces invalid values with valid ones).
   // Sections other than Molecules add `csec` (and `el`); molecule links stay exactly as before.
   useEffect(() => {
-    const search = withChemistrySection(withChemistryParams(window.location.search, { moleculeId: state.moleculeId, representation }), section, elementZ, reactionId)
+    const search = withChemistrySection(withMeasureTool(withChemistryParams(window.location.search, { moleculeId: state.moleculeId, representation }), mode), section, elementZ, reactionId)
     if (search !== window.location.search) {
       window.history.replaceState(window.history.state, '', `${window.location.pathname}${search}${window.location.hash}`)
     }
-  }, [state.moleculeId, representation, section, elementZ, reactionId])
+  }, [state.moleculeId, representation, section, elementZ, reactionId, mode])
 
   const shareParams = { molecule: state.moleculeId, view: representation, ...chemistrySectionEntries(section, elementZ, reactionId) }
   useExportNotes('chemistry', ...chemistryExportNotes(section, molecule, state, showLabels, autoRotate))

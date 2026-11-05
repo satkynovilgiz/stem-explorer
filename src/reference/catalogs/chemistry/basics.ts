@@ -199,7 +199,10 @@ export const BASICS: ReferenceEntry[] = [
       { id: 'nist-avogadro', locator: 'exact value of the Avogadro constant' },
       { id: 'chem-1-4', locator: 'Table 1.4 density of water, about 1.0 g/cm³' },
     ],
-    links: [{ label: 'Reactions and stoichiometry lab', href: '?csec=reactions#/chemistry', kind: 'tool' }],
+    links: [
+      { label: 'Work out the moles in 5 g of water', href: '?csec=tools&calc=molar-mass&cv=formula:H2O,mass:5#/chemistry', kind: 'tool' },
+      { label: 'Use moles in a balanced reaction', href: '?csec=reactions&rx=ammonia-synthesis#/chemistry', kind: 'lab' },
+    ],
   },
   {
     id: 'molar-mass',
@@ -311,7 +314,7 @@ export const BASICS: ReferenceEntry[] = [
       { id: 'chem-4-1', locator: '§4.1 balancing equations (methane and oxygen); why subscripts must not change' },
       { id: 'chem-4-2', locator: '§4.2 combustion reactions' },
     ],
-    links: [{ label: 'Balance it step by step', href: '?csec=reactions&rx=methane-combustion#/chemistry', kind: 'tool' }],
+    links: [{ label: 'Balance CH₄ + O₂ yourself and watch the atom counts', href: '?csec=reactions&rx=methane-combustion#/chemistry', kind: 'tool' }],
   },
   {
     id: 'mole-ratios',
@@ -416,7 +419,7 @@ export const BASICS: ReferenceEntry[] = [
       { id: 'the-mole', why: 'Molarity counts the solute in moles.' },
     ],
     sources: [{ id: 'chem-3-3', locator: '§3.3 definition of molarity; Example 3.14 (converting mL to L)' }, { id: 'chem-1-4', locator: '§1.4 litre and millilitre' }],
-    links: [{ label: 'Molarity calculator', href: '?csec=solutions&st=molarity#/chemistry', kind: 'tool' }],
+    links: [{ label: 'Calculate a molarity from amount and volume', href: '?csec=solutions&st=molarity#/chemistry', kind: 'tool' }],
   },
   {
     id: 'dilution',
@@ -470,6 +473,6 @@ export const BASICS: ReferenceEntry[] = [
       { id: 'molarity', why: 'Both sides of C₁V₁ = C₂V₂ are moles of solute, from molarity.' },
     ],
     sources: [{ id: 'chem-3-3', locator: '§3.3 dilution of solutions; the dilution equation' }],
-    links: [{ label: 'Dilution calculator', href: '?csec=solutions&st=dilution#/chemistry', kind: 'tool' }],
+    links: [{ label: 'Calculate the stock volume for 250 mL of 0.100 M', href: '?csec=solutions&st=dilution&sds=v1&sc1=2&sc2=0.1&sv2=250&sv2u=mL&sv1u=mL#/chemistry', kind: 'tool' }],
   },
 ]

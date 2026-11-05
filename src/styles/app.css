@@ -771,25 +771,55 @@ button {
   }
 }
 
-.viewport-message {
+/* When 3D cannot run: a compact message, then whatever useful content the page has. */
+.viewport-fallback {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-8);
-  text-align: center;
-  min-height: 280px;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.viewport-message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.viewport-message-text {
+  flex: 1 1 240px;
+  min-width: 0;
 }
 
 .viewport-message .muted {
-  max-width: 44ch;
+  max-width: 70ch;
   font-size: var(--text-sm);
 }
 
-.viewport-message .button {
-  margin-top: var(--space-3);
+.mol-diagram {
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
 }
+
+.mol-diagram svg {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  margin-bottom: var(--space-3);
+}
+
+.mol-diagram-bond { stroke: var(--color-text-subtle); stroke-width: 0.08; }
+.mol-diagram-atom { stroke: var(--color-text-subtle); stroke-width: 0.02; }
+.mol-diagram-label { font-size: 0.22px; font-weight: 700; fill: var(--color-text); paint-order: stroke; stroke: rgb(255 255 255 / 0.85); stroke-width: 0.05px; }
+.mol-diagram-values { margin: var(--space-2) 0 0; padding-left: var(--space-5); }
 
 .viewport-message-icon {
   color: var(--color-warning);
@@ -9226,3 +9256,20 @@ select { max-width: 100%; }
 .home-search-blocks { display: flex; flex-direction: column; gap: var(--space-2); }
 .home-search-blocks.is-explanation-first > .search-results[aria-label='Search results'] { order: 2; }
 .search-suggestions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); margin: var(--space-3) 0 0; }
+
+/* Calculators: the formula with its meanings, field messages and what the result means. */
+.sol-formula { margin: 0; padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.sol-formula-eq { margin: 0 0 var(--space-2); font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 600; }
+.sol-formula dl { display: grid; grid-template-columns: auto 1fr; gap: 2px var(--space-3); margin: 0; font-size: var(--text-sm); }
+.sol-formula dt { font-family: var(--font-mono); font-weight: 600; }
+.sol-formula dd { margin: 0; color: var(--color-text-muted); }
+.sol-field-error, .calc-field-error { margin: 4px 0 0; color: var(--color-danger); font-size: var(--text-sm); font-weight: 500; }
+.sol-input[aria-invalid='true'], .calc-input[aria-invalid='true'] { border-color: var(--color-danger); }
+.sol-meaning { margin: var(--space-2) 0; font-weight: 500; }
+.rx-why { margin: var(--space-3) 0 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--color-surface-raised); font-size: var(--text-sm); }
+.rx-why h4 { margin: 0 0 var(--space-1); font-size: var(--text-sm); }
+.rx-why ul { margin: var(--space-1) 0 0; padding-left: var(--space-5); }
+.rx-secondary > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.ref-next .ref-link:first-of-type { border-color: var(--color-accent-border); }
+.ref-jump { display: inline-flex; align-items: center; min-height: 44px; margin-top: var(--space-1); }
+.measure-reported { margin: var(--space-2) 0 0; font-size: var(--text-sm); }

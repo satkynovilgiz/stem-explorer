@@ -86,7 +86,7 @@ test('student layout: molarity reads simple words first, a step-by-step example,
   await expect(page.getByRole('heading', { name: 'Common mistakes' })).toBeVisible()
   // More detail starts collapsed; sources stay available.
   await expect(page.locator('details', { has: page.getByRole('heading', { name: 'More detail' }) })).not.toHaveAttribute('open', '')
-  await page.getByRole('link', { name: /Molarity calculator/ }).click()
+  await page.getByRole('link', { name: /Calculate a molarity/ }).click()
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Solutions and dilution')
 })
 

@@ -39,7 +39,7 @@ export const TOPICS: readonly ChemTopic[] = [
     actions: [
       { kind: 'read', href: learnHref('the-mole') },
       { kind: 'example', href: learnHref('the-mole', 'example') },
-      { kind: 'calculate', href: '?csec=reactions&rx=ammonia-synthesis#/chemistry' },
+      { kind: 'calculate', href: '?csec=tools&calc=molar-mass&cv=formula:H2O,mass:5#/chemistry' },
     ],
     terms: ['mole', 'moles', 'mol', 'what is a mole', 'avogadro', 'avogadro number', 'avogadro constant', 'amount of substance', 'mole ratio', 'stoichiometry'],
   },
@@ -89,7 +89,7 @@ export const TOPICS: readonly ChemTopic[] = [
     actions: [
       { kind: 'read', href: learnHref('water') },
       { kind: 'example', href: learnHref('water', 'example') },
-      { kind: 'explore', href: '?molecule=water&view=ball-and-stick#/chemistry' },
+      { kind: 'explore', href: '?molecule=water&view=ball-and-stick&mtool=angle#/chemistry' },
     ],
     terms: ['water', 'why is water bent', 'bent', 'water shape', 'water molecule', 'lone pair', 'polar'],
     ids: ['H2O'],

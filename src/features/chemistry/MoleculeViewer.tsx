@@ -1,6 +1,7 @@
 import { MousePointerClick } from 'lucide-react'
 import { lazy, type ReactNode } from 'react'
 import { ViewportShell } from '../../components/ViewportShell'
+import { MoleculeDiagram } from './MoleculeDiagram'
 import type { Molecule, Representation } from '../../data/chemistry/types'
 import type { MoleculeViewportProps } from './scene/MoleculeViewport'
 
@@ -24,6 +25,7 @@ export function MoleculeViewer({ controls, ...props }: Props) {
       label={`3D model of ${props.molecule.name}. Drag to rotate, scroll or pinch to zoom.`}
       fallbackNote="All molecule information and atom selection remain available in the panels"
       renderScene={(callbacks) => <MoleculeViewport {...props} {...callbacks} />}
+      fallback={<MoleculeDiagram molecule={props.molecule} />}
       overlay={
         <>
           <ModeBadge molecule={props.molecule} representation={props.representation} />
