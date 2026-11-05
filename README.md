@@ -97,13 +97,13 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   (IntersectionObserver), cards lift on hover and their pictures drift; the Chemistry molecule
   floats. Only transform/translate/opacity animate. With `prefers-reduced-motion: reduce`
   nothing moves: no entrance, no reveal (nothing is hidden), and the electrons are drawn still.
-- **Subject openings** (`src/features/subjects/SubjectIntro.tsx`, `subject-intro.css`): opening a
-  subject from elsewhere in the app plays a 1.7 s themed animation with the subject's name: water
-  forming at its 104.5° angle (Chemistry), a beating heart and ECG trace (Anatomy), a turning DNA
-  helix (Biology), a projectile on its parabola (Physics), a curve drawn across axes
-  (Mathematics). It is decorative: hidden from screen readers, and clicks pass through it. It does
-  not play on a reload or shared link, between tabs of a subject, or with
-  `prefers-reduced-motion: reduce`.
+- **Subject intros** (`src/features/subjects/SubjectIntro.tsx`, `useSubjectIntro.ts`,
+  `subject-intro.css`): a 1.5 s animation inside the header's subject mark (water forming at
+  104.5°, a heartbeat trace, a turning helix, a projectile on its parabola, a curve across axes).
+  Nothing is covered and nothing moves, so the page is usable at once. It plays at most once per
+  subject per browser session (`sessionStorage`). A direct link or reload counts as that subject's
+  visit and never plays, so Back and Forward cannot play it either. Tab changes do not play it, and
+  `prefers-reduced-motion` stops it, also when the preference changes while it runs.
 - **Subject headers** (`src/components/SubjectBar.tsx`, `app.css`): every subject has the same two
   rows on its own colour: the subject's mark, the breadcrumb above its name, search and controls,
   then the destination tabs as pills with the current one filled (white on each subject colour is

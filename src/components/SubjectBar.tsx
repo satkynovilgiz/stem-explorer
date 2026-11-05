@@ -10,6 +10,7 @@ import { AppLink } from './AppLink'
 import { ChemHeaderSearch, ChemNav, SubjectHeaderSearch, SubjectNav } from './ChemNav'
 import { overviewHref } from '../lib/overviewRoute'
 import { SubjectIcon } from './SubjectIcon'
+import { SubjectIntro } from '../features/subjects/SubjectIntro'
 
 const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
 
@@ -19,7 +20,7 @@ const subjectName = (id: SubjectId) => SUBJECTS.find((s) => s.id === id)!.name
  * subjects are reached from Home and from search. Each explorer's own toolbar holds its display
  * controls.
  */
-export function SubjectBar({ subject, overview = false, calculators = false, onPresent }: { subject: SubjectId; overview?: boolean; calculators?: boolean; onPresent?: () => void }) {
+export function SubjectBar({ subject, overview = false, calculators = false, intro = false, onPresent }: { subject: SubjectId; overview?: boolean; calculators?: boolean; intro?: boolean; onPresent?: () => void }) {
   const search = useLocationSearch()
   const { module, topic } = locate(subject, search)
   const [open, setOpen] = useState(false)
@@ -181,8 +182,9 @@ export function SubjectBar({ subject, overview = false, calculators = false, onP
   return (
     <div ref={barRef} className={`subject-bar chem-bar is-${subject}`}>
       <div className="chem-bar-main">
-        <span className="chem-brand-mark" aria-hidden="true">
+        <span className={`chem-brand-mark${intro ? ' has-intro' : ''}`} aria-hidden="true">
           <SubjectIcon subject={subject} size={22} />
+          {intro && <SubjectIntro subject={subject} />}
         </span>
         <div className="chem-bar-title">
           {crumbs}

@@ -1,115 +1,84 @@
-import { SUBJECTS, type SubjectId } from '../../data/subjects'
+import type { CSSProperties, JSX } from 'react'
+import type { SubjectId } from '../../data/subjects'
 import '../../styles/subject-intro.css'
 
 /**
- * A brief full-screen opening for a subject. Purely decorative: hidden from assistive technology,
- * and clicks and keys pass straight through to the page underneath.
+ * A short decorative animation inside the header's subject mark. It sits in the mark's fixed box,
+ * so nothing moves or is covered, and the mark is hidden from assistive technology.
  */
 export function SubjectIntro({ subject }: { subject: SubjectId }) {
-  const { name, tagline } = SUBJECTS.find((s) => s.id === subject)!
   const Scene = SCENES[subject]
   return (
-    <div className={`subject-intro is-${subject}`} aria-hidden="true" data-testid="subject-intro">
-      <div className="si-content">
-        <svg viewBox="0 0 240 150" className="si-scene" focusable="false">
-          <Scene />
-        </svg>
-        <p className="si-name">{name}</p>
-        <p className="si-tagline">{tagline}</p>
-      </div>
-    </div>
+    <svg viewBox="0 0 42 42" className={`si-scene si-${subject}`} focusable="false" data-testid="subject-intro">
+      <Scene />
+    </svg>
   )
 }
 
-/** Water forms: two hydrogens fly in to the real 104.5° angle and the bonds appear. */
+/** Water forms: two hydrogens arrive at the real 104.5° angle. */
 function ChemistryScene() {
-  const BOND = 50
   const half = (104.5 / 2) * (Math.PI / 180)
-  const dx = BOND * Math.sin(half)
-  const dy = BOND * Math.cos(half)
-  const O = { x: 120, y: 62 }
+  const [x, y, bond] = [21, 15, 15]
+  const dx = bond * Math.sin(half)
+  const dy = bond * Math.cos(half)
   return (
     <>
-      <circle cx={O.x} cy={O.y} r="42" className="si-ring" />
-      <line x1={O.x} y1={O.y} x2={O.x - dx} y2={O.y + dy} className="si-bond" pathLength={1} />
-      <line x1={O.x} y1={O.y} x2={O.x + dx} y2={O.y + dy} className="si-bond" pathLength={1} />
-      <g className="si-hydrogen is-left">
-        <circle cx={O.x - dx} cy={O.y + dy} r="13" className="si-atom-h" />
-      </g>
-      <g className="si-hydrogen is-right">
-        <circle cx={O.x + dx} cy={O.y + dy} r="13" className="si-atom-h" />
-      </g>
-      <circle cx={O.x} cy={O.y} r="23" className="si-atom-o" />
+      <line x1={x} y1={y} x2={x - dx} y2={y + dy} className="si-line si-draw is-late" pathLength={1} />
+      <line x1={x} y1={y} x2={x + dx} y2={y + dy} className="si-line si-draw is-late" pathLength={1} />
+      <circle cx={x - dx} cy={y + dy} r="4.5" className="si-dot si-h-left" />
+      <circle cx={x + dx} cy={y + dy} r="4.5" className="si-dot si-h-right" />
+      <circle cx={x} cy={y} r="7.5" className="si-dot" />
     </>
   )
 }
 
-/** A heart beats twice as its ECG trace is drawn underneath. */
+/** A heartbeat trace is drawn across the mark. */
 function AnatomyScene() {
-  return (
-    <>
-      <g transform="translate(120 48)">
-        <path className="si-heart" d="M0 30 C-34 8 -30 -22 -12 -22 C-5 -22 -1 -17 0 -12 C1 -17 5 -22 12 -22 C30 -22 34 8 0 30 Z" />
-      </g>
-      <path
-        className="si-draw si-ecg"
-        pathLength={1}
-        d="M8 118 H62 q6 -9 12 0 h7 l4 6 l8 -36 l8 44 l5 -14 h10 q8 -11 16 0 h16 q6 -9 12 0 h7 l4 6 l8 -36 l8 44 l5 -14 h34"
-      />
-    </>
-  )
+  return <path className="si-line si-draw" pathLength={1} d="M4 23 H12 l2.5 -3 l2.5 3 h2 l2.5 -12 l3.5 19 l2.5 -7 h2 l2 -2.5 l2 2.5 H38" />
 }
 
-const HELIX_COLUMNS = Array.from({ length: 14 }, (_, i) => i)
+const HELIX = [0, 1, 2, 3, 4, 5]
 
-/** A DNA double helix turns: each base pair swings in step, one after another along the strand. */
+/** A DNA double helix turns: base pairs swing in step, one after another. */
 function BiologyScene() {
   return (
-    <g transform="translate(29 75)">
-      {HELIX_COLUMNS.map((i) => (
-        <g key={i} transform={`translate(${i * 14} 0)`} style={{ '--i': i } as React.CSSProperties}>
-          <line x1="0" x2="0" y1="-36" y2="36" className="si-rung" />
-          <circle r="5" className="si-base is-a" />
-          <circle r="5" className="si-base is-b" />
+    <g transform="translate(8.5 21)">
+      {HELIX.map((i) => (
+        <g key={i} transform={`translate(${i * 5} 0)`} style={{ '--i': i } as CSSProperties}>
+          <line y1="-11" y2="11" className="si-rung" />
+          <circle r="1.9" className="si-dot si-base is-a" />
+          <circle r="1.9" className="si-dot si-base is-b" />
         </g>
       ))}
     </g>
   )
 }
 
-/** A projectile follows its true parabola: steady across, slowing up and speeding down. */
+/** A projectile on its true parabola: steady across, slowing up and speeding down. */
 function PhysicsScene() {
   return (
     <>
-      <line x1="10" y1="131" x2="230" y2="131" className="si-ground" />
-      <path d="M24 122 Q120 -58 216 122" className="si-arc" />
+      <path d="M6 33 Q21 -3 36 33" className="si-arc" />
       <g className="si-ball-x">
         <g className="si-ball-y">
-          <circle r="9" className="si-ball" />
+          <circle r="4" className="si-dot" />
         </g>
       </g>
-      <circle cx="216" cy="131" r="14" className="si-impact" />
     </>
   )
 }
 
-const CURVE = 'M20 75 C40 15 70 15 90 75 S140 135 160 75 S205 25 222 58'
-
-/** Axes appear and a curve is drawn across them, with a point riding its tip. */
+/** Axes, then a curve drawn across them. */
 function MathematicsScene() {
   return (
     <>
-      <line x1="20" y1="75" x2="228" y2="75" className="si-axis" pathLength={1} />
-      <line x1="20" y1="136" x2="20" y2="14" className="si-axis" pathLength={1} />
-      <path d={CURVE} className="si-draw si-curve" pathLength={1} />
-      <circle r="6" className="si-point">
-        <animateMotion dur="1s" begin="0.2s" fill="freeze" path={CURVE} />
-      </circle>
+      <path d="M7 6 V36 H37" className="si-axes" />
+      <path d="M8 29 C15 29 15 11 21 11 S28 26 36 15" className="si-line si-draw" pathLength={1} />
     </>
   )
 }
 
-const SCENES: Record<SubjectId, () => React.JSX.Element> = {
+const SCENES: Record<SubjectId, () => JSX.Element> = {
   chemistry: ChemistryScene,
   anatomy: AnatomyScene,
   biology: BiologyScene,
