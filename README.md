@@ -175,6 +175,30 @@ npm run test:e2e     # browser tests (Playwright + your installed Google Chrome)
 Browser tests build the app and serve it with `vite preview` on port 4173, then run in the
 locally installed Google Chrome (`channel: 'chrome'`), so no browser download is needed.
 
+### Design checks (CI/CD for design)
+
+Every pull request runs the **Design** workflow (`.github/workflows/design.yml`):
+
+- **Design rules** (`e2e/design-rules.e2e.ts`) on 12 pages at phone, tablet and laptop size:
+  nothing scrolls sideways (also at 320 px), left-menu links are at least 44 × 44 px, header
+  and menu controls at least 24 × 24 px, text at least 11 px, and header and menu text has a
+  contrast of at least 4.5 : 1. A broken rule fails the check.
+- **Design review**: screenshots of the same pages from `main` and from the pull request,
+  compared picture by picture (`scripts/design-compare.ts`). The pull request gets a comment
+  listing what looks different, and the **design-review** artifact holds `index.html` with
+  before, after and the changes in pink. A change does not fail the check; it is there to be
+  looked at before merging. Motion is off and 3D models are covered, so identical builds give
+  identical pictures.
+
+Vercel builds a preview of each pull request and deploys `main` to production; the production
+smoke test (`deploy-check.yml`) then checks the live site. To make the review locally:
+
+```bash
+DESIGN_SHOTS=design-shots/after npx playwright test --project=desktop e2e/design-shots.e2e.ts
+# take the "before" shots the same way from another build (BASE_URL=…), then:
+node scripts/design-compare.ts design-shots/before design-shots/after design-review
+```
+
 ## Stack
 
 React 19 · TypeScript · Vite 8 · Three.js via React Three Fiber 9 and Drei 10 · Lucide icons ·

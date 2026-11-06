@@ -1,0 +1,117 @@
+name: Design
+
+# On every pull request:
+#  1. Design rules: no sideways scrolling, big enough menu links and buttons, readable text size,
+#     readable colour contrast in the header and menu (e2e/design-rules.e2e.ts). Fails the check.
+#  2. Design review: screenshots of 12 pages at phone, tablet and laptop size, taken from `main`
+#     and from the pull request, compared picture by picture. The report (before / after / changes
+#     in pink) is uploaded as the "design-review" artifact and summarised in a pull request comment.
+#     A design change does not fail the check; it is shown so it can be looked at before merging.
+# Vercel builds a preview of every pull request and deploys `main` to production on its own.
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: design-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    name: Design rules
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chrome
+      - run: npx playwright test --project=desktop e2e/design-rules.e2e.ts
+        env:
+          CI: 'true'
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-rules-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14
+
+  review:
+    name: Design review (before / after)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chrome
+
+      - name: Screenshots of this pull request
+        run: npx playwright test --project=desktop e2e/design-shots.e2e.ts
+        env:
+          CI: 'true'
+          DESIGN_SHOTS: design-shots/after
+
+      - name: Build ${{ github.base_ref }}
+        run: |
+          git worktree add ../base "origin/${{ github.base_ref }}"
+          cd ../base
+          npm ci
+          npm run build
+
+      - name: Screenshots of ${{ github.base_ref }}
+        run: |
+          (cd ../base && npx vite preview --host 127.0.0.1 --port 4174 --strictPort) &
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:4174 > /dev/null && break; sleep 1; done
+          npx playwright test --project=desktop e2e/design-shots.e2e.ts
+        env:
+          CI: 'true'
+          BASE_URL: http://127.0.0.1:4174
+          DESIGN_SHOTS: design-shots/before
+
+      - name: Compare
+        run: |
+          node scripts/design-compare.ts design-shots/before design-shots/after design-review
+          cat design-review/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        id: upload
+        with:
+          name: design-review
+          path: design-review
+          retention-days: 30
+
+      - name: Comment on the pull request
+        uses: actions/github-script@v7
+        continue-on-error: true
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+        with:
+          script: |
+            const fs = require('fs')
+            const marker = '<!-- design-review -->'
+            let body = `${marker}\n${fs.readFileSync('design-review/summary.md', 'utf8')}`
+            body += `\n[Download the design review](${process.env.ARTIFACT_URL}) (unzip, then open \`index.html\`).\n`
+            const { owner, repo } = context.repo
+            const issue_number = context.issue.number
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number })
+            const old = comments.find((c) => c.body?.includes(marker))
+            if (old) await github.rest.issues.updateComment({ owner, repo, comment_id: old.id, body })
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body })
