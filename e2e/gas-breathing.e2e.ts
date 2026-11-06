@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test } from './fixtures.ts'
+import { expect, test, railLink } from './fixtures.ts'
 
 const p2 = (page: Page) => page.locator('.gas-p2')
 const point = (page: Page) => page.locator('.gas-point')
@@ -142,7 +142,7 @@ test.describe('Breathing mechanics', () => {
 
   test('the module switch adds a history entry, and older anatomy links still open their modules', async ({ page }) => {
     await page.goto('/?atlas=diaphragm&bview=front#/anatomy')
-    await page.getByRole('button', { name: 'Breathing', exact: true }).click()
+    await railLink(page, 'Anatomy', 'Breathing').click()
     await expect(page.locator('#breath-stage-heading')).toBeVisible()
     expect(await search(page)).toEqual({ breath: 'inspiration', bpos: '0', bshow: 'airflow' })
     await page.goBack()

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import type { Page } from '@playwright/test'
-import { expect, test, waitForViewport, openSubject } from './fixtures.ts'
+import { expect, test, waitForViewport, openSubject, railLink } from './fixtures.ts'
 import { instrument } from './storage-helpers.ts'
 
 const toast = (page: Page) => page.locator('.home-toast')
@@ -63,7 +63,7 @@ test('unsaved changes: Cancel asks first, and a draft left behind is offered bac
   await openSubject(page, 'physics')
   // Home's Biology card opens the Overview; the Cells tab returns to the explorer.
   await openSubject(page, 'biology')
-  await page.getByRole('navigation', { name: 'Biology' }).getByRole('link', { name: 'Cells' }).click()
+  await railLink(page, 'Biology', 'Cells').click()
   await expect(page.locator('.note-waiting')).toContainText('You have an unsaved Biology note draft')
   await page.getByRole('button', { name: 'Add note' }).click()
   await expect(page.locator('.note-restore')).toContainText('unsaved note draft')

@@ -4,6 +4,7 @@ import { SubjectBar } from './components/SubjectBar'
 import { KeyboardHelp } from './components/KeyboardHelp'
 import { getPeek, isTypingTarget, setPanelWidthVar, setPeek, toggleFocus, toggleSide, usePeek, useWorkspace } from './lib/workspace'
 import { HomeLink } from './components/HomeLink'
+import { SubjectFrame } from './components/SubjectFrame'
 import { isSubjectId, SUBJECTS } from './data/subjects'
 import { AnatomyExplorer } from './features/anatomy/AnatomyExplorer'
 import { BiologyExplorer } from './features/biology/BiologyExplorer'
@@ -121,6 +122,37 @@ export default function App() {
     document.title = subjectName ? `${subjectName} · STEM Explorer` : route === 'glossary' ? 'Glossary · STEM Explorer' : route === 'notebook' ? 'Notebook · STEM Explorer' : route === 'collections' ? 'Collections · STEM Explorer' : route === 'search' ? 'Search · STEM Explorer' : route === 'reference' || route === 'discover' ? document.title : 'STEM Explorer'
   }, [subjectName, route])
 
+  // The page inside a subject (not Chemistry, which routes its own pages).
+  const subjectPage = overview ? (
+      <Suspense fallback={pageLoading}>
+        <SubjectOverview subject={overview} />
+      </Suspense>
+    ) : calculators ? (
+      <Suspense fallback={pageLoading}>
+        <SubjectCalculators subject={calculators} />
+      </Suspense>
+    ) : route === 'anatomy' ? (
+      <>
+        <h1 className="visually-hidden">Anatomy Explorer: body atlas and heart</h1>
+        <AnatomyExplorer />
+      </>
+    ) : route === 'physics' ? (
+      <>
+        <h1 className="visually-hidden">Physics Explorer: projectile motion lab</h1>
+        <PhysicsExplorer />
+      </>
+    ) : route === 'mathematics' ? (
+      <>
+        <h1 className="visually-hidden">Mathematics Explorer: interactive 3D surfaces</h1>
+        <MathematicsExplorer />
+      </>
+    ) : route === 'biology' ? (
+      <>
+        <h1 className="visually-hidden">Biology Explorer: cells, DNA, division and energy</h1>
+        <BiologyExplorer />
+      </>
+    ) : null
+
   return (
     <div className={`app${isSubjectId(route) ? ' has-subject-bar' : ''}`}>
       <a className="skip-link" href="#main">
@@ -131,37 +163,13 @@ export default function App() {
       <main id="main" className="main" tabIndex={-1} key={isSubjectId(route) ? `${route}:${generation}` : route}>
         {/* No global header: subjects carry their own local navigation; other pages a link back Home. */}
         {isSubjectId(route) ? <SubjectBar subject={route} overview={Boolean(overview)} calculators={Boolean(calculators)} intro={intro === route} onPresent={() => setPresenting(route)} /> : route !== 'home' && <HomeLink />}
-        {overview ? (
-          <Suspense fallback={pageLoading}>
-            <SubjectOverview subject={overview} />
-          </Suspense>
-        ) : calculators ? (
-          <Suspense fallback={pageLoading}>
-            <SubjectCalculators subject={calculators} />
-          </Suspense>
-        ) : route === 'anatomy' ? (
-          <>
-            <h1 className="visually-hidden">Anatomy Explorer: body atlas and heart</h1>
-            <AnatomyExplorer />
-          </>
-        ) : route === 'chemistry' ? (
+        {route === 'chemistry' ? (
           // Chemistry pages give their own H1 (the topics page, a reading page or a calculator title).
           <ChemistryExplorer onPresent={() => setPresenting(route)} />
-        ) : route === 'physics' ? (
-          <>
-            <h1 className="visually-hidden">Physics Explorer: projectile motion lab</h1>
-            <PhysicsExplorer />
-          </>
-        ) : route === 'mathematics' ? (
-          <>
-            <h1 className="visually-hidden">Mathematics Explorer: interactive 3D surfaces</h1>
-            <MathematicsExplorer />
-          </>
-        ) : route === 'biology' ? (
-          <>
-            <h1 className="visually-hidden">Biology Explorer: cells, DNA, division and energy</h1>
-            <BiologyExplorer />
-          </>
+        ) : isSubjectId(route) ? (
+          <SubjectFrame subject={route} name={subjectName!} overview={Boolean(overview)} calculators={Boolean(calculators)}>
+            {subjectPage}
+          </SubjectFrame>
         ) : route === 'glossary' ? (
           <Suspense fallback={pageLoading}>
             <GlossaryPage />

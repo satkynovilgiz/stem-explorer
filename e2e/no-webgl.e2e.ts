@@ -1,4 +1,4 @@
-import { expect, test, waitForViewport, chemMenu } from './fixtures.ts'
+import { expect, test, waitForViewport, chemMenu, railLink } from './fixtures.ts'
 
 // This project launches Chrome with --disable-3d-apis, so WebGL is unavailable.
 
@@ -206,7 +206,7 @@ test('atomic structure and bonding need no WebGL', async ({ page }) => {
 test('biology process sections need no WebGL', async ({ page }) => {
   await page.goto('/?bsec=dna#/biology')
   await expect(page.locator('.dna-svg')).toBeVisible()
-  await page.getByRole('group', { name: 'Biology section' }).getByRole('button', { name: 'Energy processes' }).click()
+  await railLink(page, 'Biology', 'Energy').click()
   await expect(page.locator('.process-view')).toContainText('Glycolysis')
 })
 
@@ -221,7 +221,7 @@ test('2D functions and vectors need no WebGL', async ({ page }) => {
   await page.goto('/?msec=functions#/mathematics')
   await expect(page.locator('.fn-svg')).toBeVisible()
   await expect(page.locator('.fn-slope-value')).toContainText('(exact)')
-  await page.getByRole('group', { name: 'Mathematics section' }).getByRole('button', { name: 'Vectors and transformations' }).click()
+  await railLink(page, 'Mathematics', 'Vectors').click()
   await expect(page.locator('.vec-det-value')).toContainText('= 1')
 })
 

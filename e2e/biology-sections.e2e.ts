@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test'
-import { expect, test, waitForViewport } from './fixtures.ts'
+import { expect, test, waitForViewport, railLink } from './fixtures.ts'
 
-const sectionButton = (page: Page, name: string) => page.getByRole('group', { name: 'Biology section' }).getByRole('button', { name })
+const sectionButton = (page: Page, name: string) => railLink(page, 'Biology', name)
 const params = (page: Page) => new URL(page.url()).searchParams
 
 test('bacterial cell: its own structures, representative vs variable features, and a three-way comparison', async ({ page }) => {

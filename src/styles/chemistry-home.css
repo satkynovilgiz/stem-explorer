@@ -310,3 +310,47 @@
   .chem-home.is-overview .chem-search { padding-inline: var(--space-3); }
 }
 @media (max-width: 360px) { .chem-home.is-overview .chem-search { padding-inline: 0; } }
+
+/* ---------- The other subjects' home panels, in each subject's colour ---------- */
+.subj-home.is-overview { --hc: var(--subject-chemistry); }
+.subj-home.is-anatomy { --hc: var(--subject-anatomy); --ht: #f8efea; --ht2: #f6efe3; }
+.subj-home.is-biology { --hc: var(--subject-biology); --ht: #f1edf8; --ht2: #eef3ea; }
+.subj-home.is-physics { --hc: var(--subject-physics); --ht: #edf2f9; --ht2: #f3efe6; }
+.subj-home.is-mathematics { --hc: var(--subject-mathematics); --ht: #faf3e4; --ht2: #eef3ee; }
+.subj-home.is-overview .chem-home-head { border-color: color-mix(in srgb, var(--hc) 22%, white); background: radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--hc) 18%, white) 0%, transparent 70%), radial-gradient(60% 90% at 0% 100%, var(--ht2) 0%, transparent 70%), linear-gradient(120deg, var(--ht), #fbfaf6); }
+.subj-home.is-overview .chem-eyebrow { border-color: color-mix(in srgb, var(--hc) 30%, white); color: var(--hc); }
+.subj-home .chem-hero-word { background-image: linear-gradient(95deg, var(--hc), color-mix(in srgb, var(--hc) 70%, white) 60%, var(--hc)); }
+.subj-home .chem-search-box { box-shadow: 0 14px 32px -20px var(--hc); }
+.subj-home .chem-hero-chip rect { stroke: color-mix(in srgb, var(--hc) 30%, white); }
+.subj-hero-glow { fill: var(--hc); opacity: 0.12; }
+.subj-hero-beat { fill: var(--hc); transform-box: fill-box; transform-origin: center; }
+.subj-hero-ecg { fill: none; stroke: var(--hc); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.subj-hero-rung { stroke: var(--hc); stroke-opacity: 0.45; stroke-width: 2.5; }
+.subj-hero-base.is-a { fill: var(--hc); }
+.subj-hero-base.is-b { fill: #9aa5a2; }
+.subj-hero-base.is-a { transform: translateY(-52px); }
+.subj-hero-base.is-b { transform: translateY(52px); }
+.subj-hero-ground { stroke: #9aa5a2; stroke-width: 4; stroke-linecap: round; }
+.subj-hero-path { fill: none; stroke: var(--hc); stroke-width: 2.5; stroke-dasharray: 6 7; opacity: 0.55; }
+.subj-hero-ball { fill: var(--hc); }
+.subj-hero-ball-x { transform: translateX(220px); }
+.subj-hero-ball-y { transform: translateY(46px); }
+.subj-hero-wire { fill: none; stroke: var(--hc); stroke-width: 2; stroke-opacity: 0.85; }
+.subj-hero-wire.is-cross { stroke-opacity: 0.45; }
+@media (prefers-reduced-motion: no-preference) {
+  .subj-hero-beat { animation: subj-beat 1.1s ease-in-out infinite; }
+  .subj-hero-ecg { stroke-dasharray: 1; stroke-dashoffset: 1; animation: subj-ecg 2.2s linear infinite; }
+  .subj-hero-rung, .subj-hero-base { animation-duration: 0.9s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; animation-delay: calc(var(--i) * -0.16s); }
+  .subj-hero-rung { animation-name: subj-rung; }
+  .subj-hero-base.is-a { animation-name: subj-base-a; }
+  .subj-hero-base.is-b { animation-name: subj-base-b; }
+  .subj-hero-ball-x { animation: subj-ball-x 2.4s linear infinite; }
+  .subj-hero-ball-y { animation: subj-ball-y 2.4s linear infinite; }
+}
+@keyframes subj-beat { 0%, 40%, 100% { scale: 1; } 14% { scale: 1.12; } 26% { scale: 1.04; } }
+@keyframes subj-ecg { 0% { stroke-dashoffset: 1; } 70%, 100% { stroke-dashoffset: 0; } }
+@keyframes subj-rung { from { transform: scaleY(1); } to { transform: scaleY(-1); } }
+@keyframes subj-base-a { from { transform: translateY(-52px); } to { transform: translateY(52px); } }
+@keyframes subj-base-b { from { transform: translateY(52px); } to { transform: translateY(-52px); } }
+@keyframes subj-ball-x { from { transform: translateX(80px); } to { transform: translateX(360px); } }
+@keyframes subj-ball-y { 0% { transform: translateY(202px); animation-timing-function: cubic-bezier(.33,.67,.67,1); } 50% { transform: translateY(46px); animation-timing-function: cubic-bezier(.33,0,.67,.33); } 100% { transform: translateY(202px); } }

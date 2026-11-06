@@ -9380,3 +9380,40 @@ html.ws-focus .chem-shell, html.is-presenting .chem-shell { grid-template-column
   .chem-bar.is-chemistry .crumb-module { display: none; }
   .chem-bar.is-chemistry .crumb-module + .crumb-sep { display: none; }
 }
+
+/* ---------- Every subject: one-row header and the left menu in the subject's colour ---------- */
+.chem-bar .chem-bar-main { min-height: 60px; padding-block: 6px; }
+.chem-bar .chem-bar-title { flex: 1 1 0; display: block; }
+.chem-bar .crumbs ol { flex-wrap: nowrap; align-items: center; gap: 6px; font-size: 0.9375rem; }
+.chem-bar .crumb-home { min-height: 44px; padding: 0 14px 0 10px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); text-decoration: none; }
+.chem-bar .crumb-home:hover { border-color: var(--sb); background: color-mix(in srgb, var(--sb) 9%, transparent); }
+.chem-bar .crumb-home + .crumb-sep { display: none; }
+.chem-bar .crumbs li:first-child { margin-right: 8px; }
+.chem-bar .crumb-subject { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--color-text) !important; font-size: 1.1875rem; font-weight: 700; letter-spacing: -0.015em; text-decoration: none; }
+.chem-bar .crumb-subject:hover { color: var(--sb) !important; }
+.chem-bar .crumb-subject .chem-brand-mark { width: 36px; height: 36px; border-radius: 11px; }
+.chem-bar .crumb-subject svg { display: block; }
+.chem-bar .crumb-module, .chem-bar .crumb-topic { color: var(--color-text-muted); font-weight: 500; }
+@media (max-width: 640px) {
+  .chem-bar .crumb-subject { gap: 6px; font-size: 1.0625rem; }
+  .chem-bar .crumb-subject .chem-brand-mark { display: none; }
+  .chem-bar .crumb-module, .chem-bar .crumb-module + .crumb-sep { display: none; }
+}
+.chem-shell.is-anatomy { --rail-c: var(--subject-anatomy); }
+.chem-shell.is-biology { --rail-c: var(--subject-biology); }
+.chem-shell.is-physics { --rail-c: var(--subject-physics); }
+.chem-shell.is-mathematics { --rail-c: var(--subject-mathematics); }
+.chem-shell:not(.is-chemistry) .chem-rail-link svg { color: var(--rail-c); }
+.chem-shell:not(.is-chemistry) .chem-rail-link:hover { background: color-mix(in srgb, var(--rail-c) 10%, transparent); color: var(--rail-c); }
+.chem-shell:not(.is-chemistry) .chem-rail-link::before { background: var(--rail-c); }
+.chem-shell:not(.is-chemistry) .chem-rail-link[aria-current='page'] { background: linear-gradient(150deg, color-mix(in srgb, var(--rail-c) 82%, white), var(--rail-c)); color: #fff; box-shadow: 0 10px 20px -12px var(--rail-c); }
+.chem-shell:not(.is-chemistry) .chem-rail-link[aria-current='page'] svg { color: #fff; }
+.chem-rail .rail-group ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.chem-rail .rail-group-name { display: block; margin: 8px 0 2px; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); text-align: center; }
+/* A long menu scrolls inside itself rather than running off the screen. */
+.chem-rail > ul { max-height: calc(100dvh - var(--subject-bar-height, 60px)); overflow-y: auto; scrollbar-width: thin; }
+/* The left menu does what the in-page Module buttons did, so they are not repeated beside it. */
+.chem-shell-main .module-switch { display: none; }
+/* Beside a subject's menu the page is narrower; small controls keep a full-size tap target. */
+.chem-shell-main .playback .segmented { flex-wrap: wrap; }
+.chem-shell-main .playback .segmented-option { min-width: 44px; justify-content: center; }

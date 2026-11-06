@@ -1,11 +1,11 @@
 import type { Page } from '@playwright/test'
-import { expect, stableCanvasShot, test, waitForViewport } from './fixtures.ts'
+import { expect, stableCanvasShot, test, waitForViewport, railLink } from './fixtures.ts'
 
 const heading = (page: Page) => page.locator('#atlas-structure-heading')
 const nav = (page: Page) => page.locator('.atlas-nav')
 const searchBox = (page: Page) => page.getByRole('searchbox', { name: 'Search body structures' })
 const params = (page: Page) => new URL(page.url()).searchParams
-const moduleButton = (page: Page, name: string) => page.getByRole('group', { name: 'Anatomy module' }).getByRole('button', { name })
+const moduleButton = (page: Page, name: string) => railLink(page, 'Anatomy', name)
 
 async function pick(page: Page, query: string, name: string) {
   await searchBox(page).fill(query)
@@ -17,19 +17,19 @@ test('Anatomy opens to the body atlas; the heart is a module with Back/Forward b
   await page.goto('/#/anatomy')
   await waitForViewport(page)
   await expect(page.locator('#atlas-heading')).toHaveText('Body atlas')
-  await expect(moduleButton(page, 'Body atlas')).toHaveAttribute('aria-pressed', 'true')
+  await expect(moduleButton(page, 'Body atlas')).toHaveAttribute('aria-current', 'page')
   expect(params(page).get('bview')).toBe('front')
 
   await page.getByRole('button', { name: 'Open the detailed heart explorer' }).click()
   await expect(page.locator('#part-heading, .info-title').first()).toBeVisible()
-  await expect(moduleButton(page, 'Heart (detailed)')).toHaveAttribute('aria-pressed', 'true')
+  await expect(moduleButton(page, 'Heart (detailed)')).toHaveAttribute('aria-current', 'page')
   expect(params(page).get('heart')).toBe('whole')
   expect(params(page).get('bview')).toBeNull()
 
   await page.goBack()
   await expect(page.locator('#atlas-heading')).toHaveText('Body atlas')
   await page.goForward()
-  await expect(moduleButton(page, 'Heart (detailed)')).toHaveAttribute('aria-pressed', 'true')
+  await expect(moduleButton(page, 'Heart (detailed)')).toHaveAttribute('aria-current', 'page')
 
   // Links made before the atlas existed.
   await page.goto('/?part=mitral-valve&heart=cutaway#/anatomy')
@@ -121,9 +121,15 @@ test('clicking the model selects a structure; Isolate, Focus and Reset work', as
   await page.goto('/?layers=digestive#/anatomy')
   await waitForViewport(page)
   const box = (await page.locator('canvas').boundingBox())!
-  // The liver and stomach fill the middle of the abdomen at the default framing.
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.42)
-  await expect(heading(page)).toBeVisible()
+  // The liver, stomach and intestines fill the middle of the abdomen; where exactly depends on the
+  // canvas's shape, so try a few points down the midline until one selects a structure.
+  await expect(async () => {
+    for (const f of [0.42, 0.45, 0.48, 0.5]) {
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height * f)
+      if (await heading(page).isVisible()) return
+    }
+    throw new Error('no structure under the midline yet')
+  }).toPass({ timeout: 10_000 })
   const name = await heading(page).textContent()
   await page.getByRole('button', { name: 'Isolate' }).click()
   await expect(page.locator('.viewport-badge')).toContainText(`Isolated: ${name}`)
