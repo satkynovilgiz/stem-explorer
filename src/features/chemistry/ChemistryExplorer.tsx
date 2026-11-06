@@ -84,7 +84,7 @@ function initFromUrl() {
 export function ChemistryExplorer({ onPresent }: { onPresent?: () => void }) {
   const { module } = locate('chemistry', useLocationSearch())
   return (
-    <div className="chem-shell">
+    <div className="chem-shell is-chemistry">
       <ChemRail moduleId={module.id} />
       <div className="chem-shell-main">
         <ChemistryPages onPresent={onPresent} />
