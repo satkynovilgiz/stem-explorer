@@ -1,8 +1,8 @@
 import type { Page } from '@playwright/test'
-import { expect, test } from './fixtures.ts'
+import { expect, test, railLink } from './fixtures.ts'
 
 const params = (page: Page) => new URL(page.url()).searchParams
-const experiment = (page: Page, name: string) => page.getByRole('group', { name: 'Experiment' }).getByRole('button', { name })
+const experiment = (page: Page, name: string) => railLink(page, 'Physics', name)
 
 test('DC circuit: series values, then parallel and mixed, with equations, assumptions and a link that opens paused', async ({ page }) => {
   await page.goto('/#/physics')
@@ -74,5 +74,5 @@ test('older physics links still open their labs; switching back to projectile dr
   await expect.poll(() => params(page).get('arr')).toBeNull()
   expect(params(page).get('experiment')).toBeNull()
   await page.goto('/?speed=20&angle=30#/physics')
-  await expect(experiment(page, 'Projectile')).toHaveAttribute('aria-pressed', 'true')
+  await expect(experiment(page, 'Projectile')).toHaveAttribute('aria-current', 'page')
 })

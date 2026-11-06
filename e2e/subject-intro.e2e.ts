@@ -24,7 +24,7 @@ test.describe('Subject intro', () => {
     await page.goto('/')
     await open(page, 'physics')
     await expect(intro(page)).toBeVisible()
-    await page.getByRole('link', { name: 'Projectile motion' }).click()
+    await page.getByRole('navigation', { name: 'Physics' }).getByRole('link', { name: 'Throwing' }).click()
     await page.getByRole('searchbox', { name: 'Search physics' }).fill('wave')
     await expect(page.getByRole('searchbox', { name: 'Search physics' })).toBeFocused()
     await page.keyboard.press('Enter')

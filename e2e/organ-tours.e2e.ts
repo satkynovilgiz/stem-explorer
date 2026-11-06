@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, stableCanvasShot, test, waitForViewport } from './fixtures.ts'
+import { expect, stableCanvasShot, test, waitForViewport, railLink } from './fixtures.ts'
 
 const bar = (page: Page) => page.locator('.atlas-tour')
 const modules = (page: Page) => page.locator('.atlas-modules')
@@ -91,7 +91,7 @@ test('the urine tour and nephron close-up; the circulation tour connects to the 
   expect((await stableCanvasShot(page, true)).equals(start)).toBe(false)
   await bar(page).getByRole('button', { name: 'Step 7: Then to the lungs' }).click()
   await bar(page).getByRole('button', { name: 'Open the detailed heart explorer' }).click()
-  await expect(page.getByRole('group', { name: 'Anatomy module' }).getByRole('button', { name: 'Heart (detailed)' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(railLink(page, 'Anatomy', 'Heart')).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('button', { name: 'Start blood-flow tour' })).toBeVisible()
 })
 

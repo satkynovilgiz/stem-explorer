@@ -102,6 +102,30 @@ export async function goHome(page: Page) {
   await page.locator('.crumb-home, .home-link').first().click()
 }
 
+/** Names a module had in its page's Module buttons, and the word on the left menu now. */
+const RAIL_NAMES: Record<string, string> = {
+  'Body atlas': 'Whole body',
+  'Heart (detailed)': 'Heart',
+  'Breathing mechanics': 'Breathing',
+  'DNA and RNA': 'DNA',
+  'Energy processes': 'Energy',
+  'DC circuit': 'Circuits',
+  Projectile: 'Throwing',
+  'Spring–mass': 'Springs',
+  Wave: 'Waves',
+  Optics: 'Lenses',
+  'Gas (Boyle)': 'Gases',
+  '2D functions': 'Graphs',
+  'Vectors and transformations': 'Vectors',
+  'Statistics and probability': 'Statistics',
+  'Derivatives and motion': 'Motion',
+}
+
+/** A link in a subject's left menu (Anatomy, Biology, Physics or Mathematics), by either name. */
+export function railLink(page: Page, subject: string, name: string) {
+  return page.getByRole('navigation', { name: subject }).getByRole('link', { name: RAIL_NAMES[name] ?? name, exact: true })
+}
+
 /** Chemistry's section strip. */
 export async function chemMenu(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Chemistry' })

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test } from './fixtures.ts'
+import { expect, test, railLink } from './fixtures.ts'
 
 const params = (page: Page) => new URL(page.url()).searchParams
 const readout = (page: Page, name: RegExp) => page.locator('.mo-readouts tr', { has: page.getByRole('rowheader', { name }) }).locator('td')
@@ -95,7 +95,7 @@ test('reduced motion: no Play; step buttons and the slider still move time', asy
 
 test('older Mathematics links still open their sections', async ({ page }) => {
   await page.goto('/?msec=functions&fn=quadratic#/mathematics')
-  await expect(page.getByRole('group', { name: 'Mathematics section' }).getByRole('button', { name: '2D functions' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(railLink(page, 'Mathematics', 'Graphs')).toHaveAttribute('aria-current', 'page')
   await page.goto('/?msec=motion&mo=nope#/mathematics')
   await expect(heading(page)).toContainText('Constant acceleration')
 })

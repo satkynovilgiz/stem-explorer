@@ -14,13 +14,11 @@ for (const s of SUBJECTS) {
     await expect(page).toHaveURL(new RegExp(`#/${s.id}/overview$`))
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Explore ${s.name.toLowerCase()}`)
     await expect(page.locator('h1')).toHaveCount(1)
-    // The header: brand, tabs with Overview current, and the breadcrumb ends at the subject.
-    const tabs = page.getByRole('navigation', { name: s.name })
-    await expect(tabs.getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
+    // The header ends at the subject; on its home page no menu item is marked.
     await expect(page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: s.name })).toHaveAttribute('aria-current', 'page')
-    // Contents: one entry per section, each opening that section (the tabs add Overview and Calculators).
-    const chapters = page.locator('.subj-chapter')
-    expect(await chapters.count()).toBe(await tabs.getByRole('link').count() - 2)
+    await expect(page.getByRole('navigation', { name: s.name }).locator('[aria-current="page"]')).toHaveCount(0)
+    // Contents: one entry per section.
+    expect(await page.locator('.subj-chapter').count()).toBeGreaterThanOrEqual(3)
     // A common question opens real content.
     await page.getByRole('link', { name: s.question }).click()
     await expect(page.locator('main')).toContainText(s.answer)
@@ -49,14 +47,14 @@ test('subject search finds content, keeps the query on Back, and the header sear
   await expect(page.locator('.chem-empty')).toContainText('Nothing in Physics matches “zzqx”')
 })
 
-test('section tabs open each section and mark it current; old links still open sections', async ({ page }) => {
+test('the left menu opens each section and marks it current; old links still open sections', async ({ page }) => {
   await page.goto('/#/physics/overview')
-  const tabs = page.getByRole('navigation', { name: 'Physics' })
-  await tabs.getByRole('link', { name: 'DC circuits' }).click()
-  await expect(tabs.getByRole('link', { name: 'DC circuits' })).toHaveAttribute('aria-current', 'page')
+  const menu = page.getByRole('navigation', { name: 'Physics' })
+  await menu.getByRole('link', { name: 'Circuits' }).click()
+  await expect(menu.getByRole('link', { name: 'Circuits' })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('DC circuits')
   await page.goto('/?bsec=dna#/biology')
-  await expect(page.getByRole('navigation', { name: 'Biology' }).getByRole('link', { name: 'DNA and RNA' })).toHaveAttribute('aria-current', 'page')
-  await page.goto('/#/mathematics')
-  await expect(page.getByRole('navigation', { name: 'Mathematics' }).getByRole('link', { name: 'Overview' })).not.toHaveAttribute('aria-current', 'page')
+  await expect(page.getByRole('navigation', { name: 'Biology' }).getByRole('link', { name: 'DNA' })).toHaveAttribute('aria-current', 'page')
+  await page.goto('/#/mathematics/overview')
+  await expect(page.getByRole('navigation', { name: 'Mathematics' }).locator('[aria-current="page"]')).toHaveCount(0)
 })

@@ -1,8 +1,8 @@
 import type { Page } from '@playwright/test'
-import { expect, test, waitForViewport } from './fixtures.ts'
+import { expect, test, waitForViewport, railLink } from './fixtures.ts'
 
 const params = (page: Page) => new URL(page.url()).searchParams
-const section = (page: Page, name: string) => page.getByRole('group', { name: 'Mathematics section' }).getByRole('button', { name })
+const section = (page: Page, name: string) => railLink(page, 'Mathematics', name)
 
 async function type(page: Page, label: RegExp, value: string) {
   const input = page.getByRole('textbox', { name: label })
@@ -73,7 +73,7 @@ test('sections: old surface links still open surfaces; Back returns to the previ
   await page.goto('/?surface=saddle#/mathematics')
   await waitForViewport(page)
   await expect(page.locator('#math-heading')).toContainText('Saddle')
-  await expect(section(page, '3D surfaces')).toHaveAttribute('aria-pressed', 'true')
+  await expect(section(page, '3D surfaces')).toHaveAttribute('aria-current', 'page')
   await page.goto('/?msec=vectors#/mathematics')
   await section(page, '2D functions').click()
   await expect.poll(() => params(page).get('msec')).toBe('functions')

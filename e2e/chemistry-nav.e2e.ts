@@ -189,11 +189,12 @@ test.describe('Chemistry navigation', () => {
     await expect(page.getByRole('navigation', { name: 'Chemistry' })).toBeVisible()
   })
 
-  test('the other subjects keep their tabs and have no Chemistry strip', async ({ page }) => {
-    for (const s of ['anatomy', 'biology', 'physics', 'mathematics']) {
+  test('the other subjects have their own menus, not Chemistry’s', async ({ page }) => {
+    for (const [s, name] of [['anatomy', 'Anatomy'], ['biology', 'Biology'], ['physics', 'Physics'], ['mathematics', 'Mathematics']]) {
       await page.goto(`/#/${s}`)
-      await expect(page.locator('.subject-bar .chem-nav-link').first()).toBeVisible()
-      await expect(page.locator('.chem-rail')).toHaveCount(0)
+      await expect(page.getByRole('navigation', { name })).toBeVisible()
+      await expect(page.getByRole('navigation', { name: 'Chemistry' })).toHaveCount(0)
     }
   })
+
 })

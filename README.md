@@ -131,6 +131,13 @@ The look follows a design mockup supplied by the project owner (kept locally, no
   water molecule at its real 104.5° angle, an atom with moving electrons and drifting formula chips,
   with the search resting on its edge. The picture is decorative and hidden from screen readers, and
   everything stands still with `prefers-reduced-motion`.
+- **Subject menus** (`src/data/subjectRails.ts`, `components/SubjectRail.tsx`): every subject has a
+  menu on the left, like Chemistry's. Anatomy: Bones, Muscles, Heart, Breathing, Whole body (Bones and
+  Muscles open the body atlas on that system). Biology: all nine sections in a list. Physics and
+  Mathematics: sections under small headings. The header is one row with ← Home and the subject's
+  name once, and the in-page Module buttons are hidden because the menu does their job. Each home page
+  has an animated panel: a beating heart, a turning DNA helix, a ball on its true path, a turning
+  saddle surface. All are decorative and still with `prefers-reduced-motion`.
 - **Subject headers** (`src/components/SubjectBar.tsx`, `app.css`): every subject has the same two
   rows on its own colour: the subject's mark, the breadcrumb above its name, search and controls,
   then the destination tabs as pills with the current one filled (white on each subject colour is

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { differentPixels } from './png.ts'
-import { canvasShot, expect, parkMouse, pressed, search, stableCanvasShot, test, visibleLabels, waitForViewport, switchSubject } from './fixtures.ts'
+import { canvasShot, expect, parkMouse, pressed, search, stableCanvasShot, test, visibleLabels, waitForViewport, switchSubject, railLink } from './fixtures.ts'
 
 const item = (page: Page, name: string) =>
   page.locator('.structure-item').filter({ has: page.locator('.structure-name', { hasText: new RegExp(`^${name}$`) }) })
@@ -163,12 +163,14 @@ test.describe('URL state', () => {
     await switchSubject(page, 'anatomy')
     await waitForViewport(page)
     // A subject link opens the body atlas; the heart is one module switch away.
-    await page.getByRole('group', { name: 'Anatomy module' }).getByRole('button', { name: 'Heart (detailed)' }).click()
+    await railLink(page, 'Anatomy', 'Heart').click()
     await waitForViewport(page)
     await item(page, 'Pulmonary veins').click()
     await switchSubject(page, 'mathematics')
     await waitForViewport(page)
-    await expect(page.locator('#math-heading')).toContainText('Sinusoidal')
+    // Menu links open a section with its own settings (and where it was left), so another
+    // subject's settings in the address are not carried along.
+    await expect(page.locator('#math-heading')).toBeVisible()
     // Switching goes through Home (there is no header), so Back passes Home first.
     await page.goBack()
     await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()

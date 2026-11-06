@@ -7,7 +7,7 @@ import { useLocationSearch } from '../lib/location'
 import { moduleHref, rememberModuleState } from '../lib/moduleContext'
 import { restoreLayout, toggleFocus, toggleSide, usePeek, useWorkspace } from '../lib/workspace'
 import { AppLink } from './AppLink'
-import { ChemHeaderSearch, SubjectHeaderSearch, SubjectNav } from './ChemNav'
+import { ChemHeaderSearch, SubjectHeaderSearch } from './ChemNav'
 import { CHEM_PAGE_TITLES } from '../features/chemistry/home/chemDestinations'
 import { overviewHref } from '../lib/overviewRoute'
 import { SubjectIcon } from './SubjectIcon'
@@ -164,7 +164,10 @@ function TwoRowBar({ subject, overview = false, calculators = false, intro = fal
           // Other subjects: the subject name leads to its Overview.
           <li>
             <AppLink href={overviewHref(subject)} className={`crumb-subject is-${subject}`} aria-current={overview ? 'page' : undefined}>
-              <SubjectIcon subject={subject} size={14} />
+              <span className={`chem-brand-mark${intro ? ' has-intro' : ''}`} aria-hidden="true">
+                <SubjectIcon subject={subject} size={18} />
+                {intro && <SubjectIntro subject={subject} />}
+              </span>
               {name}
             </AppLink>
             {!overview && <ChevronRight size={14} aria-hidden="true" className="crumb-sep" />}
@@ -204,23 +207,8 @@ function TwoRowBar({ subject, overview = false, calculators = false, intro = fal
   return (
     <div ref={barRef} className={`subject-bar chem-bar is-${subject}`}>
       <div className="chem-bar-main">
-        {subject === 'chemistry' ? (
-          // One row: the way Home, then the subject and where you are in it. The name appears once.
-          <div className="chem-bar-title">{crumbs}</div>
-        ) : (
-          <>
-            <span className={`chem-brand-mark${intro ? ' has-intro' : ''}`} aria-hidden="true">
-              <SubjectIcon subject={subject} size={22} />
-              {intro && <SubjectIntro subject={subject} />}
-            </span>
-            <div className="chem-bar-title">
-              {crumbs}
-              <AppLink href={overviewHref(subject)} className="chem-brand" aria-label={`${name} Explorer: Overview`}>
-                <span className="chem-brand-name">{name}</span>
-              </AppLink>
-            </div>
-          </>
-        )}
+        {/* One row: the way Home, then the subject and where you are in it. The name appears once. */}
+        <div className="chem-bar-title">{crumbs}</div>
         <div className="chem-bar-actions">
           {!atOverview && (subject !== 'chemistry' ? <SubjectHeaderSearch subject={subject} name={name} /> : !CHEM_OWN_SEARCH.includes(module.id) && <ChemHeaderSearch />)}
           {subject !== 'chemistry' && (
@@ -233,7 +221,6 @@ function TwoRowBar({ subject, overview = false, calculators = false, intro = fal
           {hasPanels && subject !== 'chemistry' && <WorkspaceControls hasLeft={hasLeft} onPresent={onPresent} />}
         </div>
       </div>
-      {subject !== 'chemistry' && <SubjectNav subject={subject} name={name} moduleId={module.id} overview={overview} calculators={calculators} />}
       {open && <TopicDrawer subject={subject} current={module} onClose={close} />}
     </div>
   )

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, search, test, waitForViewport } from './fixtures.ts'
+import { expect, search, test, waitForViewport, railLink } from './fixtures.ts'
 
 const live = (page: Page, name: string) => page.locator('.readout > div').filter({ hasText: name }).locator('dd')
 const stat = (page: Page, name: string) => page.locator('.stats > div').filter({ hasText: name }).locator('dd')
@@ -10,11 +10,12 @@ const field = (page: Page, label: string) => page.getByRole('textbox', { name: n
 test('switches experiments without losing either lab’s settings, and links stay backward compatible', async ({ page }) => {
   await page.goto('/?speed=15&angle=60#/physics')
   await waitForViewport(page)
-  await page.getByRole('group', { name: 'Experiment' }).getByRole('button', { name: 'Spring–mass' }).click()
+  await railLink(page, 'Physics', 'Springs').click()
   await expect(page.locator('#spring-heading')).toHaveText('Spring–mass oscillation lab')
   let q = await search(page)
-  expect([q.get('experiment'), q.get('mass'), q.get('k'), q.get('x0'), q.get('angle')]).toEqual(['spring', '1', '20', '0.2', '60'])
-  await page.getByRole('group', { name: 'Experiment' }).getByRole('button', { name: 'Projectile' }).click()
+  expect([q.get('experiment'), q.get('mass'), q.get('k'), q.get('x0')]).toEqual(['spring', '1', '20', '0.2'])
+  // The menu returns to the projectile lab where it was left.
+  await railLink(page, 'Physics', 'Throwing').click()
   await expect(field(page, 'Launch angle')).toHaveValue('60')
   q = await search(page)
   expect([q.has('experiment'), q.has('mass')]).toEqual([false, false])

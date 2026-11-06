@@ -2,6 +2,7 @@ import '../../styles/chemistry-home.css'
 import { ArrowRight, BookOpen, Calculator, ChevronRight, Search, X } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { AppLink } from '../../components/AppLink'
+import { SubjectHeroArt } from './SubjectHeroArt'
 import { SubjectIcon } from '../../components/SubjectIcon'
 import { SUBJECTS } from '../../data/subjects'
 import { calculatorsOf } from '../../calc'
@@ -58,15 +59,18 @@ export function SubjectOverview({ subject }: { subject: OverviewSubject }) {
   const questions = OVERVIEW_QUESTIONS[subject].map((x) => ({ ...x, answer: answerFor(subject, x.search) })).filter((x) => x.answer)
 
   return (
-    <div className={`chem-home subj-home is-${subject}`}>
+    <div className={`chem-home subj-home is-overview is-${subject}`}>
       <header className="chem-home-head">
         <div className="chem-home-title-wrap">
-          <p className={`subj-eyebrow is-${subject}`}>
+          <p className={`subj-eyebrow chem-eyebrow is-${subject}`}>
             <SubjectIcon subject={subject} size={16} /> {name}
           </p>
-          <h1 className="chem-home-title">Explore {name.toLowerCase()}</h1>
+          <h1 className="chem-home-title">
+            Explore <span className="chem-hero-word">{name.toLowerCase()}</span>
+          </h1>
           <p className="chem-home-lead">{OVERVIEW_LEADS[subject]}</p>
         </div>
+        <SubjectHeroArt subject={subject} />
       </header>
 
       <form className="chem-search" role="search" onSubmit={(e) => (e.preventDefault(), inputRef.current?.blur())}>

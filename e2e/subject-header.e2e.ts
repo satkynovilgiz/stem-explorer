@@ -1,27 +1,24 @@
 import { expect, test } from './fixtures.ts'
 
 const SUBJECTS = [
-  ['anatomy', 'rgb(168, 71, 58)'],
-  ['biology', 'rgb(99, 74, 168)'],
-  ['physics', 'rgb(45, 92, 168)'],
-  ['mathematics', 'rgb(138, 90, 0)'],
+  ['anatomy', 'Anatomy'],
+  ['biology', 'Biology'],
+  ['physics', 'Physics'],
+  ['mathematics', 'Mathematics'],
 ] as const
 
-for (const [id, colour] of SUBJECTS) {
-  test(`${id} header: white mark icon, current tab in the subject's colour, two rows`, async ({ page }) => {
+for (const [id, name] of SUBJECTS) {
+  test(`${id} header: one row, the name once beside Home, and a white mark`, async ({ page }) => {
     await page.goto(`/#/${id}`)
     const bar = page.locator('.subject-bar')
     await expect(bar.locator('.chem-brand-mark')).toHaveCSS('color', 'rgb(255, 255, 255)')
-    const current = bar.locator('.chem-nav-link[aria-current="page"]')
-    await expect(current).toHaveCSS('color', 'rgb(255, 255, 255)')
-    const pill = await current.evaluate((el) => getComputedStyle(el, '::after').backgroundColor)
-    expect(pill).toBe(colour)
-    // The tabs sit below the first row and the link stays a 44 px target.
-    const main = (await bar.locator('.chem-bar-main').boundingBox())!
-    const tab = (await current.boundingBox())!
-    expect(tab.y).toBeGreaterThanOrEqual(main.y + main.height - 1)
-    expect(tab.height).toBeGreaterThanOrEqual(44)
-    await expect(bar.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Home' })).toBeVisible()
+    await expect(bar.getByText(name, { exact: true })).toHaveCount(1)
+    const home = (await bar.getByRole('link', { name: 'Home' }).boundingBox())!
+    const subject = (await bar.getByRole('link', { name, exact: true }).boundingBox())!
+    expect(home.height).toBeGreaterThanOrEqual(44)
+    expect(Math.abs(home.y + home.height / 2 - (subject.y + subject.height / 2))).toBeLessThanOrEqual(2)
+    // The sections are in the left menu now, not a second row of tabs.
+    await expect(bar.locator('.chem-nav-link')).toHaveCount(0)
   })
 }
 
