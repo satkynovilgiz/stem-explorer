@@ -9417,3 +9417,9 @@ html.ws-focus .chem-shell, html.is-presenting .chem-shell { grid-template-column
 /* Beside a subject's menu the page is narrower; small controls keep a full-size tap target. */
 .chem-shell-main .playback .segmented { flex-wrap: wrap; }
 .chem-shell-main .playback .segmented-option { min-width: 44px; justify-content: center; }
+/* The enzyme drawing keeps its labels inside its own box (on Linux fonts a label once poked out). */
+.enz-cycle { min-width: 0; }
+.enz-cycle-svg { overflow: hidden; }
+/* Safety net beside a subject's menu: a few pixels too wide are cut off rather than making the
+   whole page scroll sideways. Wide tables still scroll inside their own boxes. */
+.chem-shell-main { overflow-x: clip; }
