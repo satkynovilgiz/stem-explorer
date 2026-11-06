@@ -5,7 +5,6 @@ import { SUBJECTS, type SubjectId } from '../../data/subjects'
 import { overviewHref } from '../../lib/overviewRoute'
 import { useExplorationLibrary } from '../../lib/useExplorationLibrary'
 import { SUBJECT_CARDS } from './content'
-import { HeroAtom } from './HeroAtom'
 import { HomeSearch } from './HomeSearch'
 import { RecentStrip } from './RecentStrip'
 import { SavedPanel } from './SavedPanel'
@@ -62,32 +61,26 @@ export function Home() {
 
   return (
     <div ref={revealRef} className={`home home--design${message ? ' has-toast' : ''}`}>
-      <section className="home-hero" aria-labelledby="home-title">
-        <HeroAtom />
+      <section className="home-hero is-lens" aria-labelledby="home-title">
         <p className="home-eyebrow hero-in" style={{ '--d': '0ms' } as CSSProperties}>
           STEM Explorer
         </p>
-        {/* Each word rises out of its own mask; the accent word gets a gradient sweep and an underline. */}
-        <h1 id="home-title" className="home-title">
-          <span className="ht-word">
-            <span style={{ '--d': '80ms' } as CSSProperties}>Science,</span>
-          </span>{' '}
-          <span className="ht-word">
-            <span style={{ '--d': '200ms' } as CSSProperties}>made</span>
-          </span>{' '}
-          <span className="ht-word ht-accent-wrap">
-            <span className="ht-accent" style={{ '--d': '320ms' } as CSSProperties}>
-              clearer.
-            </span>
-            <svg className="ht-underline" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-              <path d="M4 14 C 70 4, 150 4, 296 11" />
-            </svg>
-          </span>
-        </h1>
-        <p className="home-lead hero-in" style={{ '--d': '520ms' } as CSSProperties}>
-          Explore a model. Understand an idea. Try it yourself.
+        {/* The clearing lens: the title starts blurred, and a magnifying glass slides across it
+            leaving it sharp ("made clearer"). The blurred copy and the glass are decoration only. */}
+        <div className="lens-head">
+          <p className="home-title lens-blur" aria-hidden="true">
+            Science, made clearer.
+          </p>
+          <h1 id="home-title" className="home-title lens-sharp">
+            Science, made <span className="ht-accent">clearer.</span>
+          </h1>
+          <span className="lens-glass" aria-hidden="true" />
+        </div>
+        {/* Three steps, numbered by CSS so the sentence itself reads as one line. */}
+        <p className="home-lead lens-steps hero-in" style={{ '--d': '420ms' } as CSSProperties}>
+          <span>Explore a model.</span> <span>Understand an idea.</span> <span>Try it yourself.</span>
         </p>
-        <div className="hero-in" style={{ '--d': '660ms' } as CSSProperties}>
+        <div className="hero-in lens-search" style={{ '--d': '560ms' } as CSSProperties}>
           <HomeSearch />
         </div>
       </section>
