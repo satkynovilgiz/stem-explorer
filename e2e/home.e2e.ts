@@ -356,6 +356,16 @@ test('Home motion: the hero animates, cards reveal on scroll, examples fill the 
   await expect.poll(() => page.locator('.lens-glass').evaluate((el) => getComputedStyle(el).opacity), { timeout: 6000 }).toBe('0')
   await expect.poll(() => page.locator('.lens-blur').evaluate((el) => getComputedStyle(el).visibility)).toBe('hidden')
   await expect(page.locator('.lens-steps')).toHaveText('Explore a model. Understand an idea. Try it yourself.')
+  // Subject cards tilt toward the mouse and show their sections; leaving the card levels it again.
+  const anatomy = page.locator('.subject-card.is-anatomy .subject-card-action')
+  await anatomy.scrollIntoViewIfNeeded()
+  await expect(anatomy.locator('.subject-card-sections')).toHaveText(/Bones.*Muscles.*Heart.*Breathing/)
+  const box = (await anatomy.boundingBox())!
+  await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.2)
+  await expect.poll(() => anatomy.evaluate((el) => el.style.getPropertyValue('--ry'))).toMatch(/^\d/)
+  await expect.poll(() => anatomy.locator('.subject-card-sections').evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
+  await page.mouse.move(5, 5)
+  await expect.poll(() => anatomy.evaluate((el) => el.style.getPropertyValue('--ry'))).toBe('')
   // Cards below the fold rise in as they are scrolled to.
   const maths = page.locator('.subject-card.is-mathematics')
   await maths.scrollIntoViewIfNeeded()

@@ -9019,6 +9019,59 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
   .subject-tiles .subject-card-img { max-width: 46%; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 40%); mask-image: linear-gradient(to right, transparent 0, #000 40%); }
 }
 .subject-card-button { white-space: nowrap; }
+
+/* ---- Choose a subject: 3D tilt cards ----
+   Five cards in a row. With a mouse, a card leans toward the pointer (Home sets --rx/--ry) with a
+   soft light following it (--mx/--my); its picture floats above the card, and the subject's
+   sections slide out. On touch screens the sections always show; with reduced motion nothing moves. */
+.subject-tiles.is-tilt { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; perspective: 1100px; }
+.subject-tiles.is-tilt > li, .subject-tiles.is-tilt > li.is-chemistry { grid-column: auto !important; min-width: 0; }
+.is-tilt .subject-card.is-chemistry { --c: var(--subject-chemistry); --tint: var(--tint-chemistry); }
+.is-tilt .subject-card.is-anatomy { --c: var(--subject-anatomy); --tint: var(--tint-anatomy); }
+.is-tilt .subject-card.is-biology { --c: var(--subject-biology); --tint: var(--tint-biology); }
+.is-tilt .subject-card.is-physics { --c: var(--subject-physics); --tint: var(--tint-physics); }
+.is-tilt .subject-card.is-mathematics { --c: var(--subject-mathematics); --tint: var(--tint-mathematics); }
+.subject-tiles.is-tilt .subject-card { height: 100%; overflow: visible; border-radius: 22px; background: none; }
+.subject-tiles.is-tilt .subject-card:hover, .subject-tiles.is-tilt .subject-card:focus-within { box-shadow: none; }
+.subject-tiles.is-tilt .subject-card-action, .subject-tiles.is-tilt .is-chemistry .subject-card-action { position: relative; display: grid; grid-template-rows: 150px 1fr; align-items: stretch; height: 100%; min-height: 0; justify-content: stretch; border: 1px solid var(--color-border); border-radius: 22px; background: var(--color-surface); transform: translateY(var(--lift, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transform-style: preserve-3d; }
+.subject-tiles.is-tilt .subject-card-action:hover, .subject-tiles.is-tilt .subject-card-action:focus-visible { --lift: -6px; border-color: var(--c); box-shadow: 0 30px 40px -28px var(--c); }
+.subject-tiles.is-tilt .subject-card-action:focus-visible { border-radius: 22px; }
+.subject-card-pic { position: relative; display: block; overflow: hidden; border-radius: 21px 21px 0 0; background: var(--tint); transform: translateZ(28px); }
+/* The pictures are small (about 150 px wide), so each shows at its own size on the right, fading into the tint. */
+.subject-tiles.is-tilt .subject-card-img { position: absolute; inset: 0 0 0 auto; width: auto; height: 100%; max-width: none; object-fit: cover; object-position: right center; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 32%); mask-image: linear-gradient(to right, transparent 0, #000 32%); }
+.subject-tiles.is-tilt .subject-card-text, .subject-tiles.is-tilt .is-chemistry .subject-card-text { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; max-width: none; padding: 14px 16px 16px; transform: translateZ(14px); }
+.subject-tiles.is-tilt .subject-card-title, .subject-tiles.is-tilt .is-chemistry .subject-card-title { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.015em; }
+.subject-tiles.is-tilt .subject-card-summary, .subject-tiles.is-tilt .is-chemistry .subject-card-summary { font-size: 0.9rem; }
+.subject-card-sections { display: flex; flex-wrap: wrap; gap: 5px; max-height: 0; overflow: hidden; opacity: 0; }
+.subject-card-sections > span { padding: 2px 9px; border-radius: 999px; background: var(--tint); color: var(--c); font-size: 0.75rem; font-weight: 600; }
+.subject-card-action:hover .subject-card-sections, .subject-card-action:focus-visible .subject-card-sections { max-height: 90px; opacity: 1; }
+@media (hover: none) { .subject-card-sections { max-height: none; opacity: 1; } }
+.subject-card-go { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 4px; color: var(--c); font-size: 0.95rem; font-weight: 700; }
+.subject-card-shine { position: absolute; inset: 0; border-radius: 22px; background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgb(255 255 255 / 0.4), transparent 50%); opacity: 0; pointer-events: none; }
+.subject-card-action:hover .subject-card-shine { opacity: 1; }
+.home.has-motion .subject-tiles.is-tilt > li.is-in:hover, .home.has-motion .subject-tiles.is-tilt > li.is-in:focus-within, .home:not(.has-motion) .subject-tiles.is-tilt > li:hover { translate: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .subject-tiles.is-tilt .subject-card-action { transition: transform 0.2s ease-out, box-shadow 0.3s ease, border-color 0.3s ease; }
+  .subject-tiles.is-tilt .subject-card-img { transition: scale 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .subject-tiles.is-tilt .subject-card-action:hover .subject-card-img { scale: 1.07; translate: none; }
+  .subject-card-sections { transition: max-height 0.4s ease, opacity 0.3s ease; }
+  .subject-card-shine { transition: opacity 0.3s ease; }
+  .subject-card-go svg { transition: translate 0.25s ease; }
+  .subject-card-action:hover .subject-card-go svg { translate: 4px 0; }
+}
+@media (max-width: 1000px) {
+  .subject-tiles.is-tilt { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .subject-tiles.is-tilt > li, .subject-tiles.is-tilt > li.is-chemistry { grid-column: span 2 !important; }
+  .subject-tiles.is-tilt > li:nth-child(4), .subject-tiles.is-tilt > li:nth-child(5) { grid-column: span 3 !important; }
+}
+@media (max-width: 640px) {
+  .subject-tiles.is-tilt { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .subject-tiles.is-tilt > li, .subject-tiles.is-tilt > li.is-chemistry, .subject-tiles.is-tilt > li:nth-child(4), .subject-tiles.is-tilt > li:nth-child(5) { grid-column: span 1 !important; }
+  .subject-tiles.is-tilt > li.is-chemistry { grid-column: 1 / -1 !important; }
+  .subject-tiles.is-tilt .subject-card-action, .subject-tiles.is-tilt .is-chemistry .subject-card-action { grid-template-rows: 116px 1fr; }
+  .subject-tiles.is-tilt .is-chemistry .subject-card-action { grid-template-rows: 150px 1fr; }
+  .subject-tiles.is-tilt .subject-card-text, .subject-tiles.is-tilt .is-chemistry .subject-card-text { max-width: none; padding: 12px 14px 14px; }
+}
 .swatch, .legend-swatch, .ptable-swatch, .structure-swatch { box-shadow: inset 0 0 0 1px rgb(19 32 31 / 0.35); }
 
 /* Layout controls are secondary: icon-only (names stay for assistive technology and tooltips). */
