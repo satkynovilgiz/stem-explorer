@@ -348,9 +348,14 @@ test.describe('Home design and exploration flow', () => {
 test('Home motion: the hero animates, cards reveal on scroll, examples fill the search; reduced motion keeps everything still', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1, name: 'Science, made clearer.' })).toBeVisible()
-  // The atom is decorative and its electrons travel their orbits.
-  await expect(page.locator('.hero-atom')).toHaveAttribute('aria-hidden', 'true')
-  await expect(page.locator('.hero-atom animateMotion')).toHaveCount(3)
+  // The clearing lens: the blurred copy and the glass are decoration; the lens crosses the title once
+  // and leaves only the sharp heading. The three steps are one sentence for screen readers.
+  await expect(page.locator('.lens-blur')).toHaveAttribute('aria-hidden', 'true')
+  await expect(page.locator('.lens-glass')).toHaveAttribute('aria-hidden', 'true')
+  expect(await page.locator('.lens-sharp').evaluate((el) => getComputedStyle(el).animationName)).toBe('lens-reveal')
+  await expect.poll(() => page.locator('.lens-glass').evaluate((el) => getComputedStyle(el).opacity), { timeout: 6000 }).toBe('0')
+  await expect.poll(() => page.locator('.lens-blur').evaluate((el) => getComputedStyle(el).visibility)).toBe('hidden')
+  await expect(page.locator('.lens-steps')).toHaveText('Explore a model. Understand an idea. Try it yourself.')
   // Cards below the fold rise in as they are scrolled to.
   const maths = page.locator('.subject-card.is-mathematics')
   await maths.scrollIntoViewIfNeeded()
@@ -364,7 +369,9 @@ test('Home motion: the hero animates, cards reveal on scroll, examples fill the 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.reload()
   await expect(page.locator('.home.has-motion')).toHaveCount(0)
-  await expect(page.locator('.hero-atom animateMotion')).toHaveCount(0)
-  expect(await page.locator('.ht-word > span').first().evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
+  // Still: the sharp title at once, no blur and no glass.
+  expect(await page.locator('.lens-sharp').evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
+  expect(await page.locator('.lens-blur').evaluate((el) => getComputedStyle(el).visibility)).toBe('hidden')
+  expect(await page.locator('.lens-glass').evaluate((el) => getComputedStyle(el).opacity)).toBe('0')
   expect(await maths.evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
 })

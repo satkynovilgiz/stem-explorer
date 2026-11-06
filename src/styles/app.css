@@ -9133,34 +9133,37 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
    The hero atom, word-by-word title, staggered entrance, and scroll reveal. Only transform,
    translate and opacity animate. With reduced motion everything is shown still and in place. */
 .home--design .home-hero { position: relative; isolation: isolate; }
-.hero-atom { position: absolute; z-index: -1; top: 50%; right: -40px; width: min(420px, 42vw); aspect-ratio: 1; translate: 0 -54%; pointer-events: none; }
-.hero-atom-svg { position: relative; width: 100%; height: 100%; overflow: visible; }
-.hero-glow { position: absolute; inset: 12%; border-radius: 50%; background: radial-gradient(circle at 40% 40%, rgb(95 179 166 / 0.32), rgb(231 207 160 / 0.22) 45%, transparent 70%); filter: blur(24px); }
-.hero-orbit { fill: none; stroke: #1d6f66; stroke-opacity: 0.28; stroke-width: 1.5; }
-.hero-electron { filter: drop-shadow(0 0 6px rgb(29 111 102 / 0.55)); }
-.ht-word { display: inline-block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; vertical-align: bottom; }
-.ht-word > span { display: inline-block; }
-.ht-accent-wrap { position: relative; overflow: visible; }
-.ht-accent { background: linear-gradient(100deg, #13544c 0%, #1d8a7c 40%, #57b8a8 50%, #1d8a7c 60%, #13544c 100%); background-size: 250% 100%; background-position: 0% 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
-.ht-underline { position: absolute; left: 2%; right: 4%; bottom: -0.06em; width: 94%; height: 0.24em; overflow: visible; }
-.ht-underline path { fill: none; stroke: #e0b765; stroke-width: 5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+/* ---- The clearing lens (Home title) ----
+   At rest (and with reduced motion) only the sharp title shows. With motion, a blurred copy sits
+   underneath, the sharp title is revealed from left to right, and a magnifying glass rides on the
+   edge of what is revealed; then the glass and the blur fade away. */
+.home-hero.is-lens { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: var(--space-5); padding-block: clamp(8px, 3vw, 28px) 0; text-align: center; }
+.home-hero.is-lens::before { content: ''; position: absolute; z-index: -1; inset: -80px 0 auto; height: 560px; background: radial-gradient(ellipse 50% 60% at 50% 18%, rgb(95 179 166 / 0.24), rgb(231 207 160 / 0.12) 55%, transparent 100%); pointer-events: none; }
+.lens-head { position: relative; display: grid; font-size: clamp(2.7rem, 8vw, 5.4rem); }
+.home--design .lens-head .home-title { grid-area: 1 / 1; margin: 0; font-size: 1em; line-height: 1.04; text-wrap: balance; }
+.lens-blur { visibility: hidden; filter: blur(0.09em); opacity: 0.5; user-select: none; }
+.lens-glass { position: absolute; top: 50%; left: 0; width: 1.7em; height: 1.7em; margin: -0.85em 0 0 -0.85em; border: 0.075em solid var(--color-text); border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.08) 60%); box-shadow: inset 0 0 0 0.02em rgb(255 255 255 / 0.8), 0 0.25em 0.4em -0.2em rgb(0 0 0 / 0.45); opacity: 0; pointer-events: none; }
+.lens-glass::after { content: ''; position: absolute; right: -0.5em; bottom: -0.42em; width: 0.62em; height: 0.15em; border-radius: 0.08em; background: var(--color-text); rotate: 42deg; }
+.ht-accent { background: linear-gradient(90deg, var(--subject-chemistry), var(--subject-physics) 55%, var(--subject-biology)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lens-steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0; counter-reset: step; }
+.home--design .lens-steps { margin: 0; font-size: 1rem; }
+.lens-steps > span { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px 0 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-weight: 600; counter-increment: step; }
+.lens-steps > span::before { content: counter(step); display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--color-accent); color: #fff; font-size: 0.8rem; font-weight: 700; }
+.lens-search { width: min(640px, 100%); text-align: left; }
+.lens-search .home-try { justify-content: center; }
 .home-try { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: var(--space-3) 0 0; font-size: 0.875rem; }
 .home-try-chip { min-height: 32px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-weight: 600; cursor: pointer; transition: border-color 0.2s, background-color 0.2s, translate 0.2s; }
 .home-try-chip:hover { border-color: var(--color-accent); background: var(--color-accent-soft); }
 .home-try-chip:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 @media (max-width: 720px) {
-  .hero-atom { top: -60px; right: -90px; width: 210px; translate: none; opacity: 0.35; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   /* Entrance: the eyebrow, then each title word rises out of its mask, then the lead and search. */
   .hero-in { animation: hero-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) both; }
-  .ht-word > span { animation: word-rise 0.8s cubic-bezier(0.2, 0.75, 0.15, 1) var(--d, 0ms) both; }
-  .ht-accent { animation: word-rise 0.8s cubic-bezier(0.2, 0.75, 0.15, 1) var(--d, 0ms) both, accent-sweep 1.6s ease-in-out 1s both; }
-  .ht-underline path { stroke-dasharray: 320; stroke-dashoffset: 320; animation: draw 0.9s cubic-bezier(0.6, 0, 0.2, 1) 0.95s forwards; }
-  .hero-atom { animation: hero-fade 1.2s ease-out 0.2s both; }
-  .hero-glow { animation: glow-drift 9s ease-in-out infinite alternate; }
-  .hero-nucleus { transform-box: fill-box; transform-origin: center; animation: nucleus-pulse 3.2s ease-in-out infinite; }
+  .lens-blur { visibility: visible; animation: lens-blur-out 3.2s ease both; }
+  .lens-sharp { animation: lens-reveal 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.3s both; }
+  .lens-glass { animation: lens-move 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.3s both, lens-show 2.6s linear 0.3s both; }
   .home-try-chip:hover { translate: 0 -1px; }
 
   /* Scroll reveal (Home adds .has-motion only when it can reveal; nothing stays hidden otherwise). */
@@ -9183,14 +9186,13 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 }
 
 @keyframes hero-rise { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
-@keyframes word-rise { from { translate: 0 105%; } to { translate: 0 0; } }
-@keyframes accent-sweep { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+@keyframes lens-reveal { from { clip-path: inset(-25% 100% -25% -5%); } to { clip-path: inset(-25% -5% -25% -5%); } }
+@keyframes lens-move { from { left: 0; translate: 0 0.12em; } 50% { translate: 0 -0.18em; } to { left: 100%; translate: 0 0.08em; } }
+@keyframes lens-show { from { opacity: 0; } 8%, 85% { opacity: 1; } to { opacity: 0; } }
+@keyframes lens-blur-out { 0%, 85% { opacity: 0.5; } to { opacity: 0; visibility: hidden; } }
 @keyframes draw { to { stroke-dashoffset: 0; } }
-@keyframes hero-fade { from { opacity: 0; scale: 0.92; } to { opacity: 1; scale: 1; } }
-@keyframes glow-drift { from { translate: -4% 3%; scale: 1; } to { translate: 5% -4%; scale: 1.08; } }
-@keyframes nucleus-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
 @keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
-/* The hero atom may hang past the edge on narrow screens; it is clipped, never scrolled to. */
+/* The lens may pass the edge of the title on narrow screens; it is clipped, never scrolled to. */
 .home--design { overflow-x: clip; }
 @media print { .home.has-motion [data-reveal] { opacity: 1 !important; translate: none !important; } }
 .info-kind { margin: 4px 0 0; font-size: var(--text-xs); }
