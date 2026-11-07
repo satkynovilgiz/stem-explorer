@@ -9025,6 +9025,15 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
    keyboard focus) a line in the subject's colour draws in under the name, the picture brightens and
    zooms a little, and the arrow moves. With reduced motion only the colours change. */
 .subject-tiles.is-cards { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+/* Wider cards on big screens: the row reaches up to 70px past the page column on each side
+   (only when the window has room for it), so each card gains width but not height. */
+@media (min-width: 1001px) {
+  .home-section:has(> .subject-tiles.is-cards) {
+    --spill: clamp(0px, (100vw - 1240px) / 2, 70px);
+    width: calc(100% + 2 * var(--spill));
+    margin-inline: calc(-1 * var(--spill));
+  }
+}
 .subject-tiles.is-cards > li, .subject-tiles.is-cards > li.is-chemistry { grid-column: auto !important; min-width: 0; }
 .is-cards .subject-card.is-chemistry { --c: var(--subject-chemistry); --tint: var(--tint-chemistry); }
 .is-cards .subject-card.is-anatomy { --c: var(--subject-anatomy); --tint: var(--tint-anatomy); }
@@ -9244,7 +9253,7 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
 /* The lens may pass the edge of the title on narrow screens; it is clipped, never scrolled to. */
-.home--design { overflow-x: clip; }
+.home--design .home-hero.is-lens { overflow-x: clip; }
 @media print { .home.has-motion [data-reveal] { opacity: 1 !important; translate: none !important; } }
 .info-kind { margin: 4px 0 0; font-size: var(--text-xs); }
 
@@ -9476,3 +9485,22 @@ html.ws-focus .chem-shell, html.is-presenting .chem-shell { grid-template-column
 /* Safety net beside a subject's menu: a few pixels too wide are cut off rather than making the
    whole page scroll sideways. Wide tables still scroll inside their own boxes. */
 .chem-shell-main { overflow-x: clip; }
+
+/* ---------- Layout fixes from the browser check (phone, iPad, laptop) ---------- */
+/* Table columns had no space between them, so numbers ran together on phones ("0.6230.623"). */
+.data-table th:not(:last-child),
+.data-table td:not(:last-child) { padding-right: var(--space-3); }
+/* The Punnett square was wider than a phone screen; let its cells shrink and wrap. */
+@media (max-width: 640px) {
+  .data-table th:not(:last-child),
+  .data-table td:not(:last-child) { padding-right: var(--space-2); }
+  .punnett td { min-width: 0; }
+  .punnett th, .punnett td { padding-right: var(--space-2); }
+}
+/* Long action buttons (e.g. "Focus: skin outline and this system") wrap instead of running off the card. */
+.share-row .tool-button { max-width: 100%; white-space: normal; text-align: left; }
+/* "Copy link" and "Clear selection" start on the same line. */
+.info-header .header-actions .copy-link { margin-top: 0; }
+/* Search page: the magnifier sits in the middle of the box, not in its top corner. */
+.search-page .search.home-search-box .search-icon { position: absolute; top: 50%; left: 14px; transform: translateY(-50%); }
+.search-page .search.home-search-box .search-input { padding-left: 42px; }
