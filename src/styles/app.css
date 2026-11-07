@@ -9076,6 +9076,8 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
   .subject-tiles.is-cards > li, .subject-tiles.is-cards > li.is-chemistry, .subject-tiles.is-cards > li:nth-child(4), .subject-tiles.is-cards > li:nth-child(5) { grid-column: span 1 !important; }
   .subject-tiles.is-cards > li.is-chemistry { grid-column: 1 / -1 !important; }
   .subject-tiles.is-cards .subject-card-action, .subject-tiles.is-cards .is-chemistry .subject-card-action { grid-template-rows: 116px 1fr; }
+  /* "Mathematics" must fit a half-width card on a 320px phone with any fallback font. */
+  .subject-tiles.is-cards .subject-card-title { max-width: 100%; font-size: clamp(1rem, 5vw, 1.2rem); overflow-wrap: anywhere; }
   .subject-tiles.is-cards .is-chemistry .subject-card-action { grid-template-rows: 150px 1fr; }
   .subject-tiles.is-cards .subject-card-text, .subject-tiles.is-cards .is-chemistry .subject-card-text { max-width: none; padding: 12px 14px 14px; }
 }
@@ -9254,6 +9256,8 @@ body { background: var(--color-bg); color: var(--color-text); font-size: var(--t
 @keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
 /* The lens may pass the edge of the title on narrow screens; it is clipped, never scrolled to. */
 .home--design .home-hero.is-lens { overflow-x: clip; }
+/* Below laptop width the whole page clips too (the wider subject row needs room only on laptops). */
+@media (max-width: 1000px) { .home--design { overflow-x: clip; } }
 @media print { .home.has-motion [data-reveal] { opacity: 1 !important; translate: none !important; } }
 .info-kind { margin: 4px 0 0; font-size: var(--text-xs); }
 
